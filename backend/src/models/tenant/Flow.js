@@ -42,6 +42,10 @@ const FlowSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  isSmartMatch: {
+    type: Boolean,
+    default: false
+  },
   nodes: {
     type: [nodeSchema],
     default: []
