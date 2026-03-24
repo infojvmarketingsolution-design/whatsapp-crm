@@ -7,6 +7,7 @@ const CampaignLogSchema = require('../models/tenant/CampaignLog');
 const CampaignSchema = require('../models/tenant/Campaign');
 const mongoose = require('mongoose');
 const { processIncomingMessage } = require('../services/flowEngine.service');
+const TemplateSchema = require('../models/tenant/Template');
 const WhatsAppService = require('../services/whatsapp.service');
 
 const verifyWebhook = (req, res) => {
@@ -159,6 +160,27 @@ const handleIncomingMessage = async (req, res) => {
            await Campaign.findByIdAndUpdate(log.campaignId, { $inc: incQuery });
          }
       }
+    }
+
+    // 4. Handle Template Status Updates
+    if (value.message_template_status_update) {
+       const update = value.message_template_status_update;
+       console.log(`📋 [Tenant: ${client.tenantId}] Template Status Update:`, update.event, update.message_template_name);
+       
+       const Template = tenantDb.model('Template', TemplateSchema);
+       const updatedTemplate = await Template.findOneAndUpdate(
+          { name: update.message_template_name },
+          { status: update.event === 'APPROVED' ? 'APPROVED' : update.event === 'REJECTED' ? 'REJECTED' : 'PENDING' },
+          { new: true }
+       );
+
+       if (io) {
+          io.to(client.tenantId).emit('template_status_update', {
+             name: update.message_template_name,
+             status: update.event,
+             templateId: updatedTemplate?._id
+          });
+       }
     }
 
     res.status(200).send('EVENT_RECEIVED');

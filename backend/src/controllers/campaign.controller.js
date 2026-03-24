@@ -154,7 +154,47 @@ const getCampaigns = async (req, res) => {
   }
 };
 
+const getCampaignReport = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tenantDb = getTenantConnection(req.tenantId);
+    const Campaign = tenantDb.model('Campaign', CampaignSchema);
+    const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
+
+    const [campaign, logs] = await Promise.all([
+      Campaign.findById(id).populate('templateId'),
+      CampaignLog.find({ campaignId: id }).sort({ sentAt: -1 })
+    ]);
+
+    if (!campaign) return res.status(404).json({ message: 'Campaign not found' });
+
+    res.json({ campaign, logs });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteCampaign = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tenantDb = getTenantConnection(req.tenantId);
+    const Campaign = tenantDb.model('Campaign', CampaignSchema);
+    const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
+
+    await Promise.all([
+      Campaign.findByIdAndDelete(id),
+      CampaignLog.deleteMany({ campaignId: id })
+    ]);
+
+    res.json({ message: 'Campaign and associated logs deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createCampaign,
-  getCampaigns
+  getCampaigns,
+  getCampaignReport,
+  deleteCampaign
 };

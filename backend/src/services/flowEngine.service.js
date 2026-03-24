@@ -143,16 +143,22 @@ const processIncomingMessage = async (tenantId, contact, messageText, io) => {
      let matched = false;
      for (const flow of activeFlows) {
          let isMatch = false;
-         if (!flow.triggerKeywords || flow.triggerKeywords.length === 0 || (flow.triggerKeywords.length === 1 && flow.triggerKeywords[0] === '')) {
-             // Skip empty flows during normal keyword matching if we want a specific default flow
-             continue;
+         const keywords = flow.triggerKeywords || [];
+         const useSmartAI = flow.useSmartAI || false;
+
+         if (keywords.length === 0 || (keywords.length === 1 && keywords[0] === '')) {
+             continue; // Skip catch-all here
+         }
+
+         if (useSmartAI) {
+             isMatch = isSmartMatch(messageText, keywords);
          } else {
-             isMatch = flow.triggerKeywords.some(kw => messageText.toLowerCase().includes(kw.toLowerCase().trim()));
+             isMatch = keywords.some(kw => messageText.toLowerCase().includes(kw.toLowerCase().trim()));
          }
 
          if (isMatch) {
              matched = true;
-             console.log(`[Flow Engine] Keyphrase match! Triggering flow: ${flow.name}`);
+             console.log(`[Flow Engine] ${useSmartAI ? 'Smart AI' : 'Keyphrase'} match! Triggering flow: ${flow.name}`);
              setTimeout(() => executeFlow(tenantId, flow._id || flow.id, contact, io), 500);
              break;
          }
@@ -172,3 +178,52 @@ const processIncomingMessage = async (tenantId, contact, messageText, io) => {
 };
 
 module.exports = { executeFlow, processIncomingMessage };
+
+/**
+ * Smart matching logic (Fuzzy + Token match)
+ */
+function isSmartMatch(message, keywords) {
+    if (!message || !keywords || keywords.length === 0) return false;
+    
+    const msg = message.toLowerCase().trim();
+    const tokens = msg.split(/\s+/);
+    
+    for (const kw of keywords) {
+        const target = kw.toLowerCase().trim();
+        if (!target) continue;
+        
+        // 1. Literal match
+        if (msg.includes(target)) return true;
+        
+        // 2. Fuzzy match entire message (Levenshtein)
+        if (levenshteinDistance(msg, target) <= 2) return true;
+        
+        // 3. Token match (Fuzzy)
+        for (const token of tokens) {
+            if (levenshteinDistance(token, target) <= 1) return true;
+        }
+    }
+    
+    return false;
+}
+
+function levenshteinDistance(a, b) {
+    const matrix = [];
+    for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+    for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+    for (let i = 1; i <= b.length; i++) {
+        for (let j = 1; j <= a.length; j++) {
+            if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                matrix[i][j] = matrix[i - 1][j - 1];
+            } else {
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j - 1] + 1, // substitution
+                    matrix[i][j - 1] + 1,     // insertion
+                    matrix[i - 1][j] + 1      // deletion
+                );
+            }
+        }
+    }
+    return matrix[b.length][a.length];
+}

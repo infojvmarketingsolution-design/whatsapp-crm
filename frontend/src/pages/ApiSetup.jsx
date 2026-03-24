@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Key, Phone, Database, CheckCircle, Copy, Eye, EyeOff, Save, AlertCircle, Webhook, Zap } from 'lucide-react';
+import { Key, Phone, Database, CheckCircle, Copy, Eye, EyeOff, Save, AlertCircle, Webhook, Zap, Wallet, ExternalLink } from 'lucide-react';
 
 export default function ApiSetup() {
   const [token, setToken] = useState('');
@@ -7,6 +7,7 @@ export default function ApiSetup() {
   const [wabaId, setWabaId] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [wabaName, setWabaName] = useState('');
+  const [limitTier, setLimitTier] = useState('');
 
   useEffect(() => {
     fetchConfig();
@@ -26,6 +27,7 @@ export default function ApiSetup() {
         if (data.wabaId) setWabaId(data.wabaId);
         if (data.phoneNumber) setPhoneNumber(data.phoneNumber);
         if (data.wabaName) setWabaName(data.wabaName);
+        if (data.limitTier) setLimitTier(data.limitTier);
       }
     } catch (err) {
       console.error('Failed to fetch config', err);
@@ -275,6 +277,37 @@ export default function ApiSetup() {
                  {testing ? <span className="w-4 h-4 border-2 border-gray-300 border-t-gray-700 rounded-full animate-spin"></span> : 'Run Connectivity Test'}
               </button>
            </div>
+
+           {/* Billing & Budget */}
+            <div className="bg-white border border-gray-100 rounded-2xl p-6 shadow-sm flex flex-col">
+               <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
+                     <Wallet size={20} />
+                  </div>
+                  <h3 className="font-bold text-gray-800">Billing & Budget</h3>
+               </div>
+               
+               <div className="space-y-4">
+                  <div>
+                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Messaging Limit</p>
+                     <p className="text-sm font-bold text-gray-700 mt-1">{limitTier || 'FETCHING...'}</p>
+                     <p className="text-[10px] text-gray-500 mt-0.5">Your daily conversation limit per 24h.</p>
+                  </div>
+
+                  <div className="pt-4 border-t border-gray-50 text-center">
+                     <p className="text-xs text-gray-500 mb-4 px-2">WhatsApp API billing is managed directly via Meta Business Suite.</p>
+                     <a 
+                       href={`https://business.facebook.com/billing_hub/payment_settings?asset_id=${wabaId}`}
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       className="w-full flex items-center justify-center bg-gray-800 text-white font-bold text-sm py-2.5 rounded-xl hover:bg-black transition shadow-premium"
+                     >
+                        <ExternalLink size={16} className="mr-2" />
+                        Add Fund / Billing
+                     </a>
+                  </div>
+               </div>
+            </div>
         </div>
       </div>
     </div>

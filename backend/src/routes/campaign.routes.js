@@ -8,5 +8,7 @@ router.use(protect, tenantMiddleware);
 
 router.post('/', createCampaign);
 router.get('/', getCampaigns);
+router.get('/:id/report', getCampaignReport);
+router.delete('/:id', deleteCampaign);
 
 module.exports = router;

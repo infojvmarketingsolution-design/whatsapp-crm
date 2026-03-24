@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle } from 'lucide-react';
+import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import CampaignReportModal from './CampaignReportModal';
 
 function Campaigns() {
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reportData, setReportData] = useState({ isOpen: false, campaign: null, logs: [] });
 
   useEffect(() => {
     fetchCampaigns();
@@ -33,6 +35,47 @@ function Campaigns() {
       setCampaigns([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this campaign? All delivery logs will be lost.')) return;
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/campaigns/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'x-tenant-id': tenantId
+        }
+      });
+      if (res.ok) {
+        setCampaigns(campaigns.filter(c => c._id !== id));
+      } else {
+         alert('Failed to delete campaign');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const showReport = async (campaign) => {
+    try {
+       const token = localStorage.getItem('token');
+       const tenantId = localStorage.getItem('tenantId');
+       const res = await fetch(`/api/campaigns/${campaign._id}/report`, {
+          headers: {
+             'Authorization': `Bearer ${token}`,
+             'x-tenant-id': tenantId
+          }
+       });
+       if (res.ok) {
+          const data = await res.json();
+          setReportData({ isOpen: true, campaign: data.campaign, logs: data.logs });
+       }
+    } catch (err) {
+       console.error("Failed to load report", err);
     }
   };
 
@@ -91,7 +134,8 @@ function Campaigns() {
               <th className="p-4 font-semibold">Sent</th>
               <th className="p-4 font-semibold">Delivered</th>
               <th className="p-4 font-semibold">Read</th>
-              <th className="p-4 font-semibold">Action</th>
+              <th className="p-4 font-semibold text-red-500">Failed</th>
+              <th className="p-4 font-semibold text-right">Action</th>
             </tr>
           </thead>
           <tbody className="text-sm">
@@ -103,19 +147,40 @@ function Campaigns() {
                 <td className="p-4 text-gray-600">{c.metrics?.sent || 0}</td>
                 <td className="p-4 text-green-600 font-medium">{c.metrics?.delivered || 0}</td>
                 <td className="p-4 text-blue-600 font-medium">{c.metrics?.read || 0}</td>
-                <td className="p-4">
-                  <button className="text-gray-400 hover:text-blue-600 transition-colors p-1">
-                    <BarChart2 size={18} />
-                  </button>
+                <td className="p-4 text-red-500 font-medium">{c.metrics?.failed || 0}</td>
+                <td className="p-4 text-right">
+                  <div className="flex items-center justify-end space-x-2">
+                    <button 
+                      onClick={() => showReport(c)}
+                      className="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-colors border border-blue-100 shadow-sm"
+                      title="View Detailed Report"
+                    >
+                      <BarChart2 size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleDelete(c._id)}
+                      className="text-red-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-lg transition-colors text-right"
+                      title="Delete Campaign"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
             {campaigns.length === 0 && !loading && (
-              <tr><td colSpan="7" className="p-8 text-center text-gray-500">No campaigns found. Create one to get started.</td></tr>
+              <tr><td colSpan="8" className="p-8 text-center text-gray-500">No campaigns found. Create one to get started.</td></tr>
             )}
           </tbody>
         </table>
       </div>
+
+      <CampaignReportModal 
+        isOpen={reportData.isOpen} 
+        onClose={() => setReportData({ ...reportData, isOpen: false })} 
+        campaign={reportData.campaign} 
+        logs={reportData.logs} 
+      />
     </div>
   );
 }

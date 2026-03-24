@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bot, Plus, Play, Pause, Settings, Trash2, Edit } from 'lucide-react';
+import { Bot, Plus, Play, Pause, Settings, Trash2, Edit, Zap } from 'lucide-react';
 
 function Flows() {
   const navigate = useNavigate();
@@ -11,6 +11,7 @@ function Flows() {
   const [editName, setEditName] = useState('');
   const [editTrigger, setEditTrigger] = useState('KEYWORD');
   const [editKeywords, setEditKeywords] = useState('');
+  const [editSmartMatch, setEditSmartMatch] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
@@ -74,6 +75,7 @@ function Flows() {
     setEditName(flow.name);
     setEditTrigger(flow.triggerType || 'KEYWORD');
     setEditKeywords(flow.triggerKeywords?.join(', ') || '');
+    setEditSmartMatch(flow.isSmartMatch || false);
     setIsSettingsOpen(true);
   };
 
@@ -91,7 +93,8 @@ function Flows() {
         body: JSON.stringify({ 
             name: editName, 
             triggerType: editTrigger, 
-            triggerKeywords: (editKeywords.trim() === '' && editTrigger === 'KEYWORD') ? [''] : keywordsArray 
+            triggerKeywords: (editKeywords.trim() === '' && editTrigger === 'KEYWORD') ? [''] : keywordsArray,
+            isSmartMatch: editSmartMatch
         })
       });
 
@@ -164,7 +167,7 @@ function Flows() {
                    </button>
                 </div>
                 <button onClick={() => navigate(`/flows/${f._id}`)} className="text-blue-600 font-bold text-sm hover:text-blue-800 transition-colors flex items-center bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md">
-                  <Edit size={14} className="mr-1.5" /> Open Canvas
+                   <Edit size={14} className="mr-1.5" /> Open Canvas
                 </button>
               </div>
             </div>
@@ -211,15 +214,36 @@ function Flows() {
                  </div>
 
                  {editTrigger === 'KEYWORD' && editKeywords.trim() !== '' && (
-                    <div className="space-y-1.5">
-                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Keywords (comma separated)</label>
-                       <textarea 
-                          className="w-full border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 min-h-[80px]" 
-                          value={editKeywords}
-                          onChange={(e) => setEditKeywords(e.target.value)}
-                          placeholder="hello, hi, help"
-                       />
-                       <p className="text-[10px] text-gray-400">Flow triggers when a customer message contains any of these words.</p>
+                    <div className="space-y-4">
+                        <div className="space-y-1.5">
+                           <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Keywords (comma separated)</label>
+                           <textarea 
+                              className="w-full border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 min-h-[80px]" 
+                              value={editKeywords}
+                              onChange={(e) => setEditKeywords(e.target.value)}
+                              placeholder="hello, hi, help"
+                           />
+                           <p className="text-[10px] text-gray-400">Flow triggers when a customer message contains any of these words.</p>
+                        </div>
+
+                        <div className="flex items-center justify-between p-3 bg-blue-50/50 rounded-xl border border-blue-100/50 group hover:border-blue-300 transition-colors">
+                           <div className="flex items-center space-x-3">
+                              <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                                <Zap size={16} fill={editSmartMatch ? "currentColor" : "none"} />
+                              </div>
+                              <div>
+                                 <p className="text-[11px] font-bold text-gray-700 uppercase tracking-tighter">Smart AI Match 🔥</p>
+                                 <p className="text-[10px] text-gray-400">Handle typos (e.g. "helo" → "hello")</p>
+                              </div>
+                           </div>
+                           <button 
+                              onClick={() => setEditSmartMatch(!editSmartMatch)}
+                              type="button"
+                              className={`w-10 h-5 rounded-full relative transition-colors ${editSmartMatch ? 'bg-blue-600' : 'bg-gray-200'}`}
+                           >
+                              <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${editSmartMatch ? 'right-1' : 'left-1'}`}></div>
+                           </button>
+                        </div>
                     </div>
                  )}
                  

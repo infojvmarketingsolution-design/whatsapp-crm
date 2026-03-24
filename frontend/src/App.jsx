@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Toaster, toast } from 'react-hot-toast';
+import io from 'socket.io-client';
 import Sidebar from './components/Sidebar';
 import Inbox from './pages/Inbox';
 import Contacts from './pages/Contacts';
@@ -278,6 +280,21 @@ function AppLayout() {
 
     fetchGlobalTheme();
     
+    // 3. Socket Listener for Template Status Updates
+    const tenantId = localStorage.getItem('tenantId');
+    const socket = io('', { query: { tenantId } });
+    
+    socket.on('template_status_update', (data) => {
+       console.log('🔔 Template Status Update:', data);
+       if (data.status === 'APPROVED') {
+          toast.success(`Template "${data.name}" was APPROVED! ✅`, { duration: 6000 });
+       } else if (data.status === 'REJECTED') {
+          toast.error(`Template "${data.name}" was REJECTED. ❌`, { duration: 8000 });
+       } else {
+          toast(`Template "${data.name}" status updated to: ${data.status}`, { icon: 'ℹ️' });
+       }
+    });
+
     // Listen for custom event from CustomizationSettings
     const handleThemeEvent = (e) => {
        if (e.detail?.color) {
@@ -286,7 +303,10 @@ function AppLayout() {
        }
     };
     window.addEventListener('themeChanged', handleThemeEvent);
-    return () => window.removeEventListener('themeChanged', handleThemeEvent);
+    return () => {
+       window.removeEventListener('themeChanged', handleThemeEvent);
+       socket.disconnect();
+    };
   }, [])
   const appStyle = {
     '--theme-bg': themeColor === '#10b981' ? '#075E54' : themeColor,
@@ -300,6 +320,7 @@ function AppLayout() {
 
   return (
     <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden`}>
+      <Toaster position="top-right" reverseOrder={false} />
       {!isAuthPage && (userRole === 'SUPER_ADMIN' ? <AdminSidebar onLogout={handleLogout} /> : <Sidebar />)}
       <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-y-auto custom-scrollbar">
         <Routes>
