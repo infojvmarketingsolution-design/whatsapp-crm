@@ -111,7 +111,7 @@ function CreateCampaign() {
               }
             } catch (err) {
               console.error(err);
-              alert('Media upload error');
+              alert('Media upload error: ' + err.message);
               setLoading(false);
               return;
             }

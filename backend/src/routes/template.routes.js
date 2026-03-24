@@ -1,4 +1,5 @@
 const express = require('express');
+const path = require('path');
 const router = express.Router();
 const { syncTemplates, getTemplates, createTemplate, deleteTemplate, uploadTemplateMedia } = require('../controllers/template.controller');
 const { protect } = require('../middleware/auth');
