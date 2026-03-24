@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 const path = require('path');
-const { getTenantConnection } = require('./src/config/db');
-require('dotenv').config({ path: path.join(__dirname, './.env') });
+const { getTenantConnection } = require('./backend/src/config/db');
+require('dotenv').config({ path: path.join(__dirname, './backend/.env') });
 
-const CampaignSchema = require('./src/models/tenant/Campaign');
-const CampaignLogSchema = require('./src/models/tenant/CampaignLog');
+const CampaignSchema = require('./backend/src/models/tenant/Campaign');
+const CampaignLogSchema = require('./backend/src/models/tenant/CampaignLog');
 
 async function testMetrics() {
     const tenantId = 'test_tenant_' + Date.now();

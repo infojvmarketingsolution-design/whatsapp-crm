@@ -5,9 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "verify-metrics": "node verify_campaign_metrics.js",
-    "migrate-billing": "node migrate_billing.js"
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "axios": "^1.13.6",

@@ -8,11 +8,6 @@ export default function ApiSetup() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [wabaName, setWabaName] = useState('');
   const [limitTier, setLimitTier] = useState('');
-  const [sentToday, setSentToday] = useState(0);
-  const [maxLimit, setMaxLimit] = useState(1000);
-  const [subscriptionEndsAt, setSubscriptionEndsAt] = useState(null);
-  const [plan, setPlan] = useState('BASIC');
-  const [status, setStatus] = useState('ACTIVE');
 
   useEffect(() => {
     fetchConfig();
@@ -33,11 +28,6 @@ export default function ApiSetup() {
         if (data.phoneNumber) setPhoneNumber(data.phoneNumber);
         if (data.wabaName) setWabaName(data.wabaName);
         if (data.limitTier) setLimitTier(data.limitTier);
-        if (data.sentToday !== undefined) setSentToday(data.sentToday);
-        if (data.maxMessagesPerDay) setMaxLimit(data.maxMessagesPerDay);
-        if (data.subscriptionEndsAt) setSubscriptionEndsAt(data.subscriptionEndsAt);
-        if (data.plan) setPlan(data.plan);
-        if (data.status) setStatus(data.status);
       }
     } catch (err) {
       console.error('Failed to fetch config', err);
@@ -296,49 +286,27 @@ export default function ApiSetup() {
                   </div>
                   <h3 className="font-bold text-gray-800">Billing & Budget</h3>
                </div>
+               
                <div className="space-y-4">
-                   <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      <div className="flex justify-between items-center mb-2">
-                         <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Platform Limit Usage</p>
-                         <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${sentToday >= maxLimit ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700'}`}>
-                            {sentToday} / {maxLimit}
-                         </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                         <div 
-                           className={`h-full transition-all duration-1000 ${sentToday >= maxLimit ? 'bg-red-500' : 'bg-[var(--theme-text)]'}`}
-                           style={{ width: `${Math.min(100, (sentToday / maxLimit) * 100)}%` }}
-                         />
-                      </div>
-                      <p className="text-[10px] text-gray-500 mt-2">Daily message limit ({plan} Plan).</p>
-                   </div>
+                  <div>
+                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Messaging Limit</p>
+                     <p className="text-sm font-bold text-gray-700 mt-1">{limitTier || 'FETCHING...'}</p>
+                     <p className="text-[10px] text-gray-500 mt-0.5">Your daily conversation limit per 24h.</p>
+                  </div>
 
-                   <div>
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Account Status</p>
-                      <div className="flex items-center space-x-2 mt-1">
-                         <div className={`w-2 h-2 rounded-full ${status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`}></div>
-                         <span className="text-sm font-bold text-gray-700 uppercase">{status}</span>
-                      </div>
-                      {subscriptionEndsAt && (
-                         <p className="text-[10px] text-gray-500 mt-1">
-                           Expires: {new Date(subscriptionEndsAt).toLocaleDateString()}
-                         </p>
-                      )}
-                   </div>
-
-                   <div className="pt-4 border-t border-gray-50 text-center">
-                      <p className="text-xs text-gray-500 mb-4 px-2 tracking-tight">WhatsApp API billing is separate and managed directly via Meta Business Suite.</p>
-                      <a 
-                        href={`https://business.facebook.com/billing_hub/payment_settings?asset_id=${wabaId}`}
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="w-full flex items-center justify-center bg-gray-800 text-white font-bold text-sm py-2.5 rounded-xl hover:bg-black transition shadow-premium"
-                      >
-                         <ExternalLink size={16} className="mr-2" />
-                         Meta Billing Hub
-                      </a>
-                   </div>
-                </div>
+                  <div className="pt-4 border-t border-gray-50 text-center">
+                     <p className="text-xs text-gray-500 mb-4 px-2">WhatsApp API billing is managed directly via Meta Business Suite.</p>
+                     <a 
+                       href={`https://business.facebook.com/billing_hub/payment_settings?asset_id=${wabaId}`}
+                       target="_blank" 
+                       rel="noopener noreferrer"
+                       className="w-full flex items-center justify-center bg-gray-800 text-white font-bold text-sm py-2.5 rounded-xl hover:bg-black transition shadow-premium"
+                     >
+                        <ExternalLink size={16} className="mr-2" />
+                        Add Fund / Billing
+                     </a>
+                  </div>
+               </div>
             </div>
         </div>
       </div>

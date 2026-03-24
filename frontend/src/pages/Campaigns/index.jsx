@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Plus, Eye, BarChart2, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
+import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle, Trash2 } from 'lucide-react';
 import CampaignReportModal from './CampaignReportModal';
 
 function Campaigns() {
@@ -155,7 +155,7 @@ function Campaigns() {
                       className="text-blue-500 hover:bg-blue-50 p-2 rounded-lg transition-colors border border-blue-100 shadow-sm"
                       title="View Detailed Report"
                     >
-                      <Eye size={16} />
+                      <BarChart2 size={16} />
                     </button>
                     <button 
                       onClick={() => handleDelete(c._id)}

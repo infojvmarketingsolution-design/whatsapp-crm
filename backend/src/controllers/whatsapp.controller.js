@@ -141,45 +141,23 @@ const handleIncomingMessage = async (req, res) => {
       const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
       const Campaign = tenantDb.model('Campaign', CampaignSchema);
       
-      const log = await CampaignLog.findOne({ messageId: statusEvent.id });
-      
+      const log = await CampaignLog.findOneAndUpdate(
+         { messageId: statusEvent.id },
+         { 
+           status: statusEvent.status.toUpperCase(),
+           ...(statusEvent.status === 'delivered' ? { deliveredAt: new Date() } : {}),
+           ...(statusEvent.status === 'read' ? { readAt: new Date() } : {})
+         }
+      );
+
       if (log && log.campaignId) {
-         const updates = {};
          const incQuery = {};
-         const status = statusEvent.status.toUpperCase();
-
-         // 100% Correct Metrics Logic: Only increment if the transition is new
-         if (status === 'SENT' && !log.sentAt) {
-            updates.sentAt = new Date();
-            updates.status = 'SENT';
-         } else if (status === 'DELIVERED' && !log.deliveredAt) {
-            updates.deliveredAt = new Date();
-            updates.status = 'DELIVERED';
-            incQuery['metrics.delivered'] = 1;
-            // If it was skipped to delivered, mark sentAt too
-            if (!log.sentAt) updates.sentAt = new Date();
-         } else if (status === 'READ' && !log.readAt) {
-            updates.readAt = new Date();
-            updates.status = 'READ';
-            incQuery['metrics.read'] = 1;
-            // Ensure delivery was counted
-            if (!log.deliveredAt) {
-               incQuery['metrics.delivered'] = 1;
-               updates.deliveredAt = new Date();
-            }
-            if (!log.sentAt) updates.sentAt = new Date();
-         } else if (status === 'FAILED' && log.status !== 'FAILED') {
-            updates.status = 'FAILED';
-            updates.errorReason = statusEvent.errors?.[0]?.title || 'Unknown Meta Error';
-            incQuery['metrics.failed'] = 1;
-         }
-
-         if (Object.keys(updates).length > 0) {
-            await CampaignLog.updateOne({ _id: log._id }, { $set: updates });
-         }
-
+         if (statusEvent.status === 'delivered') incQuery['metrics.delivered'] = 1;
+         if (statusEvent.status === 'read') incQuery['metrics.read'] = 1;
+         if (statusEvent.status === 'failed') incQuery['metrics.failed'] = 1;
+         
          if (Object.keys(incQuery).length > 0) {
-            await Campaign.findByIdAndUpdate(log.campaignId, { $inc: incQuery });
+           await Campaign.findByIdAndUpdate(log.campaignId, { $inc: incQuery });
          }
       }
     }
@@ -219,25 +197,19 @@ const getApiConfig = async (req, res) => {
     if (!client) return res.status(404).json({ message: 'Client not found' });
     
     let configData = client.whatsappConfig ? client.whatsappConfig.toObject() : {};
-    configData.plan = client.plan;
-    configData.status = client.status;
-    configData.subscriptionEndsAt = client.subscriptionEndsAt;
-    configData.maxMessagesPerDay = client.maxMessagesPerDay;
 
     // Calculate Sent Today from Tenant DB
     try {
         const tenantDb = getTenantConnection(req.tenantId);
-        
-        // Safety check for model definitions
-        const Message = tenantDb.models['Message'] || tenantDb.model('Message', MessageSchema);
-        const CampaignLog = tenantDb.models['CampaignLog'] || tenantDb.model('CampaignLog', CampaignLogSchema);
+        const Message = tenantDb.model('Message', MessageSchema);
+        const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
 
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
         const [msgCount, logCount] = await Promise.all([
             Message.countDocuments({ direction: 'OUTBOUND', createdAt: { $gte: startOfDay } }),
-            CampaignLog.countDocuments({ status: { $in: ['SENT', 'DELIVERED', 'READ'] }, sentAt: { $gte: startOfDay } })
+            CampaignLog.countDocuments({ status: 'SENT', sentAt: { $gte: startOfDay } })
         ]);
 
         configData.sentToday = msgCount + logCount;
@@ -245,33 +217,33 @@ const getApiConfig = async (req, res) => {
         console.error('Failed to calculate sentToday:', err.message);
         configData.sentToday = 0;
     }
-
-    // Attempt to fetch live verified name and phone from Meta Graph API using axios
+    
+    // Attempt to fetch live verified name and phone from Meta Graph API
     if (configData.accessToken && configData.phoneNumberId) {
       try {
-        const axios = require('axios');
-        const metaRes = await axios.get(`https://graph.facebook.com/v19.0/${configData.phoneNumberId}`, {
+        const metaRes = await fetch(`https://graph.facebook.com/v19.0/${configData.phoneNumberId}`, {
+          method: 'GET',
           headers: { 'Authorization': `Bearer ${configData.accessToken}` }
         });
         
-        if (metaRes.data) {
-          const metaData = metaRes.data;
+        if (metaRes.ok) {
+          const metaData = await metaRes.json();
           if (metaData.verified_name) configData.wabaName = metaData.verified_name;
           if (metaData.display_phone_number) configData.phoneNumber = metaData.display_phone_number;
         }
 
         // Fetch WABA Specific Limits
         if (configData.wabaId) {
-            const wabaRes = await axios.get(`https://graph.facebook.com/v17.0/${configData.wabaId}?fields=id,name,messaging_limit_tier`, {
+            const wabaRes = await fetch(`https://graph.facebook.com/v17.0/${configData.wabaId}?fields=id,name,messaging_limit_tier`, {
                 headers: { 'Authorization': `Bearer ${configData.accessToken}` }
             });
-            if (wabaRes.data) {
-                const wabaData = wabaRes.data;
+            if (wabaRes.ok) {
+                const wabaData = await wabaRes.json();
                 configData.limitTier = wabaData.messaging_limit_tier;
             }
         }
       } catch (err) {
-        console.error('Failed to fetch from Meta via Axios:', err.response?.data || err.message);
+        console.error('Failed to fetch verified name from Meta:', err.message);
       }
     }
     
@@ -322,23 +294,27 @@ const testApiConnection = async (req, res) => {
     phoneNumberId = client.whatsappConfig.phoneNumberId;
     accessToken = client.whatsappConfig.accessToken;
     
-    // Call Meta Graph API to test token validity using axios
-    const axios = require('axios');
-    const response = await axios.get(`https://graph.facebook.com/v17.0/${phoneNumberId}`, {
+    // Call Meta Graph API to test token validity
+    const response = await fetch(`https://graph.facebook.com/v17.0/${phoneNumberId}`, {
+      method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`
       }
     });
 
-    const data = response.data;
+    const data = await response.json();
 
-    if (data && data.id === phoneNumberId) {
-      return res.json({ success: true, message: 'Connection successful! Credentials are valid.' });
+    if (response.ok) {
+      if (data.id === phoneNumberId) {
+        return res.json({ success: true, message: 'Connection successful! Credentials are valid.' });
+      } else {
+        return res.json({ success: false, message: 'Connection succeeded, but returned unexpected data.' });
+      }
     } else {
-      return res.json({ success: false, message: 'Connection succeeded, but returned unexpected data.' });
+      return res.status(400).json({ success: false, message: `Meta API Error: ${data.error?.message || 'Invalid credentials'}` });
     }
   } catch (error) {
-    res.status(400).json({ success: false, message: `Meta API Error: ${error.response?.data?.error?.message || error.message}` });
+    res.status(500).json({ success: false, message: error.message });
   }
 };
 

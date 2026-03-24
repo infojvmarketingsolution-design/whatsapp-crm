@@ -26,14 +26,10 @@ function CampaignReportModal({ isOpen, onClose, campaign, logs }) {
         </div>
 
         {/* Stats Strip */}
-        <div className="grid grid-cols-5 border-b border-gray-100">
+        <div className="grid grid-cols-4 border-b border-gray-100">
            <div className="p-4 border-r border-gray-100 text-center">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Audience</p>
               <p className="text-lg font-bold text-gray-800">{campaign.metrics?.totalContacts || 0}</p>
-           </div>
-           <div className="p-4 border-r border-gray-100 text-center">
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Sent</p>
-              <p className="text-lg font-bold text-gray-600">{campaign.metrics?.sent || 0}</p>
            </div>
            <div className="p-4 border-r border-gray-100 text-center">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Delivered</p>
@@ -71,7 +67,6 @@ function CampaignReportModal({ isOpen, onClose, campaign, logs }) {
                 <th className="py-3 px-4">Recipient</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Sent At</th>
-                <th className="py-3 px-4">Delivered / Read</th>
                 <th className="py-3 px-4">Error / Reason</th>
               </tr>
             </thead>
@@ -94,13 +89,6 @@ function CampaignReportModal({ isOpen, onClose, campaign, logs }) {
                   </td>
                   <td className="py-3 px-4 text-gray-500 text-xs">
                     {log.sentAt ? new Date(log.sentAt).toLocaleString() : '-'}
-                  </td>
-                  <td className="py-3 px-4 text-gray-500 text-xs">
-                    <div className="flex flex-col space-y-1">
-                       {log.deliveredAt && <span>D: {new Date(log.deliveredAt).toLocaleTimeString()}</span>}
-                       {log.readAt && <span>R: {new Date(log.readAt).toLocaleTimeString()}</span>}
-                       {!log.deliveredAt && !log.readAt && <span className="text-gray-300">-</span>}
-                    </div>
                   </td>
                   <td className="py-3 px-4 text-xs text-red-400 italic">
                     {log.errorReason || '-'}
