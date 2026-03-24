@@ -138,17 +138,19 @@ const createTemplate = async (req, res) => {
     res.status(201).json(newTemplate);
   } catch (error) {
     const metaError = error.response?.data?.error;
-    console.error('Create Template Error:', metaError || error.message);
+    console.error('Create Template Full Error:', JSON.stringify(error.response?.data, null, 2) || error.message);
     
     let errorMessage = metaError?.message || error.message;
-    if (errorMessage === 'An unknown error has occurred') {
-      errorMessage += ' (Meta Code 1). This often indicates an invalid URL in buttons, or a configuration/permissions issue with the Access Token or WABA ID.';
+    
+    // More robust check for "unknown error" and adding better diagnostic hints
+    if (errorMessage.toLowerCase().includes('unknown error')) {
+      errorMessage = 'Meta API reported an unknown error (Code 1). Diagnostics: 1. Ensure the template name is unique. 2. Verify button URLs are valid. 3. Check if the media URL is publicly accessible. 4. Verify WABA config.';
     }
     
     res.status(500).json({ 
       message: 'Failed to create template', 
       error: errorMessage,
-      metaDetails: metaError
+      metaDetails: metaError || { message: error.message }
     });
   }
 };

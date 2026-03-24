@@ -173,10 +173,10 @@ function CreateCampaign() {
       } else {
         const err = await res.json();
         let errorMsg = err.error || err.message || 'Error occurred';
-        if (errorMsg === 'An unknown error has occurred') {
-          errorMsg += '. Please verify your WhatsApp API configuration (WABA ID/Token) and ensure all button URLs (like website links) are valid and accessible.';
-        }
-        alert('Failed: ' + errorMsg);
+        
+        // If the backend provided more details (Meta API error), include them
+        const details = err.metaDetails?.fbtrace_id ? ` (Trace ID: ${err.metaDetails.fbtrace_id})` : '';
+        alert('Failed: ' + errorMsg + details);
       }
     } catch (e) {
       console.error(e);
