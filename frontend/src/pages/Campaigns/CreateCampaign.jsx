@@ -141,6 +141,15 @@ function CreateCampaign() {
     }
     
     if (newTemplate.buttons.length > 0) {
+        const hasCTA = newTemplate.buttons.some(b => b.type === 'URL' || b.type === 'PHONE_NUMBER');
+        const hasQuickReply = newTemplate.buttons.some(b => b.type === 'QUICK_REPLY');
+
+        if (hasCTA && hasQuickReply) {
+           alert('Meta does not allow mixing "Visit Website/Call Phone" buttons with "Quick Reply" buttons in the same template. Please use only one type.');
+           setLoading(false);
+           return;
+        }
+
        const metaBtns = newTemplate.buttons.map(b => {
           if (!b.text) return null;
           
