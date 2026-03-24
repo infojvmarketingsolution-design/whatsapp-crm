@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import API_URL from '../../apiConfig';
 import { 
   ShieldCheck, 
   ToggleLeft, 
@@ -25,7 +24,7 @@ const AdminSettings = () => {
   const fetchSettings = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/admin/settings`, {
+      const res = await fetch('/api/admin/settings', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -44,7 +43,7 @@ const AdminSettings = () => {
     setMessage('');
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/admin/settings`, {
+      const res = await fetch('/api/admin/settings', {
         method: 'PUT',
         headers: { 
             'Content-Type': 'application/json',

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, Settings, Code, Copy, CheckCircle, Save, MessageCircle } from 'lucide-react';
-import API_URL from '../../apiConfig';
+import { Globe, Settings, Code, Copy, CheckCircle, Save } from 'lucide-react';
 
 export default function WebWidget() {
   const [settings, setSettings] = useState({
@@ -14,8 +13,6 @@ export default function WebWidget() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [ctcData, setCtcData] = useState({ phone: '', message: '' });
-  const [generatedLink, setGeneratedLink] = useState('');
 
   const tenantId = localStorage.getItem('tenantId') || 'DEMO_TENANT';
   const scriptCode = `<script src="/public/widget.js" data-client-id="${tenantId}"></script>`;
@@ -27,7 +24,7 @@ export default function WebWidget() {
   const fetchSettings = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/widgets`, {
+      const res = await fetch(`/api/widgets`, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -53,7 +50,7 @@ export default function WebWidget() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/widgets`, {
+      const res = await fetch(`/api/widgets`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify(settings)
@@ -69,18 +66,10 @@ export default function WebWidget() {
     }
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text || scriptCode);
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(scriptCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
-  };
-
-  const generateCtcLink = () => {
-    if (!ctcData.phone) return alert('Please enter a phone number');
-    const cleanPhone = ctcData.phone.replace(/[^0-9]/g, '');
-    const encodedMsg = encodeURIComponent(ctcData.message);
-    const link = `https://wa.me/${cleanPhone}/?text=${encodedMsg}`;
-    setGeneratedLink(link);
   };
 
   if (loading) return <div className="p-8">Loading widget settings...</div>;
@@ -111,7 +100,7 @@ export default function WebWidget() {
                 <select 
                   value={settings.status} 
                   onChange={(e) => setSettings({...settings, status: e.target.value})}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 transition-all font-medium text-gray-700"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="ACTIVE">Active (Visible)</option>
                   <option value="INACTIVE">Inactive (Hidden)</option>
@@ -130,7 +119,7 @@ export default function WebWidget() {
                     type="text" 
                     value={settings.theme_color} 
                     onChange={(e) => setSettings({...settings, theme_color: e.target.value})}
-                    className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
+                    className="flex-1 border border-gray-200 rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
               </div>
@@ -143,7 +132,7 @@ export default function WebWidget() {
                   type="text" 
                   value={settings.welcome_text} 
                   onChange={(e) => setSettings({...settings, welcome_text: e.target.value})}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g. Hi there!"
                 />
               </div>
@@ -153,7 +142,7 @@ export default function WebWidget() {
                   type="text" 
                   value={settings.button_text} 
                   onChange={(e) => setSettings({...settings, button_text: e.target.value})}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g. Chat with us"
                 />
               </div>
@@ -165,7 +154,7 @@ export default function WebWidget() {
                 <select 
                   value={settings.position} 
                   onChange={(e) => setSettings({...settings, position: e.target.value})}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="right">Bottom Right</option>
                   <option value="left">Bottom Left</option>
@@ -177,7 +166,7 @@ export default function WebWidget() {
                   type="text" 
                   value={settings.whatsapp_number_id} 
                   onChange={(e) => setSettings({...settings, whatsapp_number_id: e.target.value})}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 font-medium text-gray-700"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500"
                   placeholder="e.g. 919909700606"
                 />
               </div>
@@ -200,68 +189,12 @@ export default function WebWidget() {
                   {scriptCode}
                </pre>
                <button 
-                  onClick={() => copyToClipboard(scriptCode)}
+                  onClick={copyToClipboard}
                   className="absolute top-2 right-2 p-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
                   title="Copy code"
                >
                  {copied ? <CheckCircle size={18} className="text-green-400"/> : <Copy size={18} />}
                </button>
-            </div>
-          </div>
-
-          {/* WhatsApp Click-to-Chat Generator */}
-          <div className="bg-white p-6 rounded-2xl shadow-soft border border-crm-border mt-8">
-            <div className="flex items-center mb-4 text-green-600">
-              <MessageCircle className="mr-2" size={20}/>
-              <h2 className="text-lg font-bold text-gray-800 uppercase tracking-tight">Click-to-Chat Generator</h2>
-            </div>
-            <p className="text-sm text-gray-400 mb-6 font-medium">Generate direct links for your ads or social media bios.</p>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Phone Number (with Country Code)</label>
-                <input 
-                  type="text" 
-                  placeholder="e.g. 919876543210" 
-                  className="w-full border border-gray-100 bg-gray-50 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-400 outline-none font-medium text-gray-700"
-                  value={ctcData.phone}
-                  onChange={e => setCtcData({...ctcData, phone: e.target.value})}
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-gray-400 mb-1.5 uppercase tracking-widest">Pre-filled Message</label>
-                <textarea 
-                  placeholder="Hi, I'm interested in your product!" 
-                  className="w-full border border-gray-100 bg-gray-50 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-green-400 outline-none h-20 resize-none font-medium text-gray-700"
-                  value={ctcData.message}
-                  onChange={e => setCtcData({...ctcData, message: e.target.value})}
-                />
-              </div>
-              <button 
-                onClick={generateCtcLink}
-                className="w-full py-3 bg-green-500 text-white font-bold rounded-xl shadow-glow hover:bg-green-600 transition-all text-sm uppercase tracking-wide"
-              >
-                Generate Link
-              </button>
-
-              {generatedLink && (
-                <div className="mt-4 p-4 bg-green-50 rounded-xl border border-green-100 animate-fade-in text-center">
-                  <p className="text-[11px] font-bold text-green-700 uppercase tracking-wider mb-2">Your WhatsApp Link:</p>
-                  <div className="flex items-center space-x-2 bg-white p-2 rounded-lg border border-green-200">
-                    <span className="flex-1 text-xs truncate font-mono text-gray-600">{generatedLink}</span>
-                    <button onClick={() => copyToClipboard(generatedLink)} className="p-1.5 hover:bg-gray-100 rounded text-green-600">
-                      {copied ? <CheckCircle size={16}/> : <Copy size={16}/>}
-                    </button>
-                  </div>
-                  <div className="mt-4 flex justify-center">
-                     <div className="p-2 bg-white border border-green-200 rounded-lg">
-                        <div className="w-24 h-24 bg-gray-50 flex items-center justify-center text-[10px] text-gray-400 font-bold border-2 border-dashed border-gray-200 rounded">
-                           LINK READY
-                        </div>
-                     </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -296,6 +229,7 @@ export default function WebWidget() {
             </div>
           </div>
         </div>
+
       </div>
     </div>
   );

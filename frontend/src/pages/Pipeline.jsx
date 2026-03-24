@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MoreVertical, Search, Filter, Phone, MessageSquare, Plus } from 'lucide-react';
-import API_URL from '../apiConfig';
 
 const STATUSES = [
-  { id: 'New Lead', label: 'New Lead', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  { id: 'Interested', label: 'Interested', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  { id: 'Follow-up', label: 'Follow-up', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  { id: 'Converted', label: 'Converted', color: 'bg-green-100 text-green-800 border-green-200' },
-  { id: 'Closed Lost', label: 'Closed Lost', color: 'bg-red-100 text-red-800 border-red-200' },
+  { id: 'NEW LEAD', label: 'New Lead', color: 'bg-blue-100 text-blue-800 border-blue-200' },
+  { id: 'CONTACTED', label: 'Contacted', color: 'bg-purple-100 text-purple-800 border-purple-200' },
+  { id: 'INTERESTED', label: 'Interested', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
+  { id: 'FOLLOW_UP', label: 'Follow Up', color: 'bg-orange-100 text-orange-800 border-orange-200' },
+  { id: 'CLOSED_WON', label: 'Closed Won', color: 'bg-green-100 text-green-800 border-green-200' },
+  { id: 'CLOSED_LOST', label: 'Closed Lost', color: 'bg-red-100 text-red-800 border-red-200' },
 ];
 
 export default function Pipeline() {
@@ -27,7 +27,7 @@ export default function Pipeline() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/chat/contacts`, {
+      const res = await fetch('/api/chat/contacts', {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) setContacts(await res.json());
@@ -47,7 +47,7 @@ export default function Pipeline() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      await fetch(`${API_URL}/api/chat/contacts/${contactId}/action`, {
+      await fetch(`/api/chat/contacts/${contactId}/action`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'update_status', payload: { status: newStatus } })
@@ -63,7 +63,7 @@ export default function Pipeline() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/chat/contacts`, {
+      const res = await fetch('/api/chat/contacts', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newLeadName, phone: newLeadPhone, source: 'Pipeline Manual' })
@@ -80,18 +80,18 @@ export default function Pipeline() {
   };
 
   return (
-    <div className="flex-1 bg-white md:rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex flex-col relative z-10 w-full md:w-[calc(100%-12px)] md:ml-3 md:my-3 lg:my-3 lg:mr-3">
-      <div className="px-4 md:px-6 py-4 md:py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#fdfdfd] space-y-3 sm:space-y-0">
+    <div className="flex-1 bg-white rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex flex-col relative z-10 w-[calc(100%-12px)] ml-3 my-3">
+      <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-[#fdfdfd]">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-800">Pipeline</h1>
-          <p className="text-xs md:text-sm text-gray-500 font-medium mt-1">Drag and drop leads to advance stages.</p>
+          <h1 className="text-2xl font-bold text-gray-800">Pipeline</h1>
+          <p className="text-sm text-gray-500 font-medium mt-1">Drag and drop leads to advance stages.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:flex-none">
+        <div className="flex space-x-3">
+          <div className="relative">
             <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
-            <input type="text" placeholder="Search..." className="w-full sm:w-48 bg-gray-50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm font-medium focus:ring-2 focus:ring-brand-light/50 outline-none" />
+            <input type="text" placeholder="Search..." className="bg-gray-50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm font-medium focus:ring-2 focus:ring-brand-light/50 outline-none" />
           </div>
-          <button onClick={() => setShowAddModal(true)} className="flex items-center space-x-2 bg-[var(--theme-bg)] hover:bg-teal-900 text-white px-4 py-2 rounded-xl font-bold text-sm transition shadow-sm whitespace-nowrap">
+          <button onClick={() => setShowAddModal(true)} className="flex items-center space-x-2 bg-[var(--theme-bg)] hover:bg-teal-900 text-white px-4 py-2 rounded-xl font-bold text-sm transition shadow-sm">
             <Plus size={16} />
             <span>Add Lead</span>
           </button>
@@ -101,7 +101,7 @@ export default function Pipeline() {
       <div className="flex-1 overflow-x-auto p-6 bg-[#fcfcfd]">
         <div className="flex space-x-6 h-full min-w-max pb-4">
           {STATUSES.map(stage => {
-            const columnContacts = contacts.filter(c => (c.status || 'New Lead') === stage.id);
+            const columnContacts = contacts.filter(c => (c.status || 'NEW LEAD') === stage.id);
             return (
               <div 
                 key={stage.id} 

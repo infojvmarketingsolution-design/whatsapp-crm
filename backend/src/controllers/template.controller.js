@@ -17,7 +17,7 @@ const syncTemplates = async (req, res) => {
     const { wabaId, accessToken } = client.whatsappConfig;
     
     // Fetch from Meta API
-    const response = await axios.get(`https://graph.facebook.com/v18.0/${wabaId}/message_templates`, {
+    const response = await axios.get(`https://graph.facebook.com/v19.0/${wabaId}/message_templates`, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
 
@@ -108,7 +108,7 @@ const createTemplate = async (req, res) => {
       components
     };
 
-    const response = await axios.post(`https://graph.facebook.com/v18.0/${wabaId}/message_templates`, payload, {
+    const response = await axios.post(`https://graph.facebook.com/v19.0/${wabaId}/message_templates`, payload, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
 
@@ -137,8 +137,19 @@ const createTemplate = async (req, res) => {
 
     res.status(201).json(newTemplate);
   } catch (error) {
-    console.error('Create Template Error:', error.response?.data || error.message);
-    res.status(500).json({ message: 'Failed to create template', error: error.response?.data?.error?.message || error.message });
+    const metaError = error.response?.data?.error;
+    console.error('Create Template Error:', metaError || error.message);
+    
+    let errorMessage = metaError?.message || error.message;
+    if (errorMessage === 'An unknown error has occurred') {
+      errorMessage += ' (Meta Code 1). This often indicates an invalid URL in buttons, or a configuration/permissions issue with the Access Token or WABA ID.';
+    }
+    
+    res.status(500).json({ 
+      message: 'Failed to create template', 
+      error: errorMessage,
+      metaDetails: metaError
+    });
   }
 };
 
@@ -163,7 +174,7 @@ const deleteTemplate = async (req, res) => {
 
     if (wabaId && accessToken) {
         try {
-            await axios.delete(`https://graph.facebook.com/v18.0/${wabaId}/message_templates?name=${template.name}`, {
+            await axios.delete(`https://graph.facebook.com/v19.0/${wabaId}/message_templates?name=${template.name}`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             });
         } catch (metaErr) {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import API_URL from '../../apiConfig';
 import { Save, Bell, Mail, Smartphone } from 'lucide-react';
 
 export default function NotificationSettings() {
@@ -20,7 +19,7 @@ export default function NotificationSettings() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/settings`, {
+      const res = await fetch(`/api/settings`, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -41,7 +40,7 @@ export default function NotificationSettings() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/settings/notifications`, {
+      const res = await fetch(`/api/settings/notifications`, {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${token}`, 

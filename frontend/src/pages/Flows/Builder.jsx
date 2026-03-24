@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ReactFlow, useNodesState, useEdgesState, addEdge, Background, Controls, MiniMap } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { ArrowLeft, Save, Play, Pause, MessageSquare, Tag, Zap } from 'lucide-react';
-import API_URL from '../../apiConfig';
 import TriggerNode from './nodes/TriggerNode';
 import MessageNode from './nodes/MessageNode';
 import ActionNode from './nodes/ActionNode';
@@ -35,7 +34,7 @@ export default function FlowBuilder() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/flows/${id}`, {
+      const res = await fetch(`/api/flows/${id}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -53,7 +52,7 @@ export default function FlowBuilder() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/flows/${id}`, {
+      const res = await fetch(`/api/flows/${id}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ nodes, edges })
@@ -70,7 +69,7 @@ export default function FlowBuilder() {
       const newStatus = flowData.status === 'ACTIVE' ? 'PAUSED' : 'ACTIVE';
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/flows/${id}`, {
+      const res = await fetch(`/api/flows/${id}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

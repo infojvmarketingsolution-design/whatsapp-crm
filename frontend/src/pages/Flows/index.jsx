@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Bot, Plus, Play, Pause, Settings, Trash2, Edit } from 'lucide-react';
-import API_URL from '../../apiConfig';
 
 function Flows() {
   const navigate = useNavigate();
@@ -16,7 +15,7 @@ function Flows() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/flows`, {
+      const res = await fetch('/api/flows', {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -33,7 +32,7 @@ function Flows() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/flows`, {
+      const res = await fetch('/api/flows', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: 'Untitled Flow', description: 'New automation flow' })
@@ -52,7 +51,7 @@ function Flows() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/flows/${id}`, {
+      const res = await fetch(`/api/flows/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });

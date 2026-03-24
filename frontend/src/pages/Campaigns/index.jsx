@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle } from 'lucide-react';
-import API_URL from '../../apiConfig';
 
 function Campaigns() {
   const navigate = useNavigate();
@@ -17,7 +16,7 @@ function Campaigns() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/campaigns`, {
+      const res = await fetch('/api/campaigns', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'x-tenant-id': tenantId

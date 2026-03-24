@@ -63,13 +63,13 @@ async function seed() {
 
     const contact1 = await Contact.findOneAndUpdate(
       { phone: '+91987654321' },
-      { phone: '+91987654321', name: 'Arvind Bajaj', status: 'New Lead', source: 'CTWA Lead', tags: ['Hot Lead'] },
+      { phone: '+91987654321', name: 'Arvind Bajaj', status: 'ACTIVE', source: 'CTWA Lead', tags: ['Hot Lead'] },
       { upsert: true, new: true }
     );
 
     await Contact.findOneAndUpdate(
       { phone: '+91987654922' },
-      { phone: '+91987654922', name: 'Jay Anand', status: 'New Lead', source: 'AD', tags: ['CTWA Lead'] },
+      { phone: '+91987654922', name: 'Jay Anand', status: 'ACTIVE', source: 'AD', tags: ['CTWA Lead'] },
       { upsert: true, new: true }
     );
     console.log('✅ CRM Contacts Seeded into Tenant DB.');

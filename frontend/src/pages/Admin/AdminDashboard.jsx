@@ -25,7 +25,7 @@ const AdminDashboard = () => {
     await new Promise(resolve => setTimeout(resolve, 600));
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/clients/analytics`, {
+      const res = await fetch('/api/clients/analytics', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {

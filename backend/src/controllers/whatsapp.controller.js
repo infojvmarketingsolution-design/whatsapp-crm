@@ -82,21 +82,7 @@ const handleIncomingMessage = async (req, res) => {
       const message = value.messages[0];
       const from = message.from;
       const msgId = message.id;
-      let text = message.text?.body || '';
-      
-      // Handle Button Replies from Interactive Messages
-      if (message.type === 'interactive') {
-         const interactive = message.interactive;
-         if (interactive.type === 'button_reply') {
-            text = interactive.button_reply?.title || '';
-         } else if (interactive.type === 'list_reply') {
-            text = interactive.list_reply?.title || '';
-         }
-      }
-
-      if (!text && message.type !== 'text') {
-         text = `[Received ${message.type}]`;
-      }
+      const text = message.text?.body || `[Received ${message.type}]`;
 
       console.log(`📩 [Tenant: ${client.tenantId}] Incoming Message:`, from, text);
 

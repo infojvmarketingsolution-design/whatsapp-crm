@@ -6,7 +6,7 @@ const LeadSchema = new mongoose.Schema({
   email: { type: String },
   message: { type: String },
   source: { type: String, default: 'web_widget' },
-  status: { type: String, enum: ['New Lead', 'Interested', 'Follow-up', 'Converted', 'Closed Lost'], default: 'New Lead' },
+  status: { type: String, enum: ['NEW', 'CONTACTED', 'QUALIFIED', 'LOST', 'WON'], default: 'NEW' },
   tags: [{ type: String }]
 }, { timestamps: true });
 

@@ -1,16 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Play } from 'lucide-react';
+import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile } from 'lucide-react';
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
-import API_URL from '../apiConfig';
 
 export default function Inbox() {
   const [contacts, setContacts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [noteText, setNoteText] = useState('');
   const [showNoteInput, setShowNoteInput] = useState(false);
-  const [agents, setAgents] = useState([]);
-  const [showAgentSelection, setShowAgentSelection] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showCallModal, setShowCallModal] = useState(false);
   const [callOutcome, setCallOutcome] = useState('Connected');
@@ -29,7 +26,7 @@ export default function Inbox() {
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const PREDEFINED_TAGS = ['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'];
-  const STATUSES = ['New Lead', 'Interested', 'Follow-up', 'Converted', 'Closed Lost'];
+  const STATUSES = ['NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'];
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -38,10 +35,6 @@ export default function Inbox() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const fileInputRef = useRef(null);
   const emojiPickerRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
-  const [socket, setSocket] = useState(null);
-  const [isTyping, setIsTyping] = useState(false); // Local typing state
-  const [remoteTyping, setRemoteTyping] = useState(null); // Remote contact/agent typing status
   const messagesEndRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
@@ -95,7 +88,7 @@ export default function Inbox() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/chat/contacts/${activeChat._id}/action`, {
+      const res = await fetch(`/api/chat/contacts/${activeChat._id}/action`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -120,7 +113,6 @@ export default function Inbox() {
          setFollowupTime('');
          setShowTagInput(false);
          setNewTagName('');
-         setShowAgentSelection(false); // Close agent dropdown after action
       }
     } catch (err) {
       console.error("Action failed", err);
@@ -140,7 +132,7 @@ export default function Inbox() {
       if (newMessage.trim()) formData.append('content', newMessage.trim());
       if (attachment) formData.append('media', attachment);
 
-      const res = await fetch(`${API_URL}/api/chat/send`, {
+      const res = await fetch('/api/chat/send', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -155,12 +147,6 @@ export default function Inbox() {
         setNewMessage('');
         setAttachment(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
-        // Stop typing indicator after sending message
-        if (isTyping) {
-          setIsTyping(false);
-          socket?.emit('stop_typing', { contactId: activeChat._id });
-          if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-        }
       } else {
         const errData = await res.json();
         alert(`Send Error: ${errData.message || errData.error || 'Unknown error'}`);
@@ -179,10 +165,9 @@ export default function Inbox() {
   // 🔥 Live Socket.io Connection for Real-Time Webhooks
   useEffect(() => {
     const tenantId = localStorage.getItem('tenantId');
-    const socketInstance = io(API_URL, { query: { tenantId } });
-    setSocket(socketInstance);
+    const socket = io('', { query: { tenantId } });
     
-    socketInstance.on('new_message', (newMsg) => {
+    socket.on('new_message', (newMsg) => {
        // Only inject if it's the active chat
        setMessages(prev => {
           if (prev.find(m => m._id === newMsg._id)) return prev;
@@ -208,29 +193,22 @@ export default function Inbox() {
        });
     });
 
-    socketInstance.on('typing_status', (data) => {
-      if (data.contactId === activeChatRef.current?._id) {
-        setRemoteTyping(data.status === 'typing' ? data.userName || 'Someone' : null);
-      }
-    });
-
-    return () => socketInstance.disconnect();
+    return () => socket.disconnect();
   }, []);
 
-  // Fetch Inbox Contacts and Agents
+  // Fetch Inbox Contacts from Database
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchContacts = async () => {
       try {
         const token = localStorage.getItem('token');
         const tenantId = localStorage.getItem('tenantId');
         if (!token) return;
 
-        // Fetch Contacts
-        const contactsRes = await fetch(`${API_URL}/api/chat/contacts`, {
+        const res = await fetch('/api/chat/contacts', {
           headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
         });
-        if (contactsRes.ok) {
-           const data = await contactsRes.json();
+        if (res.ok) {
+           const data = await res.json();
            if (data && data.length > 0) {
               const mapped = data.map(c => ({
                  ...c,
@@ -240,19 +218,11 @@ export default function Inbox() {
               setActiveChat(mapped[0]);
            }
         }
-
-        // Fetch Agents
-        const agentsRes = await fetch(`${API_URL}/api/agents`, {
-          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
-        });
-        if (agentsRes.ok) {
-          setAgents(await agentsRes.json());
-        }
       } catch (err) {
         console.error("Backend API unavailable.", err);
       }
     };
-    fetchData();
+    fetchContacts();
   }, []);
 
   // Fetch Message Thread for Active Contact
@@ -265,7 +235,7 @@ export default function Inbox() {
       try {
         const token = localStorage.getItem('token');
         const tenantId = localStorage.getItem('tenantId');
-        const res = await fetch(`${API_URL}/api/chat/messages/${activeChat._id}`, {
+        const res = await fetch(`/api/chat/messages/${activeChat._id}`, {
           headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
         });
         if (res.ok) {
@@ -292,13 +262,10 @@ export default function Inbox() {
   });
 
   return (
-    <div className="flex h-full bg-white md:rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex-row animate-fade-in relative z-10 w-full md:w-[calc(100%-12px)] md:ml-3 md:my-3 lg:my-3 lg:mr-3">
+    <div className="flex h-full bg-white rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex-row animate-fade-in relative z-10 w-[calc(100%-12px)] ml-3 my-3">
       
       {/* Contact List Panel (Left) */}
-      <div className={`
-        ${activeChat ? 'hidden lg:flex' : 'flex'} 
-        w-full lg:w-[340px] border-r border-gray-100 flex-col bg-white shrink-0 z-10
-      `}>
+      <div className="w-[340px] border-r border-gray-100 flex flex-col bg-white shrink-0 z-10">
         
         <div className="p-3 bg-white flex items-center border-b border-gray-50 h-16">
           <div className="relative w-full">
@@ -364,36 +331,28 @@ export default function Inbox() {
       </div>
 
       {/* Chat Area (Middle) */}
-      <div className={`
-        ${activeChat ? 'flex' : 'hidden lg:flex'} 
-        flex-1 flex flex-col bg-[#eef0eb] relative min-w-0 border-r border-gray-100 shadow-[inset_10px_0_20px_-10px_rgba(0,0,0,0.02)]
-      `}>
+      <div className="flex-1 flex flex-col bg-[#eef0eb] relative min-w-0 border-r border-gray-100 shadow-[inset_10px_0_20px_-10px_rgba(0,0,0,0.02)]">
         
         {activeChat ? (
         <>
         {/* Chat Header */}
-        <div className="h-[52px] bg-[var(--theme-bg)] text-white flex items-center px-4 md:px-6 shadow-sm z-20 justify-between shrink-0">
-          <div className="flex items-center space-x-2 md:space-x-3">
-            <button 
-              onClick={() => setActiveChat(null)}
-              className="lg:hidden p-1.5 hover:bg-white/10 rounded-lg transition-colors mr-1"
-            >
-              <ChevronDown className="w-5 h-5 rotate-90" />
-            </button>
+        <div className="h-[52px] bg-[var(--theme-bg)] text-white flex items-center px-6 shadow-sm z-20 justify-between shrink-0">
+          <div className="flex items-center space-x-3">
             <img src={getAvatarUrl(activeChat?.name)} className="w-8 h-8 rounded-full object-cover shadow-sm border border-white/20" alt="avatar" />
-            <div className="flex flex-col min-w-0">
-               <span className="font-semibold text-sm leading-tight truncate">{activeChat?.name}</span>
-                <span className="text-white/70 text-[10px] font-medium tracking-wide leading-tight truncate">
+            <div className="flex flex-col">
+               <span className="font-semibold text-sm leading-tight">{activeChat?.name}</span>
+                <span className="text-white/70 text-[10px] font-medium tracking-wide leading-tight">
                   {activeChat?.phone}
+                  <span className="ml-2 text-[10px] opacity-40 font-mono italic">v1.1.0</span>
                 </span>
              </div>
           </div>
           <div className="flex items-center space-x-2">
             <button 
                onClick={() => setShowProfile(!showProfile)}
-               className={`text-[10px] md:text-xs font-bold transition-colors px-2 md:px-3 py-1 rounded-md ${showProfile ? 'bg-teal-700 text-white' : 'text-teal-100 hover:text-white bg-teal-800/50'}`}
+               className={`text-xs font-bold transition-colors px-3 py-1 rounded-md ${showProfile ? 'bg-teal-700 text-white' : 'text-teal-100 hover:text-white bg-teal-800/50'}`}
             >
-             {showProfile ? 'Hide' : 'Profile'}
+            Chat Profile
           </button>
         </div>
         </div>
@@ -415,10 +374,10 @@ export default function Inbox() {
                              style={{ maxWidth: '280px', maxHeight: '180px' }}
                            >
                              <img 
-                               src={API_URL + '/api' + m.content} 
+                               src={'/api' + m.content} 
                                style={{ width: '100%', height: '180px', objectFit: 'cover', display: 'block' }}
                                className="cursor-pointer hover:scale-110 transition-transform duration-300" 
-                               onClick={() => window.open(API_URL + '/api' + m.content)} 
+                               onClick={() => window.open('/api' + m.content)} 
                                alt="Attachment preview" 
                              />
                            </div>
@@ -429,68 +388,11 @@ export default function Inbox() {
                      )}
 
                      {/* Video/Doc Placeholders */}
-                     {m.type === 'video' && (
-                       <div className="mb-2">
-                          <div className={`flex items-center space-x-3 p-3 rounded-xl border ${m.direction === 'OUTBOUND' ? 'bg-black/10 border-white/20 text-white' : 'bg-gray-50 border-gray-100 text-gray-800'}`}>
-                             <div className={`p-2 rounded-lg ${m.direction === 'OUTBOUND' ? 'bg-white/20' : 'bg-blue-100 text-blue-700'}`}>
-                                <Play size={20} fill="currentColor" />
-                             </div>
-                             <div className="flex-1 min-w-0">
-                                <p className="text-[11px] font-bold truncate">{(m.content || 'video.mp4').split('/').pop()}</p>
-                                <p className="text-[9px] opacity-60 font-medium uppercase tracking-wider">Video Message</p>
-                             </div>
-                             <button 
-                               onClick={() => window.open(API_URL + '/api' + m.content)}
-                               className={`p-1.5 rounded-md transition-colors ${m.direction === 'OUTBOUND' ? 'hover:bg-white/20 text-white' : 'hover:bg-gray-200 text-gray-600'}`}
-                             >
-                               <ChevronDown size={14} className="-rotate-90" />
-                             </button>
-                          </div>
-                       </div>
-                     )}
-                     {m.type === 'document' && (
-                       <div className="mb-2">
-                         <div className={`flex items-center space-x-3 p-3 rounded-xl border ${m.direction === 'OUTBOUND' ? 'bg-black/10 border-white/20 text-white' : 'bg-gray-50 border-gray-100 text-gray-800'}`}>
-                            <div className={`p-2 rounded-lg ${m.direction === 'OUTBOUND' ? 'bg-white/20' : 'bg-teal-100 text-teal-700'}`}>
-                              <FileText size={20} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[11px] font-bold truncate">{(m.content || 'document.pdf').split('/').pop()}</p>
-                              <p className="text-[9px] opacity-60 font-medium uppercase tracking-wider">{m.content?.split('.').pop() || 'File'}</p>
-                            </div>
-                            <button 
-                              onClick={() => window.open(API_URL + '/api' + m.content)}
-                              className={`p-1.5 rounded-md transition-colors ${m.direction === 'OUTBOUND' ? 'hover:bg-white/20 text-white' : 'hover:bg-gray-200 text-gray-600'}`}
-                            >
-                              <ChevronDown size={14} className="-rotate-90" />
-                            </button>
-                         </div>
-                       </div>
-                     )}
-
-                     {/* Audio Message */}
-                     {m.type === 'audio' && (
-                       <div className="mb-2">
-                          <audio controls className="w-full h-10 rounded-lg">
-                             <source src={API_URL + '/api' + m.content} type="audio/mpeg" />
-                             Your browser does not support the audio element.
-                          </audio>
-                       </div>
-                     )}
-
-                     {/* Template Message */}
-                     {m.type === 'template' && (
-                        <div className={`p-3 rounded-xl border ${m.direction === 'OUTBOUND' ? 'bg-black/10 border-white/20 text-white' : 'bg-gray-50 border-gray-100 text-gray-800'}`}>
-                           <div className="flex items-center space-x-2 mb-1">
-                              <ShieldCheck size={14} className="opacity-70" />
-                              <span className="text-[10px] uppercase font-bold tracking-widest opacity-70">Official Template</span>
-                           </div>
-                           <p className="text-sm font-medium">{m.content}</p>
-                        </div>
-                     )}
+                     {m.type === 'video' && <div className="mb-2 flex items-center space-x-2 text-white/90 bg-black/20 p-2 rounded-lg text-xs"><ImageIcon size={14}/> <span>Video Attached</span></div>}
+                     {m.type === 'document' && <div className="mb-2 flex items-center space-x-2 text-white/90 bg-black/20 p-2 rounded-lg text-xs"><FileText size={14}/> <span>Document Attached</span></div>}
                      
                      {/* Message Text Content */}
-                     {(m.type === 'text' || (!['image', 'video', 'document', 'audio', 'template'].includes(m.type) && !m.content?.startsWith('/'))) && (
+                     {(!m.content?.startsWith('/') || m.type === 'text') && (
                         <p 
                           className={`leading-relaxed font-medium ${isEmojiOnly(m.content) ? 'text-6xl py-2 mb-2 drop-shadow-md' : 'text-[14px]'}`}
                           style={isEmojiOnly(m.content) ? { fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif' } : {}}
@@ -505,18 +407,6 @@ export default function Inbox() {
            ) : (
              <div className="text-center text-gray-400 mt-10 font-medium">No messages in this conversation.</div>
            )}
-           {/* Remote Typing Indicator */}
-           {remoteTyping && (
-             <div className="self-start bg-white/80 backdrop-blur-sm px-4 py-2 rounded-2xl border border-gray-100 shadow-sm animate-fade-in flex items-center space-x-2">
-               <div className="flex space-x-1">
-                 <div className="w-1 h-1 bg-teal-600 rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                 <div className="w-1 h-1 bg-teal-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                 <div className="w-1 h-1 bg-teal-600 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-               </div>
-               <span className="text-[10px] font-bold text-teal-700 uppercase tracking-wider">{remoteTyping} is typing...</span>
-             </div>
-           )}
-
            {/* Invisible element to auto-scroll to */}
            <div ref={messagesEndRef} />
         </div>
@@ -569,19 +459,7 @@ export default function Inbox() {
                type="text" 
                placeholder="Type a message..." 
                value={newMessage}
-               onChange={(e) => {
-                 setNewMessage(e.target.value);
-                 // Handle Typing Socket
-                 if (!isTyping) {
-                   setIsTyping(true);
-                   socket?.emit('typing', { contactId: activeChat._id, userName: 'Agent' });
-                 }
-                 if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
-                 typingTimeoutRef.current = setTimeout(() => {
-                   setIsTyping(false);
-                   socket?.emit('stop_typing', { contactId: activeChat._id });
-                 }, 2000);
-               }}
+               onChange={(e) => setNewMessage(e.target.value)}
                className="w-full bg-transparent border-none py-3 text-sm font-medium outline-none text-gray-800 placeholder-gray-400"
              />
            </form>
@@ -604,17 +482,7 @@ export default function Inbox() {
 
       {/* Chat Profile Panel (Right) */}
       {activeChat && showProfile && (
-      <div className={`
-        ${showProfile ? 'flex' : 'hidden'} 
-        fixed inset-0 z-50 lg:relative lg:inset-auto lg:w-[300px] 
-        bg-white flex-col shrink-0 overflow-y-auto custom-scrollbar shadow-xl lg:shadow-[-5px_0_15px_rgba(0,0,0,0.01)] animate-fade-in
-      `}>
-        <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between">
-            <h3 className="font-bold text-gray-800">Chat Profile</h3>
-            <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-gray-100 rounded-full">
-                <X size={20} className="text-gray-500" />
-            </button>
-        </div>
+      <div className="w-[300px] bg-[#fdfdfd] flex flex-col shrink-0 z-20 overflow-y-auto custom-scrollbar shadow-[-5px_0_15px_rgba(0,0,0,0.01)] animate-fade-in">
          
          <div className="p-8 pb-6 flex flex-col items-center justify-center border-b border-gray-50 text-center relative mt-2">
             <img src={getAvatarUrl(activeChat?.name)} className="w-24 h-24 rounded-full shadow-lg object-cover border-4 border-white mb-4" />
@@ -731,39 +599,9 @@ export default function Inbox() {
             <div className="bg-gradient-to-br from-[#def3ee] to-[#e8f7f4] rounded-xl p-4 border border-teal-100/50 shadow-sm">
               <div className="space-y-4">
                   <div className="flex justify-between items-center text-xs relative">
-                    <span className="text-teal-800/70 font-bold tracking-wide uppercase">Assign Agent</span>
-                    <div className="relative">
-                      <button onClick={() => setShowAgentSelection(!showAgentSelection)} className="flex items-center space-x-1.5 bg-white px-2.5 py-1 rounded shadow-sm border border-teal-100 text-[var(--theme-text)] font-bold tracking-wide uppercase text-[10px] hover:bg-teal-50 transition min-w-[100px]">
-                         <span className="truncate max-w-[80px]">
-                           {activeChat?.assignedAgent?.name || agents.find(a => a._id === activeChat?.assignedAgent)?.name || 'Unassigned'}
-                         </span>
-                         <ChevronDown size={12} />
-                      </button>
-                      {showAgentSelection && (
-                         <div className="absolute right-0 top-full mt-1 w-48 bg-white border border-gray-100 rounded-lg shadow-xl z-50 overflow-hidden py-1 animate-fade-in">
-                            <div 
-                               onClick={() => { handleAction('assign_agent', { agentId: null }); setShowAgentSelection(false); }}
-                               className="px-3 py-2 text-[10px] uppercase font-bold text-red-500 hover:bg-red-50 cursor-pointer transition border-b border-gray-50"
-                            >
-                              Unassign
-                            </div>
-                            {agents.map(agent => (
-                              <div 
-                                 key={agent._id} 
-                                 onClick={() => { handleAction('assign_agent', { agentId: agent._id }); setShowAgentSelection(false); }}
-                                 className={`px-3 py-2 text-[10px] uppercase font-bold hover:bg-teal-50 hover:text-[var(--theme-text)] cursor-pointer transition ${activeChat?.assignedAgent === agent._id ? 'text-teal-600 bg-teal-50' : 'text-gray-600'}`}
-                              >
-                                {agent.name} <span className="text-[8px] opacity-40 ml-1">({agent.role})</span>
-                              </div>
-                            ))}
-                         </div>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center text-xs relative">
                     <span className="text-teal-800/70 font-bold tracking-wide">PIPELINE STATUS</span>
                     <div className="relative">
-                      <button onClick={() => setShowStatusDropdown(!showStatusDropdown)} className="flex items-center space-x-1.5 bg-white px-2.5 py-1 rounded shadow-sm border border-teal-100 text-[var(--theme-text)] font-bold tracking-wide uppercase text-[10px] hover:bg-teal-50 transition min-w-[100px]">
+                      <button onClick={() => setShowStatusDropdown(!showStatusDropdown)} className="flex items-center space-x-1.5 bg-white px-2.5 py-1 rounded shadow-sm border border-teal-100 text-[var(--theme-text)] font-bold tracking-wide uppercase text-[10px] hover:bg-teal-50 transition">
                          <span>{activeChat?.status?.replace('_', ' ') || 'NEW LEAD'}</span>
                          <ChevronDown size={12} />
                       </button>

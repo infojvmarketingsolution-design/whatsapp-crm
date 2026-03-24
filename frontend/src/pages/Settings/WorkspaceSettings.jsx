@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Building2, Globe, Clock, Briefcase, Link as LinkIcon } from 'lucide-react';
-import API_URL from '../../apiConfig';
 
 export default function WorkspaceSettings() {
   const [loading, setLoading] = useState(true);
@@ -21,7 +20,7 @@ export default function WorkspaceSettings() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/settings`, {
+      const res = await fetch(`/api/settings`, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -42,7 +41,7 @@ export default function WorkspaceSettings() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/settings/workspace`, {
+      const res = await fetch(`/api/settings/workspace`, {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${token}`, 

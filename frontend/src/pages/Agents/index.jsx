@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Plus, Edit2, Trash2, Shield, Circle, UserPlus, Search, CheckCircle, XCircle } from 'lucide-react';
-import API_URL from '../../apiConfig';
 
 export default function AgentsDashboard() {
   const [agents, setAgents] = useState([]);
@@ -24,7 +23,7 @@ export default function AgentsDashboard() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/agents`, {
+      const res = await fetch(`/api/agents`, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -54,7 +53,7 @@ export default function AgentsDashboard() {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
       const isEdit = !!formData._id;
-      const url = isEdit ? `${API_URL}/api/agents/${formData._id}` : `${API_URL}/api/agents`;
+      const url = isEdit ? `/api/agents/${formData._id}` : `/api/agents`;
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
@@ -79,7 +78,7 @@ export default function AgentsDashboard() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/agents/${id}/status`, {
+      const res = await fetch(`/api/agents/${id}/status`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

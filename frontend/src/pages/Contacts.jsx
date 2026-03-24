@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, PlayCircle, Plus, ChevronDown, Download, Upload } from 'lucide-react';
-import API_URL from '../apiConfig';
 
 export default function Contacts() {
   const navigate = useNavigate();
@@ -17,7 +16,7 @@ export default function Contacts() {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
       if (!token) return;
-      const res = await fetch(`${API_URL}/api/chat/contacts`, {
+      const res = await fetch('/api/chat/contacts', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'x-tenant-id': tenantId
@@ -43,7 +42,7 @@ export default function Contacts() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/chat/contacts`, {
+      const res = await fetch('/api/chat/contacts', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: newLeadName, phone: newLeadPhone, source: 'Manual Entry' })
@@ -95,7 +94,7 @@ export default function Contacts() {
         const tenantId = localStorage.getItem('tenantId');
         if (!token) return;
 
-        const res = await fetch(`${API_URL}/api/chat/contacts`, {
+        const res = await fetch('/api/chat/contacts', {
           headers: {
             'Authorization': `Bearer ${token}`,
             'x-tenant-id': tenantId
@@ -114,15 +113,15 @@ export default function Contacts() {
   };
 
   return (
-    <div className="bg-white md:rounded-2xl shadow-sm border border-gray-100 min-h-full flex flex-col pt-6 md:pt-10 px-4 md:px-10 relative overflow-hidden animate-fade-in w-full md:w-[calc(100%-12px)] md:ml-3 md:my-3 lg:my-3 lg:mr-3">
-      <div className="mb-6 md:mb-8 relative z-10">
-         <h1 className="text-2xl md:text-3xl font-bold text-gray-800 tracking-tight">Contacts</h1>
-         <p className="text-gray-400 mt-2 font-medium text-xs md:text-sm">Import contact, create audience & launch campaign, all from one place!</p>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 min-h-full flex flex-col pt-10 px-10 relative overflow-hidden animate-fade-in">
+      <div className="mb-8 relative z-10">
+         <h1 className="text-3xl font-bold text-gray-800 tracking-tight">Contacts</h1>
+         <p className="text-gray-400 mt-2 font-medium">Import contact, create audience & launch campaign, all from one place!</p>
          
-         <div className="hidden md:flex items-center space-x-6 mt-4 text-sm text-gray-500 font-medium">
+         <div className="flex items-center space-x-6 mt-4 text-sm text-gray-500 font-medium">
             <div className="flex items-center space-x-2">
                <span className="w-4 h-4 rounded bg-[var(--theme-bg)] block"></span>
-               <span>Import up to 2 lakh contacts</span>
+               <span>Import upto 2 lakh contacts in one go</span>
             </div>
             <button className="flex items-center space-x-2 hover:text-[var(--theme-text)] transition">
                <PlayCircle size={16} />
@@ -131,27 +130,32 @@ export default function Contacts() {
          </div>
       </div>
 
-      <div className="flex flex-col space-y-4 md:space-y-0 md:flex-row md:justify-between md:items-center mb-6 relative z-10 w-full max-w-5xl">
-          <div className="relative w-full md:w-80">
+      <div className="flex justify-between items-center mb-6 relative z-10 w-full max-w-5xl">
+          <div className="relative w-80">
              <Search className="absolute left-3 top-2.5 text-gray-400" size={18} />
              <input 
                type="text" 
                value={searchTerm}
                onChange={(e) => setSearchTerm(e.target.value)}
-               placeholder="Search..." 
+               placeholder="Search name or mobile number" 
                className="w-full bg-gray-50 hover:bg-gray-100 border-none rounded-lg py-2 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-gray-200 transition-all font-medium text-gray-700 placeholder-gray-400"
              />
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-             <button onClick={() => navigate('/campaigns/create')} className="flex-1 md:flex-none bg-[var(--theme-bg)] text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-teal-900 transition shadow-sm whitespace-nowrap">
+          <div className="flex items-center space-x-3">
+             <button onClick={() => navigate('/campaigns/create')} className="bg-[var(--theme-bg)] text-white px-5 py-2 rounded-lg text-sm font-semibold hover:bg-teal-900 transition shadow-[0_4px_10px_rgba(17,74,67,0.2)]">
                 Broadcast
              </button>
-             <button onClick={() => setShowAddModal(true)} className="flex-1 md:flex-none flex items-center justify-center space-x-1 border border-brand-dark text-[var(--theme-text)] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-teal-50 transition whitespace-nowrap">
-                <Plus size={16} />
-                <span>Add</span>
+             <button onClick={() => setShowAddModal(true)} className="flex items-center space-x-1 border border-brand-dark text-[var(--theme-text)] px-4 py-2 rounded-lg text-sm font-semibold hover:bg-teal-50 transition">
+                <Plus size={16} className="text-[var(--theme-text)]" />
+                <span>Add Contact</span>
              </button>
-             <button onClick={handleExport} className="p-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition">
-                <Download size={16} />
+             <button onClick={() => alert('CSV Tooling connecting natively mapping payload in upcoming iterations!')} className="flex items-center space-x-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition hover:border-brand-dark hover:text-[var(--theme-text)]">
+                <Upload size={14} />
+                <span>Import</span>
+             </button>
+             <button onClick={handleExport} className="flex items-center space-x-1 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-50 transition hover:border-brand-dark hover:text-[var(--theme-text)]">
+                <Download size={14} />
+                <span>Export</span>
              </button>
           </div>
       </div>

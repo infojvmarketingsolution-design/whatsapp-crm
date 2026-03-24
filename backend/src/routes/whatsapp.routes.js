@@ -16,4 +16,5 @@ router.get('/config', protect, tenantMiddleware, getApiConfig);
 router.post('/config', protect, tenantMiddleware, saveApiConfig);
 router.get('/test-connection', protect, tenantMiddleware, testApiConnection);
 
+
 module.exports = router;

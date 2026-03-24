@@ -44,7 +44,7 @@ const ClientManagement = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/clients`, {
+      const res = await fetch('/api/clients', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -68,7 +68,7 @@ const ClientManagement = () => {
     setSuccess('');
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/clients`, {
+      const res = await fetch('/api/clients', {
         method: 'POST',
         headers: { 
             'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ const ClientManagement = () => {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/clients/${selectedClient._id}`, {
+      const res = await fetch(`/api/clients/${selectedClient._id}`, {
         method: 'PUT',
         headers: { 
             'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ const ClientManagement = () => {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/clients/${selectedClient._id}`, {
+      const res = await fetch(`/api/clients/${selectedClient._id}`, {
         method: 'PUT',
         headers: { 
             'Content-Type': 'application/json',

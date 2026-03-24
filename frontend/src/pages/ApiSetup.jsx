@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Key, Phone, Database, CheckCircle, Copy, Eye, EyeOff, Save, AlertCircle, Webhook, Zap } from 'lucide-react';
-import API_URL from '../apiConfig';
 
 export default function ApiSetup() {
   const [token, setToken] = useState('');
@@ -17,7 +16,7 @@ export default function ApiSetup() {
     try {
       const jwtToken = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/whatsapp/config`, {
+      const res = await fetch(`/api/whatsapp/config`, {
         headers: { 'Authorization': `Bearer ${jwtToken}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -49,7 +48,7 @@ export default function ApiSetup() {
     try {
       const jwtToken = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/whatsapp/test-connection`, {
+      const res = await fetch(`/api/whatsapp/test-connection`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${jwtToken}`,
@@ -77,7 +76,7 @@ export default function ApiSetup() {
     try {
       const jwtToken = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/whatsapp/config`, {
+      const res = await fetch(`/api/whatsapp/config`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${jwtToken}`, 

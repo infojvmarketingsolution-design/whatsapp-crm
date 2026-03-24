@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import API_URL from '../../apiConfig';
 import { UserCog, UserPlus, MoreVertical } from 'lucide-react';
 
 export default function UserAndRolesSettings() {
@@ -14,7 +13,7 @@ export default function UserAndRolesSettings() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/agents`, {
+      const res = await fetch(`/api/agents`, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, FileText, CheckCircle, Clock, XCircle, Trash2 } from 'lucide-react';
-import API_URL from '../../apiConfig';
 
 function Templates() {
   const [templates, setTemplates] = useState([]);
@@ -15,7 +14,7 @@ function Templates() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/templates`, {
+      const res = await fetch('/api/templates', {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -32,7 +31,7 @@ function Templates() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/templates/sync`, {
+      const res = await fetch('/api/templates/sync', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
@@ -54,7 +53,7 @@ function Templates() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/templates/${id}`, {
+      const res = await fetch(`/api/templates/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });

@@ -1,6 +1,5 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import API_URL from './apiConfig';
 import Sidebar from './components/Sidebar';
 import Inbox from './pages/Inbox';
 import Contacts from './pages/Contacts';
@@ -24,7 +23,7 @@ import AdminSettings from './pages/Admin/AdminSettings';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import Maintenance from './pages/Maintenance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, Menu } from 'lucide-react';
+import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2 } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge }) {
   return (
@@ -63,10 +62,10 @@ function Dashboard() {
         
         // Fetch data in parallel
         const [contactRes, wabaRes, campRes, tempRes] = await Promise.all([
-          fetch(`${API_URL}/api/chat/contacts`, { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
-          fetch(`${API_URL}/api/whatsapp/config`, { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
-          fetch(`${API_URL}/api/campaigns`, { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
-          fetch(`${API_URL}/api/templates`, { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } })
+          fetch('/api/chat/contacts', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
+          fetch('/api/whatsapp/config', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
+          fetch('/api/campaigns', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
+          fetch('/api/templates', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } })
         ]);
 
         if (wabaRes.ok) {
@@ -114,7 +113,7 @@ function Dashboard() {
   const remainingNum = limitNum === Infinity ? Infinity : Math.max(0, limitNum - sentToday);
 
   return (
-    <div className="p-4 md:p-8 bg-crm-bg min-h-full animate-fade-in-up">
+    <div className="p-8 bg-crm-bg min-h-full animate-fade-in-up">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-sm font-bold text-gray-600 tracking-wider uppercase">Dashboard</h1>
         <div className="flex items-center space-x-2 text-gray-700 font-medium">
@@ -217,29 +216,12 @@ function PlaceholderPage({ title }) {
   );
 }
 
-function MobileHeader({ onOpenMenu, themeColor }) {
-  return (
-    <div className="lg:hidden flex items-center justify-between px-4 py-3 bg-[var(--theme-bg)] text-white shadow-md sticky top-0 z-30">
-      <div className="flex items-center space-x-3">
-        <button onClick={onOpenMenu} className="p-2 hover:bg-white/10 rounded-lg transition-colors">
-          <Menu size={24} />
-        </button>
-        <span className="text-lg font-bold tracking-tight">WapiPulse</span>
-      </div>
-      <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
-        <UserCircle size={24} />
-      </div>
-    </div>
-  );
-}
-
 function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const isAuthPage = location.pathname === '/login';
   const [themeColor, setThemeColor] = React.useState('#10b981'); // Default Teal
   const [isMaintenance, setIsMaintenance] = React.useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = user.role || 'AGENT';
@@ -258,7 +240,7 @@ function AppLayout() {
          const token = localStorage.getItem('token');
          const tenantId = localStorage.getItem('tenantId');
          if (!token) return;
-         const res = await fetch(`${API_URL}/api/settings`, {
+         const res = await fetch(`/api/settings`, {
             headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
          });
          if (res.ok) {
@@ -282,7 +264,7 @@ function AppLayout() {
     
     const checkMaintenance = async () => {
        try {
-         const res = await fetch(`${API_URL}/api/health`);
+         const res = await fetch('/api/health');
          if (res.status === 503) {
             const data = await res.json();
             if (data.maintenance && userRole !== 'SUPER_ADMIN') {
@@ -305,8 +287,7 @@ function AppLayout() {
     };
     window.addEventListener('themeChanged', handleThemeEvent);
     return () => window.removeEventListener('themeChanged', handleThemeEvent);
-  }, [userRole])
-
+  }, [])
   const appStyle = {
     '--theme-bg': themeColor === '#10b981' ? '#075E54' : themeColor,
     '--theme-text': themeColor === '#10b981' ? '#075E54' : themeColor,
@@ -318,52 +299,42 @@ function AppLayout() {
   }
 
   return (
-    <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden relative`}>
-      {!isAuthPage && (
-        userRole === 'SUPER_ADMIN' 
-          ? <AdminSidebar onLogout={handleLogout} /> 
-          : <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
-      )}
-      
-      <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-hidden">
-        {!isAuthPage && <MobileHeader onOpenMenu={() => setIsSidebarOpen(true)} themeColor={themeColor} />}
-        
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
-          <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/pipeline" element={<Pipeline />} />
-            <Route path="/tasks" element={<Tasks />} />
-            <Route path="/inbox" element={<Inbox />} />
-            <Route path="/campaigns" element={<Campaigns />} />
-            <Route path="/campaigns/create" element={<CreateCampaign />} />
-            <Route path="/flows" element={<Flows />} />
-            <Route path="/flows/:id" element={<FlowBuilder />} />
-            <Route path="/agents" element={<AgentsDashboard />} />
-            <Route path="/widget" element={<WebWidget />} />
-            <Route path="/contacts" element={<Contacts />} />
-            <Route path="/templates" element={<Templates />} />
-            <Route path="/api" element={<ApiSetup />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+    <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden`}>
+      {!isAuthPage && (userRole === 'SUPER_ADMIN' ? <AdminSidebar onLogout={handleLogout} /> : <Sidebar />)}
+      <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-y-auto custom-scrollbar">
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/pipeline" element={<Pipeline />} />
+          <Route path="/tasks" element={<Tasks />} />
+          <Route path="/inbox" element={<Inbox />} />
+          <Route path="/campaigns" element={<Campaigns />} />
+          <Route path="/campaigns/create" element={<CreateCampaign />} />
+          <Route path="/flows" element={<Flows />} />
+          <Route path="/flows/:id" element={<FlowBuilder />} />
+          <Route path="/agents" element={<AgentsDashboard />} />
+          <Route path="/widget" element={<WebWidget />} />
+          <Route path="/contacts" element={<Contacts />} />
+          <Route path="/templates" element={<Templates />} />
+          <Route path="/api" element={<ApiSetup />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
-            {/* Super Admin Routes */}
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/clients" element={<ClientManagement />} />
-            <Route path="/admin/analytics" element={<AdminAnalytics />} />
-            <Route path="/admin/plans" element={<PlanManagement />} />
-            <Route path="/admin/settings" element={<AdminSettings />} />
-          </Routes>
-          
-          {!isAuthPage && (
-            <div className="w-full py-4 text-center mt-auto bg-crm-bg shrink-0">
-               <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">
-                  Developed by J.V group
-               </span>
-            </div>
-          )}
-        </div>
+          {/* Super Admin Routes */}
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
+          <Route path="/admin/clients" element={<ClientManagement />} />
+          <Route path="/admin/analytics" element={<AdminAnalytics />} />
+          <Route path="/admin/plans" element={<PlanManagement />} />
+          <Route path="/admin/settings" element={<AdminSettings />} />
+        </Routes>
+        {!isAuthPage && (
+          <div className="w-full py-4 text-center mt-auto bg-crm-bg shrink-0">
+             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">
+                Developed by J.V group
+             </span>
+          </div>
+        )}
       </div>
     </div>
   );

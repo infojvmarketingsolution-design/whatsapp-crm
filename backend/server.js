@@ -195,9 +195,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // SPA Routing: Serve index.html for any request that doesn't match an API route
 app.get('*', (req, res) => {
-  if (req.path.startsWith('/api')) {
-    return res.status(404).json({ message: 'API Route not found' });
-  }
+  if (req.path.startsWith('/api')) return;
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
@@ -206,15 +204,6 @@ io.on('connection', (socket) => {
   const tenantId = socket.handshake.query.tenantId;
   if(tenantId) socket.join(tenantId);
   
-  socket.on('typing', (data) => {
-    // Broadcast to others in the same tenant room
-    socket.to(tenantId).emit('typing_status', { ...data, status: 'typing' });
-  });
-
-  socket.on('stop_typing', (data) => {
-    socket.to(tenantId).emit('typing_status', { ...data, status: 'stopped' });
-  });
-
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Bot, Clock, AlertTriangle } from 'lucide-react';
-import API_URL from '../../apiConfig';
 
 export default function AutomationSettings() {
   const [loading, setLoading] = useState(true);
@@ -19,7 +18,7 @@ export default function AutomationSettings() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/settings`, {
+      const res = await fetch(`/api/settings`, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -40,7 +39,7 @@ export default function AutomationSettings() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/settings/automation`, {
+      const res = await fetch(`/api/settings/automation`, {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${token}`, 

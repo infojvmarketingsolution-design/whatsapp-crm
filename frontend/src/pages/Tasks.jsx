@@ -5,7 +5,6 @@ import {
   MoreVertical, MoreHorizontal, ArrowUpRight, ExternalLink
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import API_URL from '../apiConfig';
 
 export default function Tasks() {
   const [tasks, setTasks] = useState([]);
@@ -23,7 +22,7 @@ export default function Tasks() {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
       
-      const res = await fetch(`${API_URL}/api/chat/contacts`, {
+      const res = await fetch('/api/chat/contacts', {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       
@@ -55,7 +54,7 @@ export default function Tasks() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/chat/contacts/${contactId}/action`, {
+      const res = await fetch(`/api/chat/contacts/${contactId}/action`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'complete_task', payload: { taskId } })
@@ -73,7 +72,7 @@ export default function Tasks() {
       const today = new Date();
       today.setHours(today.getHours() + 1); // 1 hour from now
       
-      const res = await fetch(`${API_URL}/api/chat/contacts/${contactId}/action`, {
+      const res = await fetch(`/api/chat/contacts/${contactId}/action`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'reschedule_task', payload: { taskId, newDueDate: today } })
@@ -121,24 +120,24 @@ export default function Tasks() {
   }
 
   return (
-    <div className="flex-1 bg-[#f8fafc] flex flex-col h-full overflow-hidden w-full md:w-[calc(100%-12px)] md:ml-3 md:my-3 lg:my-3 lg:mr-3 md:rounded-3xl shadow-sm border border-slate-200">
+    <div className="flex-1 bg-[#f8fafc] flex flex-col h-full overflow-hidden">
       
       {/* Header with Stats */}
-      <div className="px-4 md:px-8 pt-6 md:pt-8 pb-6 bg-white border-b border-slate-200">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 md:mb-8 space-y-4 sm:space-y-0">
+      <div className="px-8 pt-8 pb-6 bg-white border-b border-slate-200 shadow-sm">
+        <div className="flex justify-between items-end mb-8">
           <div>
-            <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight">Work Console</h1>
-            <p className="text-slate-500 font-semibold text-xs md:text-sm">Manage your sales activities and follow-ups</p>
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Work Console</h1>
+            <p className="text-slate-500 font-semibold text-sm">Manage your sales activities and follow-ups</p>
           </div>
-          <div className="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-end">
+          <div className="flex space-x-3">
              <div className="text-right">
-                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Efficiency</p>
-                <p className="text-md md:text-lg font-black text-teal-600">84%</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Efficiency</p>
+                <p className="text-lg font-black text-teal-600">84%</p>
              </div>
-             <div className="h-8 w-[1px] bg-slate-100 mx-1 sm:mx-2"></div>
+             <div className="h-10 w-[1px] bg-slate-100 mx-2"></div>
              <div className="flex -space-x-2">
                 {[1,2,3].map(i => (
-                  <div key={i} className="w-7 h-7 md:w-8 md:h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden">
+                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden">
                     <img src={`https://i.pravatar.cc/100?u=${i+10}`} alt="avatar" />
                   </div>
                 ))}
@@ -146,43 +145,43 @@ export default function Tasks() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
-           <div onClick={() => setView('OVERDUE')} className={`cursor-pointer p-3 md:p-4 rounded-2xl border-2 transition-all ${view === 'OVERDUE' ? 'bg-rose-50 border-rose-200 shadow-md' : 'bg-white border-slate-100 hover:border-rose-100'}`}>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+           <div onClick={() => setView('OVERDUE')} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all ${view === 'OVERDUE' ? 'bg-rose-50 border-rose-200 shadow-md' : 'bg-white border-slate-100 hover:border-rose-100'}`}>
               <div className="flex justify-between items-start">
-                 <div className="p-1.5 bg-rose-100 text-rose-600 rounded-xl">
-                    <AlertCircle size={18} />
+                 <div className="p-2 bg-rose-100 text-rose-600 rounded-xl">
+                    <AlertCircle size={20} />
                  </div>
-                 <span className={`text-xl md:text-2xl font-black ${view === 'OVERDUE' ? 'text-rose-600' : 'text-slate-700'}`}>{overdueCount}</span>
+                 <span className={`text-2xl font-black ${view === 'OVERDUE' ? 'text-rose-600' : 'text-slate-700'}`}>{overdueCount}</span>
               </div>
-              <p className="mt-2 md:mt-3 font-bold text-slate-500 text-[11px] md:text-sm">Overdue</p>
+              <p className="mt-3 font-bold text-slate-500 text-sm">Overdue</p>
            </div>
-           <div onClick={() => setView('PENDING')} className={`cursor-pointer p-3 md:p-4 rounded-2xl border-2 transition-all ${view === 'PENDING' ? 'bg-teal-50 border-teal-200 shadow-md' : 'bg-white border-slate-100 hover:border-teal-100'}`}>
+           <div onClick={() => setView('PENDING')} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all ${view === 'PENDING' ? 'bg-teal-50 border-teal-200 shadow-md' : 'bg-white border-slate-100 hover:border-teal-100'}`}>
               <div className="flex justify-between items-start">
-                 <div className="p-1.5 bg-teal-100 text-teal-600 rounded-xl">
-                    <Clock size={18} />
+                 <div className="p-2 bg-teal-100 text-teal-600 rounded-xl">
+                    <Clock size={20} />
                  </div>
-                 <span className={`text-xl md:text-2xl font-black ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-700'}`}>{todayCount}</span>
+                 <span className={`text-2xl font-black ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-700'}`}>{todayCount}</span>
               </div>
-              <p className="mt-2 md:mt-3 font-bold text-slate-500 text-[11px] md:text-sm">Due Today</p>
+              <p className="mt-3 font-bold text-slate-500 text-sm">Due Today</p>
            </div>
-           <div className="hidden sm:block cursor-pointer p-3 md:p-4 bg-white border-2 border-slate-100 rounded-2xl hover:border-blue-100 transition-all">
+           <div className="cursor-pointer p-4 bg-white border-2 border-slate-100 rounded-2xl hover:border-blue-100 transition-all">
               <div className="flex justify-between items-start">
-                 <div className="p-1.5 bg-blue-100 text-blue-600 rounded-xl">
-                    <CalendarDays size={18} />
+                 <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
+                    <CalendarDays size={20} />
                  </div>
-                 <span className="text-xl md:text-2xl font-black text-slate-700">{upcomingCount}</span>
+                 <span className="text-2xl font-black text-slate-700">{upcomingCount}</span>
               </div>
-              <p className="mt-2 md:mt-3 font-bold text-slate-500 text-[11px] md:text-sm">Upcoming</p>
+              <p className="mt-3 font-bold text-slate-500 text-sm">Upcoming</p>
            </div>
         </div>
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="px-4 md:px-8 py-3 bg-white border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
-         <div className="flex flex-wrap items-center gap-4">
+      <div className="px-8 py-4 bg-white border-b border-slate-100 flex items-center justify-between">
+         <div className="flex items-center space-x-6">
             <div className="flex bg-slate-100 p-1 rounded-xl">
-               <button onClick={() => setView('PENDING')} className={`px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all ${view === 'PENDING' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Pending</button>
-               <button onClick={() => setView('COMPLETED')} className={`px-3 md:px-4 py-1.5 rounded-lg text-[10px] md:text-xs font-bold transition-all ${view === 'COMPLETED' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Completed</button>
+               <button onClick={() => setView('PENDING')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${view === 'PENDING' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Pending</button>
+               <button onClick={() => setView('COMPLETED')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${view === 'COMPLETED' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Completed</button>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -190,24 +189,24 @@ export default function Tasks() {
                <select 
                  value={filter} 
                  onChange={e => setFilter(e.target.value)}
-                 className="bg-transparent border-none text-[10px] md:text-xs font-bold text-slate-600 focus:ring-0 cursor-pointer"
+                 className="bg-transparent border-none text-xs font-bold text-slate-600 focus:ring-0 cursor-pointer"
                >
                  <option value="ALL">All Activities</option>
-                 <option value="CALL">Calls</option>
-                 <option value="MEETING">Meetings</option>
-                 <option value="FOLLOW_UP">Follow-ups</option>
+                 <option value="CALL">Calls Only</option>
+                 <option value="MEETING">Meetings Only</option>
+                 <option value="FOLLOW_UP">Follow-ups Only</option>
                </select>
             </div>
          </div>
 
-         <div className="relative group w-full lg:w-auto">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[var(--theme-text)] transition-colors" />
+         <div className="relative group">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
             <input 
               type="text" 
-              placeholder="Search tasks..."
+              placeholder="Search by contact or title..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="bg-slate-100 border-none rounded-xl pl-10 pr-4 py-2 text-xs font-medium w-full lg:w-64 focus:bg-white focus:ring-2 focus:ring-teal-100 transition-all outline-none"
+              className="bg-slate-100 border-none rounded-xl pl-10 pr-4 py-2 text-xs font-medium w-64 focus:bg-white focus:ring-2 focus:ring-teal-100 transition-all outline-none"
             />
          </div>
       </div>
@@ -277,7 +276,7 @@ export default function Tasks() {
                            </>
                         )}
                         <button 
-                          onClick={() => navigate('/inbox', { state: { selectedContact: t.phone } })}
+                          onClick={() => navigate('/chat', { state: { selectedContact: t.phone } })}
                           className="h-9 px-4 bg-slate-50 text-slate-600 text-xs font-black rounded-xl hover:bg-white hover:text-slate-800 hover:border-slate-200 border border-transparent transition-all flex items-center active:scale-95"
                         >
                           Chat <ArrowUpRight size={14} className="ml-2 opacity-60" />

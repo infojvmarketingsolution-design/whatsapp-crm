@@ -34,7 +34,7 @@ const PlanManagement = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/plans`, {
+      const res = await fetch('/api/plans', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -55,7 +55,7 @@ const PlanManagement = () => {
   const fetchGlobalSettings = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/admin/settings`, {
+      const res = await fetch('/api/admin/settings', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -71,8 +71,8 @@ const PlanManagement = () => {
     try {
       const token = localStorage.getItem('token');
       const url = isEditing 
-        ? `${API_URL}/api/plans/${selectedPlanId}` 
-        : `${API_URL}/api/plans`;
+        ? `/api/plans/${selectedPlanId}` 
+        : '/api/plans';
       
       const res = await fetch(url, {
         method: isEditing ? 'PUT' : 'POST',
@@ -96,7 +96,7 @@ const PlanManagement = () => {
     if (!window.confirm('Are you sure you want to delete this plan?')) return;
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_URL}/api/plans/${id}`, {
+      const res = await fetch(`/api/plans/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import API_URL from '../../apiConfig';
 import { Save, Palette, Monitor } from 'lucide-react';
 
 export default function CustomizationSettings() {
@@ -21,7 +20,7 @@ export default function CustomizationSettings() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/settings`, {
+      const res = await fetch(`/api/settings`, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -42,7 +41,7 @@ export default function CustomizationSettings() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/settings/customization`, {
+      const res = await fetch(`/api/settings/customization`, {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${token}`, 

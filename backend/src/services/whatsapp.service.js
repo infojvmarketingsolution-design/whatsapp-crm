@@ -129,36 +129,6 @@ class WhatsAppService {
       throw new Error(error.response?.data?.error?.message || 'Failed to send WhatsApp media');
     }
   }
-
-  async sendButtons(to, bodyText, buttons) {
-    const sanitizedTo = String(to).replace(/\D/g, '');
-    const payload = {
-      messaging_product: 'whatsapp',
-      to: sanitizedTo,
-      type: 'interactive',
-      interactive: {
-        type: 'button',
-        body: { text: bodyText },
-        action: {
-          buttons: buttons
-            .filter(b => b && b.trim() !== '')
-            .slice(0, 3) // Meta limit: 3 buttons
-            .map((btn, idx) => ({
-              type: 'reply',
-              reply: { id: `btn_${idx}`, title: btn.substring(0, 20) }
-            }))
-        }
-      }
-    };
-
-    try {
-      const response = await axios.post(this.baseUrl, payload, { headers: this.headers });
-      return response.data;
-    } catch (error) {
-      console.error('WhatsApp API Buttons Error:', error.response?.data || error.message);
-      throw new Error(error.response?.data?.error?.message || 'Failed to send WhatsApp buttons');
-    }
-  }
 }
 
 module.exports = WhatsAppService;

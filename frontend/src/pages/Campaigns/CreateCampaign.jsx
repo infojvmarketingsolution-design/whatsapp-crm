@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, ChevronRight, Send, AlertCircle, UploadCloud, Trash2, Download } from 'lucide-react';
-import API_URL from '../../apiConfig';
 import Papa from 'papaparse';
 
 function CreateCampaign() {
@@ -59,7 +58,7 @@ function CreateCampaign() {
       try {
         const token = localStorage.getItem('token');
         const tenantId = localStorage.getItem('tenantId');
-        const res = await fetch(`${API_URL}/api/templates`, {
+        const res = await fetch('/api/templates', {
           headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
         });
         if (res.ok) {
@@ -95,7 +94,7 @@ function CreateCampaign() {
             const tenantId = localStorage.getItem('tenantId');
             
             try {
-              const uploadRes = await fetch(`${API_URL}/api/templates/upload`, {
+              const uploadRes = await fetch('/api/templates/upload', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId },
                 body: formDataMedia
@@ -134,7 +133,13 @@ function CreateCampaign() {
     
     if (newTemplate.buttons.length > 0) {
        const metaBtns = newTemplate.buttons.map(b => {
-          if (b.type === 'URL' && b.text && b.url) return { type: 'URL', text: b.text, url: b.url };
+          if (b.type === 'URL' && b.text && b.url) {
+             let finalUrl = b.url.trim();
+             if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
+                finalUrl = 'https://' + finalUrl;
+             }
+             return { type: 'URL', text: b.text, url: finalUrl };
+          }
           if (b.type === 'PHONE_NUMBER' && b.text && b.phoneNumber) return { type: 'PHONE_NUMBER', text: b.text, phone_number: b.phoneNumber };
           if (b.type === 'QUICK_REPLY' && b.text) return { type: 'QUICK_REPLY', text: b.text };
           return null;
@@ -145,7 +150,7 @@ function CreateCampaign() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/templates`, {
+      const res = await fetch('/api/templates', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -167,7 +172,11 @@ function CreateCampaign() {
         setNewTemplate({ name: '', category: 'MARKETING', language: 'en', headerType: 'NONE', headerText: '', headerMediaUrl: '', bodyText: '', footerText: '', buttons: [] });
       } else {
         const err = await res.json();
-        alert('Failed: ' + (err.error || err.message || 'Error occurred'));
+        let errorMsg = err.error || err.message || 'Error occurred';
+        if (errorMsg === 'An unknown error has occurred') {
+          errorMsg += '. Please verify your WhatsApp API configuration (WABA ID/Token) and ensure all button URLs (like website links) are valid and accessible.';
+        }
+        alert('Failed: ' + errorMsg);
       }
     } catch (e) {
       console.error(e);
@@ -184,7 +193,7 @@ function CreateCampaign() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/templates/${id}`, {
+      const res = await fetch(`/api/templates/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
@@ -208,7 +217,7 @@ function CreateCampaign() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`${API_URL}/api/campaigns`, {
+      const res = await fetch('/api/campaigns', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
