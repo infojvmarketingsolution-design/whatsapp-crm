@@ -224,6 +224,7 @@ function AppLayout() {
   const isAuthPage = location.pathname === '/login';
   const [themeColor, setThemeColor] = React.useState('#10b981'); // Default Teal
   const [isMaintenance, setIsMaintenance] = React.useState(false);
+  const [whatsappConfig, setWhatsappConfig] = React.useState(null);
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = user.role || 'AGENT';
@@ -280,6 +281,24 @@ function AppLayout() {
 
     fetchGlobalTheme();
     
+    const fetchWhatsappConfig = async () => {
+       try {
+         const token = localStorage.getItem('token');
+         const tenantId = localStorage.getItem('tenantId');
+         if (!token) return;
+         const res = await fetch('/api/whatsapp/config', {
+            headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+         });
+         if (res.ok) {
+            const data = await res.json();
+            setWhatsappConfig(data);
+         }
+       } catch (e) {}
+    };
+
+    fetchWhatsappConfig();
+    const configInterval = setInterval(fetchWhatsappConfig, 30000); // Poll every 30 seconds
+    
     // 3. Socket Listener for Template Status Updates
     const tenantId = localStorage.getItem('tenantId');
     const socket = io('', { query: { tenantId } });
@@ -305,6 +324,7 @@ function AppLayout() {
     window.addEventListener('themeChanged', handleThemeEvent);
     return () => {
        window.removeEventListener('themeChanged', handleThemeEvent);
+       clearInterval(configInterval);
        socket.disconnect();
     };
   }, [])
@@ -321,7 +341,7 @@ function AppLayout() {
   return (
     <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden`}>
       <Toaster position="top-right" reverseOrder={false} />
-      {!isAuthPage && (userRole === 'SUPER_ADMIN' ? <AdminSidebar onLogout={handleLogout} /> : <Sidebar />)}
+      {!isAuthPage && (userRole === 'SUPER_ADMIN' ? <AdminSidebar onLogout={handleLogout} /> : <Sidebar whatsappConfig={whatsappConfig} />)}
       <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-y-auto custom-scrollbar">
         <Routes>
           <Route path="/" element={<Navigate to="/login" replace />} />

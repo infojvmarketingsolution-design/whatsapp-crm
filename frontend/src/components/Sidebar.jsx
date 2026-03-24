@@ -17,7 +17,7 @@ import {
   Menu
 } from 'lucide-react';
 
-export default function Sidebar() {
+export default function Sidebar({ whatsappConfig }) {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = React.useState(false);
 
@@ -76,6 +76,30 @@ export default function Sidebar() {
         ))}
       </nav>
       <div className="mt-auto border-t border-teal-800/50">
+        {!collapsed && whatsappConfig && (
+          <div className="px-6 py-4 border-b border-teal-800/30 bg-teal-900/20">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-[10px] font-bold text-teal-300 uppercase tracking-wider">Meta Status</span>
+              <div className="flex items-center space-x-1">
+                <div className={`w-2 h-2 rounded-full ${whatsappConfig.accessToken ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]' : 'bg-red-400'}`}></div>
+                <span className="text-[10px] font-bold text-white uppercase">{whatsappConfig.accessToken ? 'Connected' : 'Disconnected'}</span>
+              </div>
+            </div>
+            {whatsappConfig.wabaName && (
+               <div className="text-[11px] font-bold text-white truncate mb-1">{whatsappConfig.wabaName}</div>
+            )}
+            <div className="flex flex-col space-y-0.5">
+              <div className="flex items-center justify-between text-[9px] text-teal-300/80">
+                <span>Phone ID:</span>
+                <span className="font-mono text-white">{whatsappConfig.phoneNumberId ? `...${whatsappConfig.phoneNumberId.slice(-4)}` : 'N/A'}</span>
+              </div>
+              <div className="flex items-center justify-between text-[9px] text-teal-300/80">
+                <span>WABA ID:</span>
+                <span className="font-mono text-white">{whatsappConfig.wabaId ? `...${whatsappConfig.wabaId.slice(-4)}` : 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+        )}
         <button onClick={handleLogout} className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-teal-200 hover:text-white hover:bg-teal-800/80 transition-colors`}>
           <LogOut size={20} />
           {!collapsed && <span>Logout</span>}
