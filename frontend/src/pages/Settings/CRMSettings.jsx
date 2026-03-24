@@ -1,0 +1,114 @@
+import React, { useState, useEffect } from 'react';
+import { Save, Users, Tag, GitMerge } from 'lucide-react';
+import API_URL from '../../apiConfig';
+
+export default function CRMSettings() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState({
+    defaultPipelineId: '',
+    duplicateDetection: true,
+    autoAssignment: false
+  });
+
+  useEffect(() => {
+    fetchSettings();
+  }, []);
+
+  const fetchSettings = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`${API_URL}/api/settings`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.crm) {
+          setSettings(data.crm);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to fetch CRM settings', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`${API_URL}/api/settings/crm`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'x-tenant-id': tenantId,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(settings)
+      });
+    } catch (err) {
+      console.error('Failed to save', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const Toggle = ({ label, description, checked, onChange }) => (
+    <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-teal-100 transition-colors">
+      <div className="pr-4">
+        <div className="text-sm font-bold text-gray-800">{label}</div>
+        <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</div>
+      </div>
+      <button 
+        type="button"
+        onClick={() => onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${checked ? 'bg-teal-500' : 'bg-gray-300'}`}
+      >
+        <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
+      </button>
+    </div>
+  );
+
+  if (loading) return <div className="animate-pulse flex space-x-4"><div className="flex-1 space-y-4"><div className="h-4 bg-gray-200 rounded w-3/4"></div></div></div>;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center">
+          <Users className="mr-2 text-teal-600" size={20} />
+          CRM Settings & Rules
+        </h2>
+
+        <div className="space-y-4">
+          <Toggle 
+            label="Duplicate Contact Detection" 
+            description="Automatically merge or flag contacts with the same phone number or email address."
+            checked={settings.duplicateDetection}
+            onChange={(val) => setSettings({...settings, duplicateDetection: val})}
+          />
+          
+          <Toggle 
+            label="Auto Lead Assignment" 
+            description="Round-robin assign new incoming WhatsApp leads to available active agents."
+            checked={settings.autoAssignment}
+            onChange={(val) => setSettings({...settings, autoAssignment: val})}
+          />
+        </div>
+
+        <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end">
+          <button 
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center px-5 py-2.5 bg-[var(--theme-bg)] text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition shadow-sm disabled:opacity-50"
+          >
+            {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={16} className="mr-2" />}
+            Save CRM Settings
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
