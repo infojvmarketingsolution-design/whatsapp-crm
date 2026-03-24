@@ -18,6 +18,10 @@ class WhatsAppService {
     };
   }
 
+  async sendTextMessage(to, text) {
+    return this.sendText(to, text);
+  }
+
   async sendText(to, text) {
     const sanitizedTo = String(to).replace(/\D/g, '');
     const payload = {
@@ -127,6 +131,71 @@ class WhatsAppService {
     } catch (error) {
       console.error('WhatsApp API Media Send Error:', error.response?.data || error.message);
       throw new Error(error.response?.data?.error?.message || 'Failed to send WhatsApp media');
+    }
+  }
+
+  async sendInteractiveButtonMessage(to, { header, body, footer, buttons }) {
+    const sanitizedTo = String(to).replace(/\D/g, '');
+    const payload = {
+      messaging_product: 'whatsapp',
+      to: sanitizedTo,
+      type: 'interactive',
+      interactive: {
+        type: 'button',
+        body: { text: body }
+      }
+    };
+
+    if (header) {
+      if (header.type === 'image') payload.interactive.header = { type: 'image', image: { id: header.image } };
+      else if (header.type === 'video') payload.interactive.header = { type: 'video', video: { id: header.video } };
+      else if (header.type === 'document') payload.interactive.header = { type: 'document', document: { id: header.document } };
+      else if (header.type === 'text') payload.interactive.header = { type: 'text', text: header.text };
+    }
+
+    if (footer) payload.interactive.footer = { text: footer };
+
+    payload.interactive.action = {
+      buttons: buttons.map((btn, idx) => ({
+        type: 'reply',
+        reply: { id: `btn_${idx}_${Date.now()}`, title: btn.substring(0, 20) } // Max 20 chars for title
+      }))
+    };
+
+    try {
+      const response = await axios.post(this.baseUrl, payload, { headers: this.headers });
+      return response.data;
+    } catch (error) {
+      console.error('WhatsApp API Interactive Error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error?.message || 'Failed to send Interactive message');
+    }
+  }
+
+  async sendListMessage(to, { header, body, footer, buttonText, sections }) {
+    const sanitizedTo = String(to).replace(/\D/g, '');
+    const payload = {
+      messaging_product: 'whatsapp',
+      to: sanitizedTo,
+      type: 'interactive',
+      interactive: {
+        type: 'list',
+        body: { text: body },
+        action: {
+          button: buttonText.substring(0, 20),
+          sections: sections // [{ title: 'Section', rows: [{ id: 'row1', title: 'Option 1', description: 'desc' }] }]
+        }
+      }
+    };
+
+    if (header) payload.interactive.header = { type: 'text', text: header };
+    if (footer) payload.interactive.footer = { text: footer };
+
+    try {
+      const response = await axios.post(this.baseUrl, payload, { headers: this.headers });
+      return response.data;
+    } catch (error) {
+      console.error('WhatsApp API List Error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error?.message || 'Failed to send List message');
     }
   }
 }

@@ -55,7 +55,7 @@ export default function FlowBuilder() {
       const res = await fetch(`/api/flows/${id}`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nodes, edges })
+        body: JSON.stringify({ name: flowData.name, nodes, edges })
       });
       if (res.ok) alert('Flow canvas saved securely!');
       else alert('Failed to save flow');
@@ -101,12 +101,24 @@ export default function FlowBuilder() {
          <div className="flex items-center space-x-4">
             <button onClick={() => navigate('/flows')} className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft size={20} /></button>
             <div>
-               <h1 className="text-lg font-bold text-gray-800 flex items-center">
-                 {flowData.name} 
-                 <span className={`ml-3 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold ${flowData.status === 'ACTIVE' ? 'bg-green-100 text-green-800 border-green-200 border' : 'bg-yellow-100 text-yellow-800 border-yellow-200 border'}`}>
-                    {flowData.status === 'ACTIVE' ? 'Live' : 'Draft Mode'}
-                 </span>
-               </h1>
+          <div className="flex items-center space-x-4">
+            <button onClick={() => navigate('/flows')} className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft size={20} /></button>
+            <div>
+               <div className="flex items-center">
+                  <input 
+                     className="text-lg font-bold text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition-all px-1 -ml-1"
+                     value={flowData.name}
+                     onChange={(e) => setFlowData({ ...flowData, name: e.target.value })}
+                     onBlur={handleSave}
+                     onKeyDown={(e) => e.key === 'Enter' && e.target.blur()}
+                  />
+                  <span className={`ml-3 text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider font-bold ${flowData.status === 'ACTIVE' ? 'bg-green-100 text-green-800 border-green-200 border' : 'bg-yellow-100 text-yellow-800 border-yellow-200 border'}`}>
+                     {flowData.status === 'ACTIVE' ? 'Live' : 'Draft Mode'}
+                  </span>
+               </div>
+               <p className="text-xs text-gray-500 mt-0.5">{flowData.triggerType} Trigger {flowData.triggerKeywords?.length > 0 ? `("${flowData.triggerKeywords.join(', ')}")` : ''}</p>
+            </div>
+         </div>
                <p className="text-xs text-gray-500 mt-0.5">{flowData.triggerType} Trigger {flowData.triggerKeywords?.length > 0 ? `("${flowData.triggerKeywords.join(', ')}")` : ''}</p>
             </div>
          </div>

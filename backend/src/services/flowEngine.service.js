@@ -2,7 +2,8 @@ const { getTenantConnection } = require('../config/db');
 const mongoose = require('mongoose');
 const FlowSchema = require('../models/tenant/Flow');
 const ContactSchema = require('../models/tenant/Contact');
-const whatsappService = require('./whatsapp.service');
+const Client = require('../models/core/Client');
+const WhatsAppService = require('./whatsapp.service');
 
 /**
  * Traverses a visually-built ReactFlow JSON graph synchronously.
@@ -26,6 +27,17 @@ const executeFlow = async (tenantId, flowId, contact, io) => {
        return;
     }
 
+    // 0. Instantiate WhatsApp Service
+    const client = await Client.findOne({ tenantId });
+    if (!client || !client.whatsappConfig) {
+        console.error(`[Flow Engine] No WhatsApp config found for tenant ${tenantId}`);
+        return;
+    }
+    const waService = new WhatsAppService({
+        accessToken: client.whatsappConfig.accessToken,
+        phoneNumberId: client.whatsappConfig.phoneNumberId
+    });
+
     const { nodes, edges } = flowData;
     
     // Find Start Node
@@ -47,15 +59,41 @@ const executeFlow = async (tenantId, flowId, contact, io) => {
 
        // 1. Execute Node Behavior
        if (currentNode.type === 'messageNode') {
-           const msgType = currentNode.data?.msgType || 'TEXT';
-           const messageText = currentNode.data?.text || '';
-           const mediaUrl = currentNode.data?.mediaUrl || '';
-           const buttons = currentNode.data?.buttons || [];
+           const { msgType = 'TEXT', text = '', mediaUrl = '', mediaId = '', buttons = [], header = {}, footer = '', listOptions = [], buttonText = 'Menu' } = currentNode.data;
            
-           if (messageText || mediaUrl) {
-               console.log(`[Flow Engine] -> Sending ${msgType} Message to ${contact.phone}`);
-               // Real Meta API send
-               await whatsappService.sendTextMessage(tenantId, contact.phone, messageText || `[${msgType} Triggered]`);
+           try {
+               if (msgType === 'TEXT' && text) {
+                   await waService.sendTextMessage(contact.phone, text);
+               } 
+               else if ((msgType === 'IMAGE' || msgType === 'VIDEO' || msgType === 'DOCUMENT') && mediaId) {
+                   await waService.sendMedia(contact.phone, msgType.toLowerCase(), mediaId, text);
+               }
+               else if (msgType === 'INTERACTIVE_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0)) {
+                   // Traditional Interactive buttons or New Interactive Message
+                   await waService.sendInteractiveButtonMessage(contact.phone, {
+                       header: header.type ? header : (mediaId ? { type: 'image', image: mediaId } : null),
+                       body: text,
+                       footer: footer,
+                       buttons: buttons.filter(b => b.trim() !== '')
+                   });
+               }
+               else if (msgType === 'LIST_MESSAGE' && listOptions.length > 0) {
+                   await waService.sendListMessage(contact.phone, {
+                       header: header.text || '',
+                       body: text,
+                       footer: footer,
+                       buttonText: buttonText,
+                       sections: [{
+                           title: 'Options',
+                           rows: listOptions.filter(opt => opt.trim() !== '').map((opt, i) => ({
+                               id: `list_${i}_${Date.now()}`,
+                               title: opt.substring(0, 24)
+                           }))
+                       }]
+                   });
+               }
+           } catch (sendErr) {
+               console.error(`[Flow Engine] Failed to send ${msgType}:`, sendErr.message);
            }
            
            if (msgType === 'QUESTION') {
@@ -64,15 +102,14 @@ const executeFlow = async (tenantId, flowId, contact, io) => {
            }
        } 
        else if (currentNode.type === 'actionNode') {
-           const tagToApply = currentNode.data?.tag || '';
-           if (tagToApply) {
-               console.log(`[Flow Engine] -> Applying CRM Tag: [${tagToApply}] to ${contact.phone}`);
+           const tag = currentNode.data?.tag || '';
+           const actionType = currentNode.data?.actionType || 'ADD';
+           if (tag) {
+               console.log(`[Flow Engine] -> ${actionType} CRM Tag: [${tag}] to ${contact.phone}`);
                const tenantDb = getTenantConnection(tenantId);
                const Contact = tenantDb.model('Contact', ContactSchema);
-               await Contact.findOneAndUpdate(
-                  { phone: contact.phone },
-                  { $addToSet: { tags: tagToApply } }
-               );
+               const update = actionType === 'REMOVE' ? { $pull: { tags: tag } } : { $addToSet: { tags: tag } };
+               await Contact.findOneAndUpdate({ phone: contact.phone }, update);
            }
        }
 
@@ -103,18 +140,30 @@ const processIncomingMessage = async (tenantId, contact, messageText, io) => {
      const Flow = tenantDb.model('Flow', FlowSchema);
      activeFlows = await Flow.find({ status: 'ACTIVE', triggerType: 'KEYWORD' });
 
+     let matched = false;
      for (const flow of activeFlows) {
          let isMatch = false;
-         if (!flow.triggerKeywords || flow.triggerKeywords.length === 0 || flow.triggerKeywords[0] === '') {
-             isMatch = true;
+         if (!flow.triggerKeywords || flow.triggerKeywords.length === 0 || (flow.triggerKeywords.length === 1 && flow.triggerKeywords[0] === '')) {
+             // Skip empty flows during normal keyword matching if we want a specific default flow
+             continue;
          } else {
              isMatch = flow.triggerKeywords.some(kw => messageText.toLowerCase().includes(kw.toLowerCase().trim()));
          }
 
          if (isMatch) {
+             matched = true;
              console.log(`[Flow Engine] Keyphrase match! Triggering flow: ${flow.name}`);
              setTimeout(() => executeFlow(tenantId, flow._id || flow.id, contact, io), 500);
              break;
+         }
+     }
+
+     // Default Flow (Catch-all)
+     if (!matched) {
+         const defaultFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'KEYWORD', $or: [{ triggerKeywords: [] }, { triggerKeywords: [""] }] });
+         if (defaultFlow) {
+             console.log(`[Flow Engine] No matches. Triggering DEFAULT flow: ${defaultFlow.name}`);
+             setTimeout(() => executeFlow(tenantId, defaultFlow._id || defaultFlow.id, contact, io), 500);
          }
      }
   } catch (err) {

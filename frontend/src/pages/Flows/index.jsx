@@ -6,6 +6,12 @@ function Flows() {
   const navigate = useNavigate();
   const [flows, setFlows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [selectedFlow, setSelectedFlow] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editTrigger, setEditTrigger] = useState('KEYWORD');
+  const [editKeywords, setEditKeywords] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     fetchFlows();
@@ -63,6 +69,45 @@ function Flows() {
     }
   };
 
+  const openSettings = (flow) => {
+    setSelectedFlow(flow);
+    setEditName(flow.name);
+    setEditTrigger(flow.triggerType || 'KEYWORD');
+    setEditKeywords(flow.triggerKeywords?.join(', ') || '');
+    setIsSettingsOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!editName) return alert('Name is required');
+    setIsSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const keywordsArray = editKeywords.split(',').map(k => k.trim()).filter(Boolean);
+      
+      const res = await fetch(`/api/flows/${selectedFlow._id}`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            name: editName, 
+            triggerType: editTrigger, 
+            triggerKeywords: (editKeywords.trim() === '' && editTrigger === 'KEYWORD') ? [''] : keywordsArray 
+        })
+      });
+
+      if (res.ok) {
+        fetchFlows();
+        setIsSettingsOpen(false);
+      } else {
+        alert('Failed to update flow');
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="p-8 bg-crm-bg min-h-full animate-fade-in-up">
       <div className="flex justify-between items-center mb-8">
@@ -111,7 +156,10 @@ function Flows() {
                    <button onClick={() => handleDelete(f._id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Delete Flow">
                      <Trash2 size={16} />
                    </button>
-                   <button className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors" title="Settings">
+                   <button 
+                     onClick={() => openSettings(f)}
+                     className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors" title="Settings"
+                   >
                      <Settings size={16} />
                    </button>
                 </div>
@@ -121,6 +169,80 @@ function Flows() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {isSettingsOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+           <div className="bg-white rounded-2xl shadow-premium w-full max-w-md overflow-hidden">
+              <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                 <h2 className="text-xl font-bold text-gray-800">Flow Settings</h2>
+                 <button onClick={() => setIsSettingsOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">✕</button>
+              </div>
+              <div className="p-6 space-y-5">
+                 <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Flow Name</label>
+                    <input 
+                       type="text" 
+                       className="w-full border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50" 
+                       value={editName}
+                       onChange={(e) => setEditName(e.target.value)}
+                       placeholder="e.g. Welcome Customer"
+                    />
+                 </div>
+
+                 <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Trigger Rule</label>
+                    <div className="grid grid-cols-2 gap-2">
+                       <button 
+                          onClick={() => setEditTrigger('KEYWORD')}
+                          className={`p-2.5 rounded-lg border text-xs font-bold transition-all ${editTrigger === 'KEYWORD' && editKeywords.trim() !== '' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
+                       >
+                          Keyword Match
+                       </button>
+                       <button 
+                          onClick={() => { setEditTrigger('KEYWORD'); setEditKeywords(''); }}
+                          className={`p-2.5 rounded-lg border text-xs font-bold transition-all ${(editTrigger === 'KEYWORD' && editKeywords.trim() === '') ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
+                       >
+                          Catch-all (Default)
+                       </button>
+                    </div>
+                 </div>
+
+                 {editTrigger === 'KEYWORD' && editKeywords.trim() !== '' && (
+                    <div className="space-y-1.5">
+                       <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Keywords (comma separated)</label>
+                       <textarea 
+                          className="w-full border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-50 min-h-[80px]" 
+                          value={editKeywords}
+                          onChange={(e) => setEditKeywords(e.target.value)}
+                          placeholder="hello, hi, help"
+                       />
+                       <p className="text-[10px] text-gray-400">Flow triggers when a customer message contains any of these words.</p>
+                    </div>
+                 )}
+                 
+                 {editTrigger === 'KEYWORD' && editKeywords.trim() === '' && (
+                    <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
+                       <p className="text-xs text-purple-800 leading-relaxed font-semibold">
+                          <span className="mr-1.5">🚀</span> 
+                          This flow will trigger **automatically** for every message that doesn't match any other keyword-specific flow.
+                       </p>
+                    </div>
+                 )}
+              </div>
+              <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex justify-end space-x-3">
+                 <button onClick={() => setIsSettingsOpen(false)} className="px-5 py-2 text-sm font-bold text-gray-500 hover:text-gray-700 transition-colors">Cancel</button>
+                 <button 
+                    onClick={handleUpdate}
+                    disabled={isSaving}
+                    className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-bold shadow-soft hover:bg-blue-700 disabled:opacity-50 transition-all flex items-center"
+                 >
+                    {isSaving ? 'Updating...' : 'Save Settings'}
+                 </button>
+              </div>
+           </div>
         </div>
       )}
     </div>
