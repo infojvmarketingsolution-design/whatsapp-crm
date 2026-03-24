@@ -144,13 +144,13 @@ const processIncomingMessage = async (tenantId, contact, messageText, io) => {
      for (const flow of activeFlows) {
          let isMatch = false;
          const keywords = flow.triggerKeywords || [];
-         const useSmartAI = flow.useSmartAI || false;
+         const isSmartMatchEnabled = flow.isSmartMatch || false;
 
          if (keywords.length === 0 || (keywords.length === 1 && keywords[0] === '')) {
              continue; // Skip catch-all here
          }
 
-         if (useSmartAI) {
+         if (isSmartMatchEnabled) {
              isMatch = isSmartMatch(messageText, keywords);
          } else {
              isMatch = keywords.some(kw => messageText.toLowerCase().includes(kw.toLowerCase().trim()));
@@ -158,7 +158,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io) => {
 
          if (isMatch) {
              matched = true;
-             console.log(`[Flow Engine] ${useSmartAI ? 'Smart AI' : 'Keyphrase'} match! Triggering flow: ${flow.name}`);
+             console.log(`[Flow Engine] ${isSmartMatchEnabled ? 'Smart AI' : 'Keyphrase'} match! Triggering flow: ${flow.name}`);
              setTimeout(() => executeFlow(tenantId, flow._id || flow.id, contact, io), 500);
              break;
          }
