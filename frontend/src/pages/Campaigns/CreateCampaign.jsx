@@ -133,15 +133,23 @@ function CreateCampaign() {
     
     if (newTemplate.buttons.length > 0) {
        const metaBtns = newTemplate.buttons.map(b => {
-          if (b.type === 'URL' && b.text && b.url) {
+          if (!b.text) return null;
+          
+          if (b.text.length > 25) {
+             alert(`Button text "${b.text}" is too long. Meta allows maximum 25 characters. Current: ${b.text.length}`);
+             setLoading(false);
+             throw new Error('Button text too long');
+          }
+
+          if (b.type === 'URL' && b.url) {
              let finalUrl = b.url.trim();
              if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
                 finalUrl = 'https://' + finalUrl;
              }
              return { type: 'URL', text: b.text, url: finalUrl };
           }
-          if (b.type === 'PHONE_NUMBER' && b.text && b.phoneNumber) return { type: 'PHONE_NUMBER', text: b.text, phone_number: b.phoneNumber };
-          if (b.type === 'QUICK_REPLY' && b.text) return { type: 'QUICK_REPLY', text: b.text };
+          if (b.type === 'PHONE_NUMBER' && b.phoneNumber) return { type: 'PHONE_NUMBER', text: b.text, phone_number: b.phoneNumber };
+          if (b.type === 'QUICK_REPLY') return { type: 'QUICK_REPLY', text: b.text };
           return null;
        }).filter(Boolean);
        if (metaBtns.length > 0) components.push({ type: 'BUTTONS', buttons: metaBtns });
@@ -399,9 +407,12 @@ function CreateCampaign() {
                                  <option value="PHONE_NUMBER">Call Phone</option>
                                  <option value="QUICK_REPLY">Quick Reply</option>
                               </select>
-                              <input type="text" className="flex-1 px-2 py-1.5 border border-gray-200 rounded text-xs" placeholder="Button Text" value={btn.text} onChange={e => {
-                                 const btns = [...newTemplate.buttons]; btns[idx].text = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
-                              }} maxLength={25} />
+                              <div className="flex-1 relative">
+                                <input type="text" className={`w-full px-2 py-1.5 border rounded text-xs ${btn.text.length > 25 ? 'border-red-500 bg-red-50' : 'border-gray-200'}`} placeholder="Button Text" value={btn.text} onChange={e => {
+                                   const btns = [...newTemplate.buttons]; btns[idx].text = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
+                                }} maxLength={50} />
+                                <span className={`absolute right-1 -bottom-3 text-[8px] font-bold ${btn.text.length > 25 ? 'text-red-500' : 'text-gray-400'}`}>{btn.text.length}/25</span>
+                              </div>
                               
                               {btn.type === 'URL' && <input type="text" className="flex-[1.5] px-2 py-1.5 border border-gray-200 rounded text-xs" placeholder="https://..." value={btn.url} onChange={e => {
                                  const btns = [...newTemplate.buttons]; btns[idx].url = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
