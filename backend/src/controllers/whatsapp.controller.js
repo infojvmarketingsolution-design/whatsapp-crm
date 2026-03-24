@@ -141,23 +141,45 @@ const handleIncomingMessage = async (req, res) => {
       const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
       const Campaign = tenantDb.model('Campaign', CampaignSchema);
       
-      const log = await CampaignLog.findOneAndUpdate(
-         { messageId: statusEvent.id },
-         { 
-           status: statusEvent.status.toUpperCase(),
-           ...(statusEvent.status === 'delivered' ? { deliveredAt: new Date() } : {}),
-           ...(statusEvent.status === 'read' ? { readAt: new Date() } : {})
-         }
-      );
-
+      const log = await CampaignLog.findOne({ messageId: statusEvent.id });
+      
       if (log && log.campaignId) {
+         const updates = {};
          const incQuery = {};
-         if (statusEvent.status === 'delivered') incQuery['metrics.delivered'] = 1;
-         if (statusEvent.status === 'read') incQuery['metrics.read'] = 1;
-         if (statusEvent.status === 'failed') incQuery['metrics.failed'] = 1;
-         
+         const status = statusEvent.status.toUpperCase();
+
+         // 100% Correct Metrics Logic: Only increment if the transition is new
+         if (status === 'SENT' && !log.sentAt) {
+            updates.sentAt = new Date();
+            updates.status = 'SENT';
+         } else if (status === 'DELIVERED' && !log.deliveredAt) {
+            updates.deliveredAt = new Date();
+            updates.status = 'DELIVERED';
+            incQuery['metrics.delivered'] = 1;
+            // If it was skipped to delivered, mark sentAt too
+            if (!log.sentAt) updates.sentAt = new Date();
+         } else if (status === 'READ' && !log.readAt) {
+            updates.readAt = new Date();
+            updates.status = 'READ';
+            incQuery['metrics.read'] = 1;
+            // Ensure delivery was counted
+            if (!log.deliveredAt) {
+               incQuery['metrics.delivered'] = 1;
+               updates.deliveredAt = new Date();
+            }
+            if (!log.sentAt) updates.sentAt = new Date();
+         } else if (status === 'FAILED' && log.status !== 'FAILED') {
+            updates.status = 'FAILED';
+            updates.errorReason = statusEvent.errors?.[0]?.title || 'Unknown Meta Error';
+            incQuery['metrics.failed'] = 1;
+         }
+
+         if (Object.keys(updates).length > 0) {
+            await CampaignLog.updateOne({ _id: log._id }, { $set: updates });
+         }
+
          if (Object.keys(incQuery).length > 0) {
-           await Campaign.findByIdAndUpdate(log.campaignId, { $inc: incQuery });
+            await Campaign.findByIdAndUpdate(log.campaignId, { $inc: incQuery });
          }
       }
     }
@@ -197,6 +219,10 @@ const getApiConfig = async (req, res) => {
     if (!client) return res.status(404).json({ message: 'Client not found' });
     
     let configData = client.whatsappConfig ? client.whatsappConfig.toObject() : {};
+    configData.plan = client.plan;
+    configData.status = client.status;
+    configData.subscriptionEndsAt = client.subscriptionEndsAt;
+    configData.maxMessagesPerDay = client.maxMessagesPerDay;
 
     // Calculate Sent Today from Tenant DB
     try {

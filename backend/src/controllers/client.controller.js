@@ -13,7 +13,7 @@ const getClients = async (req, res) => {
 };
 
 const createClient = async (req, res) => {
-  const { name, email, phone, companyName, plan, adminName, password } = req.body;
+  const { name, email, phone, companyName, plan, adminName, password, maxMessagesPerDay, subscriptionEndsAt } = req.body;
   try {
     const clientExists = await Client.findOne({ email });
     if (clientExists) {
@@ -31,7 +31,9 @@ const createClient = async (req, res) => {
       companyName,
       tenantId,
       apiKey,
-      plan: plan || 'BASIC'
+      plan: plan || 'BASIC',
+      maxMessagesPerDay: maxMessagesPerDay || (plan === 'PREMIUM' ? 10000 : plan === 'PRO' ? 5000 : 1000),
+      subscriptionEndsAt: subscriptionEndsAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // Default 30 days
     });
 
     // Create default ADMIN user for this tenant

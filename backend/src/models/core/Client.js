@@ -16,7 +16,8 @@ const ClientSchema = new mongoose.Schema({
     phoneNumber: String,
     wabaName: String
   },
-  subscriptionEndsAt: Date
+  subscriptionEndsAt: Date,
+  maxMessagesPerDay: { type: Number, default: 1000 }
 }, { timestamps: true });
 
 module.exports = mongoose.model('Client', ClientSchema);
