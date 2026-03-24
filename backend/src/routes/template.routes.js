@@ -4,7 +4,7 @@ const { syncTemplates, getTemplates, createTemplate, deleteTemplate, uploadTempl
 const { protect } = require('../middleware/auth');
 const tenantMiddleware = require('../middleware/tenant');
 const multer = require('multer');
-const upload = multer({ dest: 'public/uploads/templates/' });
+const upload = multer({ dest: 'backend/public/uploads/templates/' });
 
 router.use(protect, tenantMiddleware);
 

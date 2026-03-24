@@ -18,6 +18,7 @@ function CreateCampaign() {
   const [newTemplate, setNewTemplate] = useState({ 
     name: '', category: 'MARKETING', language: 'en', 
     headerType: 'NONE', headerText: '', headerMediaUrl: '', headerFile: null,
+    latitude: '', longitude: '',
     bodyText: '', footerText: '', buttons: [] 
   });
   const headerFileRef = React.useRef(null);
@@ -83,7 +84,7 @@ function CreateCampaign() {
     if (newTemplate.headerType !== 'NONE') {
       if (newTemplate.headerType === 'TEXT' && newTemplate.headerText) {
          components.push({ type: 'HEADER', format: 'TEXT', text: newTemplate.headerText });
-      } else if (newTemplate.headerType === 'IMAGE') {
+      } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(newTemplate.headerType)) {
          let finalUrl = newTemplate.headerMediaUrl;
          
          // If a file is selected, upload it first
@@ -116,12 +117,19 @@ function CreateCampaign() {
          }
 
          if (finalUrl) {
-            components.push({ type: 'HEADER', format: 'IMAGE', example: { header_url: [finalUrl] } });
+            components.push({ type: 'HEADER', format: newTemplate.headerType, example: { header_url: [finalUrl] } });
          } else {
-            alert('Please provide an image URL or upload a file.');
+            alert('Please provide a URL or upload a file for the ' + newTemplate.headerType.toLowerCase());
             setLoading(false);
             return;
          }
+      } else if (newTemplate.headerType === 'LOCATION') {
+         if (!newTemplate.latitude || !newTemplate.longitude) {
+            alert('Please provide latitude and longitude for location header.');
+            setLoading(false);
+            return;
+         }
+         components.push({ type: 'HEADER', format: 'LOCATION', example: { location: { latitude: parseFloat(newTemplate.latitude), longitude: parseFloat(newTemplate.longitude) } } });
       }
     }
     
@@ -334,11 +342,14 @@ function CreateCampaign() {
                            <option value="NONE">None</option>
                            <option value="TEXT">Text Title</option>
                            <option value="IMAGE">Image Media</option>
+                           <option value="VIDEO">Video Media</option>
+                           <option value="DOCUMENT">Document (PDF/Doc)</option>
+                           <option value="LOCATION">Location</option>
                         </select>
                         {newTemplate.headerType === 'TEXT' && (
                            <input type="text" className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500" placeholder="Header Text" value={newTemplate.headerText} onChange={e => setNewTemplate({...newTemplate, headerText: e.target.value})} maxLength={60} />
                         )}
-                        {newTemplate.headerType === 'IMAGE' && (
+                        {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(newTemplate.headerType) && (
                            <div className="space-y-3">
                              <div 
                                className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center hover:bg-gray-50 cursor-pointer transition-colors"
@@ -348,7 +359,7 @@ function CreateCampaign() {
                                   type="file" 
                                   ref={headerFileRef} 
                                   className="hidden" 
-                                  accept="image/*" 
+                                  accept={newTemplate.headerType === 'IMAGE' ? "image/*" : newTemplate.headerType === 'VIDEO' ? "video/*" : ".pdf,.doc,.docx"} 
                                   onChange={(e) => setNewTemplate({...newTemplate, headerFile: e.target.files[0], headerMediaUrl: ''})} 
                                 />
                                 {newTemplate.headerFile ? (
@@ -359,7 +370,7 @@ function CreateCampaign() {
                                 ) : (
                                   <>
                                     <UploadCloud size={24} className="text-gray-400 mb-1" />
-                                    <p className="text-xs font-bold text-gray-500 text-center">Click to upload image</p>
+                                    <p className="text-xs font-bold text-gray-500 text-center">Click to upload {newTemplate.headerType.toLowerCase()}</p>
                                   </>
                                 )}
                              </div>
@@ -371,10 +382,22 @@ function CreateCampaign() {
                              <input 
                                type="text" 
                                className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500" 
-                               placeholder="Enter Public Image URL" 
+                               placeholder={`Enter Public ${newTemplate.headerType.toLowerCase()} URL`} 
                                value={newTemplate.headerMediaUrl} 
                                onChange={e => setNewTemplate({...newTemplate, headerMediaUrl: e.target.value, headerFile: null})} 
                              />
+                           </div>
+                        )}
+                        {newTemplate.headerType === 'LOCATION' && (
+                           <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Latitude</label>
+                                 <input type="number" step="any" className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="e.g. 23.0225" value={newTemplate.latitude} onChange={e => setNewTemplate({...newTemplate, latitude: e.target.value})} />
+                              </div>
+                              <div>
+                                 <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Longitude</label>
+                                 <input type="number" step="any" className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500 text-sm" placeholder="e.g. 72.5714" value={newTemplate.longitude} onChange={e => setNewTemplate({...newTemplate, longitude: e.target.value})} />
+                              </div>
                            </div>
                         )}
                       </div>

@@ -200,7 +200,7 @@ const uploadTemplateMedia = async (req, res) => {
     if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
 
     const tenantId = req.tenantId;
-    const uploadDir = path.join(__dirname, '..', '..', 'public', 'uploads', 'templates', tenantId);
+    const uploadDir = path.join(process.cwd(), 'backend', 'public', 'uploads', 'templates', tenantId);
     
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
