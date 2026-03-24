@@ -352,7 +352,7 @@ function AppLayout() {
         {!isAuthPage && (
           <div className="w-full py-4 text-center mt-auto bg-crm-bg shrink-0">
              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">
-                Developed by J.V group
+                Developed by J.V group | v1.2.0-FINAL
              </span>
           </div>
         )}
