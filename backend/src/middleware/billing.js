@@ -36,8 +36,10 @@ const checkBillingStatus = async (req, res, next) => {
         startOfDay.setHours(0, 0, 0, 0);
 
         const tenantDb = getTenantConnection(tenantId);
-        const Message = tenantDb.model('Message', MessageSchema);
-        const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
+        
+        // Safety check for model definitions
+        const Message = tenantDb.models['Message'] || tenantDb.model('Message', MessageSchema);
+        const CampaignLog = tenantDb.models['CampaignLog'] || tenantDb.model('CampaignLog', CampaignLogSchema);
 
         // Count both manual messages and campaign logs sent today
         const [msgCount, logCount] = await Promise.all([

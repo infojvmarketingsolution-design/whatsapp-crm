@@ -227,15 +227,17 @@ const getApiConfig = async (req, res) => {
     // Calculate Sent Today from Tenant DB
     try {
         const tenantDb = getTenantConnection(req.tenantId);
-        const Message = tenantDb.model('Message', MessageSchema);
-        const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
+        
+        // Safety check for model definitions
+        const Message = tenantDb.models['Message'] || tenantDb.model('Message', MessageSchema);
+        const CampaignLog = tenantDb.models['CampaignLog'] || tenantDb.model('CampaignLog', CampaignLogSchema);
 
         const startOfDay = new Date();
         startOfDay.setHours(0, 0, 0, 0);
 
         const [msgCount, logCount] = await Promise.all([
             Message.countDocuments({ direction: 'OUTBOUND', createdAt: { $gte: startOfDay } }),
-            CampaignLog.countDocuments({ status: 'SENT', sentAt: { $gte: startOfDay } })
+            CampaignLog.countDocuments({ status: { $in: ['SENT', 'DELIVERED', 'READ'] }, sentAt: { $gte: startOfDay } })
         ]);
 
         configData.sentToday = msgCount + logCount;
@@ -243,33 +245,33 @@ const getApiConfig = async (req, res) => {
         console.error('Failed to calculate sentToday:', err.message);
         configData.sentToday = 0;
     }
-    
-    // Attempt to fetch live verified name and phone from Meta Graph API
+
+    // Attempt to fetch live verified name and phone from Meta Graph API using axios
     if (configData.accessToken && configData.phoneNumberId) {
       try {
-        const metaRes = await fetch(`https://graph.facebook.com/v19.0/${configData.phoneNumberId}`, {
-          method: 'GET',
+        const axios = require('axios');
+        const metaRes = await axios.get(`https://graph.facebook.com/v19.0/${configData.phoneNumberId}`, {
           headers: { 'Authorization': `Bearer ${configData.accessToken}` }
         });
         
-        if (metaRes.ok) {
-          const metaData = await metaRes.json();
+        if (metaRes.data) {
+          const metaData = metaRes.data;
           if (metaData.verified_name) configData.wabaName = metaData.verified_name;
           if (metaData.display_phone_number) configData.phoneNumber = metaData.display_phone_number;
         }
 
         // Fetch WABA Specific Limits
         if (configData.wabaId) {
-            const wabaRes = await fetch(`https://graph.facebook.com/v17.0/${configData.wabaId}?fields=id,name,messaging_limit_tier`, {
+            const wabaRes = await axios.get(`https://graph.facebook.com/v17.0/${configData.wabaId}?fields=id,name,messaging_limit_tier`, {
                 headers: { 'Authorization': `Bearer ${configData.accessToken}` }
             });
-            if (wabaRes.ok) {
-                const wabaData = await wabaRes.json();
+            if (wabaRes.data) {
+                const wabaData = wabaRes.data;
                 configData.limitTier = wabaData.messaging_limit_tier;
             }
         }
       } catch (err) {
-        console.error('Failed to fetch verified name from Meta:', err.message);
+        console.error('Failed to fetch from Meta via Axios:', err.response?.data || err.message);
       }
     }
     
@@ -320,27 +322,23 @@ const testApiConnection = async (req, res) => {
     phoneNumberId = client.whatsappConfig.phoneNumberId;
     accessToken = client.whatsappConfig.accessToken;
     
-    // Call Meta Graph API to test token validity
-    const response = await fetch(`https://graph.facebook.com/v17.0/${phoneNumberId}`, {
-      method: 'GET',
+    // Call Meta Graph API to test token validity using axios
+    const axios = require('axios');
+    const response = await axios.get(`https://graph.facebook.com/v17.0/${phoneNumberId}`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`
       }
     });
 
-    const data = await response.json();
+    const data = response.data;
 
-    if (response.ok) {
-      if (data.id === phoneNumberId) {
-        return res.json({ success: true, message: 'Connection successful! Credentials are valid.' });
-      } else {
-        return res.json({ success: false, message: 'Connection succeeded, but returned unexpected data.' });
-      }
+    if (data && data.id === phoneNumberId) {
+      return res.json({ success: true, message: 'Connection successful! Credentials are valid.' });
     } else {
-      return res.status(400).json({ success: false, message: `Meta API Error: ${data.error?.message || 'Invalid credentials'}` });
+      return res.json({ success: false, message: 'Connection succeeded, but returned unexpected data.' });
     }
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(400).json({ success: false, message: `Meta API Error: ${error.response?.data?.error?.message || error.message}` });
   }
 };
 
