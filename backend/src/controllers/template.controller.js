@@ -197,26 +197,28 @@ const path = require('path');
 
 const uploadTemplateMedia = async (req, res) => {
   try {
-    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
-
-    const tenantId = req.tenantId;
-    const uploadDir = path.join(process.cwd(), 'backend', 'public', 'uploads', 'templates', tenantId);
-    
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+    if (!req.file) {
+      console.error('Upload Template Media: No file in request');
+      return res.status(400).json({ message: 'No file uploaded or file rejected by server.' });
     }
 
-    const ext = path.extname(req.file.originalname);
-    const fileName = `${Date.now()}${ext}`;
-    const targetPath = path.join(uploadDir, fileName);
+    console.log('Template Media Uploaded:', req.file.path);
 
+    const tenantId = req.tenantId;
+    const finalDir = path.join(process.cwd(), 'backend', 'public', 'uploads', 'templates', tenantId);
+    
+    if (!fs.existsSync(finalDir)) {
+      fs.mkdirSync(finalDir, { recursive: true });
+    }
+
+    const targetPath = path.join(finalDir, req.file.filename);
     fs.renameSync(req.file.path, targetPath);
 
-    const publicUrl = `/uploads/templates/${tenantId}/${fileName}`;
+    const publicUrl = `/uploads/templates/${tenantId}/${req.file.filename}`;
     res.json({ url: publicUrl });
   } catch (error) {
-    console.error('Upload Template Media Error:', error.message);
-    res.status(500).json({ message: 'Failed to upload media', error: error.message });
+    console.error('Upload Template Media Error:', error);
+    res.status(500).json({ message: 'Failed to process media upload', error: error.message });
   }
 };
 

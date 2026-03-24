@@ -104,7 +104,8 @@ function CreateCampaign() {
                 const uploadData = await uploadRes.json();
                 finalUrl = window.location.origin + '/api' + uploadData.url;
               } else {
-                alert('Media upload failed');
+                const errorData = await uploadRes.json();
+                alert('Media upload failed: ' + (errorData.message || uploadRes.statusText));
                 setLoading(false);
                 return;
               }
