@@ -64,11 +64,6 @@ const worker = new Worker('campaign-dispatch', async job => {
             }
         }
 
-        // TEST: Force an error for a specific number to verify reporting
-        if (log.phone === '9904015760') {
-           throw new Error('SYSTEM_DIAGNOSTIC_TEST: Error reporting is working!');
-        }
-
         const response = await axios.post(
           `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
           {
