@@ -1,5 +1,6 @@
 const { getTenantConnection } = require('../config/db');
 const mongoose = require('mongoose');
+const { mapMetaError } = require('../utils/metaErrorMapper');
 const CampaignSchema = require('../models/tenant/Campaign');
 const CampaignLogSchema = require('../models/tenant/CampaignLog');
 const ContactSchema = require('../models/tenant/Contact');
@@ -170,7 +171,8 @@ const processCampaignSync = async (tenantId, campaignId) => {
                 log.status = 'FAILED';
                 const metaError = err.response?.data?.error;
                 if (metaError) {
-                    log.errorReason = `${metaError.message || 'Unknown Meta Error'} (Code: ${metaError.code})`;
+                    const friendlyMessage = mapMetaError(metaError.code, metaError.message);
+                    log.errorReason = `${friendlyMessage} (Code: ${metaError.code})`;
                     if (metaError.error_data?.details) {
                         log.errorReason += ` - ${metaError.error_data.details}`;
                     }

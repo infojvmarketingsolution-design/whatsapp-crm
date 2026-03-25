@@ -3,7 +3,7 @@ const { connection } = require('../services/queue.service');
 const { getTenantConnection } = require('../config/db');
 const axios = require('axios');
 const Client = require('../models/core/Client');
-const CampaignSchema = require('../models/tenant/Campaign');
+const { mapMetaError } = require('../utils/metaErrorMapper');
 const CampaignLogSchema = require('../models/tenant/CampaignLog');
 const ContactSchema = require('../models/tenant/Contact');
 const MessageSchema = require('../models/tenant/Message');
@@ -124,7 +124,8 @@ const worker = new Worker('campaign-dispatch', async job => {
         
         log.status = 'FAILED';
         if (metaError) {
-          log.errorReason = `${metaError.message || 'Unknown Meta Error'} (Code: ${metaError.code})`;
+          const friendlyMessage = mapMetaError(metaError.code, metaError.message);
+          log.errorReason = `${friendlyMessage} (Code: ${metaError.code})`;
           if (metaError.error_data?.details) {
             log.errorReason += ` - ${metaError.error_data.details}`;
           }

@@ -8,6 +8,7 @@ const CampaignSchema = require('../models/tenant/Campaign');
 const mongoose = require('mongoose');
 const { processIncomingMessage } = require('../services/flowEngine.service');
 const TemplateSchema = require('../models/tenant/Template');
+const { mapMetaError } = require('../utils/metaErrorMapper');
 const WhatsAppService = require('../services/whatsapp.service');
 
 const verifyWebhook = (req, res) => {
@@ -150,7 +151,8 @@ const handleIncomingMessage = async (req, res) => {
       
       // If failure details are present in the webhook, capture them
       if (metaError && statusEvent.status === 'failed') {
-          logUpdate.errorReason = `${metaError.message || 'Unknown Meta Error'} (Code: ${metaError.code})`;
+          const friendlyMessage = mapMetaError(metaError.code, metaError.message);
+          logUpdate.errorReason = `${friendlyMessage} (Code: ${metaError.code})`;
           if (metaError.error_data?.details) {
               logUpdate.errorReason += ` - ${metaError.error_data.details}`;
           }
