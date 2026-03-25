@@ -11,18 +11,39 @@ const Client = require('../models/core/Client');
 const createCampaign = async (req, res) => {
   try {
     const tenantId = req.tenantId;
-    const { name, whatsappNumber, templateId, scheduledAt, audienceTags, templateComponents } = req.body;
+    const { name, whatsappNumber, templateId, scheduledAt, audienceTags, templateComponents, uploadedContacts } = req.body;
     const tenantDb = getTenantConnection(tenantId);
     const Campaign = tenantDb.model('Campaign', CampaignSchema);
     const Contact = tenantDb.model('Contact', ContactSchema);
     const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
 
-    let contactQuery = { optInStatus: true };
-    if (audienceTags && audienceTags.length > 0) {
-      contactQuery.tags = { $in: audienceTags };
+    let targetContacts = [];
+
+    if (uploadedContacts && uploadedContacts.length > 0) {
+      // Process uploaded contacts: Upsert them so they exist in our CRM
+      const upsertPromises = uploadedContacts.map(async (c) => {
+        const phone = String(c.phone).trim().replace(/[^\d+]/g, '');
+        if (!phone) return null;
+        
+        return Contact.findOneAndUpdate(
+          { phone },
+          { 
+            $set: { name: c.name || '', optInStatus: true },
+            $addToSet: { tags: 'csv_import' } 
+          },
+          { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+      });
+      const results = await Promise.all(upsertPromises);
+      targetContacts = results.filter(c => c !== null);
+    } else {
+      // Tag-based selection
+      let contactQuery = { optInStatus: true };
+      if (audienceTags && audienceTags.length > 0) {
+        contactQuery.tags = { $in: audienceTags };
+      }
+      targetContacts = await Contact.find(contactQuery);
     }
-    
-    const targetContacts = await Contact.find(contactQuery);
 
     const newCampaign = await Campaign.create({
       name,

@@ -18,6 +18,7 @@ function CreateCampaign() {
   const [templates, setTemplates] = useState([]);
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
   const [showMediaGuide, setShowMediaGuide] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
   const selectedTemplate = templates.find(t => t._id === formData.templateId);
   const [newTemplate, setNewTemplate] = useState({ 
     name: '', category: 'MARKETING', language: 'en', 
@@ -480,7 +481,14 @@ function CreateCampaign() {
                       {templates.map(t => (
                         <div 
                           key={t._id} 
-                          onClick={() => setFormData({ ...formData, templateId: t._id })}
+                          onClick={() => {
+                             setFormData(prev => ({ 
+                               ...prev, 
+                               templateId: t._id,
+                               templateComponents: { header: null, body: { variables: [] } }
+                             }));
+                             setShowConfigModal(true);
+                          }}
                           className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${formData.templateId === t._id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200 shadow-soft' : 'border-gray-200 hover:border-gray-300'}`}
                         >
                           <div>
@@ -497,153 +505,15 @@ function CreateCampaign() {
                       ))}
                     </div>
 
-                    {/* Template Configuration (Media/Variables) */}
-                    {formData.templateId && !isCreatingTemplate && selectedTemplate && (
-                       <div className="mt-8 p-6 bg-blue-50/30 rounded-xl border border-blue-100 animate-fade-in">
-                          <h3 className="text-sm font-bold text-blue-800 mb-4 flex items-center">
-                             <AlertCircle size={16} className="mr-2" />
-                             Configure "{selectedTemplate.name}" Parameters
-                          </h3>
-                          
-                          {/* Header Media Config */}
-                          {selectedTemplate.components?.find(c => c.type === 'HEADER' && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(c.format)) && (
-                             <div className="mb-6">
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
-                                   Header {selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase()}
-                                </label>
-                                
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                   <div 
-                                     className="border-2 border-dashed border-blue-200 rounded-lg p-4 flex flex-col items-center justify-center hover:bg-blue-50 cursor-pointer transition-colors"
-                                     onClick={() => {
-                                        const input = document.createElement('input');
-                                        input.type = 'file';
-                                        input.accept = selectedTemplate.components.find(c => c.type === 'HEADER').format === 'IMAGE' ? "image/*" : selectedTemplate.components.find(c => c.type === 'HEADER').format === 'VIDEO' ? "video/*" : ".pdf";
-                                        input.onchange = async (e) => {
-                                           const file = e.target.files[0];
-                                           if (file) {
-                                              setLoading(true);
-                                              const formDataMedia = new FormData();
-                                              formDataMedia.append('file', file);
-                                              const token = localStorage.getItem('token');
-                                              const tenantId = localStorage.getItem('tenantId');
-                                              try {
-                                                 const uploadRes = await fetch('/api/templates/upload', {
-                                                    method: 'POST',
-                                                    headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId },
-                                                    body: formDataMedia
-                                                 });
-                                                 if (uploadRes.ok) {
-                                                    const uploadData = await uploadRes.json();
-                                                    const finalUrl = window.location.origin + '/api' + uploadData.url;
-                                                    setFormData(prev => ({
-                                                       ...prev,
-                                                       templateComponents: {
-                                                          ...prev.templateComponents,
-                                                          header: { 
-                                                             type: selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase(),
-                                                             link: finalUrl,
-                                                             filename: file.name
-                                                          }
-                                                       }
-                                                    }));
-                                                 }
-                                              } catch (err) {
-                                                  console.error(err);
-                                                  alert('Upload failed');
-                                              } finally {
-                                                 setLoading(false);
-                                              }
-                                           }
-                                        };
-                                        input.click();
-                                     }}
-                                   >
-                                      {formData.templateComponents.header?.link ? (
-                                         <div className="text-center">
-                                            <CheckCircle size={20} className="text-green-500 mx-auto mb-1" />
-                                            <p className="text-[10px] font-bold text-green-700 truncate max-w-[150px]">{formData.templateComponents.header.filename || 'Media Uploaded'}</p>
-                                         </div>
-                                      ) : (
-                                         <>
-                                            <UploadCloud size={20} className="text-blue-400 mb-1" />
-                                            <p className="text-[10px] font-bold text-blue-500">Upload {selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase()}</p>
-                                         </>
-                                      )}
-                                   </div>
-                                   <div className="flex flex-col justify-center">
-                                      <input 
-                                        type="text" 
-                                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500" 
-                                        placeholder="Or Enter Public URL"
-                                        value={formData.templateComponents.header?.link || ''}
-                                        onChange={e => setFormData(prev => ({
-                                           ...prev,
-                                           templateComponents: {
-                                              ...prev.templateComponents,
-                                              header: { 
-                                                 type: selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase(),
-                                                 link: e.target.value
-                                              }
-                                           }
-                                        }))}
-                                      />
-                                   </div>
-                                </div>
-                                
-                                {/* Media Criteria Info */}
-                                <div 
-                                  className="mt-3 p-3 bg-white/50 rounded-lg border border-blue-100/50 flex items-start space-x-2 cursor-pointer hover:bg-blue-50 transition-colors group"
-                                  onClick={() => setShowMediaGuide(true)}
-                                >
-                                   <Info size={14} className="text-blue-500 mt-0.5 group-hover:scale-110 transition-transform" />
-                                   <div className="text-[10px] text-gray-600 leading-relaxed flex-1">
-                                      <p className="font-bold text-blue-800 mb-1 uppercase tracking-tight flex justify-between items-center">
-                                         Requirement Criteria 
-                                         <span className="text-[8px] bg-blue-100 px-1 rounded text-blue-600">Click for Guide</span>
-                                      </p>
-                                      {selectedTemplate.components.find(c => c.type === 'HEADER').format === 'IMAGE' && "Images: JPG, PNG. Max size: 5MB."}
-                                      {selectedTemplate.components.find(c => c.type === 'HEADER').format === 'VIDEO' && "Videos: MP4, 3GP (H.264/AAC). Max size: 16MB."}
-                                      {selectedTemplate.components.find(c => c.type === 'HEADER').format === 'DOCUMENT' && "Documents: PDF only. Max size: 100MB."}
-                                   </div>
-                                </div>
-                             </div>
-                          )}
-
-                          {/* Body Variables Config */}
-                          {selectedTemplate.variables?.length > 0 && (
-                             <div>
-                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
-                                   Body Variables
-                                </label>
-                                <div className="space-y-3">
-                                   {selectedTemplate.variables.map((v, idx) => (
-                                      <div key={idx} className="flex items-center space-x-3">
-                                         <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">{v}</span>
-                                         <input 
-                                           type="text" 
-                                           className="flex-1 px-3 py-2 border border-gray-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500"
-                                           placeholder={`Value for ${v} (e.g. customer name)`}
-                                           value={formData.templateComponents.body.variables[idx] || ''}
-                                           onChange={e => {
-                                              const vars = [...formData.templateComponents.body.variables];
-                                              vars[idx] = e.target.value;
-                                              setFormData(prev => ({
-                                                 ...prev,
-                                                 templateComponents: {
-                                                    ...prev.templateComponents,
-                                                    body: { variables: vars }
-                                                 }
-                                              }));
-                                           }}
-                                         />
-                                      </div>
-                                   ))}
-                                </div>
-                             </div>
-                          )}
-                       </div>
-                    )}
+                    <TemplateConfigModal 
+                      isOpen={showConfigModal} 
+                      onClose={() => setShowConfigModal(false)}
+                      selectedTemplate={selectedTemplate}
+                      formData={formData}
+                      setFormData={setFormData}
+                      setLoading={setLoading}
+                      setShowMediaGuide={setShowMediaGuide}
+                    />
                   </>
                 )}
               </div>
@@ -748,6 +618,191 @@ function CreateCampaign() {
     </div>
   );
 }
+
+// Template Configuration Modal
+const TemplateConfigModal = ({ isOpen, onClose, selectedTemplate, formData, setFormData, setLoading, setShowMediaGuide }) => {
+  if (!isOpen || !selectedTemplate) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in slide-in-from-bottom-10 duration-300">
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div className="flex items-center space-x-3">
+             <div className="p-2 bg-blue-600 text-white rounded-lg shadow-soft">
+                <AlertCircle size={20} />
+             </div>
+             <div>
+                <h2 className="text-xl font-bold text-gray-900">Configure Parameters</h2>
+                <p className="text-xs text-gray-500 font-medium">Template: {selectedTemplate.name}</p>
+             </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+            <X size={20} className="text-gray-400" />
+          </button>
+        </div>
+
+        <div className="p-8 overflow-y-auto flex-1 space-y-8 bg-white">
+           {/* Header Media Config */}
+           {selectedTemplate.components?.find(c => c.type === 'HEADER' && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(c.format)) && (
+              <div className="space-y-4">
+                 <div className="flex items-center justify-between">
+                   <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">
+                      Header {selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase()}
+                   </label>
+                   <button 
+                     onClick={() => setShowMediaGuide(true)}
+                     className="text-[10px] font-bold text-blue-600 hover:text-blue-700 underline"
+                   >
+                     View Requirements
+                   </button>
+                 </div>
+                 
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div 
+                      className="border-2 border-dashed border-blue-200 rounded-xl p-5 flex flex-col items-center justify-center hover:bg-blue-50 cursor-pointer transition-all group"
+                      onClick={() => {
+                         const input = document.createElement('input');
+                         input.type = 'file';
+                         input.accept = selectedTemplate.components.find(c => c.type === 'HEADER').format === 'IMAGE' ? "image/*" : selectedTemplate.components.find(c => c.type === 'HEADER').format === 'VIDEO' ? "video/*" : ".pdf";
+                         input.onchange = async (e) => {
+                            const file = e.target.files[0];
+                            if (file) {
+                               setLoading(true);
+                               const formDataMedia = new FormData();
+                               formDataMedia.append('file', file);
+                               const token = localStorage.getItem('token');
+                               const tenantId = localStorage.getItem('tenantId');
+                               try {
+                                  const uploadRes = await fetch('/api/templates/upload', {
+                                     method: 'POST',
+                                     headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId },
+                                     body: formDataMedia
+                                  });
+                                  if (uploadRes.ok) {
+                                     const uploadData = await uploadRes.json();
+                                     const finalUrl = window.location.origin + '/api' + uploadData.url;
+                                     setFormData(prev => ({
+                                        ...prev,
+                                        templateComponents: {
+                                           ...prev.templateComponents,
+                                           header: { 
+                                              type: selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase(),
+                                              link: finalUrl,
+                                              filename: file.name
+                                           }
+                                        }
+                                     }));
+                                  }
+                               } catch (err) {
+                                   console.error(err);
+                                   alert('Upload failed');
+                               } finally {
+                                  setLoading(false);
+                               }
+                            }
+                         };
+                         input.click();
+                      }}
+                    >
+                       {formData.templateComponents.header?.link ? (
+                          <div className="text-center">
+                             <CheckCircle size={28} className="text-green-500 mx-auto mb-2" />
+                             <p className="text-xs font-bold text-green-700 truncate max-w-[150px]">{formData.templateComponents.header.filename || 'Media Uploaded'}</p>
+                             <p className="text-[10px] text-gray-400 mt-1">Click to change</p>
+                          </div>
+                       ) : (
+                          <>
+                             <div className="p-3 bg-blue-50 rounded-full group-hover:scale-110 transition-transform mb-3">
+                                <UploadCloud size={24} className="text-blue-500" />
+                             </div>
+                             <p className="text-xs font-bold text-blue-600">Upload {selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase()}</p>
+                          </>
+                       )}
+                    </div>
+                    <div className="flex flex-col justify-center space-y-2">
+                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center">OR</p>
+                       <input 
+                         type="text" 
+                         className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 shadow-sm" 
+                         placeholder="Enter Public URL"
+                         value={formData.templateComponents.header?.link || ''}
+                         onChange={e => setFormData(prev => ({
+                            ...prev,
+                            templateComponents: {
+                               ...prev.templateComponents,
+                               header: { 
+                                  type: selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase(),
+                                  link: e.target.value
+                               }
+                            }
+                         }))}
+                       />
+                    </div>
+                 </div>
+              </div>
+           )}
+
+           {/* Body Variables Config */}
+           {selectedTemplate.variables?.length > 0 && (
+              <div className="space-y-4">
+                 <label className="block text-xs font-bold text-gray-400 uppercase tracking-widest">
+                    Body Variables
+                 </label>
+                 <div className="space-y-4">
+                    {selectedTemplate.variables.map((v, idx) => (
+                       <div key={idx} className="flex flex-col space-y-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="w-6 h-6 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">{v}</span>
+                            <span className="text-[10px] font-bold text-gray-500">Value for variable</span>
+                          </div>
+                          <input 
+                            type="text" 
+                            className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-blue-500 shadow-sm"
+                            placeholder={`e.g. customer name, order ID...`}
+                            value={formData.templateComponents.body.variables[idx] || ''}
+                            onChange={e => {
+                               const vars = [...formData.templateComponents.body.variables];
+                               vars[idx] = e.target.value;
+                               setFormData(prev => ({
+                                  ...prev,
+                                  templateComponents: {
+                                     ...prev.templateComponents,
+                                     body: { variables: vars }
+                                  }
+                               }));
+                            }}
+                          />
+                       </div>
+                    ))}
+                 </div>
+              </div>
+           )}
+
+           {(!selectedTemplate.variables?.length && !selectedTemplate.components?.find(c => c.type === 'HEADER' && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(c.format))) && (
+              <div className="py-10 text-center space-y-4">
+                 <div className="p-4 bg-green-50 rounded-full w-fit mx-auto">
+                    <CheckCircle size={40} className="text-green-500" />
+                 </div>
+                 <div>
+                    <h3 className="font-bold text-gray-800">No configuration needed</h3>
+                    <p className="text-sm text-gray-500">This template is ready to use without any additional parameters.</p>
+                 </div>
+              </div>
+           )}
+        </div>
+
+        <div className="p-6 bg-gray-50 border-t border-gray-100 flex justify-center">
+          <button 
+            onClick={onClose}
+            className="px-16 py-3 bg-gray-900 text-white font-bold rounded-xl text-sm hover:bg-black transition-all shadow-md hover:-translate-y-0.5 transform active:scale-95"
+          >
+            Save & Continue
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // Media Requirements Guidance Modal
 const MediaRequirementsModal = ({ isOpen, onClose }) => {
