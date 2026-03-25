@@ -120,15 +120,20 @@ const worker = new Worker('campaign-dispatch', async job => {
         sentCount++;
       } catch (err) {
         const metaError = err.response?.data?.error;
-        console.error(`[Worker] Failed for ${log.phone}:`, metaError || err.message);
+        console.error(`[Worker CRITICAL] Status: ${err.response?.status}, Phone: ${log.phone}, Error:`, JSON.stringify(err.response?.data || err.message));
         
         log.status = 'FAILED';
-        // Capture more detail: code, subcode, and message
         if (metaError) {
-          log.errorReason = `${metaError.message}${metaError.error_data?.details ? ' (' + metaError.error_data.details + ')' : ''}`;
+          log.errorReason = `${metaError.message || 'Unknown Meta Error'} (Code: ${metaError.code})`;
+          if (metaError.error_data?.details) {
+            log.errorReason += ` - ${metaError.error_data.details}`;
+          }
         } else {
-          log.errorReason = err.message;
+          log.errorReason = err.message || 'Unknown System Error';
         }
+        
+        // Final fallback to ensure something is always there
+        if (!log.errorReason) log.errorReason = 'API Connection Failed';
         
         await log.save();
         failCount++;
