@@ -119,9 +119,17 @@ const worker = new Worker('campaign-dispatch', async job => {
 
         sentCount++;
       } catch (err) {
-        console.error(`[Worker] Failed for ${log.phone}:`, err.response?.data || err.message);
+        const metaError = err.response?.data?.error;
+        console.error(`[Worker] Failed for ${log.phone}:`, metaError || err.message);
+        
         log.status = 'FAILED';
-        log.errorReason = err.response?.data?.error?.message || err.message;
+        // Capture more detail: code, subcode, and message
+        if (metaError) {
+          log.errorReason = `${metaError.message}${metaError.error_data?.details ? ' (' + metaError.error_data.details + ')' : ''}`;
+        } else {
+          log.errorReason = err.message;
+        }
+        
         await log.save();
         failCount++;
       }

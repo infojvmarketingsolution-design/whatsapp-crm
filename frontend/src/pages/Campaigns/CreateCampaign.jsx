@@ -61,7 +61,14 @@ function CreateCampaign() {
 
           const parsed = rows.slice(startIndex).map(row => {
             const rawPhone = String(row[phoneIdx] || '').trim();
-            const normalizedPhone = rawPhone.replace(/[^\d+]/g, '');
+            
+            // Comprehensive cleaning: Allow leading + then only digits
+            let normalizedPhone = rawPhone.replace(/\s+/g, ''); 
+            if (normalizedPhone.startsWith('+')) {
+                normalizedPhone = '+' + normalizedPhone.substring(1).replace(/\D/g, '');
+            } else {
+                normalizedPhone = normalizedPhone.replace(/\D/g, '');
+            }
             
             // Basic validation: must have at least 7 digits
             if (normalizedPhone.replace(/\D/g, '').length < 7) return null;
