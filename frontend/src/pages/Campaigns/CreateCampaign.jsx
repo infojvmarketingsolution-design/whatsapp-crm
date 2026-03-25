@@ -34,13 +34,45 @@ function CreateCampaign() {
     const file = e.target.files[0];
     if (file) {
       Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
+        header: false,
+        skipEmptyLines: 'greedy',
         complete: function(results) {
-          const parsed = results.data.map(row => ({
-            phone: row.phone || row.Phone || row.PHONE || Object.values(row)[0],
-            name: row.name || row.Name || row.NAME || ''
-          })).filter(c => c.phone);
+          const rows = results.data;
+          if (!rows || rows.length === 0) return;
+
+          // Attempt to find the phone and name columns
+          const firstRow = rows[0].map(c => String(c || '').toLowerCase().trim());
+          const phoneKeywords = ['phone', 'mobile', 'whatsapp', 'number', 'contact', 'tele'];
+          const nameKeywords = ['name', 'full name', 'first name', 'customer', 'user', 'label'];
+
+          let phoneIdx = firstRow.findIndex(cell => phoneKeywords.some(k => cell.includes(k)));
+          let nameIdx = firstRow.findIndex(cell => nameKeywords.some(k => cell.includes(k)));
+
+          // Fallback logic if no headers match
+          if (phoneIdx === -1) {
+            // Check if first row contains something that looks like a phone number
+            phoneIdx = rows[0].findIndex(cell => /^\+?\d{7,15}$/.test(String(cell || '').replace(/\s+/g, '')));
+            if (phoneIdx === -1) phoneIdx = 0; // Default to first column
+          }
+
+          // Decide if we should skip the first row (if it's a header)
+          const isHeader = phoneIdx !== -1 && !/^\d{7,}$/.test(String(rows[0][phoneIdx] || '').replace(/\D/g, ''));
+          const startIndex = isHeader ? 1 : 0;
+
+          const parsed = rows.slice(startIndex).map(row => {
+            const rawPhone = String(row[phoneIdx] || '').trim();
+            const normalizedPhone = rawPhone.replace(/[^\d+]/g, '');
+            
+            // Basic validation: must have at least 7 digits
+            if (normalizedPhone.replace(/\D/g, '').length < 7) return null;
+
+            return {
+              phone: normalizedPhone,
+              name: nameIdx !== -1 && row[nameIdx] ? String(row[nameIdx]).trim() : ''
+            };
+          }).filter(Boolean);
+
+          console.log(`[CSV Parser] Successfully parsed ${parsed.length} contacts`);
           setFormData(prev => ({ ...prev, uploadedContacts: parsed, audienceTags: [] }));
         }
       });
