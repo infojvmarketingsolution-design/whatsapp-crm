@@ -168,7 +168,15 @@ const processCampaignSync = async (tenantId, campaignId) => {
             } catch (err) {
                 console.error(`[Campaign Controller] Failed to send to ${log.phone}:`, err.response?.data || err.message);
                 log.status = 'FAILED';
-                log.errorReason = err.response?.data?.error?.message || err.message;
+                const metaError = err.response?.data?.error;
+                if (metaError) {
+                    log.errorReason = `${metaError.message || 'Unknown Meta Error'} (Code: ${metaError.code})`;
+                    if (metaError.error_data?.details) {
+                        log.errorReason += ` - ${metaError.error_data.details}`;
+                    }
+                } else {
+                    log.errorReason = err.message || 'Unknown System Error';
+                }
                 await log.save();
                 failCount++;
             }

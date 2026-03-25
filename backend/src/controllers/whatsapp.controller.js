@@ -131,7 +131,8 @@ const handleIncomingMessage = async (req, res) => {
     // 3. Handle Status Updates
     if (value.statuses && value.statuses[0]) {
       const statusEvent = value.statuses[0];
-      console.log(`📊 [Tenant: ${client.tenantId}] Status Update:`, statusEvent.id, statusEvent.status);
+      const metaError = statusEvent.errors?.[0]; // Get the first error if present
+      console.log(`📊 [Tenant: ${client.tenantId}] Status Update:`, statusEvent.id, statusEvent.status, metaError || '');
 
       await Message.findOneAndUpdate(
          { messageId: statusEvent.id },
@@ -141,13 +142,23 @@ const handleIncomingMessage = async (req, res) => {
       const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
       const Campaign = tenantDb.model('Campaign', CampaignSchema);
       
+      const logUpdate = { 
+        status: statusEvent.status.toUpperCase(),
+        ...(statusEvent.status === 'delivered' ? { deliveredAt: new Date() } : {}),
+        ...(statusEvent.status === 'read' ? { readAt: new Date() } : {})
+      };
+      
+      // If failure details are present in the webhook, capture them
+      if (metaError && statusEvent.status === 'failed') {
+          logUpdate.errorReason = `${metaError.message || 'Unknown Meta Error'} (Code: ${metaError.code})`;
+          if (metaError.error_data?.details) {
+              logUpdate.errorReason += ` - ${metaError.error_data.details}`;
+          }
+      }
+
       const log = await CampaignLog.findOneAndUpdate(
          { messageId: statusEvent.id },
-         { 
-           status: statusEvent.status.toUpperCase(),
-           ...(statusEvent.status === 'delivered' ? { deliveredAt: new Date() } : {}),
-           ...(statusEvent.status === 'read' ? { readAt: new Date() } : {})
-         }
+         logUpdate
       );
 
       if (log && log.campaignId) {
