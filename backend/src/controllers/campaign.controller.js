@@ -131,9 +131,15 @@ const processCampaignSync = async (tenantId, campaignId) => {
                     
                     if (header) {
                         const headerParams = [];
-                        if (header.type === 'image') headerParams.push({ type: 'image', image: { link: header.link } });
-                        else if (header.type === 'video') headerParams.push({ type: 'video', video: { link: header.link } });
-                        else if (header.type === 'document') headerParams.push({ type: 'document', document: { link: header.link, filename: header.filename || 'Document' } });
+                        // Force HTTPS for all media links to prevent Meta API rejection
+                        let mediaLink = header.link;
+                        if (mediaLink && mediaLink.startsWith('http://')) {
+                            mediaLink = mediaLink.replace('http://', 'https://');
+                        }
+
+                        if (header.type === 'image') headerParams.push({ type: 'image', image: { link: mediaLink } });
+                        else if (header.type === 'video') headerParams.push({ type: 'video', video: { link: mediaLink } });
+                        else if (header.type === 'document') headerParams.push({ type: 'document', document: { link: mediaLink, filename: header.filename || 'Document' } });
                         
                         if (headerParams.length > 0) {
                             components.push({ type: 'header', parameters: headerParams });
