@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, ChevronRight, Send, AlertCircle, UploadCloud, Trash2, Download } from 'lucide-react';
+import { ArrowLeft, CheckCircle, ChevronRight, Send, UploadCloud, Download, AlertCircle, Info, Trash2, X, Image as ImageIcon, Video, FileText as FileIcon } from 'lucide-react';
 import Papa from 'papaparse';
 
 function CreateCampaign() {
@@ -10,11 +10,15 @@ function CreateCampaign() {
   const [formData, setFormData] = useState({
     name: '',
     templateId: '',
+    templateComponents: { header: null, body: { variables: [] } },
     audienceTags: [],
     uploadedContacts: []
   });
-  
+
+  const [templates, setTemplates] = useState([]);
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
+  const [showMediaGuide, setShowMediaGuide] = useState(false);
+  const selectedTemplate = templates.find(t => t._id === formData.templateId);
   const [newTemplate, setNewTemplate] = useState({ 
     name: '', category: 'MARKETING', language: 'en', 
     headerType: 'NONE', headerText: '', headerMediaUrl: '', headerFile: null,
@@ -52,7 +56,7 @@ function CreateCampaign() {
     link.click();
   };
 
-  const [templates, setTemplates] = useState([]);
+
   
   useEffect(() => {
     const fetchTemplates = async () => {
@@ -253,6 +257,7 @@ function CreateCampaign() {
         body: JSON.stringify({
           name: formData.name,
           templateId: formData.templateId,
+          templateComponents: formData.templateComponents,
           audienceTags: formData.audienceTags,
           uploadedContacts: formData.uploadedContacts
         })
@@ -469,27 +474,177 @@ function CreateCampaign() {
                       </div>
                    </div>
                 ) : (
-                  <div className="grid gap-4">
-                    {templates.length === 0 && <p className="text-sm text-gray-500 italic p-4 text-center border border-dashed rounded-lg bg-gray-50">No templates found. Please create one.</p>}
-                    {templates.map(t => (
-                      <div 
-                        key={t._id} 
-                        onClick={() => setFormData({ ...formData, templateId: t._id })}
-                        className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${formData.templateId === t._id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200 shadow-soft' : 'border-gray-200 hover:border-gray-300'}`}
-                      >
-                        <div>
-                          <h3 className="font-bold text-gray-800 flex items-center">{t.name} {t.status === 'PENDING' && <span className="ml-2 text-[10px] bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full uppercase">Pending Review</span>}</h3>
-                          <p className="text-xs text-gray-500 mt-1">{t.category} • {t.language}</p>
+                  <>
+                    <div className="grid gap-4">
+                      {templates.length === 0 && <p className="text-sm text-gray-500 italic p-4 text-center border border-dashed rounded-lg bg-gray-50">No templates found. Please create one.</p>}
+                      {templates.map(t => (
+                        <div 
+                          key={t._id} 
+                          onClick={() => setFormData({ ...formData, templateId: t._id })}
+                          className={`p-4 border rounded-xl cursor-pointer transition-all flex items-center justify-between ${formData.templateId === t._id ? 'border-blue-500 bg-blue-50 ring-2 ring-blue-200 shadow-soft' : 'border-gray-200 hover:border-gray-300'}`}
+                        >
+                          <div>
+                            <h3 className="font-bold text-gray-800 flex items-center">{t.name} {t.status === 'PENDING' && <span className="ml-2 text-[10px] bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full uppercase">Pending Review</span>}</h3>
+                            <p className="text-xs text-gray-500 mt-1">{t.category} • {t.language}</p>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                             {formData.templateId === t._id && <CheckCircle size={20} className="text-blue-600" />}
+                             <button onClick={(e) => handleDeleteTemplate(e, t._id)} className="text-gray-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors">
+                               <Trash2 size={16} />
+                             </button>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-3">
-                           {formData.templateId === t._id && <CheckCircle size={20} className="text-blue-600" />}
-                           <button onClick={(e) => handleDeleteTemplate(e, t._id)} className="text-gray-400 hover:text-red-500 p-1.5 rounded-full hover:bg-red-50 transition-colors">
-                             <Trash2 size={16} />
-                           </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+
+                    {/* Template Configuration (Media/Variables) */}
+                    {formData.templateId && !isCreatingTemplate && selectedTemplate && (
+                       <div className="mt-8 p-6 bg-blue-50/30 rounded-xl border border-blue-100 animate-fade-in">
+                          <h3 className="text-sm font-bold text-blue-800 mb-4 flex items-center">
+                             <AlertCircle size={16} className="mr-2" />
+                             Configure "{selectedTemplate.name}" Parameters
+                          </h3>
+                          
+                          {/* Header Media Config */}
+                          {selectedTemplate.components?.find(c => c.type === 'HEADER' && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(c.format)) && (
+                             <div className="mb-6">
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-2">
+                                   Header {selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase()}
+                                </label>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                   <div 
+                                     className="border-2 border-dashed border-blue-200 rounded-lg p-4 flex flex-col items-center justify-center hover:bg-blue-50 cursor-pointer transition-colors"
+                                     onClick={() => {
+                                        const input = document.createElement('input');
+                                        input.type = 'file';
+                                        input.accept = selectedTemplate.components.find(c => c.type === 'HEADER').format === 'IMAGE' ? "image/*" : selectedTemplate.components.find(c => c.type === 'HEADER').format === 'VIDEO' ? "video/*" : ".pdf";
+                                        input.onchange = async (e) => {
+                                           const file = e.target.files[0];
+                                           if (file) {
+                                              setLoading(true);
+                                              const formDataMedia = new FormData();
+                                              formDataMedia.append('file', file);
+                                              const token = localStorage.getItem('token');
+                                              const tenantId = localStorage.getItem('tenantId');
+                                              try {
+                                                 const uploadRes = await fetch('/api/templates/upload', {
+                                                    method: 'POST',
+                                                    headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId },
+                                                    body: formDataMedia
+                                                 });
+                                                 if (uploadRes.ok) {
+                                                    const uploadData = await uploadRes.json();
+                                                    const finalUrl = window.location.origin + '/api' + uploadData.url;
+                                                    setFormData(prev => ({
+                                                       ...prev,
+                                                       templateComponents: {
+                                                          ...prev.templateComponents,
+                                                          header: { 
+                                                             type: selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase(),
+                                                             link: finalUrl,
+                                                             filename: file.name
+                                                          }
+                                                       }
+                                                    }));
+                                                 }
+                                              } catch (err) {
+                                                  console.error(err);
+                                                  alert('Upload failed');
+                                              } finally {
+                                                 setLoading(false);
+                                              }
+                                           }
+                                        };
+                                        input.click();
+                                     }}
+                                   >
+                                      {formData.templateComponents.header?.link ? (
+                                         <div className="text-center">
+                                            <CheckCircle size={20} className="text-green-500 mx-auto mb-1" />
+                                            <p className="text-[10px] font-bold text-green-700 truncate max-w-[150px]">{formData.templateComponents.header.filename || 'Media Uploaded'}</p>
+                                         </div>
+                                      ) : (
+                                         <>
+                                            <UploadCloud size={20} className="text-blue-400 mb-1" />
+                                            <p className="text-[10px] font-bold text-blue-500">Upload {selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase()}</p>
+                                         </>
+                                      )}
+                                   </div>
+                                   <div className="flex flex-col justify-center">
+                                      <input 
+                                        type="text" 
+                                        className="w-full px-3 py-2 border border-gray-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500" 
+                                        placeholder="Or Enter Public URL"
+                                        value={formData.templateComponents.header?.link || ''}
+                                        onChange={e => setFormData(prev => ({
+                                           ...prev,
+                                           templateComponents: {
+                                              ...prev.templateComponents,
+                                              header: { 
+                                                 type: selectedTemplate.components.find(c => c.type === 'HEADER').format.toLowerCase(),
+                                                 link: e.target.value
+                                              }
+                                           }
+                                        }))}
+                                      />
+                                   </div>
+                                </div>
+                                
+                                {/* Media Criteria Info */}
+                                <div 
+                                  className="mt-3 p-3 bg-white/50 rounded-lg border border-blue-100/50 flex items-start space-x-2 cursor-pointer hover:bg-blue-50 transition-colors group"
+                                  onClick={() => setShowMediaGuide(true)}
+                                >
+                                   <Info size={14} className="text-blue-500 mt-0.5 group-hover:scale-110 transition-transform" />
+                                   <div className="text-[10px] text-gray-600 leading-relaxed flex-1">
+                                      <p className="font-bold text-blue-800 mb-1 uppercase tracking-tight flex justify-between items-center">
+                                         Requirement Criteria 
+                                         <span className="text-[8px] bg-blue-100 px-1 rounded text-blue-600">Click for Guide</span>
+                                      </p>
+                                      {selectedTemplate.components.find(c => c.type === 'HEADER').format === 'IMAGE' && "Images: JPG, PNG. Max size: 5MB."}
+                                      {selectedTemplate.components.find(c => c.type === 'HEADER').format === 'VIDEO' && "Videos: MP4, 3GP (H.264/AAC). Max size: 16MB."}
+                                      {selectedTemplate.components.find(c => c.type === 'HEADER').format === 'DOCUMENT' && "Documents: PDF only. Max size: 100MB."}
+                                   </div>
+                                </div>
+                             </div>
+                          )}
+
+                          {/* Body Variables Config */}
+                          {selectedTemplate.variables?.length > 0 && (
+                             <div>
+                                <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">
+                                   Body Variables
+                                </label>
+                                <div className="space-y-3">
+                                   {selectedTemplate.variables.map((v, idx) => (
+                                      <div key={idx} className="flex items-center space-x-3">
+                                         <span className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-[10px] font-bold">{v}</span>
+                                         <input 
+                                           type="text" 
+                                           className="flex-1 px-3 py-2 border border-gray-200 rounded-md text-xs outline-none focus:ring-2 focus:ring-blue-500"
+                                           placeholder={`Value for ${v} (e.g. customer name)`}
+                                           value={formData.templateComponents.body.variables[idx] || ''}
+                                           onChange={e => {
+                                              const vars = [...formData.templateComponents.body.variables];
+                                              vars[idx] = e.target.value;
+                                              setFormData(prev => ({
+                                                 ...prev,
+                                                 templateComponents: {
+                                                    ...prev.templateComponents,
+                                                    body: { variables: vars }
+                                                 }
+                                              }));
+                                           }}
+                                         />
+                                      </div>
+                                   ))}
+                                </div>
+                             </div>
+                          )}
+                       </div>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -589,8 +744,128 @@ function CreateCampaign() {
           </div>
         </div>
       </div>
+      <MediaRequirementsModal isOpen={showMediaGuide} onClose={() => setShowMediaGuide(false)} />
     </div>
   );
 }
+
+// Media Requirements Guidance Modal
+const MediaRequirementsModal = ({ isOpen, onClose }) => {
+  if (!isOpen) return null;
+
+  const data = [
+    {
+      type: 'IMAGE',
+      icon: <ImageIcon size={20} className="text-pink-500" />,
+      title: 'Images',
+      formats: 'JPG, PNG',
+      size: '5 MB',
+      details: [
+        'Recommended resolution: 800x800 px',
+        'Supported aspect ratios: 1.91:1 to 4:5',
+        'Must be static (no animated GIFs)'
+      ]
+    },
+    {
+      type: 'VIDEO',
+      icon: <Video size={20} className="text-purple-500" />,
+      title: 'Videos',
+      formats: 'MP4, 3GP',
+      size: '16 MB',
+      details: [
+        'H.264 video codec and AAC audio codec',
+        'Recommended: Square (1:1) or Vertical (4:5)',
+        'Avoid high bitrates to ensure delivery'
+      ]
+    },
+    {
+      type: 'DOCUMENT',
+      icon: <FileIcon size={20} className="text-blue-500" />,
+      title: 'Documents',
+      formats: 'PDF only',
+      size: '100 MB',
+      details: [
+        'Maximum page count: None (limited by size)',
+        'Ideal for brochures, catalogs, and invoices',
+        'Must end with .pdf extension'
+      ]
+    }
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-gray-900/60 backdrop-blur-md p-4 animate-fade-in">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in duration-300">
+        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+          <div className="flex items-center space-x-3">
+             <div className="p-2 bg-blue-600 text-white rounded-lg shadow-soft">
+                <Info size={20} />
+             </div>
+             <div>
+                <h2 className="text-xl font-bold text-gray-900">Media Support Guide</h2>
+                <p className="text-xs text-gray-500 font-medium">WhatsApp Business API Specifications</p>
+             </div>
+          </div>
+          <button onClick={onClose} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
+            <X size={20} className="text-gray-400" />
+          </button>
+        </div>
+
+        <div className="p-8 overflow-y-auto flex-1 bg-white">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {data.map((item, idx) => (
+              <div key={idx} className="flex flex-col border border-gray-100 rounded-2xl p-5 hover:border-blue-200 hover:shadow-soft transition-all bg-gray-50/30">
+                 <div className="flex items-center space-x-3 mb-4">
+                    <div className="p-2 bg-white rounded-lg shadow-sm">
+                       {item.icon}
+                    </div>
+                    <h3 className="font-bold text-gray-800">{item.title}</h3>
+                 </div>
+                 
+                 <div className="space-y-3 flex-1">
+                    <div>
+                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Formats</p>
+                       <p className="text-sm font-semibold text-gray-700">{item.formats}</p>
+                    </div>
+                    <div>
+                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Max Size</p>
+                       <p className="text-sm font-bold text-blue-600">{item.size}</p>
+                    </div>
+                    <div className="pt-3 border-t border-gray-100">
+                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">Best Practices</p>
+                       <ul className="space-y-1.5">
+                          {item.details.map((d, i) => (
+                            <li key={i} className="text-[10px] text-gray-500 flex items-start">
+                               <CheckCircle size={10} className="mr-1.5 mt-0.5 text-green-500 shrink-0" />
+                               {d}
+                            </li>
+                          ))}
+                       </ul>
+                    </div>
+                 </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-8 p-4 bg-yellow-50 border border-yellow-100 rounded-xl flex items-start space-x-3">
+             <AlertCircle size={18} className="text-yellow-600 mt-0.5 shrink-0" />
+             <div className="text-xs text-yellow-800 leading-relaxed">
+                <p className="font-bold mb-1">Important Note</p>
+                Meta Graph API v19.0+ enforces strict size validation. If your media exceeds these limits, the campaign status will show as <b>FAILED</b> with a "Media size too large" error.
+             </div>
+          </div>
+        </div>
+
+        <div className="p-5 bg-gray-50 border-t border-gray-100 flex justify-center">
+          <button 
+            onClick={onClose}
+            className="px-10 py-2.5 bg-gray-900 text-white font-bold rounded-xl text-sm hover:bg-black transition-all shadow-md hover:-translate-y-0.5 transform active:scale-95"
+          >
+            Got it, Clear!
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default CreateCampaign;

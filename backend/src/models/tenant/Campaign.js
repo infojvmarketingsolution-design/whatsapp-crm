@@ -17,6 +17,7 @@ const CampaignSchema = new mongoose.Schema({
     read: { type: Number, default: 0 },
     failed: { type: Number, default: 0 }
   },
+  templateComponents: { type: mongoose.Schema.Types.Mixed }, // Store header media and body variables
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 

@@ -11,7 +11,8 @@ const Client = require('../models/core/Client');
 const createCampaign = async (req, res) => {
   try {
     const tenantId = req.tenantId;
-    const { name, whatsappNumber, templateId, scheduledAt, audienceTags } = req.body;    const tenantDb = getTenantConnection(tenantId);
+    const { name, whatsappNumber, templateId, scheduledAt, audienceTags, templateComponents } = req.body;
+    const tenantDb = getTenantConnection(tenantId);
     const Campaign = tenantDb.model('Campaign', CampaignSchema);
     const Contact = tenantDb.model('Contact', ContactSchema);
     const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
@@ -30,6 +31,7 @@ const createCampaign = async (req, res) => {
       scheduledAt,
       status: scheduledAt ? 'SCHEDULED' : 'RUNNING',
       audience: { tags: audienceTags || [] },
+      templateComponents,
       metrics: { totalContacts: targetContacts.length }
     });
 
@@ -100,6 +102,28 @@ const processCampaignSync = async (tenantId, campaignId) => {
 
         for (const log of pendingLogs) {
             try {
+                // Build components for WhatsApp API
+                const components = [];
+                if (campaign.templateComponents) {
+                    const { header, body } = campaign.templateComponents;
+                    
+                    if (header) {
+                        const headerParams = [];
+                        if (header.type === 'image') headerParams.push({ type: 'image', image: { link: header.link } });
+                        else if (header.type === 'video') headerParams.push({ type: 'video', video: { link: header.link } });
+                        else if (header.type === 'document') headerParams.push({ type: 'document', document: { link: header.link, filename: header.filename || 'Document' } });
+                        
+                        if (headerParams.length > 0) {
+                            components.push({ type: 'header', parameters: headerParams });
+                        }
+                    }
+
+                    if (body && body.variables && body.variables.length > 0) {
+                        const bodyParams = body.variables.map(v => ({ type: 'text', text: v }));
+                        components.push({ type: 'body', parameters: bodyParams });
+                    }
+                }
+
                 const response = await axios.post(
                     `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
                     {
@@ -108,7 +132,8 @@ const processCampaignSync = async (tenantId, campaignId) => {
                         type: 'template',
                         template: {
                             name: template.name,
-                            language: { code: template.language || 'en' }
+                            language: { code: template.language || 'en' },
+                            components: components.length > 0 ? components : undefined
                         }
                     },
                     { headers: { 'Authorization': `Bearer ${accessToken}` } }
