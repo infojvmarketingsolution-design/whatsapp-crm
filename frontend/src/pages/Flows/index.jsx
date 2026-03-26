@@ -197,20 +197,26 @@ function Flows() {
 
                  <div className="space-y-1.5">
                     <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Trigger Rule</label>
-                    <div className="grid grid-cols-2 gap-2">
-                       <button 
-                          onClick={() => setEditTrigger('KEYWORD')}
-                          className={`p-2.5 rounded-lg border text-xs font-bold transition-all ${editTrigger === 'KEYWORD' && editKeywords.trim() !== '' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
-                       >
-                          Keyword Match
-                       </button>
-                       <button 
-                          onClick={() => { setEditTrigger('KEYWORD'); setEditKeywords(''); }}
-                          className={`p-2.5 rounded-lg border text-xs font-bold transition-all ${(editTrigger === 'KEYWORD' && editKeywords.trim() === '') ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
-                       >
-                          Catch-all (Default)
-                       </button>
-                    </div>
+                     <div className="grid grid-cols-3 gap-2">
+                        <button 
+                           onClick={() => setEditTrigger('KEYWORD')}
+                           className={`p-2.5 rounded-lg border text-[10px] font-bold transition-all ${editTrigger === 'KEYWORD' && editKeywords.trim() !== '' ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
+                        >
+                           Keyword Match
+                        </button>
+                        <button 
+                           onClick={() => { setEditTrigger('NEW_MESSAGE'); setEditKeywords(''); }}
+                           className={`p-2.5 rounded-lg border text-[10px] font-bold transition-all ${editTrigger === 'NEW_MESSAGE' ? 'bg-green-50 border-green-200 text-green-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
+                        >
+                           Welcome (First Msg)
+                        </button>
+                        <button 
+                           onClick={() => { setEditTrigger('KEYWORD'); setEditKeywords(''); }}
+                           className={`p-2.5 rounded-lg border text-[10px] font-bold transition-all ${(editTrigger === 'KEYWORD' && editKeywords.trim() === '') ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-white border-gray-100 text-gray-500 hover:bg-gray-50'}`}
+                        >
+                           Catch-all
+                        </button>
+                     </div>
                  </div>
 
                  {editTrigger === 'KEYWORD' && editKeywords.trim() !== '' && (
@@ -246,8 +252,16 @@ function Flows() {
                         </div>
                     </div>
                  )}
-                 
-                 {editTrigger === 'KEYWORD' && editKeywords.trim() === '' && (
+                  {editTrigger === 'NEW_MESSAGE' && (
+                     <div className="p-4 bg-green-50 rounded-lg border border-green-100">
+                        <p className="text-xs text-green-800 leading-relaxed font-semibold">
+                           <span className="mr-1.5">👋</span> 
+                           This flow will trigger **only once** when a brand new contact sends their very first message to you.
+                        </p>
+                     </div>
+                  )}
+                  
+                  {editTrigger === 'KEYWORD' && editKeywords.trim() === '' && (
                     <div className="p-4 bg-purple-50 rounded-lg border border-purple-100">
                        <p className="text-xs text-purple-800 leading-relaxed font-semibold">
                           <span className="mr-1.5">🚀</span> 

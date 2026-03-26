@@ -133,11 +133,22 @@ const executeFlow = async (tenantId, flowId, contact, io) => {
   }
 };
 
-const processIncomingMessage = async (tenantId, contact, messageText, io) => {
+const processIncomingMessage = async (tenantId, contact, messageText, io, isNewContact = false) => {
   try {
-     let activeFlows = [];
      const tenantDb = getTenantConnection(tenantId);
      const Flow = tenantDb.model('Flow', FlowSchema);
+
+     // 1. Check for "First Time" (NEW_MESSAGE) Trigger if it's a new contact
+     if (isNewContact) {
+         const welcomeFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
+         if (welcomeFlow) {
+             console.log(`[Flow Engine] New contact detected! Triggering Welcome Flow: ${welcomeFlow.name}`);
+             setTimeout(() => executeFlow(tenantId, welcomeFlow._id || welcomeFlow.id, contact, io), 500);
+             return; // Stop further matching if welcome flow is triggered
+         }
+     }
+
+     let activeFlows = [];
      activeFlows = await Flow.find({ status: 'ACTIVE', triggerType: 'KEYWORD' });
 
      let matched = false;

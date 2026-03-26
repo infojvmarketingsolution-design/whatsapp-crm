@@ -89,9 +89,11 @@ const handleIncomingMessage = async (req, res) => {
       console.log(`📩 [Tenant: ${client.tenantId}] Incoming Message:`, from, text);
 
       let contact = await Contact.findOne({ phone: from });
+      let isNewContact = false;
       if (!contact) {
          const contactName = value.contacts?.[0]?.profile?.name || 'Unknown';
          contact = await Contact.create({ phone: from, name: contactName, lastMessageAt: new Date() });
+         isNewContact = true;
       } else {
          contact.lastMessageAt = new Date();
          await contact.save();
@@ -126,7 +128,7 @@ const handleIncomingMessage = async (req, res) => {
       }
       
       // Trigger Automation Engine
-      await processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io);
+      await processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io, isNewContact);
     }
 
     // 3. Handle Status Updates

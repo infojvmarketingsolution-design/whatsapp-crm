@@ -101,9 +101,6 @@ export default function FlowBuilder() {
          <div className="flex items-center space-x-4">
             <button onClick={() => navigate('/flows')} className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft size={20} /></button>
             <div>
-          <div className="flex items-center space-x-4">
-            <button onClick={() => navigate('/flows')} className="p-2 text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-full transition-colors"><ArrowLeft size={20} /></button>
-            <div>
                <div className="flex items-center">
                   <input 
                      className="text-lg font-bold text-gray-800 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 outline-none transition-all px-1 -ml-1"
@@ -116,9 +113,6 @@ export default function FlowBuilder() {
                      {flowData.status === 'ACTIVE' ? 'Live' : 'Draft Mode'}
                   </span>
                </div>
-               <p className="text-xs text-gray-500 mt-0.5">{flowData.triggerType} Trigger {flowData.triggerKeywords?.length > 0 ? `("${flowData.triggerKeywords.join(', ')}")` : ''}</p>
-            </div>
-         </div>
                <p className="text-xs text-gray-500 mt-0.5">{flowData.triggerType} Trigger {flowData.triggerKeywords?.length > 0 ? `("${flowData.triggerKeywords.join(', ')}")` : ''}</p>
             </div>
          </div>
