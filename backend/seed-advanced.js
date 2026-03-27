@@ -5,8 +5,8 @@ const FlowSchema = require('./src/models/tenant/Flow');
 const SEED_DATA = {
   name: 'JV Group Advanced Automation',
   status: 'ACTIVE',
-  triggerType: 'KEYWORD', // TRIGGER FOR EVERYONE (Catch-all)
-  triggerKeywords: [''],
+  triggerType: 'NEW_MESSAGE', // TRIGGER FOR NEW VISITORS
+  triggerKeywords: [],
   isSmartMatch: true,
   nodes: [
     {
