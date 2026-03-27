@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const { getTenantConnection } = require('../src/config/db');
 const Client = require('../src/models/core/Client');
 const ContactSchema = require('../src/models/tenant/Contact');
-const FlowSchema = require('../models/tenant/Flow');
+const FlowSchema = require('../src/models/tenant/Flow');
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 const PHONES = ['916354070709', '917383503632', '6354070709', '7383503632'];
