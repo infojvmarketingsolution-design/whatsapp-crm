@@ -28,15 +28,30 @@ async function clear() {
         const tenantDb = getTenantConnection(client.tenantId);
         const Contact = tenantDb.model('Contact', ContactSchema);
         const Message = tenantDb.model('Message', MessageSchema);
+        const results = []; // Initialize results array for each client
 
         for (const phone of PHONES) {
             const contact = await Contact.findOne({ phone });
             if (contact) {
-                console.log(`[${client.tenantId}] Found ${phone}. Clearing...`);
-                const msgResult = await Message.deleteMany({ contactId: contact._id });
-                await Contact.findByIdAndDelete(contact._id);
-                console.log(`[${client.tenantId}] Deleted contact and ${msgResult.deletedCount} messages.`);
+                // Instead of completely deleting, we clear all messages and RESET the session
+                const result = await Contact.findOneAndUpdate(
+                    { phone: phone.replace('+', '') }, 
+                    { 
+                        $unset: { currentFlowStep: "", lastFlowId: "" },
+                        $set: { status: 'LEAD' } // Reset status
+                    }
+                );
+                
+                if (result) {
+                    const msgDeleted = await Message.deleteMany({ contactId: result._id });
+                    results.push(`[${client.tenantId}] Cleared ${phone} and ${msgDeleted.deletedCount} messages.`);
+                }
             }
+        }
+        if (results.length > 0) {
+            console.log(results.join('\n'));
+        } else {
+            console.log(`[${client.tenantId}] No matching contacts found for specified phones.`);
         }
     }
 

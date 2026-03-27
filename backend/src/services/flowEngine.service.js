@@ -200,7 +200,18 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      if (activeContact.currentFlowStep && activeContact.lastFlowId) {
          console.log(`[Flow Engine] Resuming Session for ${activeContact.phone}: ${activeContact.currentFlowStep}`);
          const activeFlow = await Flow.findById(activeContact.lastFlowId);
-         if (activeFlow) {
+
+         if (!activeFlow || activeFlow.status !== 'ACTIVE') {
+             console.log(`[Flow Engine] ⚠️ Flow ${activeContact.lastFlowId} not found or inactive. Clearing stuck session for ${activeContact.phone}.`);
+             // Clear the stuck session so the contact can trigger new flows
+             await Contact.findOneAndUpdate({ phone: activeContact.phone }, { 
+                 $unset: { currentFlowStep: "", lastFlowId: "" } 
+             });
+             // Update activeContact object to reflect cleared session for subsequent checks
+             activeContact.currentFlowStep = null;
+             activeContact.lastFlowId = null;
+             // Continue to normal trigger analysis instead of returning!
+         } else {
              const lastNode = activeFlow.nodes.find(n => n.id === activeContact.currentFlowStep);
              if (lastNode && (lastNode.data.msgType === 'QUESTION' || lastNode.data.variableName)) {
                  const varName = lastNode.data.variableName || 'last_input';
