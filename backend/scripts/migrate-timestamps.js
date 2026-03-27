@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const { getTenantConnection } = require('../src/config/db');
 const Client = require('../src/models/core/Client');
 const ContactSchema = require('../src/models/tenant/Contact');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
 
 async function migrate() {
   try {
