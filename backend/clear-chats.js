@@ -1,33 +1,46 @@
 const mongoose = require('mongoose');
 const { getTenantConnection } = require('./src/config/db');
+const Client = require('./src/models/core/Client');
 const ContactSchema = require('./src/models/tenant/Contact');
 const MessageSchema = require('./src/models/tenant/Message');
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, './.env') }); // It's in the same folder as scripts if we run from backend, but if in root it's in backend/.env
 
-const PHONES = ['916354070709', '917383503632'];
+// The numbers provided by the user (adding common country codes automatically to be sure)
+const INPUT_PHONES = ['6354070709', '7383503632'];
+const PHONES = [];
+INPUT_PHONES.forEach(p => {
+    PHONES.push(p);
+    PHONES.push(`91${p}`);
+    PHONES.push(`+91${p}`);
+});
 
 async function clear() {
-  const tenantId = 'tenant_demo_001';
-  const mongoUri = 'mongodb://127.0.0.1:27017/jv_tenant_tenant_demo_001';
-
   try {
-    await mongoose.connect(mongoUri);
-    console.log('Connected to Tenant Database');
+    console.log('--- STARTING GLOBAL CHAT CLEARANCE ---');
+    await mongoose.connect(process.env.CORE_DB_URI);
+    
+    const clients = await Client.find({ status: 'ACTIVE' });
+    console.log(`Searching across ${clients.length} active tenants...`);
 
-    const Contact = mongoose.model('Contact', ContactSchema);
-    const Message = mongoose.model('Message', MessageSchema);
+    for (const client of clients) {
+        console.log(`\nChecking Tenant: ${client.tenantId}`);
+        const tenantDb = getTenantConnection(client.tenantId);
+        const Contact = tenantDb.model('Contact', ContactSchema);
+        const Message = tenantDb.model('Message', MessageSchema);
 
-    for (const phone of PHONES) {
-      const contact = await Contact.findOne({ phone });
-      if (contact) {
-        console.log(`Clearing contact and messages for ${phone}...`);
-        await Message.deleteMany({ contactId: contact._id });
-        await Contact.findByIdAndDelete(contact._id);
-        console.log(`Successfully cleared ${phone}.`);
-      } else {
-        console.log(`Contact ${phone} not found.`);
-      }
+        for (const phone of PHONES) {
+            const contact = await Contact.findOne({ phone });
+            if (contact) {
+                console.log(`[${client.tenantId}] Found ${phone}. Clearing...`);
+                const msgResult = await Message.deleteMany({ contactId: contact._id });
+                await Contact.findByIdAndDelete(contact._id);
+                console.log(`[${client.tenantId}] Deleted contact and ${msgResult.deletedCount} messages.`);
+            }
+        }
     }
 
+    console.log('\n--- ALL SPECIFIED CHATS CLEARED ---');
     process.exit(0);
   } catch (err) {
     console.error('Clear error:', err);
