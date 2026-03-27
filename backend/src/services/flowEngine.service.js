@@ -45,6 +45,13 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
         });
     };
 
+    const getFullUrl = (url) => {
+        if (!url) return null;
+        if (url.startsWith('http')) return url;
+        // Prepend domain for Meta API compatibility (MUST BE PUBLIC SECURE URL)
+        return `https://wapipulse.com${url}`;
+    };
+
     let currentNode;
     if (startNodeId) {
         console.log(`[Flow Engine] Branching from Node: ${startNodeId} with Reply: ${replyValue}`);
@@ -91,28 +98,30 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
        });
 
        if (currentNode.type === 'messageNode') {
-           const { msgType = 'TEXT', text = '', mediaId = '', buttons = [], header = {}, footer = '', listOptions = [], buttonText = 'Menu' } = currentNode.data;
+           const { msgType = 'TEXT', text = '', mediaId = '', buttons = [], header = {}, footer = '', listOptions = [], buttonText = 'Menu', mediaUrl = '' } = currentNode.data;
            
            const interpolatedText = interpolate(text);
            const interpolatedHeader = header.text ? { ...header, text: interpolate(header.text) } : header;
+           const publicMediaUrl = getFullUrl(mediaUrl || currentNode.data.mediaUrl);
 
            try {
                if (msgType === 'TEXT' && text) {
                    await waService.sendTextMessage(contact.phone, interpolatedText);
                } 
                else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(msgType)) {
-                   if (mediaId && !mediaId.includes('demo_')) {
+                   // Only use mediaId if it's purely digits (Meta Media ID)
+                   if (mediaId && /^\d+$/.test(mediaId)) {
                        await waService.sendMedia(contact.phone, msgType.toLowerCase(), mediaId, interpolatedText);
-                   } else if (currentNode.data.mediaUrl) {
-                       await waService.sendMedia(contact.phone, msgType.toLowerCase(), null, interpolatedText, currentNode.data.mediaUrl);
+                   } else if (publicMediaUrl) {
+                       await waService.sendMedia(contact.phone, msgType.toLowerCase(), null, interpolatedText, publicMediaUrl);
                    } else {
                        await waService.sendTextMessage(contact.phone, interpolatedText);
                    }
                }
                else if (msgType === 'INTERACTIVE_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0)) {
-                   const headerMedia = (mediaId && !mediaId.includes('demo_')) 
+                   const headerMedia = (mediaId && /^\d+$/.test(mediaId)) 
                         ? { type: 'image', image: mediaId } 
-                        : (currentNode.data.mediaUrl ? { type: 'image', link: currentNode.data.mediaUrl } : null);
+                        : (publicMediaUrl ? { type: 'image', link: publicMediaUrl } : null);
 
                    await waService.sendInteractiveButtonMessage(contact.phone, {
                        header: interpolatedHeader.type ? interpolatedHeader : headerMedia,

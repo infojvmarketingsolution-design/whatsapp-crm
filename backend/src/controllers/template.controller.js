@@ -215,7 +215,10 @@ const uploadTemplateMedia = async (req, res) => {
     fs.renameSync(req.file.path, targetPath);
 
     const publicUrl = `/uploads/templates/${tenantId}/${req.file.filename}`;
-    res.json({ url: publicUrl });
+    res.json({ 
+      url: publicUrl,
+      mediaId: req.file.filename 
+    });
   } catch (error) {
     console.error('Upload Template Media Error:', error);
     res.status(500).json({ message: 'Failed to process media upload', error: error.message });
