@@ -59,19 +59,24 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
         const outgoingEdges = edges.filter(e => e.source === startNodeId);
         
         if (lastNode && outgoingEdges.length > 1) {
-            console.log(`[Flow Engine] Multiple paths found: ${outgoingEdges.length}. Matching handle...`);
+            console.log(`[Flow Engine] Searching for edge with handle matching "${replyValue}" among ${outgoingEdges.length} options...`);
             let targetEdge = outgoingEdges.find(e => {
                 const handle = e.sourceHandle;
-                return handle === replyValue || handle === `handle_${replyValue}`;
+                const isMatch = (handle === replyValue || handle === `handle_${replyValue}`);
+                console.log(`[Flow Engine] Checking Handle: "${handle}" vs Input: "${replyValue}" | Match: ${isMatch}`);
+                return isMatch;
             });
 
             if (!targetEdge && replyValue && replyValue.startsWith('list_')) {
+                console.log(`[Flow Engine] No strict match. Trying loose list_ match for ${replyValue}...`);
                 targetEdge = outgoingEdges.find(e => e.sourceHandle === replyValue);
             }
 
             if (!targetEdge) {
-                console.log(`[Flow Engine] No specific branch match. Falling back to first edge.`);
-                targetEdge = outgoingEdges[0];
+                console.log(`[Flow Engine] ❌ NO BRANCH MATCH FOUND for "${replyValue}". Using fallback.`);
+                targetEdge = outgoingEdges[0]; 
+            } else {
+                console.log(`[Flow Engine] ✅ MATCHED EDGE: ${targetEdge.id} leading to node: ${targetEdge.target}`);
             }
             currentNode = targetEdge ? nodes.find(n => n.id === targetEdge.target) : null;
         } else {

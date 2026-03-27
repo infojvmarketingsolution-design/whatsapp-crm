@@ -91,13 +91,15 @@ const handleIncomingMessage = async (req, res) => {
       // Detect Interactive Replies (Buttons/List)
       if (message.type === 'interactive') {
           const interactive = message.interactive;
+          console.log(`[Webhook] Interactive Payload:`, JSON.stringify(interactive));
           if (interactive.type === 'button_reply') {
               msgBody = interactive.button_reply.title;
-              replyValue = interactive.button_reply.id; // Use button ID for branching
+              replyValue = interactive.button_reply.id; 
           } else if (interactive.type === 'list_reply') {
               msgBody = interactive.list_reply.title;
-              replyValue = interactive.list_reply.id; // Use list option ID for branching
+              replyValue = interactive.list_reply.id; 
           }
+          console.log(`[Webhook] Extracted ReplyValue: "${replyValue}"`);
       } else if (message.type === 'button') {
           msgBody = message.button.text;
           replyValue = message.button.payload;
