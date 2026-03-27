@@ -4,8 +4,14 @@ const WhatsAppService = require('./src/services/whatsapp.service');
 const dotenv = require('dotenv');
 dotenv.config();
 
+const mongoose = require('mongoose');
+
 async function testLiveMedia(phone) {
     try {
+        console.log('🔌 Connecting to MongoDB...');
+        await mongoose.connect(process.env.CORE_DB_URI);
+        console.log('✅ Connected to MongoDB.');
+
         const client = await Client.findOne({ status: 'ACTIVE' });
         if (!client) throw new Error('No client found');
 
