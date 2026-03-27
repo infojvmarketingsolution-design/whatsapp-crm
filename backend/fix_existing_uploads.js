@@ -13,19 +13,16 @@ const Client = require('./src/models/core/Client');
  */
 function sanitize(name) {
     if (!name) return name;
-    // Extract actual filename if it's a path
     const isPath = name.includes('/');
     const filename = isPath ? name.split('/').pop() : name;
-    
     const sanitizedFilename = filename.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9\.\-_]/g, '');
-    
     return isPath ? name.replace(filename, sanitizedFilename) : sanitizedFilename;
 }
 
 async function fixUploads() {
     try {
         const coreUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/crm_core';
-        console.log('--- FINAL MEDIA REPAIR ---');
+        console.log('--- NESTED PATH MEDIA REPAIR ---');
         await mongoose.connect(coreUri);
 
         const clients = await Client.find({});
@@ -49,12 +46,12 @@ async function fixUploads() {
                 const filename = val.includes('/') ? val.split('/').pop() : val;
                 const sanitizedFilename = sanitize(filename);
 
-                // Possible file locations
+                // Target the specific nested path found on server: backend/backend/public/uploads
                 const searchDirs = [
-                    path.join(__dirname, 'public/uploads', subDir, tenantId),
-                    path.join(__dirname, 'uploads', subDir, tenantId),
-                    path.join(process.cwd(), 'backend/public/uploads', subDir, tenantId),
-                    path.join(process.cwd(), 'public/uploads', subDir, tenantId)
+                    path.join(__dirname, 'backend/public/uploads', subDir, tenantId), // This should resolve to backend/backend/public/uploads
+                    path.join(__dirname, 'public/uploads', subDir, tenantId),         // fallback
+                    path.join(process.cwd(), 'backend/backend/public/uploads', subDir, tenantId),
+                    path.join(process.cwd(), 'backend/public/uploads', subDir, tenantId)
                 ];
 
                 let found = false;
@@ -69,23 +66,6 @@ async function fixUploads() {
                         break;
                     }
                 }
-
-                if (!found) {
-                    // Try the other subDir just in case
-                    const altDir = subDir === 'templates' ? 'media' : 'templates';
-                    for (const dir of searchDirs) {
-                        const altOldPath = path.join(dir.replace(subDir, altDir), filename);
-                        const altNewPath = path.join(dir.replace(subDir, altDir), sanitizedFilename);
-                        if (fs.existsSync(altOldPath)) {
-                             console.log(`  ✅ RENAMED (found in ${altDir}): ${filename} -> ${sanitizedFilename}`);
-                             fs.renameSync(altOldPath, altNewPath);
-                             found = true;
-                             tenantFixCount++;
-                             break;
-                        }
-                    }
-                }
-
                 return val.replace(filename, sanitizedFilename);
             };
 
