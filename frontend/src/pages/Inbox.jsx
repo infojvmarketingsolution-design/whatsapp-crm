@@ -354,7 +354,7 @@ export default function Inbox() {
                <span className="font-semibold text-sm leading-tight">{activeChat?.name}</span>
                 <span className="text-white/70 text-[10px] font-medium tracking-wide leading-tight">
                   {activeChat?.phone}
-                  <span className="ml-2 text-[10px] opacity-40 font-mono italic">v1.1.0</span>
+                  <span className="ml-2 text-[10px] opacity-40 font-mono italic">v1.1.2 Diagnostics Active</span>
                 </span>
              </div>
           </div>

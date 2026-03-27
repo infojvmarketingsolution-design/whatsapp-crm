@@ -55,8 +55,21 @@ const handleIncomingMessage = async (req, res) => {
        console.error('❌ Failed to write to log file:', e.message);
     }
 
-    const entry = req.body.entry?.[0];
-    const changes = entry?.changes?.[0];
+    // 0. LOG RAW JSON PAYLOAD FOR DEEP DIAGNOSIS
+    try {
+        const logPath = require('path').join(__dirname, '../../public/webhook_payloads.log');
+        const payloadStr = JSON.stringify(req.body, null, 2);
+        fs.appendFileSync(logPath, `[${new Date().toISOString()}] RAW PAYLOAD:\n${payloadStr}\n\n`);
+    } catch(e) {
+        console.error("❌ Failed to write deep log:", e.message);
+    }
+
+    const { object, entry } = req.body;
+    if (object !== 'whatsapp_business_account' || !entry || !entry[0].changes[0]) {
+      return res.status(200).send('EVENT_RECEIVED');
+    }
+
+    const changes = entry[0].changes[0];
     const value = changes?.value;
 
     if (!value) {
