@@ -94,7 +94,8 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
        // Persist state by phone instead of ID to be safe
        await Contact.findOneAndUpdate({ phone: contact.phone }, { 
            currentFlowStep: currentNode.id, 
-           lastFlowId: flowId 
+           lastFlowId: flowId,
+           lastMessageAt: new Date()
        });
 
        if (currentNode.type === 'messageNode') {

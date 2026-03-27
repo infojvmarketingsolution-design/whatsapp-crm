@@ -209,11 +209,14 @@ const sendMessage = async (req, res) => {
     const Message = req.tenantDb.model('Message', MessageSchema);
     newMessage = await Message.create(msgData);
 
+    // 4b. Update Contact's Last Message Timestamp
+    await Contact.findByIdAndUpdate(contactId, { lastMessageAt: new Date() });
+
     // 5. Emit via socket
     const io = req.app.get('io');
     if (io) {
        console.log(`[POST /send] Emitting via socket to room ${req.tenantId || 'offline'}`);
-       io.to(req.tenantId || 'offline').emit('new_message', newMessage);
+       io.to(req.tenantId || 'offline').emit('new_message', Object.assign({}, newMessage._doc, { contact: contact.toObject() }));
     }
 
     console.log(`[POST /send] Success! Returning msg: ${newMessage.messageId}`);

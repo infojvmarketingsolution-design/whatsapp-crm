@@ -144,6 +144,17 @@ export default function Inbox() {
       if (res.ok) {
         const sentMsg = await res.json();
         setMessages(prev => [...prev, sentMsg]);
+        
+        // BUMP CONTACT TO TOP
+        setContacts(prev => {
+           const exists = prev.find(c => c._id === activeChat._id);
+           if (exists) {
+              const others = prev.filter(c => c._id !== activeChat._id);
+              return [exists, ...others];
+           }
+           return prev;
+        });
+
         setNewMessage('');
         setAttachment(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
