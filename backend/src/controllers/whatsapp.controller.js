@@ -46,8 +46,10 @@ const handleIncomingMessage = async (req, res) => {
     try {
        const fs = require('fs');
        const path = require('path');
-       const logPath = path.join(__dirname, '../../webhook_debug.log');
-       fs.appendFileSync(logPath, `[${new Date().toISOString()}] body: ${JSON.stringify(req.body)}\n`);
+       // Use absolute path for reliability
+       const logPath = 'o:\\OneDrive\\Business\\Development\\Whatsapp Api + CRM (19 March 2026)\\backend\\webhook_debug.log';
+       const logEntry = `[${new Date().toISOString()}] WEBHOOK HIT - body: ${JSON.stringify(req.body)}\n`;
+       fs.appendFileSync(logPath, logEntry);
        console.log('✅ Webhook body appended to:', logPath);
     } catch(e) {
        console.error('❌ Failed to write to log file:', e.message);
@@ -71,8 +73,16 @@ const handleIncomingMessage = async (req, res) => {
     
     if (!client) {
       console.warn(`⚠️ No active client found for phoneNumberId: ${phoneNumberId}`);
+      // Log failure to debug file too
+      try {
+          const fs = require('fs');
+          const logPath = 'o:\\OneDrive\\Business\\Development\\Whatsapp Api + CRM (19 March 2026)\\backend\\webhook_debug.log';
+          fs.appendFileSync(logPath, `[${new Date().toISOString()}] ❌ CLIENT NOT FOUND for PhoneID: ${phoneNumberId}\n`);
+      } catch(e) {}
       return res.status(200).send('EVENT_RECEIVED');
     }
+
+    console.log(`✅ [Tenant: ${client.tenantId}] Client matched for PhoneID: ${phoneNumberId}`);
 
     const tenantDb = getTenantConnection(client.tenantId);
     const Contact = tenantDb.model('Contact', ContactSchema);
@@ -135,17 +145,24 @@ const handleIncomingMessage = async (req, res) => {
           }
       }
       
-      const savedMsg = await Message.create({
-         contactId: contact._id,
-         messageId: msgId,
-         direction: 'INBOUND',
-         type: message.type,
-         content: msgBody,
-         status: 'RECEIVED'
-      });
+      let savedMsg;
+      try {
+        savedMsg = await Message.create({
+           contactId: contact._id,
+           messageId: msgId,
+           direction: 'INBOUND',
+           type: message.type,
+           content: msgBody,
+           status: 'RECEIVED'
+        });
 
-      if (io) {
-        io.to(client.tenantId).emit('new_message', Object.assign({}, savedMsg._doc, { contact: contact.toObject() }));
+        if (io) {
+          io.to(client.tenantId).emit('new_message', Object.assign({}, savedMsg._doc, { contact: contact.toObject() }));
+        }
+      } catch (dbErr) {
+        console.error("DB Create Error:", dbErr);
+        const logPath = require('path').join(__dirname, '../../public/debug_webhook.txt');
+        require('fs').appendFileSync(logPath, `[${new Date().toISOString()}] ERROR saving message: ${dbErr.message}\nPayload: ${JSON.stringify({contactId: contact._id, msgId, type: message.type})}\n\n`);
       }
       
       // Trigger Automation Engine with replyValue for branching
