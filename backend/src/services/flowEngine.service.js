@@ -210,36 +210,45 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      }
 
      if (isNewContact) {
-         console.log(`[Flow Engine] Incoming NEW CONTACT message from ${activeContact.phone}`);
+         console.log(`[Flow Engine] Analyzing NEW_MESSAGE trigger for ${activeContact.phone}...`);
          const welcomeFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
          if (welcomeFlow) {
-             console.log(`[Flow Engine] Triggering Welcome Flow: ${welcomeFlow.name}`);
+             console.log(`[Flow Engine] Triggering Welcome Flow: "${welcomeFlow.name}"`);
              executeFlow(tenantId, welcomeFlow._id, activeContact, io);
              return;
+         } else {
+             console.log(`[Flow Engine] No ACTIVE NEW_MESSAGE flow found.`);
          }
      }
 
+     console.log(`[Flow Engine] Searching for KEYWORD matches for "${messageText}"...`);
      let activeFlows = await Flow.find({ status: 'ACTIVE', triggerType: 'KEYWORD' });
+     console.log(`[Flow Engine] Found ${activeFlows.length} active keyword flows to check.`);
+     
      let matched = false;
      for (const flow of activeFlows) {
-         const keywords = flow.triggerKeywords || [];
-         if (keywords.length === 0 || (keywords.length === 1 && keywords[0] === '')) continue;
+         const keywords = (flow.triggerKeywords || []).filter(kw => kw.trim() !== '');
+         if (keywords.length === 0) continue;
 
+         console.log(`[Flow Engine] Checking flow "${flow.name}" keywords: [${keywords.join(', ')}]`);
          const isMatch = flow.isSmartMatch ? smartMatch(messageText, keywords) : keywords.some(kw => messageText.toLowerCase().includes(kw.toLowerCase().trim()));
 
          if (isMatch) {
              matched = true;
-             console.log(`[Flow Engine] Triggered Keyword Flow: ${flow.name}`);
+             console.log(`[Flow Engine] MATCH FOUND! Triggering flow: "${flow.name}"`);
              executeFlow(tenantId, flow._id, activeContact, io);
              break;
          }
      }
 
      if (!matched) {
+         console.log(`[Flow Engine] No keywords matched "${messageText}". Checking for catch-all...`);
          const defaultFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'KEYWORD', $or: [{ triggerKeywords: [] }, { triggerKeywords: [""] }] });
          if (defaultFlow) {
-             console.log(`[Flow Engine] Triggering Catch-all Flow: ${defaultFlow.name}`);
+             console.log(`[Flow Engine] Triggering Catch-all Flow: "${defaultFlow.name}"`);
              executeFlow(tenantId, defaultFlow._id, activeContact, io);
+         } else {
+             console.log(`[Flow Engine] No catch-all flow found. Message ignored.`);
          }
      }
   } catch (err) {
