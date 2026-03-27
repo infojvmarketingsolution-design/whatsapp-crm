@@ -207,7 +207,7 @@ const sendMessage = async (req, res) => {
     };
     
     const Message = req.tenantDb.model('Message', MessageSchema);
-    newMessage = await Message.create(msgData);
+    let newMessage = await Message.create(msgData);
 
     // 4b. Update Contact's Last Message Timestamp
     await Contact.findByIdAndUpdate(contactId, { lastMessageAt: new Date() });

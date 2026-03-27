@@ -4,6 +4,7 @@ const FlowSchema = require('../models/tenant/Flow');
 const ContactSchema = require('../models/tenant/Contact');
 const Client = require('../models/core/Client');
 const WhatsAppService = require('./whatsapp.service');
+const MessageSchema = require('../models/tenant/Message');
 
 /**
  * Traverses a visually-built ReactFlow JSON graph synchronously.
@@ -15,6 +16,7 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
     const tenantDb = getTenantConnection(tenantId);
     const Flow = tenantDb.model('Flow', FlowSchema);
     const Contact = tenantDb.model('Contact', ContactSchema);
+    const Message = tenantDb.model('Message', MessageSchema);
     
     let flowData = await Flow.findById(flowId);
     if (!flowData || flowData.status !== 'ACTIVE') {
@@ -112,22 +114,44 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
            const interpolatedHeader = header.text ? { ...header, text: interpolate(header.text) } : header;
            const publicMediaUrl = getFullUrl(mediaUrl || currentNode.data.mediaUrl);
 
+           const saveAndEmit = async (type, content, waResult) => {
+               try {
+                  const savedMsg = await Message.create({
+                      contactId: contact._id,
+                      messageId: waResult?.messages?.[0]?.id || `out_${Date.now()}_flow_sent`,
+                      direction: 'OUTBOUND',
+                      type: type,
+                      content: content,
+                      status: 'SENT'
+                  });
+                  if (io) {
+                      io.to(tenantId).emit('new_message', Object.assign({}, savedMsg._doc, { contact: contact }));
+                  }
+               } catch (e) {
+                  console.error('[Flow Engine] Error saving flow message:', e);
+               }
+           };
+
            try {
                if (msgType === 'TEXT' && text) {
-                   await waService.sendTextMessage(contact.phone, interpolatedText);
+                   let res = await waService.sendTextMessage(contact.phone, interpolatedText);
+                   await saveAndEmit('text', interpolatedText, res);
                }                else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(msgType.toUpperCase())) {
                     const isMediaId = mediaId && /^\d+$/.test(mediaId.toString());
                     const mType = msgType.toLowerCase();
 
                     if (isMediaId) {
-                        await waService.sendMedia(contact.phone, mType, mediaId, interpolatedText);
+                        let res = await waService.sendMedia(contact.phone, mType, mediaId, interpolatedText);
+                        await saveAndEmit(mType, `[Media ID] ${mediaId}\nCaption: ${interpolatedText}`, res);
                     } else {
                         // If mediaId is not a numeric ID, treat it as a potential filename/URL
                         const finalMediaUrl = getFullUrl(mediaUrl || mediaId);
                         if (finalMediaUrl) {
-                            await waService.sendMedia(contact.phone, mType, null, interpolatedText, finalMediaUrl);
+                            let res = await waService.sendMedia(contact.phone, mType, null, interpolatedText, finalMediaUrl);
+                            await saveAndEmit(mType, `${finalMediaUrl}`, res);
                         } else {
-                            await waService.sendTextMessage(contact.phone, interpolatedText);
+                            let res = await waService.sendTextMessage(contact.phone, interpolatedText);
+                            await saveAndEmit('text', interpolatedText, res);
                         }
                     }
                 }
@@ -136,15 +160,16 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
                         ? { type: 'image', image: mediaId } 
                         : (publicMediaUrl ? { type: 'image', link: publicMediaUrl } : null);
 
-                   await waService.sendInteractiveButtonMessage(contact.phone, {
+                   let res = await waService.sendInteractiveButtonMessage(contact.phone, {
                        header: interpolatedHeader.type ? interpolatedHeader : headerMedia,
                        body: interpolatedText,
                        footer: interpolate(footer),
                        buttons: buttons.filter(b => b.trim() !== '').map(b => interpolate(b))
                    });
+                   await saveAndEmit('interactive', `[Interactive]\n${interpolatedText}`, res);
                }
                else if (msgType === 'LIST_MESSAGE' && listOptions.length > 0) {
-                   await waService.sendListMessage(contact.phone, {
+                   let res = await waService.sendListMessage(contact.phone, {
                        header: interpolatedHeader.text || '',
                        body: interpolatedText,
                        footer: interpolate(footer),
@@ -157,6 +182,7 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
                            }))
                        }]
                    });
+                   await saveAndEmit('interactive', `[List]\n${interpolatedText}\nOptions: ${listOptions.join(', ')}`, res);
                }
            } catch (sendErr) {
                console.error(`[Flow Engine] Send Error:`, sendErr.message);
@@ -215,7 +241,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
              // Update activeContact object to reflect cleared session for subsequent checks
              activeContact.currentFlowStep = null;
              activeContact.lastFlowId = null;
-             // Continue to normal trigger analysis instead of returning!
+             // DO NOT RETURN! Continue to normal trigger analysis.
          } else {
              const lastNode = activeFlow.nodes.find(n => n.id === activeContact.currentFlowStep);
              if (lastNode && (lastNode.data.msgType === 'QUESTION' || lastNode.data.variableName)) {
@@ -227,9 +253,10 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
                  activeContact.flowVariables = activeContact.flowVariables || {};
                  activeContact.flowVariables[varName] = messageText;
              }
+             // Only execute and return if we HAVE a valid active flow to resume
+             executeFlow(tenantId, activeContact.lastFlowId, activeContact, io, activeContact.currentFlowStep, replyValue || messageText);
+             return;
          }
-         executeFlow(tenantId, activeContact.lastFlowId, activeContact, io, activeContact.currentFlowStep, replyValue || messageText);
-         return;
      }
 
      // 2. New Contact Trigger
