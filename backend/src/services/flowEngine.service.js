@@ -48,8 +48,10 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
     const getFullUrl = (url) => {
         if (!url) return null;
         if (url.startsWith('http')) return url;
-        // Prepend domain for Meta API compatibility (MUST BE PUBLIC SECURE URL)
-        return `https://wapipulse.com${url}`;
+        // Use environment variable for base URL if provided, fallback to wapipulse.com
+        const baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').replace(/\/$/, '');
+        const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
+        return `${baseUrl}${normalizedUrl}`;
     };
 
     let currentNode;
