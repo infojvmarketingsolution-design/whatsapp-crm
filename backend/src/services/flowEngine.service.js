@@ -12,209 +12,231 @@ const WhatsAppService = require('./whatsapp.service');
  * @param {string} flowId - The Flow ID triggered
  * @param {object} contact - The Contact object { phone, name, _id }
  * @param {string} startNodeId - (Optional) specific node to start. If null, starts at triggerNode.
+ * @param {string} replyValue - (Optional) The user's reply text/button for branching.
  */
-const executeFlow = async (tenantId, flowId, contact, io) => {
+const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, replyValue = null) => {
   try {
-    console.log(`[Flow Engine] Activating flow ${flowId} for contact ${contact.phone}...`);
-    
-    let flowData;
     const tenantDb = getTenantConnection(tenantId);
     const Flow = tenantDb.model('Flow', FlowSchema);
-    flowData = await Flow.findById(flowId);
+    const Contact = tenantDb.model('Contact', ContactSchema);
+    
+    let flowData = await Flow.findById(flowId);
 
     if (!flowData || flowData.status !== 'ACTIVE') {
-       console.log(`[Flow Engine] Flow ${flowId} is missing or not active.`);
        return;
     }
 
-    // 0. Instantiate WhatsApp Service
+    const { nodes, edges } = flowData;
+    
+    // Instantiate WhatsApp Service
     const client = await Client.findOne({ tenantId });
-    if (!client || !client.whatsappConfig) {
-        console.error(`[Flow Engine] No WhatsApp config found for tenant ${tenantId}`);
-        return;
-    }
+    if (!client || !client.whatsappConfig) return;
+
     const waService = new WhatsAppService({
         accessToken: client.whatsappConfig.accessToken,
         phoneNumberId: client.whatsappConfig.phoneNumberId
     });
 
-    const { nodes, edges } = flowData;
-    
-    // Find Start Node
-    let currentNode = nodes.find(n => n.type === 'triggerNode' || n.id === 'start-1');
-    if (!currentNode) {
-       console.log(`[Flow Engine] No valid start node found in flow ${flowData.name}.`);
-       return;
+    // Helper: Substitute variables {{name}}, {{email}} etc.
+    const interpolate = (text) => {
+        if (!text) return '';
+        return text.replace(/\{\{(.*?)\}\}/g, (match, key) => {
+            const v = key.trim();
+            if (v === 'name') return contact.name || 'Friend';
+            if (v === 'phone') return contact.phone || '';
+            return contact.flowVariables?.[v] || match;
+        });
+    };
+
+    // Determine current node
+    let currentNode;
+    if (startNodeId) {
+        // Resuming from a specific node (e.g. after a question or button click)
+        const lastNode = nodes.find(n => n.id === startNodeId);
+        if (lastNode && (lastNode.data.msgType === 'INTERACTIVE_MESSAGE' || lastNode.data.msgType === 'LIST_MESSAGE' || lastNode.data.msgType === 'INTERACTIVE')) {
+            // BRANCHING: Find edge that matches the reply value or button text
+            const outgoingEdges = edges.filter(e => e.source === startNodeId);
+            let targetEdge = outgoingEdges.find(e => {
+                const sourceHandle = e.sourceHandle;
+                // If the handle matches the reply value or button index, use it
+                return sourceHandle === replyValue || sourceHandle === `handle_${replyValue}`;
+            });
+            // Fallback: If no handle match, use the first edge
+            if (!targetEdge) targetEdge = outgoingEdges[0];
+            currentNode = targetEdge ? nodes.find(n => n.id === targetEdge.target) : null;
+        } else {
+            // Linear progression
+            const nextEdge = edges.find(e => e.source === startNodeId);
+            currentNode = nextEdge ? nodes.find(n => n.id === nextEdge.target) : null;
+        }
+    } else {
+        currentNode = nodes.find(n => n.type === 'triggerNode' || n.id === 'start-1');
     }
 
-    console.log(`[Flow Engine] Initiated graph traversal starting at ${currentNode.id}`);
-
-    // Iterative Graph Traversal
-    let executionLimit = 20; // Prevent infinite loops
+    let executionLimit = 20;
     let steps = 0;
 
     while (currentNode && steps < executionLimit) {
-       console.log(`[Flow Node Exec] Type: ${currentNode.type} | ID: ${currentNode.id}`);
        steps++;
 
-       // 1. Execute Node Behavior
+       // Save state to contact
+       await Contact.findByIdAndUpdate(contact._id, { 
+           currentFlowStep: currentNode.id, 
+           lastFlowId: flowId 
+       });
+
        if (currentNode.type === 'messageNode') {
-           const { msgType = 'TEXT', text = '', mediaUrl = '', mediaId = '', buttons = [], header = {}, footer = '', listOptions = [], buttonText = 'Menu' } = currentNode.data;
+           const { msgType = 'TEXT', text = '', mediaId = '', buttons = [], header = {}, footer = '', listOptions = [], buttonText = 'Menu' } = currentNode.data;
            
+           const interpolatedText = interpolate(text);
+           const interpolatedHeader = header.text ? { ...header, text: interpolate(header.text) } : header;
+
            try {
                if (msgType === 'TEXT' && text) {
-                   await waService.sendTextMessage(contact.phone, text);
+                   await waService.sendTextMessage(contact.phone, interpolatedText);
                } 
                else if ((msgType === 'IMAGE' || msgType === 'VIDEO' || msgType === 'DOCUMENT') && mediaId) {
-                   await waService.sendMedia(contact.phone, msgType.toLowerCase(), mediaId, text);
+                   await waService.sendMedia(contact.phone, msgType.toLowerCase(), mediaId, interpolatedText);
                }
                else if (msgType === 'INTERACTIVE_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0)) {
-                   // Traditional Interactive buttons or New Interactive Message
                    await waService.sendInteractiveButtonMessage(contact.phone, {
-                       header: header.type ? header : (mediaId ? { type: 'image', image: mediaId } : null),
-                       body: text,
-                       footer: footer,
-                       buttons: buttons.filter(b => b.trim() !== '')
+                       header: interpolatedHeader.type ? interpolatedHeader : (mediaId ? { type: 'image', image: mediaId } : null),
+                       body: interpolatedText,
+                       footer: interpolate(footer),
+                       buttons: buttons.filter(b => b.trim() !== '').map(b => interpolate(b))
                    });
                }
                else if (msgType === 'LIST_MESSAGE' && listOptions.length > 0) {
                    await waService.sendListMessage(contact.phone, {
-                       header: header.text || '',
-                       body: text,
-                       footer: footer,
-                       buttonText: buttonText,
+                       header: interpolatedHeader.text || '',
+                       body: interpolatedText,
+                       footer: interpolate(footer),
+                       buttonText: interpolate(buttonText),
                        sections: [{
                            title: 'Options',
                            rows: listOptions.filter(opt => opt.trim() !== '').map((opt, i) => ({
-                               id: `list_${i}_${Date.now()}`,
-                               title: opt.substring(0, 24)
+                               id: `list_${i}`,
+                               title: interpolate(opt).substring(0, 24)
                            }))
                        }]
                    });
                }
            } catch (sendErr) {
-               console.error(`[Flow Engine] Failed to send ${msgType}:`, sendErr.message);
+               console.error(`[Flow Engine] Node Error ${currentNode.id}:`, sendErr.message);
            }
            
-           if (msgType === 'QUESTION') {
-               console.log(`[Flow Engine] Halting execution to wait for user input for variable: "${currentNode.data.variableName}"`);
-               break; // Halt graph traversal for user answer
+           // If it's a QUESTION or INTERACTIVE, we MUST wait for user reply
+           if (msgType === 'QUESTION' || msgType === 'INTERACTIVE_MESSAGE' || msgType === 'LIST_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0)) {
+               break; 
            }
        } 
        else if (currentNode.type === 'actionNode') {
-           const tag = currentNode.data?.tag || '';
+           const tag = interpolate(currentNode.data?.tag || '');
            const actionType = currentNode.data?.actionType || 'ADD';
            if (tag) {
-               console.log(`[Flow Engine] -> ${actionType} CRM Tag: [${tag}] to ${contact.phone}`);
-               const tenantDb = getTenantConnection(tenantId);
-               const Contact = tenantDb.model('Contact', ContactSchema);
                const update = actionType === 'REMOVE' ? { $pull: { tags: tag } } : { $addToSet: { tags: tag } };
-               await Contact.findOneAndUpdate({ phone: contact.phone }, update);
+               await Contact.findByIdAndUpdate(contact._id, update);
            }
        }
 
-       // 2. Find Next Node via Edges
        const outgoingEdge = edges.find(e => e.source === currentNode.id);
-       
        if (!outgoingEdge) {
-           console.log(`[Flow Engine] Execution reached the end of the branch. Stopped.`);
+           // End of flow
+           await Contact.findByIdAndUpdate(contact._id, { $unset: { currentFlowStep: "", lastFlowId: "" } });
            break;
        }
-
        currentNode = nodes.find(n => n.id === outgoingEdge.target);
     }
-
-    if (steps >= executionLimit) {
-       console.warn(`[Flow Engine] Hit execution limit of ${executionLimit} steps! Terminating to prevent infinite loop.`);
-    }
-
   } catch (error) {
-    console.error(`[Flow Engine] Fatal Crash during graph execution:`, error);
+    console.error(`[Flow Engine] Fatal Crash:`, error);
   }
 };
 
-const processIncomingMessage = async (tenantId, contact, messageText, io, isNewContact = false) => {
+const processIncomingMessage = async (tenantId, contact, messageText, io, isNewContact = false, replyValue = null) => {
   try {
      const tenantDb = getTenantConnection(tenantId);
      const Flow = tenantDb.model('Flow', FlowSchema);
+     const Contact = tenantDb.model('Contact', ContactSchema);
 
-     // 1. Check for "First Time" (NEW_MESSAGE) Trigger if it's a new contact
+     // A. Check if user is ALREADY IN A FLOW (Session)
+     if (contact.currentFlowStep && contact.lastFlowId) {
+         console.log(`[Flow Engine] Resuming session for ${contact.phone} at node ${contact.currentFlowStep}`);
+         
+         // If last node was a QUESTION, save the answer to variable
+         const activeFlow = await Flow.findById(contact.lastFlowId);
+         if (activeFlow) {
+             const lastNode = activeFlow.nodes.find(n => n.id === contact.currentFlowStep);
+             if (lastNode && lastNode.data.msgType === 'QUESTION' && lastNode.data.variableName) {
+                 const varName = lastNode.data.variableName;
+                 await Contact.findByIdAndUpdate(contact._id, { 
+                     $set: { [`flowVariables.${varName}`]: messageText }
+                 });
+                 // Refresh contact to have new variable for interpolation
+                 contact.flowVariables = contact.flowVariables || {};
+                 contact.flowVariables[varName] = messageText;
+             }
+         }
+
+         // Resume flow from the next step
+         setTimeout(() => executeFlow(tenantId, contact.lastFlowId, contact, io, contact.currentFlowStep, replyValue || messageText), 500);
+         return;
+     }
+
+     // B. If not in a session, look for new triggers
      if (isNewContact) {
          const welcomeFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
          if (welcomeFlow) {
-             console.log(`[Flow Engine] New contact detected! Triggering Welcome Flow: ${welcomeFlow.name}`);
              setTimeout(() => executeFlow(tenantId, welcomeFlow._id || welcomeFlow.id, contact, io), 500);
-             return; // Stop further matching if welcome flow is triggered
+             return;
          }
      }
 
-     let activeFlows = [];
-     activeFlows = await Flow.find({ status: 'ACTIVE', triggerType: 'KEYWORD' });
-
+     let activeFlows = await Flow.find({ status: 'ACTIVE', triggerType: 'KEYWORD' });
      let matched = false;
      for (const flow of activeFlows) {
          let isMatch = false;
          const keywords = flow.triggerKeywords || [];
          const isSmartMatchEnabled = flow.isSmartMatch || false;
 
-         if (keywords.length === 0 || (keywords.length === 1 && keywords[0] === '')) {
-             continue; // Skip catch-all here
-         }
+         if (keywords.length === 0 || (keywords.length === 1 && keywords[0] === '')) continue;
 
          if (isSmartMatchEnabled) {
-             isMatch = isSmartMatch(messageText, keywords);
+             isMatch = smartMatch(messageText, keywords);
          } else {
              isMatch = keywords.some(kw => messageText.toLowerCase().includes(kw.toLowerCase().trim()));
          }
 
          if (isMatch) {
              matched = true;
-             console.log(`[Flow Engine] ${isSmartMatchEnabled ? 'Smart AI' : 'Keyphrase'} match! Triggering flow: ${flow.name}`);
              setTimeout(() => executeFlow(tenantId, flow._id || flow.id, contact, io), 500);
              break;
          }
      }
 
-     // Default Flow (Catch-all)
      if (!matched) {
          const defaultFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'KEYWORD', $or: [{ triggerKeywords: [] }, { triggerKeywords: [""] }] });
          if (defaultFlow) {
-             console.log(`[Flow Engine] No matches. Triggering DEFAULT flow: ${defaultFlow.name}`);
              setTimeout(() => executeFlow(tenantId, defaultFlow._id || defaultFlow.id, contact, io), 500);
          }
      }
   } catch (err) {
-     console.error('[Flow Engine] Matching error:', err);
+     console.error('[Flow Engine] Logic Error:', err);
   }
 };
 
-module.exports = { executeFlow, processIncomingMessage };
-
-/**
- * Smart matching logic (Fuzzy + Token match)
- */
-function isSmartMatch(message, keywords) {
+function smartMatch(message, keywords) {
     if (!message || !keywords || keywords.length === 0) return false;
-    
     const msg = message.toLowerCase().trim();
     const tokens = msg.split(/\s+/);
-    
     for (const kw of keywords) {
         const target = kw.toLowerCase().trim();
         if (!target) continue;
-        
-        // 1. Literal match
         if (msg.includes(target)) return true;
-        
-        // 2. Fuzzy match entire message (Levenshtein)
         if (levenshteinDistance(msg, target) <= 2) return true;
-        
-        // 3. Token match (Fuzzy)
         for (const token of tokens) {
             if (levenshteinDistance(token, target) <= 1) return true;
         }
     }
-    
     return false;
 }
 
@@ -222,19 +244,16 @@ function levenshteinDistance(a, b) {
     const matrix = [];
     for (let i = 0; i <= b.length; i++) matrix[i] = [i];
     for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
-
     for (let i = 1; i <= b.length; i++) {
         for (let j = 1; j <= a.length; j++) {
             if (b.charAt(i - 1) === a.charAt(j - 1)) {
                 matrix[i][j] = matrix[i - 1][j - 1];
             } else {
-                matrix[i][j] = Math.min(
-                    matrix[i - 1][j - 1] + 1, // substitution
-                    matrix[i][j - 1] + 1,     // insertion
-                    matrix[i - 1][j] + 1      // deletion
-                );
+                matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
             }
         }
     }
     return matrix[b.length][a.length];
 }
+
+module.exports = { executeFlow, processIncomingMessage };

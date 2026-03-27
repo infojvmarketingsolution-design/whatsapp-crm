@@ -84,9 +84,30 @@ const handleIncomingMessage = async (req, res) => {
       const message = value.messages[0];
       const from = message.from;
       const msgId = message.id;
-      const text = message.text?.body || `[Received ${message.type}]`;
+      
+      let msgBody = message.text?.body || "";
+      let replyValue = null;
 
-      console.log(`📩 [Tenant: ${client.tenantId}] Incoming Message:`, from, text);
+      // Detect Interactive Replies (Buttons/List)
+      if (message.type === 'interactive') {
+          const interactive = message.interactive;
+          if (interactive.type === 'button_reply') {
+              msgBody = interactive.button_reply.title;
+              replyValue = interactive.button_reply.id; // Use button ID for branching
+          } else if (interactive.type === 'list_reply') {
+              msgBody = interactive.list_reply.title;
+              replyValue = interactive.list_reply.id; // Use list option ID for branching
+          }
+      } else if (message.type === 'button') {
+          msgBody = message.button.text;
+          replyValue = message.button.payload;
+      }
+
+      if (!msgBody && !message.type.match(/image|video|document|audio/)) {
+          msgBody = `[Received ${message.type}]`;
+      }
+
+      console.log(`📩 [Tenant: ${client.tenantId}] Incoming Message:`, from, msgBody);
 
       let contact = await Contact.findOne({ phone: from });
       let isNewContact = false;
@@ -99,8 +120,6 @@ const handleIncomingMessage = async (req, res) => {
          await contact.save();
       }
 
-      let msgBody = text;
-      
       const waService = new WhatsAppService({
           accessToken: client.whatsappConfig.accessToken,
           phoneNumberId: client.whatsappConfig.phoneNumberId
@@ -127,8 +146,8 @@ const handleIncomingMessage = async (req, res) => {
         io.to(client.tenantId).emit('new_message', Object.assign({}, savedMsg._doc, { contact: contact.toObject() }));
       }
       
-      // Trigger Automation Engine
-      await processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io, isNewContact);
+      // Trigger Automation Engine with replyValue for branching
+      await processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io, isNewContact, replyValue);
     }
 
     // 3. Handle Status Updates

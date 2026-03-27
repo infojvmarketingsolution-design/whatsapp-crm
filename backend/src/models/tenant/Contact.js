@@ -19,7 +19,10 @@ const ContactSchema = new mongoose.Schema({
     metadata: mongoose.Schema.Types.Mixed
   }],
   lastActivity: { type: Date },
-  lastMessageAt: { type: Date }
+  lastMessageAt: { type: Date },
+  currentFlowStep: { type: String }, // Node ID for session tracking
+  lastFlowId: { type: mongoose.Schema.Types.ObjectId, ref: 'Flow' },
+  flowVariables: { type: mongoose.Schema.Types.Mixed, default: {} }
 }, { timestamps: true });
 
 // Exporting Schema, not model, because models are bound to tenant DB dynamically

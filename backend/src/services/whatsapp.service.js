@@ -158,7 +158,7 @@ class WhatsAppService {
     payload.interactive.action = {
       buttons: buttons.map((btn, idx) => ({
         type: 'reply',
-        reply: { id: `btn_${idx}_${Date.now()}`, title: btn.substring(0, 20) } // Max 20 chars for title
+        reply: { id: `btn_${idx}`, title: btn.substring(0, 20) } 
       }))
     };
 
