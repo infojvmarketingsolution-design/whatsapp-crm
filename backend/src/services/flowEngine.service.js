@@ -103,13 +103,19 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
                else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(msgType)) {
                    if (mediaId && !mediaId.includes('demo_')) {
                        await waService.sendMedia(contact.phone, msgType.toLowerCase(), mediaId, interpolatedText);
+                   } else if (currentNode.data.mediaUrl) {
+                       await waService.sendMedia(contact.phone, msgType.toLowerCase(), null, interpolatedText, currentNode.data.mediaUrl);
                    } else {
                        await waService.sendTextMessage(contact.phone, interpolatedText);
                    }
                }
                else if (msgType === 'INTERACTIVE_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0)) {
+                   const headerMedia = (mediaId && !mediaId.includes('demo_')) 
+                        ? { type: 'image', image: mediaId } 
+                        : (currentNode.data.mediaUrl ? { type: 'image', link: currentNode.data.mediaUrl } : null);
+
                    await waService.sendInteractiveButtonMessage(contact.phone, {
-                       header: interpolatedHeader.type ? interpolatedHeader : (mediaId && !mediaId.includes('demo_') ? { type: 'image', image: mediaId } : null),
+                       header: interpolatedHeader.type ? interpolatedHeader : headerMedia,
                        body: interpolatedText,
                        footer: interpolate(footer),
                        buttons: buttons.filter(b => b.trim() !== '').map(b => interpolate(b))
@@ -163,37 +169,42 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
 
 const processIncomingMessage = async (tenantId, contact, messageText, io, isNewContact = false, replyValue = null) => {
   try {
-     console.log(`[Flow Engine] Processing Message: "${messageText}" | ReplyValue: "${replyValue}" | Session: ${contact.currentFlowStep || 'NONE'}`);
+     console.log(`[Flow Engine] Processing Message from ${contact.phone}: "${messageText}" | ReplyValue: "${replyValue}" | Session: ${contact.currentFlowStep || 'NONE'}`);
      
      const tenantDb = getTenantConnection(tenantId);
      const Flow = tenantDb.model('Flow', FlowSchema);
      const Contact = tenantDb.model('Contact', ContactSchema);
 
-     if (contact.currentFlowStep && contact.lastFlowId) {
-         console.log(`[Flow Engine] Found Active Session: ${contact.currentFlowStep}`);
-         const activeFlow = await Flow.findById(contact.lastFlowId);
+     // Refresh contact from DB to ensure it's not stale from the controller
+     const dbContact = await Contact.findOne({ phone: contact.phone });
+     const activeContact = dbContact ? dbContact.toObject() : contact;
+
+     if (activeContact.currentFlowStep && activeContact.lastFlowId) {
+         console.log(`[Flow Engine] Found Active Session for ${activeContact.phone}: ${activeContact.currentFlowStep}`);
+         const activeFlow = await Flow.findById(activeContact.lastFlowId);
          if (activeFlow) {
-             const lastNode = activeFlow.nodes.find(n => n.id === contact.currentFlowStep);
+             const lastNode = activeFlow.nodes.find(n => n.id === activeContact.currentFlowStep);
              if (lastNode && lastNode.data.msgType === 'QUESTION' && lastNode.data.variableName) {
                  const varName = lastNode.data.variableName;
                  console.log(`[Flow Engine] Saving input "${messageText}" to variable "${varName}"`);
-                 await Contact.findOneAndUpdate({ phone: contact.phone }, { 
+                 await Contact.findOneAndUpdate({ phone: activeContact.phone }, { 
                      $set: { [`flowVariables.${varName}`]: messageText }
                  });
-                 contact.flowVariables = contact.flowVariables || {};
-                 contact.flowVariables[varName] = messageText;
+                 activeContact.flowVariables = activeContact.flowVariables || {};
+                 activeContact.flowVariables[varName] = messageText;
              }
          }
 
-         executeFlow(tenantId, contact.lastFlowId, contact, io, contact.currentFlowStep, replyValue || messageText);
+         executeFlow(tenantId, activeContact.lastFlowId, activeContact, io, activeContact.currentFlowStep, replyValue || messageText);
          return;
      }
 
      if (isNewContact) {
+         console.log(`[Flow Engine] Incoming NEW CONTACT message from ${activeContact.phone}`);
          const welcomeFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
          if (welcomeFlow) {
              console.log(`[Flow Engine] Triggering Welcome Flow: ${welcomeFlow.name}`);
-             executeFlow(tenantId, welcomeFlow._id, contact, io);
+             executeFlow(tenantId, welcomeFlow._id, activeContact, io);
              return;
          }
      }
@@ -209,7 +220,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          if (isMatch) {
              matched = true;
              console.log(`[Flow Engine] Triggered Keyword Flow: ${flow.name}`);
-             executeFlow(tenantId, flow._id, contact, io);
+             executeFlow(tenantId, flow._id, activeContact, io);
              break;
          }
      }
@@ -218,7 +229,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          const defaultFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'KEYWORD', $or: [{ triggerKeywords: [] }, { triggerKeywords: [""] }] });
          if (defaultFlow) {
              console.log(`[Flow Engine] Triggering Catch-all Flow: ${defaultFlow.name}`);
-             executeFlow(tenantId, defaultFlow._id, contact, io);
+             executeFlow(tenantId, defaultFlow._id, activeContact, io);
          }
      }
   } catch (err) {

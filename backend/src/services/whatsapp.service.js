@@ -112,7 +112,7 @@ class WhatsAppService {
     }
   }
 
-  async sendMedia(to, type, mediaId, caption = '') {
+  async sendMedia(to, type, mediaId, caption = '', mediaUrl = null) {
     const sanitizedTo = String(to).replace(/\D/g, '');
     const payload = {
       messaging_product: 'whatsapp',
@@ -120,7 +120,12 @@ class WhatsAppService {
       type: type, // 'image', 'video', 'document'
     };
     
-    payload[type] = { id: mediaId };
+    if (mediaId) {
+      payload[type] = { id: mediaId };
+    } else if (mediaUrl) {
+      payload[type] = { link: mediaUrl };
+    }
+
     if (caption && (type === 'image' || type === 'video' || type === 'document')) {
       payload[type].caption = caption;
     }
@@ -147,9 +152,15 @@ class WhatsAppService {
     };
 
     if (header) {
-      if (header.type === 'image') payload.interactive.header = { type: 'image', image: { id: header.image } };
-      else if (header.type === 'video') payload.interactive.header = { type: 'video', video: { id: header.video } };
-      else if (header.type === 'document') payload.interactive.header = { type: 'document', document: { id: header.document } };
+      if (header.type === 'image') {
+          payload.interactive.header = { type: 'image', image: header.image ? { id: header.image } : { link: header.link } };
+      }
+      else if (header.type === 'video') {
+           payload.interactive.header = { type: 'video', video: header.video ? { id: header.video } : { link: header.link } };
+      }
+      else if (header.type === 'document') {
+           payload.interactive.header = { type: 'document', document: header.document ? { id: header.document } : { link: header.link } };
+      }
       else if (header.type === 'text') payload.interactive.header = { type: 'text', text: header.text };
     }
 
