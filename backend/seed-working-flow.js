@@ -18,7 +18,7 @@ async function seedWorkingFlow() {
       name: 'Working Image Flow',
       description: 'A flow that sends an image to the user.',
       status: 'ACTIVE',
-      triggerType: 'KEYWORD',
+      triggerType: 'NEW_MESSAGE', // Make it the primary welcome flow
       triggerKeywords: ['image', 'photo', 'picture'],
       isSmartMatch: true,
       nodes: [
@@ -26,7 +26,7 @@ async function seedWorkingFlow() {
           id: 'trigger-1',
           type: 'triggerNode',
           position: { x: 250, y: 50 },
-          data: { triggerWords: 'image, photo, picture' }
+          data: { triggerWords: 'image, photo, picture, hello, hi' }
         },
         {
           id: 'msg-1',
