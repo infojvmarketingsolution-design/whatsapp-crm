@@ -113,7 +113,7 @@ const handleIncomingMessage = async (req, res) => {
       let isNewContact = false;
       if (!contact) {
          const contactName = value.contacts?.[0]?.profile?.name || 'Unknown';
-         contact = await Contact.create({ phone: from, name: contactName, lastMessageAt: new Date() });
+         contact = await Contact.create({ phone: from, name: contactName, lastMessageAt: new Date(), status: 'NEW LEAD' });
          isNewContact = true;
       } else {
          contact.lastMessageAt = new Date();

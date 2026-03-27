@@ -202,6 +202,11 @@ const uploadTemplateMedia = async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded or file rejected by server.' });
     }
 
+    if (req.file.mimetype === 'image/webp') {
+      console.error('Upload Template Media: WebP is not supported by Meta API');
+      return res.status(400).json({ message: 'Meta API does not support WebP. Please upload a PNG or JPEG.' });
+    }
+
     console.log('Template Media Uploaded:', req.file.path);
 
     const tenantId = req.tenantId;
