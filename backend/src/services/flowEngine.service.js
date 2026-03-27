@@ -115,17 +115,22 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
            try {
                if (msgType === 'TEXT' && text) {
                    await waService.sendTextMessage(contact.phone, interpolatedText);
-               } 
-               else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(msgType)) {
-                   // Only use mediaId if it's purely digits (Meta Media ID)
-                   if (mediaId && /^\d+$/.test(mediaId)) {
-                       await waService.sendMedia(contact.phone, msgType.toLowerCase(), mediaId, interpolatedText);
-                   } else if (publicMediaUrl) {
-                       await waService.sendMedia(contact.phone, msgType.toLowerCase(), null, interpolatedText, publicMediaUrl);
-                   } else {
-                       await waService.sendTextMessage(contact.phone, interpolatedText);
-                   }
-               }
+               }                else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(msgType.toUpperCase())) {
+                    const isMediaId = mediaId && /^\d+$/.test(mediaId.toString());
+                    const mType = msgType.toLowerCase();
+
+                    if (isMediaId) {
+                        await waService.sendMedia(contact.phone, mType, mediaId, interpolatedText);
+                    } else {
+                        // If mediaId is not a numeric ID, treat it as a potential filename/URL
+                        const finalMediaUrl = getFullUrl(mediaUrl || mediaId);
+                        if (finalMediaUrl) {
+                            await waService.sendMedia(contact.phone, mType, null, interpolatedText, finalMediaUrl);
+                        } else {
+                            await waService.sendTextMessage(contact.phone, interpolatedText);
+                        }
+                    }
+                }
                else if (msgType === 'INTERACTIVE_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0)) {
                    const headerMedia = (mediaId && /^\d+$/.test(mediaId)) 
                         ? { type: 'image', image: mediaId } 
