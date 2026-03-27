@@ -107,7 +107,7 @@ const handleIncomingMessage = async (req, res) => {
           msgBody = `[Received ${message.type}]`;
       }
 
-      console.log(`📩 [Tenant: ${client.tenantId}] Incoming Message:`, from, msgBody);
+      console.log(`📩 [Tenant: ${client.tenantId}] Incoming: ${msgBody} | ReplyValue: ${replyValue}`);
 
       let contact = await Contact.findOne({ phone: from });
       let isNewContact = false;

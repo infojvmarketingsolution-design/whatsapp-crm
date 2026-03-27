@@ -7,12 +7,6 @@ const WhatsAppService = require('./whatsapp.service');
 
 /**
  * Traverses a visually-built ReactFlow JSON graph synchronously.
- * 
- * @param {string} tenantId - Tenant DB ID
- * @param {string} flowId - The Flow ID triggered
- * @param {object} contact - The Contact object { phone, name, _id }
- * @param {string} startNodeId - (Optional) specific node to start. If null, starts at triggerNode.
- * @param {string} replyValue - (Optional) The user's reply text/button for branching.
  */
 const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, replyValue = null) => {
   try {
@@ -21,14 +15,10 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
     const Contact = tenantDb.model('Contact', ContactSchema);
     
     let flowData = await Flow.findById(flowId);
-
-    if (!flowData || flowData.status !== 'ACTIVE') {
-       return;
-    }
+    if (!flowData || flowData.status !== 'ACTIVE') return;
 
     const { nodes, edges } = flowData;
     
-    // Instantiate WhatsApp Service
     const client = await Client.findOne({ tenantId });
     if (!client || !client.whatsappConfig) return;
 
@@ -37,35 +27,42 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
         phoneNumberId: client.whatsappConfig.phoneNumberId
     });
 
-    // Helper: Substitute variables {{name}}, {{email}} etc.
     const interpolate = (text) => {
         if (!text) return '';
         return text.replace(/\{\{(.*?)\}\}/g, (match, key) => {
             const v = key.trim();
-            if (v === 'name') return contact.name || 'Friend';
+            if (v === 'name' || v === 'visitor_name') return contact.name || contact.flowVariables?.visitor_name || 'Friend';
             if (v === 'phone') return contact.phone || '';
             return contact.flowVariables?.[v] || match;
         });
     };
 
-    // Determine current node
     let currentNode;
     if (startNodeId) {
-        // Resuming from a specific node (e.g. after a question or button click)
+        console.log(`[Flow Engine] Resuming from Node: ${startNodeId} | Reply: ${replyValue}`);
         const lastNode = nodes.find(n => n.id === startNodeId);
-        if (lastNode && (lastNode.data.msgType === 'INTERACTIVE_MESSAGE' || lastNode.data.msgType === 'LIST_MESSAGE' || lastNode.data.msgType === 'INTERACTIVE')) {
-            // BRANCHING: Find edge that matches the reply value or button text
-            const outgoingEdges = edges.filter(e => e.source === startNodeId);
+        const outgoingEdges = edges.filter(e => e.source === startNodeId);
+        
+        if (lastNode && outgoingEdges.length > 1) {
+            // BRANCHING LOGIC
+            console.log(`[Flow Engine] Branching search for handle: "${replyValue}" among ${outgoingEdges.length} edges`);
             let targetEdge = outgoingEdges.find(e => {
-                const sourceHandle = e.sourceHandle;
-                // If the handle matches the reply value or button index, use it
-                return sourceHandle === replyValue || sourceHandle === `handle_${replyValue}`;
+                const handle = e.sourceHandle;
+                // Match handle ID (list_0, btn_0) or exact text
+                return handle === replyValue || handle === `handle_${replyValue}`;
             });
-            // Fallback: If no handle match, use the first edge
-            if (!targetEdge) targetEdge = outgoingEdges[0];
+
+            // If no handle match, check if replyValue is an index
+            if (!targetEdge && replyValue && replyValue.startsWith('list_')) {
+                targetEdge = outgoingEdges.find(e => e.sourceHandle === replyValue);
+            }
+
+            if (!targetEdge) {
+                console.log(`[Flow Engine] No branch match for "${replyValue}". Falling back to first edge.`);
+                targetEdge = outgoingEdges[0];
+            }
             currentNode = targetEdge ? nodes.find(n => n.id === targetEdge.target) : null;
         } else {
-            // Linear progression
             const nextEdge = edges.find(e => e.source === startNodeId);
             currentNode = nextEdge ? nodes.find(n => n.id === nextEdge.target) : null;
         }
@@ -78,8 +75,8 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
 
     while (currentNode && steps < executionLimit) {
        steps++;
+       console.log(`[Flow Engine] Step ${steps}: Node ${currentNode.id} (${currentNode.type})`);
 
-       // Save state to contact
        await Contact.findByIdAndUpdate(contact._id, { 
            currentFlowStep: currentNode.id, 
            lastFlowId: flowId 
@@ -95,12 +92,23 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
                if (msgType === 'TEXT' && text) {
                    await waService.sendTextMessage(contact.phone, interpolatedText);
                } 
-               else if ((msgType === 'IMAGE' || msgType === 'VIDEO' || msgType === 'DOCUMENT') && mediaId) {
-                   await waService.sendMedia(contact.phone, msgType.toLowerCase(), mediaId, interpolatedText);
+               else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(msgType)) {
+                   // mediaId might be a placeholder or invalid. Fallback to TEXT if it fails.
+                   try {
+                       if (mediaId && !mediaId.includes('demo_')) {
+                           await waService.sendMedia(contact.phone, msgType.toLowerCase(), mediaId, interpolatedText);
+                       } else {
+                           // Fallback to text if no real media ID
+                           await waService.sendTextMessage(contact.phone, interpolatedText);
+                       }
+                   } catch (mediaErr) {
+                       console.warn(`[Flow Engine] Media failed, falling back to text:`, mediaErr.message);
+                       await waService.sendTextMessage(contact.phone, interpolatedText);
+                   }
                }
                else if (msgType === 'INTERACTIVE_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0)) {
                    await waService.sendInteractiveButtonMessage(contact.phone, {
-                       header: interpolatedHeader.type ? interpolatedHeader : (mediaId ? { type: 'image', image: mediaId } : null),
+                       header: interpolatedHeader.type ? interpolatedHeader : (mediaId && !mediaId.includes('demo_') ? { type: 'image', image: mediaId } : null),
                        body: interpolatedText,
                        footer: interpolate(footer),
                        buttons: buttons.filter(b => b.trim() !== '').map(b => interpolate(b))
@@ -122,10 +130,9 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
                    });
                }
            } catch (sendErr) {
-               console.error(`[Flow Engine] Node Error ${currentNode.id}:`, sendErr.message);
+               console.error(`[Flow Engine] Error sending node ${currentNode.id}:`, sendErr.message);
            }
            
-           // If it's a QUESTION or INTERACTIVE, we MUST wait for user reply
            if (msgType === 'QUESTION' || msgType === 'INTERACTIVE_MESSAGE' || msgType === 'LIST_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0)) {
                break; 
            }
@@ -141,14 +148,13 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
 
        const outgoingEdge = edges.find(e => e.source === currentNode.id);
        if (!outgoingEdge) {
-           // End of flow
            await Contact.findByIdAndUpdate(contact._id, { $unset: { currentFlowStep: "", lastFlowId: "" } });
            break;
        }
        currentNode = nodes.find(n => n.id === outgoingEdge.target);
     }
   } catch (error) {
-    console.error(`[Flow Engine] Fatal Crash:`, error);
+    console.error(`[Flow Engine] Fatal Error:`, error);
   }
 };
 
@@ -158,11 +164,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      const Flow = tenantDb.model('Flow', FlowSchema);
      const Contact = tenantDb.model('Contact', ContactSchema);
 
-     // A. Check if user is ALREADY IN A FLOW (Session)
      if (contact.currentFlowStep && contact.lastFlowId) {
-         console.log(`[Flow Engine] Resuming session for ${contact.phone} at node ${contact.currentFlowStep}`);
-         
-         // If last node was a QUESTION, save the answer to variable
          const activeFlow = await Flow.findById(contact.lastFlowId);
          if (activeFlow) {
              const lastNode = activeFlow.nodes.find(n => n.id === contact.currentFlowStep);
@@ -171,22 +173,21 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
                  await Contact.findByIdAndUpdate(contact._id, { 
                      $set: { [`flowVariables.${varName}`]: messageText }
                  });
-                 // Refresh contact to have new variable for interpolation
+                 // Update local object for immediate use in interpolate
                  contact.flowVariables = contact.flowVariables || {};
                  contact.flowVariables[varName] = messageText;
              }
          }
 
-         // Resume flow from the next step
-         setTimeout(() => executeFlow(tenantId, contact.lastFlowId, contact, io, contact.currentFlowStep, replyValue || messageText), 500);
+         // Resume flow
+         executeFlow(tenantId, contact.lastFlowId, contact, io, contact.currentFlowStep, replyValue || messageText);
          return;
      }
 
-     // B. If not in a session, look for new triggers
      if (isNewContact) {
          const welcomeFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
          if (welcomeFlow) {
-             setTimeout(() => executeFlow(tenantId, welcomeFlow._id || welcomeFlow.id, contact, io), 500);
+             executeFlow(tenantId, welcomeFlow._id, contact, io);
              return;
          }
      }
@@ -194,21 +195,14 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      let activeFlows = await Flow.find({ status: 'ACTIVE', triggerType: 'KEYWORD' });
      let matched = false;
      for (const flow of activeFlows) {
-         let isMatch = false;
          const keywords = flow.triggerKeywords || [];
-         const isSmartMatchEnabled = flow.isSmartMatch || false;
-
          if (keywords.length === 0 || (keywords.length === 1 && keywords[0] === '')) continue;
 
-         if (isSmartMatchEnabled) {
-             isMatch = smartMatch(messageText, keywords);
-         } else {
-             isMatch = keywords.some(kw => messageText.toLowerCase().includes(kw.toLowerCase().trim()));
-         }
+         const isMatch = flow.isSmartMatch ? smartMatch(messageText, keywords) : keywords.some(kw => messageText.toLowerCase().includes(kw.toLowerCase().trim()));
 
          if (isMatch) {
              matched = true;
-             setTimeout(() => executeFlow(tenantId, flow._id || flow.id, contact, io), 500);
+             executeFlow(tenantId, flow._id, contact, io);
              break;
          }
      }
@@ -216,7 +210,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      if (!matched) {
          const defaultFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'KEYWORD', $or: [{ triggerKeywords: [] }, { triggerKeywords: [""] }] });
          if (defaultFlow) {
-             setTimeout(() => executeFlow(tenantId, defaultFlow._id || defaultFlow.id, contact, io), 500);
+             executeFlow(tenantId, defaultFlow._id, contact, io);
          }
      }
   } catch (err) {
@@ -227,15 +221,11 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
 function smartMatch(message, keywords) {
     if (!message || !keywords || keywords.length === 0) return false;
     const msg = message.toLowerCase().trim();
-    const tokens = msg.split(/\s+/);
     for (const kw of keywords) {
         const target = kw.toLowerCase().trim();
         if (!target) continue;
         if (msg.includes(target)) return true;
         if (levenshteinDistance(msg, target) <= 2) return true;
-        for (const token of tokens) {
-            if (levenshteinDistance(token, target) <= 1) return true;
-        }
     }
     return false;
 }
@@ -246,11 +236,8 @@ function levenshteinDistance(a, b) {
     for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
     for (let i = 1; i <= b.length; i++) {
         for (let j = 1; j <= a.length; j++) {
-            if (b.charAt(i - 1) === a.charAt(j - 1)) {
-                matrix[i][j] = matrix[i - 1][j - 1];
-            } else {
-                matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
-            }
+            if (b.charAt(i - 1) === a.charAt(j - 1)) matrix[i][j] = matrix[i - 1][j - 1];
+            else matrix[i][j] = Math.min(matrix[i - 1][j - 1] + 1, matrix[i][j - 1] + 1, matrix[i - 1][j] + 1);
         }
     }
     return matrix[b.length][a.length];
