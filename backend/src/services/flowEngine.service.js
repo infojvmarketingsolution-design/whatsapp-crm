@@ -184,23 +184,24 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
 
 const processIncomingMessage = async (tenantId, contact, messageText, io, isNewContact = false, replyValue = null) => {
   try {
-     console.log(`[Flow Engine] Processing Message from ${contact.phone}: "${messageText}" | ReplyValue: "${replyValue}" | Session: ${contact.currentFlowStep || 'NONE'}`);
+     console.log(`[Flow Engine] Processing Message from ${contact.phone}: "${messageText}" | ReplyValue: "${replyValue}" | isNewContact: ${isNewContact} | Session: ${contact.currentFlowStep || 'NONE'}`);
      
      const tenantDb = getTenantConnection(tenantId);
      const Flow = tenantDb.model('Flow', FlowSchema);
      const Contact = tenantDb.model('Contact', ContactSchema);
 
-     // Refresh contact from DB to ensure it's not stale from the controller
+     // Refresh contact from DB
      const dbContact = await Contact.findOne({ phone: contact.phone });
      const activeContact = dbContact ? dbContact.toObject() : contact;
 
+     // 1. Session Resume
      if (activeContact.currentFlowStep && activeContact.lastFlowId) {
-         console.log(`[Flow Engine] Found Active Session for ${activeContact.phone}: ${activeContact.currentFlowStep}`);
+         console.log(`[Flow Engine] Resuming Session for ${activeContact.phone}: ${activeContact.currentFlowStep}`);
          const activeFlow = await Flow.findById(activeContact.lastFlowId);
          if (activeFlow) {
              const lastNode = activeFlow.nodes.find(n => n.id === activeContact.currentFlowStep);
-             if (lastNode && lastNode.data.msgType === 'QUESTION' && lastNode.data.variableName) {
-                 const varName = lastNode.data.variableName;
+             if (lastNode && (lastNode.data.msgType === 'QUESTION' || lastNode.data.variableName)) {
+                 const varName = lastNode.data.variableName || 'last_input';
                  console.log(`[Flow Engine] Saving input "${messageText}" to variable "${varName}"`);
                  await Contact.findOneAndUpdate({ phone: activeContact.phone }, { 
                      $set: { [`flowVariables.${varName}`]: messageText }
@@ -209,53 +210,66 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
                  activeContact.flowVariables[varName] = messageText;
              }
          }
-
          executeFlow(tenantId, activeContact.lastFlowId, activeContact, io, activeContact.currentFlowStep, replyValue || messageText);
          return;
      }
 
+     // 2. New Contact Trigger
      if (isNewContact) {
-         console.log(`[Flow Engine] Analyzing NEW_MESSAGE trigger for ${activeContact.phone}...`);
+         console.log(`[Flow Engine] 🆕 Analyzing NEW_MESSAGE trigger for ${activeContact.phone}...`);
          const welcomeFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
          if (welcomeFlow) {
-             console.log(`[Flow Engine] Triggering Welcome Flow: "${welcomeFlow.name}"`);
+             console.log(`[Flow Engine] ✅ Triggered Welcome Flow: "${welcomeFlow.name}"`);
              executeFlow(tenantId, welcomeFlow._id, activeContact, io);
              return;
          } else {
-             console.log(`[Flow Engine] No ACTIVE NEW_MESSAGE flow found.`);
+             console.log(`[Flow Engine] ❌ No ACTIVE flow found with triggerType: 'NEW_MESSAGE'`);
          }
      }
 
-     console.log(`[Flow Engine] Searching for KEYWORD matches for "${messageText}"...`);
-     let activeFlows = await Flow.find({ status: 'ACTIVE', triggerType: 'KEYWORD' });
+     // 3. Keyword Match
+     console.log(`[Flow Engine] Searching for KEYWORD match for "${messageText}"...`);
+     const activeFlows = await Flow.find({ status: 'ACTIVE', triggerType: 'KEYWORD' });
      console.log(`[Flow Engine] Found ${activeFlows.length} active keyword flows to check.`);
      
-     let matched = false;
+     let matchedFlow = null;
      for (const flow of activeFlows) {
          const keywords = (flow.triggerKeywords || []).filter(kw => kw.trim() !== '');
          if (keywords.length === 0) continue;
 
          console.log(`[Flow Engine] Checking flow "${flow.name}" keywords: [${keywords.join(', ')}]`);
-         const isMatch = flow.isSmartMatch ? smartMatch(messageText, keywords) : keywords.some(kw => messageText.toLowerCase().includes(kw.toLowerCase().trim()));
+         const isMatch = keywords.some(k => {
+             if (flow.isSmartMatch) return messageText.toLowerCase().includes(k.toLowerCase());
+             return messageText.toLowerCase() === k.toLowerCase();
+         });
 
          if (isMatch) {
-             matched = true;
-             console.log(`[Flow Engine] MATCH FOUND! Triggering flow: "${flow.name}"`);
-             executeFlow(tenantId, flow._id, activeContact, io);
+             matchedFlow = flow;
+             console.log(`[Flow Engine] 🎯 Match found! Triggering flow: "${flow.name}"`);
              break;
          }
      }
 
-     if (!matched) {
-         console.log(`[Flow Engine] No keywords matched "${messageText}". Checking for catch-all...`);
-         const defaultFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'KEYWORD', $or: [{ triggerKeywords: [] }, { triggerKeywords: [""] }] });
-         if (defaultFlow) {
-             console.log(`[Flow Engine] Triggering Catch-all Flow: "${defaultFlow.name}"`);
-             executeFlow(tenantId, defaultFlow._id, activeContact, io);
-         } else {
-             console.log(`[Flow Engine] No catch-all flow found. Message ignored.`);
-         }
+     if (matchedFlow) {
+         executeFlow(tenantId, matchedFlow._id, activeContact, io);
+         return;
      }
+
+     // 4. Catch-all Fallback
+     console.log(`[Flow Engine] No match found. Checking for Catch-all...`);
+     const catchAllFlow = await Flow.findOne({ 
+         status: 'ACTIVE', 
+         triggerType: 'KEYWORD', 
+         $or: [{ triggerKeywords: [] }, { triggerKeywords: [""] }] 
+     });
+
+     if (catchAllFlow) {
+         console.log(`[Flow Engine] 🎣 Triggering Catch-all Flow: "${catchAllFlow.name}"`);
+         executeFlow(tenantId, catchAllFlow._id, activeContact, io);
+     } else {
+         console.log(`[Flow Engine] No catch-all flow found. Silent.`);
+     }
+
   } catch (err) {
      console.error('[Flow Engine] Logic Error:', err);
   }
