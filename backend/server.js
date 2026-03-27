@@ -221,11 +221,10 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 5000;
 
 // Connect to Database, then start server
-const { seedDemoFlow } = require('./src/scripts/seed-flow-logic');
+const { connectCoreDB } = require('./src/config/db');
 
-connectCoreDB().then(async () => {
+connectCoreDB().then(() => {
   console.log("✅ Connected to Core Database successfully.");
-  await seedDemoFlow();
 }).catch((err) => {
   console.warn("⚠️ Warning: MongoDB is offline. Running server in UI/Webhook test mode without DB.");
 });
