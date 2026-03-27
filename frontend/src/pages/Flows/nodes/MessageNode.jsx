@@ -1,6 +1,6 @@
 import React from 'react';
 import { Handle, Position, useReactFlow } from '@xyflow/react';
-import { MessageSquare, Image as ImageIcon, Video, HelpCircle, List, Trash2, Upload, FileText } from 'lucide-react';
+import { MessageSquare, Image as ImageIcon, Video, HelpCircle, List, Trash2, Upload, FileText, Sparkles } from 'lucide-react';
 
 export default function MessageNode({ id, data }) {
   const { updateNodeData } = useReactFlow();
@@ -42,6 +42,45 @@ export default function MessageNode({ id, data }) {
       }
    };
 
+   const loadDemo = () => {
+     const demos = {
+       'TEXT': { text: "Welcome to JV Group! 🚀 We provide end-to-end WhatsApp Marketing solutions. How can we help you today?" },
+       'IMAGE': { 
+         text: "Check out our JV Group office culture! 🏢 We create winning teams.",
+         mediaUrl: "https://placehold.co/600x400/blue/white?text=JV+Group+Office",
+         mediaId: "demo_image_id"
+       },
+       'VIDEO': { 
+         text: "Watch how JV Group scales businesses with Automation. 🎥",
+         mediaUrl: "https://www.w3schools.com/html/mov_bbb.mp4",
+         mediaId: "demo_video_id"
+       },
+       'DOCUMENT': { 
+         text: "Download our JV Group Portfolio 2024. 📄",
+         mediaUrl: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
+         mediaId: "demo_doc_id"
+       },
+       'INTERACTIVE_MESSAGE': {
+         header: { type: 'text', text: "JV Group Services" },
+         text: "Select a service to grow your business with us.",
+         footer: "Expertise in AI & Marketing",
+         buttons: ["WhatsApp Marketing", "Web Development", "CRM Solutions"]
+       },
+       'LIST_MESSAGE': {
+         text: "Explore JV Group's industry-specific solutions.",
+         buttonText: "Select Industry",
+         listOptions: ["Real Estate", "E-commerce", "Education", "Healthcare", "SaaS"]
+       },
+       'QUESTION': {
+         text: "Great! To get started with JV Group, please enter your Business Name. 🏢",
+         variableName: "business_name"
+       }
+     };
+
+     const demoData = demos[msgType] || {};
+     updateNodeData(id, { ...data, ...demoData });
+   };
+
   const Icon = msgType === 'IMAGE' ? ImageIcon : msgType === 'VIDEO' ? Video : msgType === 'DOCUMENT' ? FileText : msgType === 'QUESTION' ? HelpCircle : msgType === 'INTERACTIVE' || msgType === 'INTERACTIVE_MESSAGE' ? List : msgType === 'LIST_MESSAGE' ? List : MessageSquare;
 
   return (
@@ -51,9 +90,15 @@ export default function MessageNode({ id, data }) {
             <Icon size={14} className="text-blue-600 mr-2" />
             <span className="text-sm font-bold text-blue-800 uppercase tracking-widest text-[11px]">{msgType.replace('_', ' ')}</span>
          </div>
-         <button onClick={onDelete} className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-red-50">
-            <Trash2 size={14} />
-         </button>
+         <div className="flex items-center space-x-2">
+            <button onClick={loadDemo} title="Load JV Demo" className="text-blue-500 hover:text-blue-700 transition-colors p-1 rounded hover:bg-blue-100 flex items-center space-x-1">
+               <Sparkles size={14} />
+               <span className="text-[10px] font-bold">DEMO</span>
+            </button>
+            <button onClick={onDelete} className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded hover:bg-red-50">
+               <Trash2 size={14} />
+            </button>
+         </div>
       </div>
       <div className="p-4 bg-white flex flex-col space-y-3">
          <select 
