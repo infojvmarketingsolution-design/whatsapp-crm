@@ -8,9 +8,6 @@ const FlowSchema = require('./src/models/tenant/Flow');
 const CampaignSchema = require('./src/models/tenant/Campaign');
 const Client = require('./src/models/core/Client');
 
-/**
- * Sanitizes a filename the same way the new Multer config does.
- */
 function sanitize(name) {
     if (!name) return name;
     const isPath = name.includes('/');
@@ -22,7 +19,7 @@ function sanitize(name) {
 async function fixUploads() {
     try {
         const coreUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/crm_core';
-        console.log('--- NESTED PATH MEDIA REPAIR ---');
+        console.log('--- DIAGNOSTIC PATH MEDIA REPAIR ---');
         await mongoose.connect(coreUri);
 
         const clients = await Client.find({});
@@ -46,20 +43,26 @@ async function fixUploads() {
                 const filename = val.includes('/') ? val.split('/').pop() : val;
                 const sanitizedFilename = sanitize(filename);
 
-                // Target the specific nested path found on server: backend/backend/public/uploads
                 const searchDirs = [
-                    path.join(__dirname, 'backend/public/uploads', subDir, tenantId), // This should resolve to backend/backend/public/uploads
-                    path.join(__dirname, 'public/uploads', subDir, tenantId),         // fallback
+                    path.join(__dirname, 'backend/public/uploads', subDir, tenantId),
+                    path.join(__dirname, 'public/uploads', subDir, tenantId),
                     path.join(process.cwd(), 'backend/backend/public/uploads', subDir, tenantId),
-                    path.join(process.cwd(), 'backend/public/uploads', subDir, tenantId)
+                    path.join(process.cwd(), 'backend/public/uploads', subDir, tenantId),
+                    path.join(process.cwd(), 'public/uploads', subDir, tenantId)
                 ];
 
                 let found = false;
                 for (const dir of searchDirs) {
                     const oldPath = path.join(dir, filename);
                     const newPath = path.join(dir, sanitizedFilename);
+                    
+                    // console.log(`  Checking: ${oldPath}`); // Temporarily muted to prevent spam, but let's enable for the specific broken file
+                    if (filename.includes('1774613948556')) {
+                         console.log(`  [Diagnostic] Checking for ${filename} at: ${oldPath}`);
+                    }
+
                     if (fs.existsSync(oldPath)) {
-                        console.log(`  ✅ RENAMED: ${filename} -> ${sanitizedFilename}`);
+                        console.log(`  ✅ FOUND & RENAMED: ${filename} -> ${sanitizedFilename}`);
                         fs.renameSync(oldPath, newPath);
                         found = true;
                         tenantFixCount++;
@@ -110,7 +113,6 @@ async function fixUploads() {
             await conn.close();
         }
         await mongoose.connection.close();
-        console.log('\n--- ALL MEDIA REPAIRED ---');
     } catch (err) {
         console.error(err);
     }
