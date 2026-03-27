@@ -95,7 +95,11 @@ const handleIncomingMessage = async (req, res) => {
       const from = message.from;
       const msgId = message.id;
       
-      let msgBody = message.text?.body || "";
+      let msgBody = "";
+      if (message.text) {
+          msgBody = message.text.body || (typeof message.text === 'string' ? message.text : JSON.stringify(message.text));
+      }
+      
       let replyValue = null;
 
       // Detect Interactive Replies (Buttons/List)
@@ -115,8 +119,10 @@ const handleIncomingMessage = async (req, res) => {
           replyValue = message.button.payload;
       }
 
-      if (!msgBody && !message.type.match(/image|video|document|audio/)) {
-          msgBody = `[Received ${message.type}]`;
+      if (!msgBody || msgBody.trim() === '') {
+          if (!message.type.match(/image|video|document|audio/)) {
+              msgBody = `[Received ${message.type || 'unknown'}]`;
+          }
       }
 
       console.log(`📩 [Tenant: ${client.tenantId}] Incoming: ${msgBody} | ReplyValue: ${replyValue}`);

@@ -403,12 +403,12 @@ export default function Inbox() {
                      {m.type === 'document' && <div className="mb-2 flex items-center space-x-2 text-white/90 bg-black/20 p-2 rounded-lg text-xs"><FileText size={14}/> <span>Document Attached</span></div>}
                      
                      {/* Message Text Content */}
-                     {(!m.content?.startsWith('/') || m.type === 'text') && (
+                     {(!m.content || typeof m.content !== 'string' || !m.content.startsWith('/') || m.type === 'text') && (
                         <p 
                           className={`leading-relaxed font-medium ${isEmojiOnly(m.content) ? 'text-6xl py-2 mb-2 drop-shadow-md' : 'text-[14px]'}`}
                           style={isEmojiOnly(m.content) ? { fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif' } : {}}
                         >
-                          {m.content}
+                          {(m.content && typeof m.content === 'object') ? JSON.stringify(m.content) : (m.content || '[Empty Message]')}
                         </p>
                      )}
                    </div>
