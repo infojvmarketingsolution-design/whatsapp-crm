@@ -190,9 +190,8 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/admin/settings', adminSettingsRoutes);
 
-// Diagnostic Logging for Uploads
+// Diagnostic Logging for Uploads (Backward Compatibility for /api/uploads)
 app.use('/api/uploads', (req, res, next) => {
-  console.log(`[Media Request] ${req.method} ${req.url} - Agent: ${req.headers['user-agent']}`);
   next();
 }, express.static(path.join(__dirname, 'public/uploads'), {
   setHeaders: (res, path) => {
@@ -200,6 +199,17 @@ app.use('/api/uploads', (req, res, next) => {
     res.set('Cache-Control', 'public, max-age=31536000');
   }
 }));
+
+// Main Media Route (Matches generated URLs /uploads/...)
+app.use('/uploads', (req, res, next) => {
+  next();
+}, express.static(path.join(__dirname, 'public/uploads'), {
+  setHeaders: (res, path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cache-Control', 'public, max-age=31536000');
+  }
+}));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // SPA Routing: Serve index.html for any request that doesn't match an API route

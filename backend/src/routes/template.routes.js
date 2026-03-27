@@ -16,7 +16,9 @@ const upload = multer({
       cb(null, dir);
     },
     filename: (req, file, cb) => {
-      cb(null, Date.now() + '-' + file.originalname);
+      // Sanitize: replace spaces with underscores and remove non-alphanumeric chars (except . and -)
+      const sanitizedName = file.originalname.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9\.\-_]/g, '');
+      cb(null, Date.now() + '-' + sanitizedName);
     }
   })
 });
