@@ -8,18 +8,10 @@ const FlowSchema = require('./src/models/tenant/Flow');
 const CampaignSchema = require('./src/models/tenant/Campaign');
 const Client = require('./src/models/core/Client');
 
-function sanitize(name) {
-    if (!name) return name;
-    const isPath = name.includes('/');
-    const filename = isPath ? name.split('/').pop() : name;
-    const sanitizedFilename = filename.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9\.\-_]/g, '');
-    return isPath ? name.replace(filename, sanitizedFilename) : sanitizedFilename;
-}
-
 async function fixUploads() {
     try {
         const coreUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/crm_core';
-        console.log('--- DIAGNOSTIC PATH MEDIA REPAIR ---');
+        console.log('--- DEFINITIVE MEDIA REPAIR ---');
         await mongoose.connect(coreUri);
 
         const clients = await Client.find({});
@@ -37,39 +29,39 @@ async function fixUploads() {
 
             let tenantFixCount = 0;
 
-            const fixAndRename = (val, subDir) => {
-                if (typeof val !== 'string' || (!val.includes(' ') && !/[^a-zA-Z0-9\.\-_]/.test(val))) return val;
+            const processValue = (val, subDir) => {
+                if (typeof val !== 'string') return val;
                 
-                const filename = val.includes('/') ? val.split('/').pop() : val;
-                const sanitizedFilename = sanitize(filename);
+                // Check if it's a problematic filename (has spaces or parentheses)
+                if (val.includes(' ') || val.includes('(') || val.includes(')')) {
+                    const filename = val.includes('/') ? val.split('/').pop() : val;
+                    const sanitizedFilename = filename.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9\.\-_]/g, '');
 
-                const searchDirs = [
-                    path.join(__dirname, 'backend/public/uploads', subDir, tenantId),
-                    path.join(__dirname, 'public/uploads', subDir, tenantId),
-                    path.join(process.cwd(), 'backend/backend/public/uploads', subDir, tenantId),
-                    path.join(process.cwd(), 'backend/public/uploads', subDir, tenantId),
-                    path.join(process.cwd(), 'public/uploads', subDir, tenantId)
-                ];
+                    // We use the EXACT base path discovered via 'find'
+                    const baseUploads = path.join(process.cwd(), 'backend/backend/public/uploads');
+                    const oldPath = path.join(baseUploads, subDir, tenantId, filename);
+                    const newPath = path.join(baseUploads, subDir, tenantId, sanitizedFilename);
 
-                let found = false;
-                for (const dir of searchDirs) {
-                    const oldPath = path.join(dir, filename);
-                    const newPath = path.join(dir, sanitizedFilename);
-                    
-                    // console.log(`  Checking: ${oldPath}`); // Temporarily muted to prevent spam, but let's enable for the specific broken file
-                    if (filename.includes('1774613948556')) {
-                         console.log(`  [Diagnostic] Checking for ${filename} at: ${oldPath}`);
-                    }
+                    // Also try the fallback path (just backend/public)
+                    const fallbackPath = path.join(process.cwd(), 'backend/public/uploads', subDir, tenantId, filename);
+                    const fallbackNewPath = path.join(process.cwd(), 'backend/public/uploads', subDir, tenantId, sanitizedFilename);
 
                     if (fs.existsSync(oldPath)) {
-                        console.log(`  ✅ FOUND & RENAMED: ${filename} -> ${sanitizedFilename}`);
+                        console.log(`  ✅ RENAMED: ${filename} -> ${sanitizedFilename}`);
                         fs.renameSync(oldPath, newPath);
-                        found = true;
                         tenantFixCount++;
-                        break;
+                        return val.replace(filename, sanitizedFilename);
+                    } else if (fs.existsSync(fallbackPath)) {
+                        console.log(`  ✅ RENAMED (Fallback): ${filename} -> ${sanitizedFilename}`);
+                        fs.renameSync(fallbackPath, fallbackNewPath);
+                        tenantFixCount++;
+                        return val.replace(filename, sanitizedFilename);
+                    } else {
+                        // console.log(`  ❌ NOT ON DISK: ${filename}`);
+                        return val;
                     }
                 }
-                return val.replace(filename, sanitizedFilename);
+                return val;
             };
 
             // 1. Templates
@@ -80,7 +72,7 @@ async function fixUploads() {
                     for (const c of t.components) {
                         if (c.example && c.example.header_handle) {
                             const old = c.example.header_handle[0];
-                            const fixed = fixAndRename(old, 'templates');
+                            const fixed = processValue(old, 'templates');
                             if (old !== fixed) { c.example.header_handle[0] = fixed; mod = true; }
                         }
                     }
@@ -96,12 +88,12 @@ async function fixUploads() {
                     if (n.data) {
                         if (n.data.mediaUrl) {
                             const old = n.data.mediaUrl;
-                            const fixed = fixAndRename(old, 'templates');
+                            const fixed = processValue(old, 'templates');
                             if (old !== fixed) { n.data.mediaUrl = fixed; mod = true; }
                         }
                         if (n.data.mediaId) {
                             const old = n.data.mediaId;
-                            const fixed = fixAndRename(old, 'templates');
+                            const fixed = processValue(old, 'templates');
                             if (old !== fixed) { n.data.mediaId = fixed; mod = true; }
                         }
                     }
@@ -109,10 +101,11 @@ async function fixUploads() {
                 if (mod) { f.markModified('nodes'); await f.save(); }
             }
 
-            console.log(`  Done. Sanitized ${tenantFixCount} entries.`);
+            console.log(`  Done. Cleaned ${tenantFixCount} files in DB and Disk.`);
             await conn.close();
         }
         await mongoose.connection.close();
+        console.log('\n--- SYSTEM REPAIRED ---');
     } catch (err) {
         console.error(err);
     }
