@@ -13,22 +13,26 @@ const Client = require('./src/models/core/Client');
  */
 function sanitize(name) {
     if (!name) return name;
-    return name.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9\.\-_]/g, '');
+    // Extract actual filename if it's a path
+    const isPath = name.includes('/');
+    const filename = isPath ? name.split('/').pop() : name;
+    
+    const sanitizedFilename = filename.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9\.\-_]/g, '');
+    
+    return isPath ? name.replace(filename, sanitizedFilename) : sanitizedFilename;
 }
 
 async function fixUploads() {
     try {
         const coreUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/crm_core';
-        console.log('Connecting to Core DB:', coreUri);
+        console.log('--- FINAL MEDIA REPAIR ---');
         await mongoose.connect(coreUri);
 
         const clients = await Client.find({});
-        console.log(`Found ${clients.length} clients to process.`);
-
         for (const client of clients) {
             const tenantId = client.tenantId;
             const tenantUri = `mongodb://127.0.0.1:27017/jv_tenant_${tenantId}`;
-            console.log(`\n--- Processing Tenant: ${tenantId} ---`);
+            console.log(`\nTenant: ${tenantId}`);
 
             const conn = mongoose.createConnection(tenantUri);
             await new Promise(resolve => conn.once('open', resolve));
@@ -39,127 +43,96 @@ async function fixUploads() {
 
             let tenantFixCount = 0;
 
-            const fixPathInString = (str, subDir) => {
-                if (typeof str !== 'string' || !str.includes('uploads/')) return str;
+            const fixAndRename = (val, subDir) => {
+                if (typeof val !== 'string' || (!val.includes(' ') && !/[^a-zA-Z0-9\.\-_]/.test(val))) return val;
                 
-                const parts = str.split('/');
-                const filename = parts[parts.length - 1];
-                
-                // If filename has spaces or special chars
-                if (filename.includes(' ') || /[^a-zA-Z0-9\.\-_]/.test(filename)) {
-                    const sanitizedFilename = sanitize(filename);
-                    
-                    // Physical rename
-                    const fileDir = path.join(__dirname, 'public/uploads', subDir, tenantId);
-                    const oldPath = path.join(fileDir, filename);
-                    const newPath = path.join(fileDir, sanitizedFilename);
+                const filename = val.includes('/') ? val.split('/').pop() : val;
+                const sanitizedFilename = sanitize(filename);
 
+                // Possible file locations
+                const searchDirs = [
+                    path.join(__dirname, 'public/uploads', subDir, tenantId),
+                    path.join(__dirname, 'uploads', subDir, tenantId),
+                    path.join(process.cwd(), 'backend/public/uploads', subDir, tenantId),
+                    path.join(process.cwd(), 'public/uploads', subDir, tenantId)
+                ];
+
+                let found = false;
+                for (const dir of searchDirs) {
+                    const oldPath = path.join(dir, filename);
+                    const newPath = path.join(dir, sanitizedFilename);
                     if (fs.existsSync(oldPath)) {
-                        console.log(`Renaming: uploads/${subDir}/${tenantId}/${filename} -> ${sanitizedFilename}`);
+                        console.log(`  ✅ RENAMED: ${filename} -> ${sanitizedFilename}`);
                         fs.renameSync(oldPath, newPath);
+                        found = true;
                         tenantFixCount++;
-                        return str.replace(filename, sanitizedFilename);
-                    } else {
-                        // Sometimes the subDir might be different in the DB vs the physical path
-                        // We try templates or media
-                        const altDir = subDir === 'templates' ? 'media' : 'templates';
-                        const altPath = path.join(__dirname, 'public/uploads', altDir, tenantId, filename);
-                        if (fs.existsSync(altPath)) {
-                             const altNewPath = path.join(__dirname, 'public/uploads', altDir, tenantId, sanitizedFilename);
-                             console.log(`Renaming (Alt Path): uploads/${altDir}/${tenantId}/${filename} -> ${sanitizedFilename}`);
-                             fs.renameSync(altPath, altNewPath);
-                             tenantFixCount++;
-                             return str.replace(filename, sanitizedFilename);
-                        }
-                        // console.warn(`File not found on disk: uploads/${subDir}/${tenantId}/${filename}`);
+                        break;
                     }
                 }
-                return str;
+
+                if (!found) {
+                    // Try the other subDir just in case
+                    const altDir = subDir === 'templates' ? 'media' : 'templates';
+                    for (const dir of searchDirs) {
+                        const altOldPath = path.join(dir.replace(subDir, altDir), filename);
+                        const altNewPath = path.join(dir.replace(subDir, altDir), sanitizedFilename);
+                        if (fs.existsSync(altOldPath)) {
+                             console.log(`  ✅ RENAMED (found in ${altDir}): ${filename} -> ${sanitizedFilename}`);
+                             fs.renameSync(altOldPath, altNewPath);
+                             found = true;
+                             tenantFixCount++;
+                             break;
+                        }
+                    }
+                }
+
+                return val.replace(filename, sanitizedFilename);
             };
 
-            // 1. Fix Templates
+            // 1. Templates
             const templates = await Template.find({});
             for (const t of templates) {
-                let modified = false;
+                let mod = false;
                 if (t.components && Array.isArray(t.components)) {
-                    for (const comp of t.components) {
-                        if (comp.example && comp.example.header_handle) {
-                             const oldHandle = comp.example.header_handle[0];
-                             const newHandle = fixPathInString(oldHandle, 'templates');
-                             if (oldHandle !== newHandle) {
-                                 comp.example.header_handle[0] = newHandle;
-                                 modified = true;
-                             }
+                    for (const c of t.components) {
+                        if (c.example && c.example.header_handle) {
+                            const old = c.example.header_handle[0];
+                            const fixed = fixAndRename(old, 'templates');
+                            if (old !== fixed) { c.example.header_handle[0] = fixed; mod = true; }
                         }
                     }
                 }
-                if (modified) {
-                    t.markModified('components');
-                    await t.save();
-                }
+                if (mod) { t.markModified('components'); await t.save(); }
             }
 
-            // 2. Fix Flows (Crucial!)
+            // 2. Flows
             const flows = await Flow.find({});
             for (const f of flows) {
-                let modified = false;
-                if (f.nodes && Array.isArray(f.nodes)) {
-                    for (const node of f.nodes) {
-                        if (node.data) {
-                            if (node.data.mediaUrl) {
-                                const oldUrl = node.data.mediaUrl;
-                                const newUrl = fixPathInString(oldUrl, 'templates');
-                                if (oldUrl !== newUrl) {
-                                    node.data.mediaUrl = newUrl;
-                                    modified = true;
-                                }
-                            }
-                            if (node.data.mediaId && typeof node.data.mediaId === 'string' && node.data.mediaId.includes('.')) {
-                                const oldId = node.data.mediaId;
-                                const newId = fixPathInString(oldId, 'templates');
-                                if (oldId !== newId) {
-                                    node.data.mediaId = newId;
-                                    modified = true;
-                                }
-                            }
+                let mod = false;
+                for (const n of f.nodes) {
+                    if (n.data) {
+                        if (n.data.mediaUrl) {
+                            const old = n.data.mediaUrl;
+                            const fixed = fixAndRename(old, 'templates');
+                            if (old !== fixed) { n.data.mediaUrl = fixed; mod = true; }
+                        }
+                        if (n.data.mediaId) {
+                            const old = n.data.mediaId;
+                            const fixed = fixAndRename(old, 'templates');
+                            if (old !== fixed) { n.data.mediaId = fixed; mod = true; }
                         }
                     }
                 }
-                if (modified) {
-                    f.markModified('nodes');
-                    await f.save();
-                }
+                if (mod) { f.markModified('nodes'); await f.save(); }
             }
 
-            // 3. Fix Campaigns
-            const campaigns = await Campaign.find({});
-            for (const c of campaigns) {
-                let modified = false;
-                if (c.templateComponents && c.templateComponents.header) {
-                     const header = c.templateComponents.header;
-                     if (header.link) {
-                         const oldLink = header.link;
-                         const newLink = fixPathInString(oldLink, 'templates');
-                         if (oldLink !== newLink) {
-                             header.link = newLink;
-                             modified = true;
-                         }
-                     }
-                }
-                if (modified) {
-                    c.markModified('templateComponents');
-                    await c.save();
-                }
-            }
-
-            console.log(`Sanitized ${tenantFixCount} files across Templates, Flows, and Campaigns in ${tenantId}`);
+            console.log(`  Done. Sanitized ${tenantFixCount} entries.`);
             await conn.close();
         }
-
-        console.log('\n--- Full Media Sanitization Complete ---');
         await mongoose.connection.close();
+        console.log('\n--- ALL MEDIA REPAIRED ---');
     } catch (err) {
-        console.error('Migration Error:', err);
+        console.error(err);
     }
 }
 
