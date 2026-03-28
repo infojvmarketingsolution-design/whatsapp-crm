@@ -9,7 +9,7 @@ const mongoose = require('mongoose');
 
 class PRDFlowService {
   constructor() {
-    this.QUALIFICATION_OPTIONS = [
+    this.DEFAULT_QUALIFICATION_OPTIONS = [
       '10th Pass',
       '12th Pass',
       'Diploma Completed',
@@ -17,7 +17,7 @@ class PRDFlowService {
       'Master Completed'
     ];
 
-    this.PROGRAM_MAP = {
+    this.DEFAULT_PROGRAM_MAP = {
       '10th Pass': {
         'Diploma Programs': ['Diploma in Engineering', 'IT Diploma', 'Animation Diploma']
       },
@@ -94,6 +94,10 @@ class PRDFlowService {
     // Ensure image URLs are absolute for Meta API
     prompts.greetingImage = this.makeAbsolute(prompts.greetingImage);
     prompts.successProofImage = this.makeAbsolute(prompts.successProofImage);
+
+    // Extraction of dynamic branching lists
+    const qualOptions = prompts.qualificationOptions || this.DEFAULT_QUALIFICATION_OPTIONS;
+    const progMap = prompts.programMap || this.DEFAULT_PROGRAM_MAP;
 
     const replaceVars = (str) => {
       if (!str) return '';
@@ -179,7 +183,7 @@ class PRDFlowService {
           buttonText: 'Select Qualification',
           sections: [{
             title: 'Current Level',
-            rows: this.QUALIFICATION_OPTIONS.map((opt, i) => ({
+            rows: qualOptions.map((opt, i) => ({
               id: `qual_${i}`,
               title: opt
             }))
@@ -199,16 +203,16 @@ class PRDFlowService {
       case 'AWAITING_QUALIFICATION': {
         let qual = messageText.trim();
         // Check if message matches any of our qualification options exactly
-        if (!this.QUALIFICATION_OPTIONS.includes(qual)) {
+        if (!qualOptions.includes(qual)) {
            // Fallback check: maybe it matched a row ID or has minor case diff
-           const matched = this.QUALIFICATION_OPTIONS.find(opt => opt.toLowerCase() === qual.toLowerCase());
+           const matched = qualOptions.find(opt => opt.toLowerCase() === qual.toLowerCase());
            if (matched) qual = matched;
            else return; // Ignore if it doesn't match a valid qualification
         }
 
-        const sections = Object.keys(this.PROGRAM_MAP[qual]).map(secTitle => ({
+        const sections = Object.keys(progMap[qual]).map(secTitle => ({
           title: secTitle,
-          rows: this.PROGRAM_MAP[qual][secTitle].map((progName, i) => ({
+          rows: progMap[qual][secTitle].map((progName, i) => ({
             id: `prog_${qual.substring(0,3)}_${i}`,
             title: progName
           }))

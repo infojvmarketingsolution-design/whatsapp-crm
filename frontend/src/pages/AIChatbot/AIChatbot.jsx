@@ -368,14 +368,27 @@ export default function AIChatbot() {
             colorClass="bg-blue-600"
             id="node-greeting"
           >
-             <NodeInput 
-                label="Greeting Text" 
-                value={settings.aiPrompts.greetingMessage}
-                onChange={(val) => updatePrompt('greetingMessage', val)}
-                placeholder="Welcome to our business! How can I help you?"
-                hint="Use {{name}} for dynamic name tag."
-                icon={MessageSquare}
-             />
+             <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-1">
+                  <NodeInput 
+                      label="Greeting Text" 
+                      value={settings.aiPrompts.greetingMessage}
+                      onChange={(val) => updatePrompt('greetingMessage', val)}
+                      placeholder="Welcome to our business! How can I help you?"
+                      hint="Use {{name}} for dynamic name tag."
+                      icon={MessageSquare}
+                  />
+                </div>
+                <div className="w-full md:w-64">
+                   <NodeInput 
+                      label="Name Request" 
+                      value={settings.aiPrompts.namePrompt}
+                      onChange={(val) => updatePrompt('namePrompt', val)}
+                      placeholder="May I know your name?"
+                      icon={User}
+                   />
+                </div>
+             </div>
              <NodeInput 
                 label="Greeting Image" 
                 value={settings.aiPrompts.greetingImage}
@@ -390,29 +403,62 @@ export default function AIChatbot() {
 
           <NodeLine />
 
-          {/* STEP 3: QUALIFICATION */}
+          {/* STEP 3 & 4: QUALIFICATION & BRANCHING */}
           <FlowNode 
-            title="Qualification Logic" 
+            title="Qualification & Branching Logic" 
             icon={GraduationCap} 
             colorClass="bg-indigo-600"
             id="node-qual"
           >
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+             <div className="space-y-6">
                 <NodeInput 
-                  label="Name Request Prompt" 
-                  value={settings.aiPrompts.namePrompt}
-                  onChange={(val) => updatePrompt('namePrompt', val)}
-                  placeholder="May I know your name?"
-                  icon={User}
-                />
-                <NodeInput 
-                  label="Education/Program Selection" 
+                  label="Qualification Question" 
                   value={settings.aiPrompts.programListPrompt}
                   onChange={(val) => updatePrompt('programListPrompt', val)}
-                  placeholder="Which program are you interested in?"
-                  hint="Bot will show qualification list here."
-                  icon={GraduationCap}
+                  placeholder="Select your last qualification 👇"
+                  hint="This triggers the initial menu selection."
+                  icon={User}
                 />
+                
+                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6">
+                   <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center">
+                         <Play size={10} className="mr-2 text-indigo-500" />
+                         Branching Logic Preview
+                      </h3>
+                      <div className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded font-bold uppercase">Manual Control</div>
+                   </div>
+
+                   <div className="space-y-3">
+                      {(settings.aiPrompts.qualificationOptions || []).map((qual) => (
+                        <div key={qual} className="group relative bg-white border border-gray-100 rounded-xl p-4 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md">
+                           <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-black text-gray-800 uppercase tracking-wide">{qual}</span>
+                              <div className="h-px flex-1 mx-4 bg-gray-50 group-hover:bg-indigo-50 transition-colors"></div>
+                              <ArrowRight size={12} className="text-indigo-400" />
+                           </div>
+                           <div className="flex flex-wrap gap-2">
+                              {Object.keys(settings.aiPrompts.programMap?.[qual] || {}).map(section => (
+                                 <div key={section} className="flex flex-col space-y-1">
+                                    <span className="text-[9px] font-bold text-gray-400 uppercase italic mb-1">{section}</span>
+                                    <div className="flex flex-wrap gap-1.5">
+                                       {(settings.aiPrompts.programMap[qual][section] || []).map(prog => (
+                                          <span key={prog} className="px-2 py-0.5 bg-gray-50 text-gray-600 rounded text-[9px] font-medium border border-gray-100 group-hover:bg-indigo-50/30 group-hover:border-indigo-100 transition-all font-mono">
+                                             {prog}
+                                          </span>
+                                       ))}
+                                    </div>
+                                 </div>
+                              ))}
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                   
+                   <p className="text-[10px] text-gray-400 mt-4 italic text-center">
+                      The programs above are fixed according to your "Select Qualification" choice.
+                   </p>
+                </div>
              </div>
           </FlowNode>
 

@@ -10,6 +10,20 @@ const AIPromptsSchema = new mongoose.Schema({
   callTimePrompt: { type: String, default: '{{name}}, what is your preferred time for our counsellor to call you? 📞' },
   agentTransferPrompt: { type: String, default: 'Transferring you to a human agent... 👨‍💻' },
   fallbackMessage: { type: String, default: "I'm sorry, I didn't quite get that. Could you please rephrase?" },
+  qualificationOptions: { type: [String], default: ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'] },
+  programMap: { type: mongoose.Schema.Types.Mixed, default: {
+    '10th Pass': { 'Diploma Programs': ['Diploma in Engineering', 'IT Diploma', 'Animation Diploma'] },
+    '12th Pass': { 
+      'Trending Programs': ['B.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
+      'Traditional Programs': ['BBA', 'B.Com', 'BCA', 'B.Sc']
+    },
+    'Diploma Completed': { 'Bachelor Programs': ['Electrical Engineering', 'Civil Engineering', 'Mechanical Engineering'] },
+    'Graduation Completed': { 
+      'Trending Master Programs': ['M.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
+      'Traditional Master Programs': ['MBA', 'M.Com', 'MCA', 'M.Sc']
+    },
+    'Master Completed': { 'PhD Programs': ['PhD in Marketing', 'PhD in Civil Engineering', 'PhD in IT'] }
+  } }
 });
 
 
