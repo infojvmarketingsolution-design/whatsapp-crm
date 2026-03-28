@@ -17,7 +17,20 @@ exports.getSettings = async (req, res) => {
           workspace: { name: 'Demo Workspace', timezone: 'UTC', language: 'en', industry: 'Other' },
           whatsapp: { defaultSender: null, optInHandling: false },
           crm: { duplicateDetection: true, autoAssignment: false },
-          automation: { botEnabled: false, fallbackToHuman: true, rateLimit: 50 },
+          automation: { 
+            botEnabled: false, 
+            fallbackToHuman: true, 
+            rateLimit: 50,
+            aiPrompts: {
+              greetingMessage: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?',
+              namePrompt: 'Great! May I know your name?',
+              programListPrompt: '{{name}}, which career path or program are you interested in?',
+              successProofMessage: '🎉 Success Stories, {{name}}!\n\nOur students are already working in top companies 🚀\nYou could be next!',
+              callTimePrompt: '{{name}}, what is your preferred time for our counsellor to call you? 📞',
+              agentTransferPrompt: 'Transferring you to a human agent... 👨‍💻',
+              fallbackMessage: "I'm sorry, I didn't quite get that. Could you please rephrase?"
+            }
+          },
           notifications: { email: true, whatsapp: true, inApp: true },
           customization: { themeColor: '#10b981', customLogin: false }
        };

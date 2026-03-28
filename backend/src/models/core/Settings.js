@@ -1,5 +1,16 @@
 const mongoose = require('mongoose');
 
+const AIPromptsSchema = new mongoose.Schema({
+  greetingMessage: { type: String, default: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?' },
+  namePrompt: { type: String, default: 'Great! May I know your name?' },
+  programListPrompt: { type: String, default: '{{name}}, which career path or program are you interested in?' },
+  successProofMessage: { type: String, default: '🎉 Success Stories, {{name}}!\n\nOur students are already working in top companies 🚀\nYou could be next!' },
+  callTimePrompt: { type: String, default: '{{name}}, what is your preferred time for our counsellor to call you? 📞' },
+  agentTransferPrompt: { type: String, default: 'Transferring you to a human agent... 👨‍💻' },
+  fallbackMessage: { type: String, default: "I'm sorry, I didn't quite get that. Could you please rephrase?" },
+});
+
+
 const WorkspaceSettingsSchema = new mongoose.Schema({
   name: { type: String, default: 'My Workspace' },
   logoUrl: { type: String, default: null },
@@ -28,7 +39,8 @@ const AutomationSettingsSchema = new mongoose.Schema({
   botEnabled: { type: Boolean, default: false },
   fallbackToHuman: { type: Boolean, default: true },
   workingHours: { type: Object, default: {} },
-  rateLimit: { type: Number, default: 0 }
+  rateLimit: { type: Number, default: 0 },
+  aiPrompts: { type: AIPromptsSchema, default: () => ({}) }
 });
 
 const SettingsSchema = new mongoose.Schema({

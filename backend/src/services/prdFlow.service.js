@@ -3,6 +3,9 @@ const ContactSchema = require('../models/tenant/Contact');
 const LeadSchema = require('../models/crm/Lead');
 const { getTenantConnection } = require('../config/db');
 const AIService = require('./ai.service');
+const Settings = require('../models/core/Settings');
+const mongoose = require('mongoose');
+
 
 class PRDFlowService {
   constructor() {
@@ -41,6 +44,35 @@ class PRDFlowService {
     const currentState = contact.currentFlowStep || 'START_PRD_FLOW';
     console.log(`[PRD Flow] Processing Step: ${currentState} for ${contact.phone}`);
 
+    // Fetch dynamic prompts from settings
+    let prompts = {
+      greetingMessage: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?',
+      namePrompt: 'Great! May I know your name?',
+      programListPrompt: '{{name}}, which career path or program are you interested in?',
+      successProofMessage: '🎉 Success Stories, {{name}}!\n\nOur students are already working in top companies 🚀\nYou could be next!',
+      callTimePrompt: '{{name}}, what is your preferred time for our counsellor to call you? 📞',
+      agentTransferPrompt: 'Transferring you to a human agent... 👨‍💻',
+      fallbackMessage: "I'm sorry, I didn't quite get that. Could you please rephrase?"
+    };
+
+    try {
+      const settings = await Settings.findOne({ tenantId });
+      if (settings?.automation?.aiPrompts) {
+        // Merge with defaults to ensure no missing keys
+        prompts = { ...prompts, ...settings.automation.aiPrompts.toObject() };
+      }
+    } catch (err) {
+      console.warn('[PRD Flow] Could not fetch settings, using defaults:', err.message);
+    }
+
+    const replaceVars = (str) => {
+      if (!str) return '';
+      return str
+        .replace(/{{name}}/g, contact.name || 'Friend')
+        .replace(/{{qualification}}/g, contact.qualification || 'your qualification')
+        .replace(/{{program}}/g, contact.selectedProgram || 'the program');
+    };
+
     const saveAndEmit = async (type, payload, waResult) => {
       const savedMsg = await Message.create({
         contactId: contact._id,
@@ -55,10 +87,9 @@ class PRDFlowService {
 
     switch (currentState) {
       case 'START_PRD_FLOW': {
-        const greeting = `Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?`;
+        const greeting = replaceVars(prompts.greetingMessage);
         
         // PRD Step 1: Send Greeting Message
-        // Using pure text because Meta asynchronously fails to fetch Unsplash links
         const res = await waService.sendTextMessage(contact.phone, greeting);
         await saveAndEmit('text', greeting, res);
         
@@ -68,8 +99,8 @@ class PRDFlowService {
       }
 
       case 'AWAITING_NAME': {
-        const name = await AIService.extractData(message, 'NAME');
-        const reply = `Nice to meet you, ${name} 😊\n\n${name}, please select your last qualification 👇`;
+        const name = await AIService.extractData(messageText, 'NAME');
+        const reply = replaceVars(prompts.programListPrompt).replace(/{{name}}/g, name);
         
         const res = await waService.sendListMessage(contact.phone, {
           header: 'Education Qualification',
@@ -160,14 +191,13 @@ class PRDFlowService {
         await waService.sendTextMessage(contact.phone, scholarship);
 
         // Success Proof (PRD Step 4)
-        const success = `🎉 Success Stories, ${contact.name || ''}!\n\nOur students are already working in top companies 🚀\nYou could be next!`;
+        const success = replaceVars(prompts.successProofMessage);
         
-        // Using pure text because Meta asynchronously fails to fetch Unsplash links
         const sRes = await waService.sendTextMessage(contact.phone, success);
         await saveAndEmit('text', success, sRes);
 
         // 3. Ask Call Time
-        const timeMsg = `${contact.name || ''}, what is your preferred time for our counsellor to call you? 📞`;
+        const timeMsg = replaceVars(prompts.callTimePrompt);
         const res = await waService.sendInteractiveButtonMessage(contact.phone, {
           body: timeMsg,
           buttons: ['Morning (10AM-1PM)', 'Afternoon (1PM-5PM)', 'Evening (5PM-8PM)']
@@ -222,8 +252,8 @@ class PRDFlowService {
       }
 
       case 'AWAITING_ADDITIONAL_HELP': {
-        if (message.toLowerCase().includes('yes')) {
-          const transferMsg = `Connecting you to our expert agent 👨💼`;
+        if (messageText.toLowerCase().includes('yes')) {
+          const transferMsg = replaceVars(prompts.agentTransferPrompt);
           await waService.sendTextMessage(contact.phone, transferMsg);
           // Flag for human agent
           await Contact.findByIdAndUpdate(contact._id, { 

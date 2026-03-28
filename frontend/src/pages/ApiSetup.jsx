@@ -234,10 +234,13 @@ export default function ApiSetup() {
               <div className="absolute -right-4 -top-4 text-white/10">
                  <Webhook size={100} />
               </div>
-              <h3 className="font-bold text-lg mb-1 relative z-10 flex items-center">
-                 <Zap size={18} className="mr-2 text-yellow-400" fill="currentColor" />
-                 Webhook Status
-              </h3>
+               <h3 className="font-bold text-lg mb-1 relative z-10 flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Zap size={18} className="mr-2 text-yellow-400" fill="currentColor" />
+                    Webhook Status
+                  </div>
+                  <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded font-mono">v1.3.0-LIVE</span>
+               </h3>
               <p className="text-sm text-teal-100/70 mb-6 relative z-10">Listening for incoming Meta hooks on verified endpoint.</p>
               
               <div className="bg-black/20 rounded-xl p-4 border border-white/10 relative z-10">

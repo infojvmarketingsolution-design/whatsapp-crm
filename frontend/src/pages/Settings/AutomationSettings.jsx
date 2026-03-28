@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Bot, Clock, AlertTriangle } from 'lucide-react';
+import { Save, Bot, Clock, AlertTriangle, MessageSquare, User, GraduationCap, PhoneCall, Headphones, HelpCircle } from 'lucide-react';
 
 export default function AutomationSettings() {
   const [loading, setLoading] = useState(true);
@@ -7,7 +7,16 @@ export default function AutomationSettings() {
   const [settings, setSettings] = useState({
     botEnabled: false,
     fallbackToHuman: true,
-    rateLimit: 50
+    rateLimit: 50,
+    aiPrompts: {
+      greetingMessage: '',
+      namePrompt: '',
+      programListPrompt: '',
+      successProofMessage: '',
+      callTimePrompt: '',
+      agentTransferPrompt: '',
+      fallbackMessage: ''
+    }
   });
 
   useEffect(() => {
@@ -24,7 +33,12 @@ export default function AutomationSettings() {
       if (res.ok) {
         const data = await res.json();
         if (data.automation) {
-          setSettings(data.automation);
+          setSettings({
+            ...data.automation,
+            aiPrompts: {
+              ...(data.automation.aiPrompts || {})
+            }
+          });
         }
       }
     } catch (err) {
@@ -55,6 +69,16 @@ export default function AutomationSettings() {
     }
   };
 
+  const updatePrompt = (key, value) => {
+    setSettings({
+      ...settings,
+      aiPrompts: {
+        ...settings.aiPrompts,
+        [key]: value
+      }
+    });
+  };
+
   // Switch Toggle Component
   const Toggle = ({ label, description, checked, onChange }) => (
     <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-teal-100 transition-colors">
@@ -72,10 +96,26 @@ export default function AutomationSettings() {
     </div>
   );
 
+  const PromptInput = ({ label, icon: Icon, value, onChange, placeholder, hint }) => (
+    <div className="space-y-1.5">
+      <label className="flex items-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+        <Icon size={14} className="mr-1.5 text-teal-600" />
+        {label}
+      </label>
+      <textarea 
+        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 min-h-[80px] resize-none"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      {hint && <p className="text-[10px] text-gray-400 italic mt-1">{hint}</p>}
+    </div>
+  );
+
   if (loading) return <div className="animate-pulse space-y-4"><div className="h-20 bg-gray-200 rounded-xl"></div><div className="h-20 bg-gray-200 rounded-xl"></div></div>;
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-4xl space-y-6 pb-20">
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center">
           <Bot className="mr-2 text-teal-600" size={20} />
@@ -109,21 +149,96 @@ export default function AutomationSettings() {
              <p className="text-xs text-gray-500 mb-3">Prevent spam loops by limiting how many times automation triggers per user.</p>
              <input 
                 type="number" 
-                value={settings.rateLimit || 50}
-                onChange={(e) => setSettings({...settings, rateLimit: parseInt(e.target.value)})}
+                value={settings.rateLimit || 0}
+                onChange={(e) => setSettings({...settings, rateLimit: parseInt(e.target.value) || 0})}
                 className="w-32 bg-white border border-gray-200 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               />
           </div>
         </div>
+      </div>
 
-        <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end">
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center">
+          <MessageSquare className="mr-2 text-teal-600" size={20} />
+          Bot Script & Prompts
+        </h2>
+        <p className="text-sm text-gray-500 mb-8 border-b border-gray-50 pb-4">
+          Customize what the AI bot says during the automated onboarding process.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <PromptInput 
+            label="Greeting Message" 
+            icon={Bot}
+            value={settings.aiPrompts.greetingMessage}
+            onChange={(val) => updatePrompt('greetingMessage', val)}
+            placeholder="First message sent when user says hi..."
+            hint="Supports: {{name}}"
+          />
+
+          <PromptInput 
+            label="Name Request (Secondary)" 
+            icon={User}
+            value={settings.aiPrompts.namePrompt}
+            onChange={(val) => updatePrompt('namePrompt', val)}
+            placeholder="If bot forgot to ask name..."
+          />
+
+          <PromptInput 
+            label="Program List Prompt" 
+            icon={GraduationCap}
+            value={settings.aiPrompts.programListPrompt}
+            onChange={(val) => updatePrompt('programListPrompt', val)}
+            placeholder="Asking user to select a course..."
+            hint="Supports: {{name}}"
+          />
+
+          <PromptInput 
+            label="Success Proof / Social Proof" 
+            icon={AlertTriangle}
+            value={settings.aiPrompts.successProofMessage}
+            onChange={(val) => updatePrompt('successProofMessage', val)}
+            placeholder="Mentioning success stories..."
+            hint="Supports: {{name}}"
+          />
+
+          <PromptInput 
+            label="Call Time Request" 
+            icon={PhoneCall}
+            value={settings.aiPrompts.callTimePrompt}
+            onChange={(val) => updatePrompt('callTimePrompt', val)}
+            placeholder="Asking when to call back..."
+            hint="Supports: {{name}}"
+          />
+
+          <PromptInput 
+            label="Agent Transfer Message" 
+            icon={Headphones}
+            value={settings.aiPrompts.agentTransferPrompt}
+            onChange={(val) => updatePrompt('agentTransferPrompt', val)}
+            placeholder="When handing over to a human..."
+          />
+
+          <PromptInput 
+            label="Fallback / Don't Understand" 
+            icon={HelpCircle}
+            value={settings.aiPrompts.fallbackMessage}
+            onChange={(val) => updatePrompt('fallbackMessage', val)}
+            placeholder="When user says something irrelevant..."
+          />
+        </div>
+
+        <div className="mt-10 pt-6 border-t border-gray-100 flex justify-end items-center">
+           <p className="text-xs text-gray-400 mr-6">
+             All changes are saved instantly to the database.
+           </p>
           <button 
             onClick={handleSave}
             disabled={saving}
-            className="flex items-center px-5 py-2.5 bg-[var(--theme-bg)] text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition shadow-sm disabled:opacity-50"
+            className="flex items-center px-6 py-3 bg-[var(--theme-bg)] text-white rounded-xl text-sm font-bold hover:opacity-90 transition shadow-lg shadow-teal-500/20 disabled:opacity-50"
           >
-            {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={16} className="mr-2" />}
-            Save Automation Settings
+            {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={18} className="mr-2" />}
+            Save Automation Script
           </button>
         </div>
       </div>
