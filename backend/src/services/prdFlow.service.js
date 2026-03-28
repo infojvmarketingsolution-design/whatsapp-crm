@@ -160,10 +160,10 @@ class PRDFlowService {
       }
 
       case 'AWAITING_QUALIFICATION': {
-        let qual = message;
-        // If it's a list reply, it might be in message if the controller passed it
+        let qual = messageText;
+        // If it's a list reply, it might be in messageText if the controller passed it
         if (!this.QUALIFICATION_OPTIONS.includes(qual)) {
-           qual = await AIService.extractData(message, 'QUALIFICATION');
+           qual = await AIService.extractData(messageText, 'QUALIFICATION');
         }
 
         if (!this.PROGRAM_MAP[qual]) {
@@ -211,7 +211,7 @@ class PRDFlowService {
       }
 
       case 'AWAITING_PROGRAM': {
-        const selectedProgram = message;
+        const selectedProgram = messageText;
         
         // 1. Show Program Details (Placeholder)
         await waService.sendTextMessage(contact.phone, `Great choice! ${selectedProgram} is an excellent program.`);
@@ -261,7 +261,7 @@ class PRDFlowService {
       }
 
       case 'AWAITING_CALL_TIME': {
-        const preferredTime = message;
+        const preferredTime = messageText;
         const vars = contact.flowVariables || {};
         
         // Final Summary
