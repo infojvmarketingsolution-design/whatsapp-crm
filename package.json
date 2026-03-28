@@ -6,7 +6,7 @@
     "start": "node backend/server.js",
     "install-backend": "cd backend && npm install",
     "install-frontend": "cd frontend && npm install",
-    "build-frontend": "cd frontend && npm install && npm run build && cd .. && npx rimraf backend/public && npx shx mkdir -p backend/public && npx shx cp -r frontend/dist/. backend/public/",
+    "build-frontend": "cd frontend && npm install && npm run build",
     "postinstall": "npm run install-backend && npm run install-frontend"
   },
   "dependencies": {
