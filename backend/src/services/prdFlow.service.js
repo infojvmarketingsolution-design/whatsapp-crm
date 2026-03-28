@@ -35,8 +35,10 @@ class PRDFlowService {
   makeAbsolute(url) {
     if (!url) return '';
     if (url.startsWith('http')) return url;
-    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://wapipulse.com' : 'http://localhost:5000';
-    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+    // Use BASE_URL if available, otherwise fallback to wapipulse.com
+    const baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').replace(/\/$/, '');
+    const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
+    return `${baseUrl}${normalizedUrl}`;
   }
 
   async processStep(tenantId, contact, messageText, waService, io) {
@@ -106,10 +108,11 @@ class PRDFlowService {
         // PRD Step 1: Send Greeting Message
         if (greetingImg) {
           try {
+            console.log(`[PRD Flow] Sending Greeting Image: ${greetingImg}`);
             const res = await waService.sendMedia(contact.phone, 'image', null, greeting, greetingImg);
             await saveAndEmit('image', greetingImg, res);
           } catch (mediaErr) {
-            console.error('[PRD Flow] Dynamic Greeting Image Failed, falling back to text:', mediaErr.message);
+            console.error(`[PRD Flow] ❌ Greeting Image Failed (URL: ${greetingImg}):`, mediaErr.message);
             const res = await waService.sendTextMessage(contact.phone, greeting);
             await saveAndEmit('text', greeting, res);
           }
@@ -237,10 +240,11 @@ class PRDFlowService {
         
         if (successImg) {
           try {
+            console.log(`[PRD Flow] Sending Success Image: ${successImg}`);
             const sRes = await waService.sendMedia(contact.phone, 'image', null, success, successImg);
             await saveAndEmit('image', successImg, sRes);
           } catch (mediaErr) {
-            console.error('[PRD Flow] Dynamic Success Image Failed, falling back to text:', mediaErr.message);
+            console.error(`[PRD Flow] ❌ Success Image Failed (URL: ${successImg}):`, mediaErr.message);
             const sRes = await waService.sendTextMessage(contact.phone, success);
             await saveAndEmit('text', success, sRes);
           }

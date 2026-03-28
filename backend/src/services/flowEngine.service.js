@@ -276,16 +276,25 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          }
      }
 
-     // 2. New Contact Trigger
+     // 2. New Contact Trigger (Fast-Track Greeting)
      if (isNewContact) {
-         console.log(`[Flow Engine] 🆕 Analyzing NEW_MESSAGE trigger for ${activeContact.phone}...`);
+         console.log(`[Flow Engine] 🆕 New Contact detected: ${activeContact.phone}`);
+         
+         // 2a. Check for Flow Builder 'NEW_MESSAGE' trigger
          const welcomeFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
          if (welcomeFlow) {
              console.log(`[Flow Engine] ✅ Triggered Welcome Flow: "${welcomeFlow.name}"`);
              executeFlow(tenantId, welcomeFlow._id, activeContact, io);
              return;
-         } else {
-             console.log(`[Flow Engine] ❌ No ACTIVE flow found with triggerType: 'NEW_MESSAGE'`);
+         }
+
+         // 2b. Rule-based Fast Greeting (Skip AI latency for "Hi/Hello")
+         const msg = (messageText || "").toLowerCase().trim();
+         const fastGreets = ['hi', 'hello', 'hey', 'start', 'interested', 'demo'];
+         if (fastGreets.includes(msg)) {
+             console.log(`[Flow Engine] 🚀 Fast-Track Greeting triggered for "${msg}"`);
+             await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
+             return;
          }
      }
 
@@ -322,7 +331,10 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      const intent = await AIService.detectIntent(messageText);
      console.log(`[Flow Engine] AI Detected Intent: ${intent}`);
 
-     if (intent === 'START_FLOW') {
+     // If it's a new contact, we almost always want to trigger the greeting flow
+     // unless AI is absolutely sure it's something else (like an AGENT_TRANSFER).
+     if (intent === 'START_FLOW' || (isNewContact && intent === 'UNCLEAR')) {
+         console.log(`[Flow Engine] Triggering PRD Greeting Flow (Intent: ${intent}, isNew: ${isNewContact})`);
          await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
          return;
      } else if (intent === 'AGENT_TRANSFER') {
