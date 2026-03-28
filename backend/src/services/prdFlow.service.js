@@ -64,8 +64,8 @@ class PRDFlowService {
 
     // Fetch dynamic prompts from settings
     let prompts = {
-      greetingMessage: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?',
-      greetingImage: '',
+      greetingMessage: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀',
+      greetingImage: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=60',
       namePrompt: 'Great! May I know your name?',
       programListPrompt: '{{name}}, which career path or program are you interested in?',
       successProofMessage: '🎉 Success Stories, {{name}}!\n\nOur students are already working in top companies 🚀\nYou could be next!',
@@ -138,9 +138,12 @@ class PRDFlowService {
         }
 
         // PRD Step 1.5: Send Name Prompt as a separate message (User Request)
+        // Add a 1s delay so greeting arrives first
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         const nPrompt = replaceVars(prompts.namePrompt);
-        await waService.sendTextMessage(contact.phone, nPrompt);
-        await saveAndEmit('text', nPrompt, null);
+        const nameRes = await waService.sendTextMessage(contact.phone, nPrompt);
+        await saveAndEmit('text', nPrompt, nameRes);
         
         await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: 'AWAITING_NAME' });
         triggerScoreUpdate();
@@ -238,30 +241,20 @@ class PRDFlowService {
       case 'AWAITING_PROGRAM': {
         const selectedProgram = messageText;
         
-        // 1. Show Program Details (Placeholder)
-        await waService.sendTextMessage(contact.phone, `Great choice! ${selectedProgram} is an excellent program.`);
+        // 1. Combine Program Confirmation & Conversion Boosters into one professional message
+        const acknowledgment = `Great choice! *${selectedProgram}* is an excellent program. 🎓\n\n⚠️ *Hurry ${contact.name || ''}!* Only limited seats available. Admissions are filling fast for this intake.\n\n🎁 *Good News!* You may be eligible for a Scholarship up to 30%. Our counsellor will guide you on how to claim it.`;
+        await waService.sendTextMessage(contact.phone, acknowledgment);
 
-        // 2. CONVERSION BOOSTERS
-        // Urgency
-        const urgency = `⚠️ Hurry ${contact.name || ''}!\n\nOnly limited seats available in this program 🚀\nAdmissions are filling fast for this intake.\n\nWould you like to secure your spot early?`;
-        await waService.sendTextMessage(contact.phone, urgency);
-
-        // Scholarship
-        const scholarship = `🎁 Good News ${contact.name || ''}!\n\nYou may be eligible for a Scholarship up to 30% 🎓\n\nOur counsellor will guide you on how to claim it.`;
-        await waService.sendTextMessage(contact.phone, scholarship);
-
-        // Success Proof (PRD Step 4)
+        // 2. Success Proof (Photo/Video) - Kept separate as it usually contains media
         const success = replaceVars(prompts.successProofMessage);
         const successImg = prompts.successProofImage;
         
         if (successImg) {
           try {
             const isId = /^\d+$/.test(successImg);
-            console.log(`[PRD Flow] Sending Success media to ${contact.phone}. ${isId ? 'Media ID' : 'URL'}: ${successImg}`);
             const sRes = await waService.sendMedia(contact.phone, 'image', isId ? successImg : null, success, isId ? null : successImg);
             await saveAndEmit('image', successImg, sRes);
           } catch (mediaErr) {
-            console.error(`[PRD Flow] ❌ Success Image Failed for ${contact.phone}:`, mediaErr.message);
             const sRes = await waService.sendTextMessage(contact.phone, success);
             await saveAndEmit('text', success, sRes);
           }
@@ -270,7 +263,7 @@ class PRDFlowService {
           await saveAndEmit('text', success, sRes);
         }
 
-        // 3. Ask Call Time
+        // 3. Ask Call Time (Immediate interactive follow-up)
         const timeMsg = replaceVars(prompts.callTimePrompt);
         const res = await waService.sendInteractiveButtonMessage(contact.phone, {
           body: timeMsg,
