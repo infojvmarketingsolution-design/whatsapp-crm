@@ -33,12 +33,16 @@ class PRDFlowService {
   }
 
   makeAbsolute(url) {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
+    if (!url || typeof url !== 'string' || url.trim() === '') return '';
+    const trimmedUrl = url.trim();
+    if (trimmedUrl.startsWith('http')) return trimmedUrl;
+    
     // Use BASE_URL if available, otherwise fallback to wapipulse.com
-    const baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').replace(/\/$/, '');
-    const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
-    return `${baseUrl}${normalizedUrl}`;
+    let baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').trim();
+    baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
+    
+    const normalizedPath = trimmedUrl.startsWith('/') ? trimmedUrl : `/${trimmedUrl}`;
+    return `${baseUrl}${normalizedPath}`;
   }
 
   async processStep(tenantId, contact, messageText, waService, io) {
@@ -110,11 +114,13 @@ class PRDFlowService {
         // PRD Step 1: Send Greeting Message
         if (greetingImg) {
           try {
-            console.log(`[PRD Flow] Sending Media Greeting to ${contact.phone}...`);
+            console.log(`[PRD Flow] Sending Media Greeting to ${contact.phone}. Image: ${greetingImg}`);
             const res = await waService.sendMedia(contact.phone, 'image', null, greeting, greetingImg);
+            console.log(`[PRD Flow] ✅ Media Greeting Sent Successfully to ${contact.phone}`);
             await saveAndEmit('image', greetingImg, res);
           } catch (mediaErr) {
             console.error(`[PRD Flow] ❌ Media Greeting Failed for ${contact.phone}:`, mediaErr.message);
+            console.log(`[PRD Flow] 🔔 Falling back to text-only greeting for ${contact.phone}`);
             // Fallback to text
             const res = await waService.sendTextMessage(contact.phone, greeting);
             await saveAndEmit('text', greeting, res);

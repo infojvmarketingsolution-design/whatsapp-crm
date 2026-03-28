@@ -294,6 +294,12 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
              console.log(`[Flow Engine] ✅ Triggered Welcome Flow: "${welcomeFlow.name}"`);
              executeFlow(tenantId, welcomeFlow._id, activeContact, io);
              return;
+         } else {
+             // ⚡ FIX: If no custom welcome flow, automatically trigger the PRD AI Greeting for the new contact
+             // This ensures that even if they say something other than "Hi", they get the greeting text+image
+             console.log(`[Flow Engine] No custom welcome flow found. Triggering AI Greeting for NEW contact: ${activeContact.phone}`);
+             await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
+             return;
          }
      }
 
