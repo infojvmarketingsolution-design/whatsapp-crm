@@ -190,20 +190,16 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/admin/settings', adminSettingsRoutes);
 
-// Diagnostic Logging for Uploads (Backward Compatibility for /api/uploads)
-app.use('/api/uploads', (req, res, next) => {
-  next();
-}, express.static(path.join(__dirname, 'public/uploads'), {
+// Main Media Route (Matches generated URLs /uploads/...)
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
   setHeaders: (res, path) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Cache-Control', 'public, max-age=31536000');
   }
 }));
 
-// Main Media Route (Matches generated URLs /uploads/...)
-app.use('/uploads', (req, res, next) => {
-  next();
-}, express.static(path.join(__dirname, 'public/uploads'), {
+// Fallback specifically for the nested backend structure found on some servers
+app.use('/uploads', express.static(path.join(__dirname, 'backend/public/uploads'), {
   setHeaders: (res, path) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Cache-Control', 'public, max-age=31536000');
