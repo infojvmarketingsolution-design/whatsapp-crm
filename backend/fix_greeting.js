@@ -3,41 +3,44 @@ require('dotenv').config();
 
 async function run() {
   try {
-    const mongoUri = 'mongodb://127.0.0.1:27017/crm_core';
+    const mongoUri = 'mongodb://127.0.0.1:27017/admin'; // Connect to admin to list all DBs
     console.log('Connecting to:', mongoUri);
     await mongoose.connect(mongoUri, { serverSelectionTimeoutMS: 5000 });
-    console.log('Connected to DB');
+    console.log('Connected to Admin DB');
     
-    const db = mongoose.connection.db;
-    const collections = await db.listCollections().toArray();
-    console.log('--- ALL COLLECTIONS IN crm_core ---');
-    console.log(collections.map(c => c.name));
+    const admin = mongoose.connection.db.admin();
+    const dbs = await admin.listDatabases();
+    console.log('--- ALL DATABASES ON SERVER ---');
+    dbs.databases.forEach(db => {
+      console.log(`- ${db.name} (${db.sizeOnDisk} bytes)`);
+    });
 
-    // Try to find ANY collection that might have settings
-    const searchTerms = ['setting', 'client', 'tenant'];
-    for (const collInfo of collections) {
-      const collName = collInfo.name;
-      if (searchTerms.some(term => collName.toLowerCase().includes(term))) {
-        console.log(`Checking collection: ${collName}`);
-        const count = await db.collection(collName).countDocuments();
-        console.log(`- Count: ${count}`);
+    // Strategy 2: For each DB, check for settings
+    for (const dbInfo of dbs.databases) {
+      if (dbInfo.name === 'admin' || dbInfo.name === 'local' || dbInfo.name === 'config') continue;
+      
+      const conn = mongoose.createConnection(`mongodb://127.0.0.1:27017/${dbInfo.name}`);
+      await conn.asPromise();
+      const collections = await conn.db.listCollections().toArray();
+      const hasSettings = collections.some(c => c.name.includes('setting'));
+      
+      if (hasSettings) {
+        console.log(`Potential Match: ${dbInfo.name}`);
+        const coll = conn.db.collection('settings');
+        const count = await coll.countDocuments();
+        console.log(`- settings count: ${count}`);
         
         if (count > 0) {
-          const doc = await db.collection(collName).findOne({});
-          console.log(`- Sample Doc keys: ${Object.keys(doc)}`);
-          
-          // If it looks like a settings doc, update it!
-          if (doc.automation || doc.tenantId) {
-            console.log(`Updating ${collName}...`);
-            const updateRes = await db.collection(collName).updateMany({}, {
-              $set: {
-                'automation.aiPrompts.greetingMessage': 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?'
-              }
-            });
-            console.log(`- Update Result:`, updateRes);
-          }
+          console.log(`Updating ${dbInfo.name}.settings...`);
+          const res = await coll.updateMany({}, {
+            $set: {
+              'automation.aiPrompts.greetingMessage': 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?'
+            }
+          });
+          console.log(`- Update Result:`, res);
         }
       }
+      await conn.close();
     }
     
     await mongoose.connection.close();
