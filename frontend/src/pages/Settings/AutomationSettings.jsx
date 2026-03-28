@@ -158,21 +158,43 @@ export default function AutomationSettings() {
           placeholder={placeholder}
         />
         {isImage && (
-          <button 
-            onClick={() => handleUploadClick(fieldKey)}
-            disabled={uploading === fieldKey}
-            className="absolute right-3 bottom-3 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 hover:text-teal-600 hover:border-teal-200 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
-            title="Upload Image"
-          >
-            {uploading === fieldKey ? (
-              <span className="w-4 h-4 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></span>
-            ) : (
-              <Upload size={16} />
+          <div className="absolute right-3 bottom-3 flex items-center space-x-2">
+            {value && (
+              <div className="relative group/preview h-10 w-10 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+                 <img src={value} alt="Preview" className="h-full w-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 flex items-center justify-center transition-opacity">
+                    <button onClick={() => window.open(value, '_blank')} className="text-white p-1 hover:text-teal-300">
+                       <HelpCircle size={14} />
+                    </button>
+                 </div>
+              </div>
             )}
-          </button>
+            <button 
+              onClick={() => handleUploadClick(fieldKey)}
+              disabled={uploading === fieldKey}
+              className={`flex items-center space-x-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 hover:text-teal-600 hover:border-teal-200 hover:bg-teal-50 transition-all shadow-sm ${uploading === fieldKey ? 'opacity-50 cursor-not-allowed' : ''}`}
+              title="Upload from Browser"
+            >
+              {uploading === fieldKey ? (
+                <span className="w-4 h-4 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></span>
+              ) : (
+                <>
+                  <Upload size={14} />
+                  <span className="text-[10px] font-bold uppercase">Upload</span>
+                </>
+              )}
+            </button>
+          </div>
         )}
       </div>
-      {hint && <p className="text-[10px] text-gray-400 italic mt-1">{hint}</p>}
+      <div className="flex justify-between items-center px-1">
+        {hint && <p className="text-[10px] text-gray-400 italic">{hint}</p>}
+        {isImage && (
+           <p className="text-[10px] text-gray-400">
+             {value ? 'Link generated auto ✔️' : 'Paste manual link or upload from browser'}
+           </p>
+        )}
+      </div>
     </div>
   );
 
