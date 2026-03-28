@@ -196,6 +196,9 @@ export default function Inbox() {
       });
       if (res.ok) {
         setAiSummary(await res.json());
+      } else {
+        const errorData = await res.json();
+        alert(`Summarization Failed: ${errorData.message || 'Unknown error. check backend logs.'}`);
       }
     } catch (err) {
       console.error("AI Summarization failed", err);

@@ -401,7 +401,10 @@ const summarizeLead = async (req, res) => {
     const summary = await aiService.summarizeConversation(messages.reverse(), contact);
 
     if (!summary) {
-      return res.status(500).json({ message: 'Failed to generate summary' });
+      const isConfigured = !!aiService.openai;
+      return res.status(isConfigured ? 500 : 400).json({ 
+        message: isConfigured ? 'Failed to generate summary' : 'AI service is not configured. Please check your OpenAI API key.' 
+      });
     }
 
     res.json(summary);

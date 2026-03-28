@@ -5,6 +5,8 @@ class AIService {
     this.apiKey = process.env.OPENAI_API_KEY;
     if (this.apiKey) {
       this.openai = new OpenAI({ apiKey: this.apiKey });
+    } else {
+      console.warn('[AI Service] ⚠️ OpenAI API Key is missing. AI features will be disabled.');
     }
   }
 
@@ -109,14 +111,23 @@ class AIService {
    * Summarizes a conversation history into 3 key points.
    */
   async summarizeConversation(messages, contactInfo) {
-    if (!this.openai) return null;
+    if (!this.openai) {
+      console.error('[AI Service] ❌ Summarization failed: OpenAI API key is missing.');
+      return null;
+    }
 
     try {
+      if (!messages || messages.length === 0) {
+        return { goal: 'None', painPoint: 'No conversation history found', nextStep: 'Start the conversation' };
+      }
+
       const historyStr = messages.map(m => `${m.direction}: ${m.content}`).join("\n");
       const contactContext = `Name: ${contactInfo.name}, Qualification: ${contactInfo.qualification}, Selected Program: ${contactInfo.selectedProgram}`;
 
+      console.log(`[AI Service] Summarizing conversation for ${contactInfo.name} (${messages.length} messages)`);
+
       const response = await this.openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: "gpt-3.5-turbo-0125",
         messages: [
           { 
             role: "system", 
