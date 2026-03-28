@@ -160,12 +160,13 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
                     }
                 }
                else if (msgType === 'INTERACTIVE_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0)) {
+                   const hType = (currentNode.data.headerType || 'image').toLowerCase();
                    const headerMedia = (mediaId && /^\d+$/.test(mediaId)) 
-                        ? { type: 'image', image: mediaId } 
-                        : (publicMediaUrl ? { type: 'image', link: publicMediaUrl } : null);
+                        ? { type: hType, [hType]: mediaId } 
+                        : (publicMediaUrl ? { type: hType, link: publicMediaUrl } : null);
 
                    let res = await waService.sendInteractiveButtonMessage(contact.phone, {
-                       header: interpolatedHeader.type ? interpolatedHeader : headerMedia,
+                       header: (interpolatedHeader && interpolatedHeader.type) ? interpolatedHeader : headerMedia,
                        body: interpolatedText,
                        footer: interpolate(footer),
                        buttons: buttons.filter(b => b.trim() !== '').map(b => interpolate(b))

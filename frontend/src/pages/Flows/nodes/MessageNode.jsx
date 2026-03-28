@@ -121,21 +121,41 @@ export default function MessageNode({ id, data }) {
             <div className="space-y-2">
                {msgType === 'INTERACTIVE_MESSAGE' && (
                   <div className="flex space-x-2 mb-2">
-                     <select className="text-[10px] w-full border rounded p-1" value={data.headerType || 'image'} onChange={(e) => updateField('headerType', e.target.value)}>
-                        <option value="image">Image Header</option>
-                        <option value="video">Video Header</option>
-                        <option value="document">Document Header</option>
-                        <option value="text">Text Header Only</option>
+                     <select className="text-[10px] w-full border rounded p-1 font-bold text-gray-600" value={data.headerType || 'image'} onChange={(e) => updateField('headerType', e.target.value)}>
+                        <option value="image">📸 Image Header</option>
+                        <option value="video">🎥 Video Header</option>
+                        <option value="document">📄 Document Header</option>
+                        <option value="text">📊 Text Header Only</option>
                      </select>
                   </div>
                )}
                {(!data.headerType || data.headerType !== 'text') && (
-                 <div className="flex items-center justify-between bg-gray-50 p-2 rounded border border-dashed border-gray-300">
-                    <span className="text-[10px] text-gray-500 font-bold truncate pr-2">{data.mediaId ? `File Attached` : `No Media selected`}</span>
-                    <label className="cursor-pointer bg-white px-2 py-1 rounded border border-gray-200 text-[10px] font-bold text-blue-600 hover:bg-blue-50 transition-colors flex items-center shrink-0">
-                       <Upload size={10} className="mr-1" /> Browse
-                       <input type="file" className="hidden" accept="*/*" onChange={(e) => e.target.files[0] && handleUpload(e.target.files[0])} />
-                    </label>
+                 <div className="space-y-2">
+                   <div className="flex items-center justify-between bg-gray-50 p-2 rounded border border-dashed border-gray-300">
+                      <div className="flex flex-col">
+                        <span className="text-[9px] text-gray-400 uppercase font-black">Media Source</span>
+                        <span className="text-[10px] text-gray-700 font-bold truncate max-w-[150px]">{data.mediaId ? `ID: ${data.mediaId.slice(0, 10)}...` : (data.mediaUrl ? 'External Link Set' : 'No File')}</span>
+                      </div>
+                      <label className="cursor-pointer bg-blue-600 px-3 py-1.5 rounded shadow-sm text-[10px] font-bold text-white hover:bg-blue-700 transition-colors flex items-center shrink-0">
+                         <Upload size={12} className="mr-1.5" /> Browse
+                         <input 
+                           type="file" 
+                           className="hidden" 
+                           accept={data.headerType === 'video' || msgType === 'VIDEO' ? "video/*" : data.headerType === 'document' || msgType === 'DOCUMENT' ? ".pdf,.doc,.docx,.xls,.xlsx" : "image/*"} 
+                           onChange={(e) => e.target.files[0] && handleUpload(e.target.files[0])} 
+                         />
+                      </label>
+                   </div>
+                   <div className="relative group">
+                      <span className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Manual Media URL (Link)</span>
+                      <input 
+                        type="text" 
+                        placeholder="https://example.com/media.jpg"
+                        className="w-full text-[10px] p-2 border border-gray-200 rounded outline-none focus:border-blue-400 bg-gray-50/50"
+                        value={data.mediaUrl || ''}
+                        onChange={(e) => updateField('mediaUrl', e.target.value)}
+                      />
+                   </div>
                  </div>
                )}
             </div>
@@ -163,30 +183,38 @@ export default function MessageNode({ id, data }) {
 
          {(msgType === 'INTERACTIVE_MESSAGE') && (
             <div className="space-y-3 border-t border-gray-100 pt-3 pr-4">
-               <span className="text-[10px] uppercase font-bold text-gray-400 block">Buttons</span>
+               <div className="flex items-center justify-between uppercase font-bold text-gray-400 text-[9px]">
+                  <span>Buttons</span>
+                  <span className="text-teal-600">Reply ONLY</span>
+               </div>
                {[0, 1, 2].map(idx => (
-                 <div key={idx} className="relative">
-                    <input 
-                       type="text" 
-                       className="w-full text-xs border border-gray-200 rounded p-1.5 outline-none focus:border-blue-400 bg-blue-50/30" 
-                       placeholder={`Button ${idx + 1}`}
-                       value={data.buttons?.[idx] || ''}
-                       onChange={(e) => {
-                          const newBtns = [...(data.buttons || ['', '', ''])];
-                          newBtns[idx] = e.target.value;
-                          updateField('buttons', newBtns);
-                       }}
-                    />
-                    {data.buttons?.[idx] && (
-                       <Handle 
-                          type="source" 
-                          position={Position.Right} 
-                          id={`btn_${idx}`} 
-                          style={{ top: '50%', right: '-20px', background: '#3b82f6' }} 
+                 <div key={idx} className="space-y-1">
+                    <div className="relative">
+                       <input 
+                          type="text" 
+                          className="w-full text-xs border border-gray-200 rounded p-1.5 outline-none focus:border-blue-400 bg-blue-50/30" 
+                          placeholder={`Button Text ${idx + 1}`}
+                          value={data.buttons?.[idx] || ''}
+                          onChange={(e) => {
+                             const newBtns = [...(data.buttons || ['', '', ''])];
+                             newBtns[idx] = e.target.value;
+                             updateField('buttons', newBtns);
+                          }}
                        />
-                    )}
+                       {data.buttons?.[idx] && (
+                          <Handle 
+                             type="source" 
+                             position={Position.Right} 
+                             id={`btn_${idx}`} 
+                             style={{ top: '50%', right: '-20px', background: '#3b82f6' }} 
+                          />
+                       )}
+                    </div>
                  </div>
                ))}
+               <div className="mt-2 text-[8px] text-gray-400 italic">
+                  Note: Standard buttons can only lead to other nodes. Use "Website Link Button" node for external links.
+               </div>
             </div>
          )}
          
