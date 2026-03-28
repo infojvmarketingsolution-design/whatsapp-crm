@@ -46,8 +46,7 @@ const handleIncomingMessage = async (req, res) => {
     try {
        const fs = require('fs');
        const path = require('path');
-       // Use absolute path for reliability
-       const logPath = 'o:\\OneDrive\\Business\\Development\\Whatsapp Api + CRM (19 March 2026)\\backend\\webhook_debug.log';
+       const logPath = path.join(__dirname, '../../webhook_debug.log');
        const logEntry = `[${new Date().toISOString()}] WEBHOOK HIT - body: ${JSON.stringify(req.body)}\n`;
        fs.appendFileSync(logPath, logEntry);
        console.log('✅ Webhook body appended to:', logPath);
@@ -88,8 +87,8 @@ const handleIncomingMessage = async (req, res) => {
       console.warn(`⚠️ No active client found for phoneNumberId: ${phoneNumberId}`);
       // Log failure to debug file too
       try {
-          const fs = require('fs');
-          const logPath = 'o:\\OneDrive\\Business\\Development\\Whatsapp Api + CRM (19 March 2026)\\backend\\webhook_debug.log';
+          const path = require('path');
+          const logPath = path.join(__dirname, '../../webhook_debug.log');
           fs.appendFileSync(logPath, `[${new Date().toISOString()}] ❌ CLIENT NOT FOUND for PhoneID: ${phoneNumberId}\n`);
       } catch(e) {}
       return res.status(200).send('EVENT_RECEIVED');
