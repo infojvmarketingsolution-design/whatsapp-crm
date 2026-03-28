@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle } from 'lucide-react';
+import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2 } from 'lucide-react';
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -624,7 +624,7 @@ export default function Inbox() {
               className="absolute top-4 right-4 p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors shadow-sm border border-red-100"
               title="Delete Lead Options"
             >
-              <X size={16} />
+              <Trash2 size={16} />
             </button>
 
             {showDeleteModal && (
