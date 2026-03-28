@@ -221,23 +221,23 @@ export default function Pipeline() {
                                </div>
                                <button 
                                  onClick={() => {
-                                   if (window.confirm("Archive this lead? It will be hidden from your pipeline and inbox.")) {
+                                   if (window.confirm("Archive this lead? It will be hidden from your pipeline and inbox (Fronthead delete).")) {
                                      handleAction(c._id, 'archive_lead');
                                    }
                                  }}
                                  className="w-full text-left px-4 py-2 text-xs font-bold text-orange-600 hover:bg-orange-50 border-t border-gray-50"
                                >
-                                 Hide Lead (Archive)
+                                 Delete lead only fronthead
                                </button>
                                <button 
                                  onClick={() => {
-                                   if (window.confirm("PERMANENTLY delete this lead and all history? This cannot be undone.")) {
+                                   if (window.confirm("PERMANENTLY delete this lead and all history from the database? This cannot be undone.")) {
                                       handleAction(c._id, 'hard_delete_lead');
                                    }
                                  }}
                                  className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 border-t border-gray-50"
                                >
-                                 Delete from Database
+                                 Delete this lead from database also
                                </button>
                              </div>
                           )}

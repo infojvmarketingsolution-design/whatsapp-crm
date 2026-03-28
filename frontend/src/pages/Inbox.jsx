@@ -634,7 +634,7 @@ export default function Inbox() {
                   className="w-full text-left p-2.5 text-xs font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors flex items-center space-x-2 mb-1"
                 >
                   <Clock size={14} />
-                  <span>Hide from List (Archive)</span>
+                  <span>Delete lead only fronthead</span>
                 </button>
                 <button 
                   onClick={() => {
@@ -645,7 +645,7 @@ export default function Inbox() {
                   className="w-full text-left p-2.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center space-x-2"
                 >
                   <AlertCircle size={14} />
-                  <span>Delete from Database</span>
+                  <span>Delete this lead from database also</span>
                 </button>
               </div>
             )}
