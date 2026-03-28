@@ -112,31 +112,32 @@ class PRDFlowService {
     switch (currentState) {
       case 'START_PRD_FLOW': {
         const greeting = replaceVars(prompts.greetingMessage);
-        const greetingImg = prompts.greetingImage;
+        // Use default if empty or not provided
+        const greetingImg = (prompts.greetingImage && prompts.greetingImage.trim() !== '') 
+          ? prompts.greetingImage 
+          : 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=60';
         
-        console.log(`[PRD Flow] START_PRD_FLOW for ${contact.phone}. Image: ${greetingImg || 'None'}`);
+        console.log(`[PRD Flow] START_PRD_FLOW for ${contact.phone}. Image: ${greetingImg}`);
 
-        // PRD Step 1: Send Greeting Message
-        // Log for debugging
-        console.log(`[PRD Flow] Sending Greeting to ${contact.phone}. Image: ${greetingImg || 'None'}`);
+        // PRD Step 1: Send Greeting Text (Guaranteed to arrive)
+        const gRes = await waService.sendTextMessage(contact.phone, greeting);
+        await saveAndEmit('text', greeting, gRes);
 
+        // PRD Step 2: Send Greeting Image (Arrives immediately after)
         if (greetingImg) {
           try {
             const isId = /^\d+$/.test(greetingImg);
-            const res = await waService.sendMedia(contact.phone, 'image', isId ? greetingImg : null, greeting, isId ? null : greetingImg);
-            await saveAndEmit('image', greetingImg, res);
+            // Send image WITHOUT caption to keep it separate and clean
+            const imgRes = await waService.sendMedia(contact.phone, 'image', isId ? greetingImg : null, null, isId ? null : greetingImg);
+            await saveAndEmit('image', greetingImg, imgRes);
           } catch (mediaErr) {
-            console.error(`[PRD Flow] Media Greeting Failed, falling back to text:`, mediaErr.message);
-            const res = await waService.sendTextMessage(contact.phone, greeting);
-            await saveAndEmit('text', greeting, res);
+            console.error(`[PRD Flow] Optional Greeting Image failed:`, mediaErr.message);
+            // We don't need a fallback here because the text greeting already arrived!
           }
-        } else {
-          const res = await waService.sendTextMessage(contact.phone, greeting);
-          await saveAndEmit('text', greeting, res);
         }
 
-        // PRD Step 1.5: Send Name Prompt as a separate message (User Request)
-        // Add a 1s delay so greeting arrives first
+        // PRD Step 3: Send Name Prompt as a separate message
+        // Add a 1s delay so greeting/image arrive first
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         const nPrompt = replaceVars(prompts.namePrompt);

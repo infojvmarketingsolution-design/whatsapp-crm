@@ -191,29 +191,26 @@ app.use('/api/plans', planRoutes);
 app.use('/api/admin/settings', adminSettingsRoutes);
 
 // Main Media Route (Matches generated URLs /uploads/...)
-// Try serving from backend/uploads (Root)
-app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
-  setHeaders: (res, path) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Cache-Control', 'public, max-age=31536000');
-  }
-}));
+// Resolves uploads path based on the project's real structure to ensure public accessibility
+const uploadPaths = [
+  path.join(__dirname, 'public/uploads'),
+  path.join(__dirname, 'uploads'),
+  path.join(process.cwd(), 'public/uploads'),
+  path.join(process.cwd(), 'uploads')
+];
 
-// Fallback to public/uploads
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
-  setHeaders: (res, path) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Cache-Control', 'public, max-age=31536000');
+uploadPaths.forEach(uPath => {
+  if (fs.existsSync(uPath)) {
+    console.log(`[Server] ✅ Serving static files from: ${uPath} via /uploads`);
+    app.use('/uploads', express.static(uPath, {
+      setHeaders: (res, path) => {
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Cache-Control', 'public, max-age=31536000');
+      }
+    }));
   }
-}));
+});
 
-// Fallback specifically for the nested backend structure found on some servers
-app.use('/uploads', express.static(path.join(__dirname, 'backend/public/uploads'), {
-  setHeaders: (res, path) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set('Cache-Control', 'public, max-age=31536000');
-  }
-}));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
