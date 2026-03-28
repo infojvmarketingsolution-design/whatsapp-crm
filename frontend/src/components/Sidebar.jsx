@@ -33,6 +33,7 @@ export default function Sidebar({ whatsappConfig }) {
     { name: 'Chat', icon: MessageSquare, path: '/inbox' },
     { name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
     { name: 'Flows', icon: Bot, path: '/flows' },
+    { name: 'AI Chatbot', icon: Bot, path: '/ai-chatbot' },
     { name: 'Agents', icon: UserPlus, path: '/agents' },
     { name: 'Web Widget', icon: Globe, path: '/widget' },
     { name: 'Contacts', icon: Users, path: '/contacts' },
