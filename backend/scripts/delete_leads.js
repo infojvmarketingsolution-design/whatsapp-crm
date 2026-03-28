@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 const path = require('path');
-require('dotenv').config({ path: path.join(__dirname, '.env') });
-const { getTenantConnection } = require('./src/config/db');
-const ContactSchema = require('./src/models/tenant/Contact');
-const MessageSchema = require('./src/models/tenant/Message');
+require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const { getTenantConnection } = require('../src/config/db');
+const ContactSchema = require('../src/models/tenant/Contact');
+const MessageSchema = require('../src/models/tenant/Message');
 
 async function deleteContacts() {
     try {
