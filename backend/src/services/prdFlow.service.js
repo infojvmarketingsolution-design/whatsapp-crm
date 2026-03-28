@@ -32,6 +32,13 @@ class PRDFlowService {
     };
   }
 
+  makeAbsolute(url) {
+    if (!url) return '';
+    if (url.startsWith('http')) return url;
+    const baseUrl = process.env.NODE_ENV === 'production' ? 'https://wapipulse.com' : 'http://localhost:5000';
+    return `${baseUrl}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+
   async processStep(tenantId, contact, messageText, waService, io) {
     const tenantDb = getTenantConnection(tenantId);
     const Contact = tenantDb.model('Contact', ContactSchema);
@@ -47,9 +54,11 @@ class PRDFlowService {
     // Fetch dynamic prompts from settings
     let prompts = {
       greetingMessage: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?',
+      greetingImage: '',
       namePrompt: 'Great! May I know your name?',
       programListPrompt: '{{name}}, which career path or program are you interested in?',
       successProofMessage: '🎉 Success Stories, {{name}}!\n\nOur students are already working in top companies 🚀\nYou could be next!',
+      successProofImage: '',
       callTimePrompt: '{{name}}, what is your preferred time for our counsellor to call you? 📞',
       agentTransferPrompt: 'Transferring you to a human agent... 👨‍💻',
       fallbackMessage: "I'm sorry, I didn't quite get that. Could you please rephrase?"
@@ -64,6 +73,10 @@ class PRDFlowService {
     } catch (err) {
       console.warn('[PRD Flow] Could not fetch settings, using defaults:', err.message);
     }
+
+    // Ensure image URLs are absolute for Meta API
+    prompts.greetingImage = this.makeAbsolute(prompts.greetingImage);
+    prompts.successProofImage = this.makeAbsolute(prompts.successProofImage);
 
     const replaceVars = (str) => {
       if (!str) return '';

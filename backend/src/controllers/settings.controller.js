@@ -123,7 +123,9 @@ exports.uploadImage = async (req, res) => {
 
     fs.renameSync(req.file.path, targetPath);
 
-    const publicUrl = `/uploads/prompts/${tenantId}/${fileName}`;
+    const protocol = req.protocol === 'http' && req.get('host').includes('localhost') ? 'http' : 'https';
+    const host = req.get('host');
+    const publicUrl = `${protocol}://${host}/uploads/prompts/${tenantId}/${fileName}`;
     
     res.json({ success: true, url: publicUrl });
   } catch (err) {
