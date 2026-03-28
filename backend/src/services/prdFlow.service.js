@@ -115,7 +115,7 @@ class PRDFlowService {
         // Use default if empty or not provided
         const greetingImg = (prompts.greetingImage && prompts.greetingImage.trim() !== '') 
           ? prompts.greetingImage 
-          : 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=60';
+          : null;
         
         console.log(`[PRD Flow] START_PRD_FLOW for ${contact.phone}. Image: ${greetingImg}`);
 
