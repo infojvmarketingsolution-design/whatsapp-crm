@@ -8,8 +8,16 @@ async function seedPremiumDemo() {
     const dbUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/crm_core';
     await mongoose.connect(dbUri);
     
-    // We'll target the main demo tenant or the first one found
-    const tenantId = 'tenant_demo_001'; // Default or change as needed
+    // Dynamically find the main client/tenant
+    const Client = require('../models/core/Client');
+    const firstClient = await Client.findOne({});
+    if (!firstClient) {
+      console.error('❌ No Client found in database!');
+      process.exit(1);
+    }
+
+    const tenantId = firstClient.tenantId;
+    console.log(`🌱 Seeding for Tenant: ${tenantId}`);
     const tenantDb = getTenantConnection(tenantId);
     const Flow = tenantDb.model('Flow', FlowSchema);
 
