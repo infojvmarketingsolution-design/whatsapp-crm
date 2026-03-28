@@ -191,6 +191,15 @@ app.use('/api/plans', planRoutes);
 app.use('/api/admin/settings', adminSettingsRoutes);
 
 // Main Media Route (Matches generated URLs /uploads/...)
+// Try serving from backend/uploads (Root)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), {
+  setHeaders: (res, path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cache-Control', 'public, max-age=31536000');
+  }
+}));
+
+// Fallback to public/uploads
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads'), {
   setHeaders: (res, path) => {
     res.set('Access-Control-Allow-Origin', '*');

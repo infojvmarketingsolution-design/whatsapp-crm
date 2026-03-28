@@ -117,22 +117,20 @@ class PRDFlowService {
         console.log(`[PRD Flow] START_PRD_FLOW for ${contact.phone}. Image: ${greetingImg || 'None'}`);
 
         // PRD Step 1: Send Greeting Message
+        // Log for debugging
+        console.log(`[PRD Flow] Sending Greeting to ${contact.phone}. Image: ${greetingImg || 'None'}`);
+
         if (greetingImg) {
           try {
             const isId = /^\d+$/.test(greetingImg);
-            console.log(`[PRD Flow] Sending Media Greeting to ${contact.phone}. ${isId ? 'Media ID' : 'URL'}: ${greetingImg}`);
             const res = await waService.sendMedia(contact.phone, 'image', isId ? greetingImg : null, greeting, isId ? null : greetingImg);
-            console.log(`[PRD Flow] ✅ Media Greeting Sent Successfully to ${contact.phone}`);
             await saveAndEmit('image', greetingImg, res);
           } catch (mediaErr) {
-            console.error(`[PRD Flow] ❌ Media Greeting Failed for ${contact.phone}:`, mediaErr.message);
-            console.log(`[PRD Flow] 🔔 Falling back to text-only greeting for ${contact.phone}`);
-            // Fallback to text
+            console.error(`[PRD Flow] Media Greeting Failed, falling back to text:`, mediaErr.message);
             const res = await waService.sendTextMessage(contact.phone, greeting);
             await saveAndEmit('text', greeting, res);
           }
         } else {
-          console.log(`[PRD Flow] Sending Text Greeting to ${contact.phone}...`);
           const res = await waService.sendTextMessage(contact.phone, greeting);
           await saveAndEmit('text', greeting, res);
         }
