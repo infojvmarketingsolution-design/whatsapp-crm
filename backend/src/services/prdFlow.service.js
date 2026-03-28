@@ -56,17 +56,11 @@ class PRDFlowService {
     switch (currentState) {
       case 'START_PRD_FLOW': {
         const greeting = `Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?`;
-        // PRD Step 1: Send Greeting Message + Image
-        const greetingImg = 'https://images.unsplash.com/photo-1523050335392-9ae95356c5e8?q=80&w=800&auto=format&fit=crop';
         
-        try {
-          const res = await waService.sendMedia(contact.phone, 'image', null, greeting, greetingImg);
-          await saveAndEmit('image', greetingImg, res); // Save image URL for inbox display
-        } catch (mediaErr) {
-          console.error('[PRD Flow] Greeting Image Failed, dropping back to text:', mediaErr.message);
-          const res = await waService.sendTextMessage(contact.phone, greeting);
-          await saveAndEmit('text', greeting, res);
-        }
+        // PRD Step 1: Send Greeting Message
+        // Using pure text because Meta asynchronously fails to fetch Unsplash links
+        const res = await waService.sendTextMessage(contact.phone, greeting);
+        await saveAndEmit('text', greeting, res);
         
         await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: 'AWAITING_NAME' });
         triggerScoreUpdate();
@@ -167,16 +161,10 @@ class PRDFlowService {
 
         // Success Proof (PRD Step 4)
         const success = `🎉 Success Stories, ${contact.name || ''}!\n\nOur students are already working in top companies 🚀\nYou could be next!`;
-        const successImg = 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=800&auto=format&fit=crop';
         
-        try {
-          const sRes = await waService.sendMedia(contact.phone, 'image', null, success, successImg);
-          await saveAndEmit('image', successImg, sRes); // Save image URL for inbox display
-        } catch (mediaErr) {
-          console.error('[PRD Flow] Success Image Failed, dropping back to text:', mediaErr.message);
-          const sRes = await waService.sendTextMessage(contact.phone, success);
-          await saveAndEmit('text', success, sRes);
-        }
+        // Using pure text because Meta asynchronously fails to fetch Unsplash links
+        const sRes = await waService.sendTextMessage(contact.phone, success);
+        await saveAndEmit('text', success, sRes);
 
         // 3. Ask Call Time
         const timeMsg = `${contact.name || ''}, what is your preferred time for our counsellor to call you? 📞`;
