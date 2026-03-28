@@ -124,7 +124,17 @@ class PRDFlowService {
       }
 
       case 'AWAITING_NAME': {
-        const name = await AIService.extractData(messageText, 'NAME');
+        const words = messageText.trim().split(/\s+/);
+        let name = messageText.trim();
+        
+        // Fast-Mode: If message is 1-2 words, skip OpenAI to save 3-5 seconds
+        if (words.length > 2) {
+          console.log(`[PRD Flow] Complex name detected, calling AI extraction...`);
+          name = await AIService.extractData(messageText, 'NAME');
+        } else {
+          console.log(`[PRD Flow] Fast-mode name capture: ${name}`);
+        }
+
         const reply = replaceVars(prompts.programListPrompt).replace(/{{name}}/g, name);
         
         const res = await waService.sendListMessage(contact.phone, {

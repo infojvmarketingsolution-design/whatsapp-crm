@@ -218,8 +218,14 @@ const handleIncomingMessage = async (req, res) => {
         require('fs').appendFileSync(logPath, `[${new Date().toISOString()}] ERROR saving message: ${dbErr.message}\nPayload: ${JSON.stringify({contactId: contact._id, msgId, type: message.type})}\n\n`);
       }
       
-      // Trigger Automation Engine with replyValue for branching
-      await processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io, isNewContact, replyValue);
+      // ⚡ Immediate Response to Meta (Avoid Webhook Timeouts/Retries)
+      res.status(200).send('EVENT_RECEIVED');
+
+      // Trigger Automation Engine with replyValue for branching (Background Process)
+      processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io, isNewContact, replyValue)
+        .catch(err => {
+          console.error(`[Background PRD Flow Error] Tenant: ${client.tenantId}`, err);
+        });
     }
 
     // 3. Handle Status Updates
