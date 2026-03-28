@@ -226,6 +226,8 @@ const handleIncomingMessage = async (req, res) => {
         .catch(err => {
           console.error(`[Background PRD Flow Error] Tenant: ${client.tenantId}`, err);
         });
+
+      return; // ✅ FIX: Added return here to prevent multiple responses for one payload
     }
 
     // 3. Handle Status Updates
