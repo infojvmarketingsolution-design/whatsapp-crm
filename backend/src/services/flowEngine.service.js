@@ -276,24 +276,23 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          }
      }
 
-     // 2. New Contact Trigger (Fast-Track Greeting)
+     // 1.5 Fast-Track Greeting (FOR ALL CONTACTS WITHOUT AN ACTIVE SESSION)
+     // Skip AI latency for simple greetings to provide instant response
+     const msg = (messageText || "").toLowerCase().trim();
+     const fastGreets = ['hi', 'hello', 'hey', 'start', 'interested', 'demo'];
+     if (!activeContact.currentFlowStep && fastGreets.includes(msg)) {
+         console.log(`[Flow Engine] 🚀 Universal Fast-Track Greeting triggered for "${msg}" (Phone: ${activeContact.phone})`);
+         await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
+         return;
+     }
+
+     // 2. New Contact Trigger (Flow Builder)
      if (isNewContact) {
-         console.log(`[Flow Engine] 🆕 New Contact detected: ${activeContact.phone}`);
-         
-         // 2a. Check for Flow Builder 'NEW_MESSAGE' trigger
+         console.log(`[Flow Engine] 🆕 New Contact detected: ${activeContact.phone}. Checking for NEW_MESSAGE flow...`);
          const welcomeFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
          if (welcomeFlow) {
              console.log(`[Flow Engine] ✅ Triggered Welcome Flow: "${welcomeFlow.name}"`);
              executeFlow(tenantId, welcomeFlow._id, activeContact, io);
-             return;
-         }
-
-         // 2b. Rule-based Fast Greeting (Skip AI latency for "Hi/Hello")
-         const msg = (messageText || "").toLowerCase().trim();
-         const fastGreets = ['hi', 'hello', 'hey', 'start', 'interested', 'demo'];
-         if (fastGreets.includes(msg)) {
-             console.log(`[Flow Engine] 🚀 Fast-Track Greeting triggered for "${msg}"`);
-             await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
              return;
          }
      }
@@ -331,10 +330,10 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      const intent = await AIService.detectIntent(messageText);
      console.log(`[Flow Engine] AI Detected Intent: ${intent}`);
 
-     // If it's a new contact, we almost always want to trigger the greeting flow
-     // unless AI is absolutely sure it's something else (like an AGENT_TRANSFER).
-     if (intent === 'START_FLOW' || (isNewContact && intent === 'UNCLEAR')) {
-         console.log(`[Flow Engine] Triggering PRD Greeting Flow (Intent: ${intent}, isNew: ${isNewContact})`);
+     // TRIGGER PRD GREETING FLOW
+     // Trigger if: AI says START_FLOW OR (No Active Session AND AI is UNCLEAR)
+     if (intent === 'START_FLOW' || (!activeContact.currentFlowStep && intent === 'UNCLEAR')) {
+         console.log(`[Flow Engine] Triggering PRD Greeting Flow (Intent: ${intent}, No Active Session: ${!activeContact.currentFlowStep})`);
          await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
          return;
      } else if (intent === 'AGENT_TRANSFER') {

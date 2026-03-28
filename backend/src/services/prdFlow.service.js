@@ -62,7 +62,7 @@ class PRDFlowService {
       successProofMessage: '🎉 Success Stories, {{name}}!\n\nOur students are already working in top companies 🚀\nYou could be next!',
       successProofImage: '',
       callTimePrompt: '{{name}}, what is your preferred time for our counsellor to call you? 📞',
-      agentTransferPrompt: 'Transferring you to a human agent... 👨‍💻',
+      agentTransferPrompt: 'Transferring you to a human agent... 👨–💻',
       fallbackMessage: "I'm sorry, I didn't quite get that. Could you please rephrase?"
     };
 
@@ -105,18 +105,22 @@ class PRDFlowService {
         const greeting = replaceVars(prompts.greetingMessage);
         const greetingImg = prompts.greetingImage;
         
+        console.log(`[PRD Flow] START_PRD_FLOW for ${contact.phone}. Image: ${greetingImg || 'None'}`);
+
         // PRD Step 1: Send Greeting Message
         if (greetingImg) {
           try {
-            console.log(`[PRD Flow] Sending Greeting Image: ${greetingImg}`);
+            console.log(`[PRD Flow] Sending Media Greeting to ${contact.phone}...`);
             const res = await waService.sendMedia(contact.phone, 'image', null, greeting, greetingImg);
             await saveAndEmit('image', greetingImg, res);
           } catch (mediaErr) {
-            console.error(`[PRD Flow] ❌ Greeting Image Failed (URL: ${greetingImg}):`, mediaErr.message);
+            console.error(`[PRD Flow] ❌ Media Greeting Failed for ${contact.phone}:`, mediaErr.message);
+            // Fallback to text
             const res = await waService.sendTextMessage(contact.phone, greeting);
             await saveAndEmit('text', greeting, res);
           }
         } else {
+          console.log(`[PRD Flow] Sending Text Greeting to ${contact.phone}...`);
           const res = await waService.sendTextMessage(contact.phone, greeting);
           await saveAndEmit('text', greeting, res);
         }
@@ -240,11 +244,11 @@ class PRDFlowService {
         
         if (successImg) {
           try {
-            console.log(`[PRD Flow] Sending Success Image: ${successImg}`);
+            console.log(`[PRD Flow] Sending Success Image to ${contact.phone}...`);
             const sRes = await waService.sendMedia(contact.phone, 'image', null, success, successImg);
             await saveAndEmit('image', successImg, sRes);
           } catch (mediaErr) {
-            console.error(`[PRD Flow] ❌ Success Image Failed (URL: ${successImg}):`, mediaErr.message);
+            console.error(`[PRD Flow] ❌ Success Image Failed for ${contact.phone}:`, mediaErr.message);
             const sRes = await waService.sendTextMessage(contact.phone, success);
             await saveAndEmit('text', success, sRes);
           }
