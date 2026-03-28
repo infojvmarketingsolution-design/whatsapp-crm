@@ -12,6 +12,7 @@ app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 const path = require('path');
+const fs = require('fs');
 // // app.use('/public', express.static(path.join(__dirname, 'public'))); // Replaced by general static middleware below
 
 const io = new Server(server, {
