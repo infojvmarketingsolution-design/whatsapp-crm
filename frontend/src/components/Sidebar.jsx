@@ -33,7 +33,6 @@ export default function Sidebar({ whatsappConfig }) {
     { name: 'Chat', icon: MessageSquare, path: '/inbox' },
     { name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
     { name: 'Flows', icon: Bot, path: '/flows' },
-    { name: 'AI Chatbot', icon: Bot, path: '/ai-chatbot' },
     { name: 'Agents', icon: UserPlus, path: '/agents' },
     { name: 'Web Widget', icon: Globe, path: '/widget' },
     { name: 'Contacts', icon: Users, path: '/contacts' },
@@ -45,7 +44,7 @@ export default function Sidebar({ whatsappConfig }) {
   return (
     <div className={`${collapsed ? 'w-20' : 'w-64'} shrink-0 bg-[var(--theme-bg)] text-white min-h-screen flex flex-col shadow-lg z-20 transition-all duration-300`}>
       <div className={`p-5 border-b border-teal-800/50 flex items-center ${collapsed ? 'justify-center' : 'justify-between'} relative h-[73px]`}>
-        {!collapsed && <span className="text-xl font-bold tracking-wider truncate mr-10">WapiPulse CRM</span>}
+        {!collapsed && <span className="text-xl font-bold tracking-wider truncate mr-10">WapiPulse</span>}
         <button 
           onClick={() => setCollapsed(!collapsed)}
           className={`${collapsed ? '' : 'absolute right-5'} text-teal-200 hover:text-white transition-colors cursor-pointer p-1 hover:bg-teal-800/50 rounded-md`}
@@ -109,4 +108,3 @@ export default function Sidebar({ whatsappConfig }) {
     </div>
   );
 }
-// FORCE REBUILD 2026-03-29 01:27

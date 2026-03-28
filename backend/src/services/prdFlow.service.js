@@ -112,9 +112,12 @@ class PRDFlowService {
     switch (currentState) {
       case 'START_PRD_FLOW': {
         const greeting = replaceVars(prompts.greetingMessage);
-        const greetingImg = prompts.greetingImage?.trim();
+        // Use default if empty or not provided
+        const greetingImg = (prompts.greetingImage && prompts.greetingImage.trim() !== '') 
+          ? prompts.greetingImage 
+          : 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=60';
         
-        console.log(`[PRD Flow] START_PRD_FLOW for ${contact.phone}. Image: ${greetingImg || 'NONE'}`);
+        console.log(`[PRD Flow] START_PRD_FLOW for ${contact.phone}. Image: ${greetingImg}`);
 
         // PRD Step 1: Send Greeting Text (Guaranteed to arrive)
         const gRes = await waService.sendTextMessage(contact.phone, greeting);
@@ -129,6 +132,7 @@ class PRDFlowService {
             await saveAndEmit('image', greetingImg, imgRes);
           } catch (mediaErr) {
             console.error(`[PRD Flow] Optional Greeting Image failed:`, mediaErr.message);
+            // We don't need a fallback here because the text greeting already arrived!
           }
         }
 

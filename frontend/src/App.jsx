@@ -17,7 +17,6 @@ import Tasks from './pages/Tasks';
 import AgentsDashboard from './pages/Agents';
 import WebWidget from './pages/WebWidget';
 import Settings from './pages/Settings';
-import AIChatbot from './pages/AIChatbot/AIChatbot';
 import AdminSidebar from './components/AdminSidebar';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import ClientManagement from './pages/Admin/ClientManagement';
@@ -361,7 +360,6 @@ function AppLayout() {
           <Route path="/templates" element={<Templates />} />
           <Route path="/api" element={<ApiSetup />} />
           <Route path="/settings" element={<Settings />} />
-          <Route path="/ai-chatbot" element={<AIChatbot />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
           {/* Super Admin Routes */}

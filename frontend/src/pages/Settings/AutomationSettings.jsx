@@ -144,57 +144,50 @@ export default function AutomationSettings() {
     </div>
   );
 
-  const PromptInput = ({ label, icon: Icon, value, onChange, placeholder, hint, isImage, fieldKey }) => (
+  const PromptInput = ({ label, icon: Icon, value, onChange, placeholder, hint, isImage, fieldKey, type = 'text' }) => (
     <div className="space-y-1.5">
       <label className="flex items-center text-xs font-bold text-gray-700 uppercase tracking-wider">
         <Icon size={14} className="mr-1.5 text-teal-600" />
         {label}
       </label>
       <div className="relative group">
-        <textarea 
-          className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 min-h-[80px] resize-none"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={placeholder}
-        />
-        {isImage && (
-          <div className="absolute right-3 bottom-3 flex items-center space-x-2">
-            {value && (
-              <div className="relative group/preview h-10 w-10 border border-gray-200 rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
-                 <img src={value} alt="Preview" className="h-full w-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
-                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 flex items-center justify-center transition-opacity">
-                    <button onClick={() => window.open(value, '_blank')} className="text-white p-1 hover:text-teal-300">
-                       <HelpCircle size={14} />
-                    </button>
-                 </div>
-              </div>
+        {type === 'textarea' ? (
+          <textarea 
+            className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 min-h-[80px] resize-none"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+          />
+        ) : (
+          <div className="flex gap-2">
+            <input 
+              type="text"
+              className="flex-1 bg-white border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder={placeholder}
+            />
+            {isImage && (
+              <button 
+                onClick={() => handleUploadClick(fieldKey)}
+                disabled={uploading === fieldKey}
+                className="px-4 bg-gray-50 border border-gray-200 rounded-xl text-gray-600 hover:text-teal-600 hover:border-teal-200 transition-all flex items-center shadow-sm whitespace-nowrap"
+                title="Upload Image"
+              >
+                {uploading === fieldKey ? (
+                  <span className="w-4 h-4 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></span>
+                ) : (
+                  <>
+                    <Upload size={16} className="mr-2" />
+                    Select Image
+                  </>
+                )}
+              </button>
             )}
-            <button 
-              onClick={() => handleUploadClick(fieldKey)}
-              disabled={uploading === fieldKey}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-gray-600 hover:text-teal-600 hover:border-teal-200 hover:bg-teal-50 transition-all shadow-sm ${uploading === fieldKey ? 'opacity-50 cursor-not-allowed' : ''}`}
-              title="Upload from Browser"
-            >
-              {uploading === fieldKey ? (
-                <span className="w-4 h-4 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></span>
-              ) : (
-                <>
-                  <Upload size={14} />
-                  <span className="text-[10px] font-bold uppercase">Upload</span>
-                </>
-              )}
-            </button>
           </div>
         )}
       </div>
-      <div className="flex justify-between items-center px-1">
-        {hint && <p className="text-[10px] text-gray-400 italic">{hint}</p>}
-        {isImage && (
-           <p className="text-[10px] text-gray-400">
-             {value ? 'Link generated auto ✔️' : 'Paste manual link or upload from browser'}
-           </p>
-        )}
-      </div>
+      {hint && <p className="text-[10px] text-gray-400 italic mt-1">{hint}</p>}
     </div>
   );
 
@@ -247,6 +240,135 @@ export default function AutomationSettings() {
                 className="w-32 bg-white border border-gray-200 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
               />
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <div className="flex justify-between items-start mb-2">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center">
+            <MessageSquare className="mr-2 text-teal-600" size={20} />
+            Bot Script & Prompts
+          </h2>
+          <div className="flex items-center text-[10px] uppercase font-bold text-gray-400 tracking-widest bg-gray-50 px-2 py-1 rounded">
+             <Upload size={10} className="mr-1" />
+             Auto-Upload Enabled
+          </div>
+        </div>
+        <p className="text-sm text-gray-500 mb-8 border-b border-gray-50 pb-4">
+          Customize what the AI bot says during the automated onboarding process. Hover over Image URL boxes to upload from your computer.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <PromptInput 
+              label="Greeting Message" 
+              icon={Bot}
+              value={settings.aiPrompts.greetingMessage}
+              onChange={(val) => updatePrompt('greetingMessage', val)}
+              placeholder="First message sent when user says hi..."
+              hint="Supports: {{name}}"
+              type="textarea"
+            />
+            <div className="bg-teal-50/30 p-4 border border-teal-100/50 rounded-2xl space-y-4">
+               <PromptInput 
+                label="Greeting Image & Media" 
+                icon={Bot}
+                value={settings.aiPrompts.greetingImage}
+                onChange={(val) => updatePrompt('greetingImage', val)}
+                placeholder="Paste URL or upload image..."
+                hint="Sent alongside the greeting message to new users."
+                isImage={true}
+                fieldKey="greetingImage"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <PromptInput 
+              label="Program List Prompt" 
+              icon={GraduationCap}
+              value={settings.aiPrompts.programListPrompt}
+              onChange={(val) => updatePrompt('programListPrompt', val)}
+              placeholder="Asking user to select a course..."
+              hint="Supports: {{name}}"
+              type="textarea"
+            />
+            <div className="pt-[14px]">
+              <PromptInput 
+                label="Name Request (Secondary)" 
+                icon={User}
+                value={settings.aiPrompts.namePrompt}
+                onChange={(val) => updatePrompt('namePrompt', val)}
+                placeholder="If bot forgot to ask name..."
+                type="textarea"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <PromptInput 
+              label="Success Proof / Social Proof" 
+              icon={AlertTriangle}
+              value={settings.aiPrompts.successProofMessage}
+              onChange={(val) => updatePrompt('successProofMessage', val)}
+              placeholder="Mentioning success stories..."
+              hint="Supports: {{name}}"
+              type="textarea"
+            />
+            <PromptInput 
+              label="Success Proof Media" 
+              icon={AlertTriangle}
+              value={settings.aiPrompts.successProofImage}
+              onChange={(val) => updatePrompt('successProofImage', val)}
+              placeholder="Paste URL or upload image..."
+              hint="Sent with social proof message."
+              isImage={true}
+              fieldKey="successProofImage"
+            />
+          </div>
+
+          <div className="space-y-6">
+            <PromptInput 
+              label="Call Time Request" 
+              icon={PhoneCall}
+              value={settings.aiPrompts.callTimePrompt}
+              onChange={(val) => updatePrompt('callTimePrompt', val)}
+              placeholder="Asking when to call back..."
+              hint="Supports: {{name}}"
+              type="textarea"
+            />
+            <PromptInput 
+              label="Agent Transfer Message" 
+              icon={Headphones}
+              value={settings.aiPrompts.agentTransferPrompt}
+              onChange={(val) => updatePrompt('agentTransferPrompt', val)}
+              placeholder="When handing over to a human..."
+              type="textarea"
+            />
+          </div>
+
+          <PromptInput 
+            label="Fallback / Don't Understand" 
+            icon={HelpCircle}
+            value={settings.aiPrompts.fallbackMessage}
+            onChange={(val) => updatePrompt('fallbackMessage', val)}
+            placeholder="When user says something irrelevant..."
+            type="textarea"
+          />
+        </div>
+
+        <div className="mt-10 pt-6 border-t border-gray-100 flex justify-end items-center">
+           <p className="text-xs text-gray-400 mr-6">
+             All changes are saved instantly to the database.
+           </p>
+          <button 
+            onClick={handleSave}
+            disabled={saving}
+            className="flex items-center px-6 py-3 bg-[var(--theme-bg)] text-white rounded-xl text-sm font-bold hover:opacity-90 transition shadow-lg shadow-teal-500/20 disabled:opacity-50"
+          >
+            {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={18} className="mr-2" />}
+            Save Automation Script
+          </button>
         </div>
       </div>
     </div>
