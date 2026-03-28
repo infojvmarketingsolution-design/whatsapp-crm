@@ -122,6 +122,28 @@ export default function Pipeline() {
     }
   };
 
+  const handleAction = async (contactId, action, payload = {}) => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/chat/contacts/${contactId}/action`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, payload })
+      });
+      if (res.ok) {
+        if (action === 'archive_lead' || action === 'hard_delete_lead') {
+          setContacts(prev => prev.filter(c => c._id !== contactId));
+          setActiveDropdown(null);
+        } else {
+          fetchContacts();
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   return (
     <div className="flex-1 bg-white rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex flex-col relative z-10 w-[calc(100%-12px)] ml-3 my-3">
       <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-[#fdfdfd]">
@@ -197,7 +219,26 @@ export default function Pipeline() {
                                     </button>
                                  ))}
                                </div>
-                               <button onClick={() => { setActiveDropdown(null); handleDrop({preventDefault:()=>null, dataTransfer:{getData:()=>c._id}}, 'CLOSED_LOST'); }} className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 border-t border-gray-50">Mark Lost</button>
+                               <button 
+                                 onClick={() => {
+                                   if (window.confirm("Archive this lead? It will be hidden from your pipeline and inbox.")) {
+                                     handleAction(c._id, 'archive_lead');
+                                   }
+                                 }}
+                                 className="w-full text-left px-4 py-2 text-xs font-bold text-orange-600 hover:bg-orange-50 border-t border-gray-50"
+                               >
+                                 Hide Lead (Archive)
+                               </button>
+                               <button 
+                                 onClick={() => {
+                                   if (window.confirm("PERMANENTLY delete this lead and all history? This cannot be undone.")) {
+                                      handleAction(c._id, 'hard_delete_lead');
+                                   }
+                                 }}
+                                 className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 border-t border-gray-50"
+                               >
+                                 Delete from Database
+                               </button>
                              </div>
                           )}
                         </div>

@@ -18,6 +18,7 @@ export default function Inbox() {
   const [meetingDate, setMeetingDate] = useState('');
   const [meetingLocation, setMeetingLocation] = useState('');
   const [showFollowupModal, setShowFollowupModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [followupHeading, setFollowupHeading] = useState('');
   const [followupType, setFollowupType] = useState('Call');
   const [followupDate, setFollowupDate] = useState('');
@@ -100,23 +101,31 @@ export default function Inbox() {
         },
         body: JSON.stringify({ action, payload })
       });
-      if (res.ok) {
-         const data = await res.json();
-         setActiveChat(data.contact);
-         setContacts(prev => prev.map(c => c._id === data.contact._id ? {...c, ...data.contact} : c));
-         setShowNoteInput(false);
-         setNoteText('');
-         setShowStatusDropdown(false);
-         setShowCallModal(false);
-         setShowMeetingModal(false);
-         setShowFollowupModal(false);
-         setFollowupHeading('');
-         setFollowupDescription('');
-         setFollowupDate('');
-         setFollowupTime('');
-         setShowTagInput(false);
-         setNewTagName('');
-      }
+       if (res.ok) {
+          const data = await res.json();
+          
+          if (action === 'archive_lead' || action === 'hard_delete_lead') {
+            setContacts(prev => prev.filter(c => c._id !== activeChat._id));
+            setActiveChat(null);
+            setShowDeleteModal(false);
+            return;
+          }
+
+          setActiveChat(data.contact);
+          setContacts(prev => prev.map(c => c._id === data.contact._id ? {...c, ...data.contact} : c));
+          setShowNoteInput(false);
+          setNoteText('');
+          setShowStatusDropdown(false);
+          setShowCallModal(false);
+          setShowMeetingModal(false);
+          setShowFollowupModal(false);
+          setFollowupHeading('');
+          setFollowupDescription('');
+          setFollowupDate('');
+          setFollowupTime('');
+          setShowTagInput(false);
+          setNewTagName('');
+       }
     } catch (err) {
       console.error("Action failed", err);
     }
@@ -609,6 +618,38 @@ export default function Inbox() {
          
          <div className="p-8 pb-6 flex flex-col items-center justify-center border-b border-gray-50 text-center relative mt-2">
             <img src={getAvatarUrl(activeChat?.name)} className="w-24 h-24 rounded-full shadow-lg object-cover border-4 border-white mb-4" />
+            
+            <button 
+              onClick={() => setShowDeleteModal(!showDeleteModal)}
+              className="absolute top-4 right-4 p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors shadow-sm border border-red-100"
+              title="Delete Lead Options"
+            >
+              <X size={16} />
+            </button>
+
+            {showDeleteModal && (
+              <div className="absolute top-14 right-4 bg-white border border-gray-100 rounded-xl shadow-xl p-2 z-50 w-48 animate-pop-in">
+                <button 
+                  onClick={() => handleAction('archive_lead', {})}
+                  className="w-full text-left p-2.5 text-xs font-bold text-gray-700 hover:bg-orange-50 hover:text-orange-700 rounded-lg transition-colors flex items-center space-x-2 mb-1"
+                >
+                  <Clock size={14} />
+                  <span>Hide from List (Archive)</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    if (window.confirm("Are you sure? This will PERMANENTLY delete this lead and ALL message history from the database!")) {
+                      handleAction('hard_delete_lead', {});
+                    }
+                  }}
+                  className="w-full text-left p-2.5 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors flex items-center space-x-2"
+                >
+                  <AlertCircle size={14} />
+                  <span>Delete from Database</span>
+                </button>
+              </div>
+            )}
+
             <h2 className="text-xl font-bold text-gray-800">{activeChat?.name}</h2>
             <p className="text-sm text-gray-500 font-semibold tracking-wide mt-1">{activeChat?.phone || '+91 987654321'}</p>
          </div>

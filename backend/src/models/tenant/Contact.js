@@ -28,7 +28,8 @@ const ContactSchema = new mongoose.Schema({
   selectedProgram: { type: String },
   preferredCallTime: { type: String },
   score: { type: Number, default: 0 },
-  heatLevel: { type: String, enum: ['Cold', 'Warm', 'Hot'], default: 'Cold' }
+  heatLevel: { type: String, enum: ['Cold', 'Warm', 'Hot'], default: 'Cold' },
+  isArchived: { type: Boolean, default: false }
 }, { timestamps: true });
 
 // Exporting Schema, not model, because models are bound to tenant DB dynamically

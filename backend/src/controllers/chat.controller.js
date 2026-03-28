@@ -21,7 +21,7 @@ const getContacts = async (req, res) => {
   try {
     const { status, qualification } = req.query;
     const Contact = req.tenantDb.model('Contact', ContactSchema);
-    const filter = {};
+    const filter = { isArchived: { $ne: true } };
     if (status) filter.status = status;
     if (qualification) filter.qualification = qualification;
 
@@ -79,6 +79,15 @@ const performContactAction = async (req, res) => {
          description: `Follow-up: ${payload.title || 'Reminder'} set for ${new Date(payload.dateTime).toLocaleString()}`, 
          timestamp: new Date() 
        });
+    } else if (action === 'archive_lead') {
+       contact.isArchived = true;
+       contact.timeline.push({ eventType: 'LEAD_ARCHIVED', description: 'Lead archived (Hidden from Inbox)', timestamp: new Date() });
+    } else if (action === 'hard_delete_lead') {
+       const MessageModel = req.tenantDb.model('Message', MessageSchema);
+       await MessageModel.deleteMany({ contactId: contact._id });
+       const ContactModel = req.tenantDb.model('Contact', ContactSchema);
+       await ContactModel.deleteOne({ _id: contact._id });
+       return res.json({ success: true, message: 'Lead and messages permanently deleted' });
     } else if (action === 'add_tag') {
        if (!contact.tags) contact.tags = [];
        if (!contact.tags.includes(payload.tag)) {
