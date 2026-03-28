@@ -45,7 +45,7 @@ export default function Sidebar({ whatsappConfig }) {
   return (
     <div className={`${collapsed ? 'w-20' : 'w-64'} shrink-0 bg-[var(--theme-bg)] text-white min-h-screen flex flex-col shadow-lg z-20 transition-all duration-300`}>
       <div className={`p-5 border-b border-teal-800/50 flex items-center ${collapsed ? 'justify-center' : 'justify-between'} relative h-[73px]`}>
-        {!collapsed && <span className="text-xl font-bold tracking-wider truncate mr-10">WapiPulse</span>}
+        {!collapsed && <span className="text-xl font-bold tracking-wider truncate mr-10">WapiPulse CRM</span>}
         <button 
           onClick={() => setCollapsed(!collapsed)}
           className={`${collapsed ? '' : 'absolute right-5'} text-teal-200 hover:text-white transition-colors cursor-pointer p-1 hover:bg-teal-800/50 rounded-md`}
