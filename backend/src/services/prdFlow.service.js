@@ -18,17 +18,23 @@ class PRDFlowService {
     ];
 
     this.PROGRAM_MAP = {
-      '10th Pass': ['Diploma in Engineering', 'IT Diploma', 'Animation Diploma'],
+      '10th Pass': {
+        'Diploma Programs': ['Diploma in Engineering', 'IT Diploma', 'Animation Diploma']
+      },
       '12th Pass': {
-        'Trending': ['B.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
-        'Traditional': ['BBA', 'B.Com', 'BCA', 'B.Sc']
+        'Trending Programs': ['B.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
+        'Traditional Programs': ['BBA', 'B.Com', 'BCA', 'B.Sc']
       },
-      'Diploma Completed': ['Electrical Engineering', 'Civil Engineering', 'Mechanical Engineering'],
+      'Diploma Completed': {
+        'Bachelor Programs': ['Electrical Engineering', 'Civil Engineering', 'Mechanical Engineering']
+      },
       'Graduation Completed': {
-        'Trending Master': ['M.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
-        'Traditional Master': ['MBA', 'M.Com', 'MCA', 'M.Sc']
+        'Trending Master Programs': ['M.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
+        'Traditional Master Programs': ['MBA', 'M.Com', 'MCA', 'M.Sc']
       },
-      'Master Completed': ['PhD in Marketing', 'PhD in Civil Engineering', 'PhD in IT']
+      'Master Completed': {
+        'PhD Programs': ['PhD in Marketing', 'PhD in Civil Engineering', 'PhD in IT']
+      }
     };
   }
 
@@ -167,8 +173,19 @@ class PRDFlowService {
 
         const reply = replaceVars(prompts.programListPrompt).replace(/{{name}}/g, name);
         
-        await waService.sendSmartButtons(contact.phone, { body: reply, buttons: this.QUALIFICATION_OPTIONS });
-        await saveAndEmit('interactive', reply, null); // Manual save as we use smart buttons
+        await waService.sendListMessage(contact.phone, {
+          header: 'Education Qualification',
+          body: reply,
+          buttonText: 'Select Qualification',
+          sections: [{
+            title: 'Current Level',
+            rows: this.QUALIFICATION_OPTIONS.map((opt, i) => ({
+              id: `qual_${i}`,
+              title: opt
+            }))
+          }]
+        });
+        await saveAndEmit('interactive', reply, null);
         await Contact.findByIdAndUpdate(contact._id, { 
           name, 
           currentFlowStep: 'AWAITING_QUALIFICATION',
@@ -181,36 +198,31 @@ class PRDFlowService {
 
       case 'AWAITING_QUALIFICATION': {
         let qual = messageText.trim();
-        // If it's a list reply, it might be in messageText if the controller passed it
+        // Check if message matches any of our qualification options exactly
         if (!this.QUALIFICATION_OPTIONS.includes(qual)) {
-           qual = await AIService.extractData(messageText, 'QUALIFICATION');
+           // Fallback check: maybe it matched a row ID or has minor case diff
+           const matched = this.QUALIFICATION_OPTIONS.find(opt => opt.toLowerCase() === qual.toLowerCase());
+           if (matched) qual = matched;
+           else return; // Ignore if it doesn't match a valid qualification
         }
 
-        if (!this.PROGRAM_MAP[qual]) {
-          const retry = `Please select a valid qualification from the list.`;
-          await waService.sendTextMessage(contact.phone, retry);
-          return;
-        }
+        const sections = Object.keys(this.PROGRAM_MAP[qual]).map(secTitle => ({
+          title: secTitle,
+          rows: this.PROGRAM_MAP[qual][secTitle].map((progName, i) => ({
+            id: `prog_${qual.substring(0,3)}_${i}`,
+            title: progName
+          }))
+        }));
 
-        const programs = this.PROGRAM_MAP[qual];
-        let reply = `${contact.name || 'Friend'}, here are the programs for ${qual}:`;
+        let reply = `Great, ${contact.name || 'Friend'}! Please select your preferred program for *${qual}*:`;
         
-        if (Array.isArray(programs)) {
-          await waService.sendSmartButtons(contact.phone, { body: reply, buttons: programs });
-          await saveAndEmit('interactive', reply, null);
-        } else {
-          // Nested categories like Trending/Traditional
-          reply += `\n\nWe have Trending and Traditional options.`;
-          const allOptions = [];
-          Object.keys(programs).forEach(cat => {
-            programs[cat].forEach(p => {
-              allOptions.push(p);
-            });
-          });
-
-          await waService.sendSmartButtons(contact.phone, { body: reply, buttons: allOptions.slice(0, 9) });
-          await saveAndEmit('interactive', reply, null);
-        }
+        await waService.sendListMessage(contact.phone, {
+          header: 'Program Selection',
+          body: reply,
+          buttonText: 'View Programs',
+          sections
+        });
+        await saveAndEmit('interactive', reply, null);
 
         await Contact.findByIdAndUpdate(contact._id, { 
           currentFlowStep: 'AWAITING_PROGRAM',
