@@ -88,10 +88,22 @@ class PRDFlowService {
     switch (currentState) {
       case 'START_PRD_FLOW': {
         const greeting = replaceVars(prompts.greetingMessage);
+        const greetingImg = prompts.greetingImage;
         
         // PRD Step 1: Send Greeting Message
-        const res = await waService.sendTextMessage(contact.phone, greeting);
-        await saveAndEmit('text', greeting, res);
+        if (greetingImg) {
+          try {
+            const res = await waService.sendMedia(contact.phone, 'image', null, greeting, greetingImg);
+            await saveAndEmit('image', greetingImg, res);
+          } catch (mediaErr) {
+            console.error('[PRD Flow] Dynamic Greeting Image Failed, falling back to text:', mediaErr.message);
+            const res = await waService.sendTextMessage(contact.phone, greeting);
+            await saveAndEmit('text', greeting, res);
+          }
+        } else {
+          const res = await waService.sendTextMessage(contact.phone, greeting);
+          await saveAndEmit('text', greeting, res);
+        }
         
         await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: 'AWAITING_NAME' });
         triggerScoreUpdate();
@@ -192,9 +204,21 @@ class PRDFlowService {
 
         // Success Proof (PRD Step 4)
         const success = replaceVars(prompts.successProofMessage);
+        const successImg = prompts.successProofImage;
         
-        const sRes = await waService.sendTextMessage(contact.phone, success);
-        await saveAndEmit('text', success, sRes);
+        if (successImg) {
+          try {
+            const sRes = await waService.sendMedia(contact.phone, 'image', null, success, successImg);
+            await saveAndEmit('image', successImg, sRes);
+          } catch (mediaErr) {
+            console.error('[PRD Flow] Dynamic Success Image Failed, falling back to text:', mediaErr.message);
+            const sRes = await waService.sendTextMessage(contact.phone, success);
+            await saveAndEmit('text', success, sRes);
+          }
+        } else {
+          const sRes = await waService.sendTextMessage(contact.phone, success);
+          await saveAndEmit('text', success, sRes);
+        }
 
         // 3. Ask Call Time
         const timeMsg = replaceVars(prompts.callTimePrompt);

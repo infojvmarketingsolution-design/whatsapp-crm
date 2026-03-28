@@ -23,9 +23,11 @@ exports.getSettings = async (req, res) => {
             rateLimit: 50,
             aiPrompts: {
               greetingMessage: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?',
+              greetingImage: '',
               namePrompt: 'Great! May I know your name?',
               programListPrompt: '{{name}}, which career path or program are you interested in?',
               successProofMessage: '🎉 Success Stories, {{name}}!\n\nOur students are already working in top companies 🚀\nYou could be next!',
+              successProofImage: '',
               callTimePrompt: '{{name}}, what is your preferred time for our counsellor to call you? 📞',
               agentTransferPrompt: 'Transferring you to a human agent... 👨‍💻',
               fallbackMessage: "I'm sorry, I didn't quite get that. Could you please rephrase?"

@@ -167,57 +167,81 @@ export default function AutomationSettings() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <PromptInput 
-            label="Greeting Message" 
-            icon={Bot}
-            value={settings.aiPrompts.greetingMessage}
-            onChange={(val) => updatePrompt('greetingMessage', val)}
-            placeholder="First message sent when user says hi..."
-            hint="Supports: {{name}}"
-          />
+          <div className="space-y-6">
+            <PromptInput 
+              label="Greeting Message" 
+              icon={Bot}
+              value={settings.aiPrompts.greetingMessage}
+              onChange={(val) => updatePrompt('greetingMessage', val)}
+              placeholder="First message sent when user says hi..."
+              hint="Supports: {{name}}"
+            />
+            <PromptInput 
+              label="Greeting Image URL" 
+              icon={Bot}
+              value={settings.aiPrompts.greetingImage}
+              onChange={(val) => updatePrompt('greetingImage', val)}
+              placeholder="https://example.com/image.jpg"
+              hint="Requires direct link (jpg/png)"
+            />
+          </div>
 
-          <PromptInput 
-            label="Name Request (Secondary)" 
-            icon={User}
-            value={settings.aiPrompts.namePrompt}
-            onChange={(val) => updatePrompt('namePrompt', val)}
-            placeholder="If bot forgot to ask name..."
-          />
+          <div className="space-y-6">
+            <PromptInput 
+              label="Program List Prompt" 
+              icon={GraduationCap}
+              value={settings.aiPrompts.programListPrompt}
+              onChange={(val) => updatePrompt('programListPrompt', val)}
+              placeholder="Asking user to select a course..."
+              hint="Supports: {{name}}"
+            />
+            <div className="pt-[14px]">
+              <PromptInput 
+                label="Name Request (Secondary)" 
+                icon={User}
+                value={settings.aiPrompts.namePrompt}
+                onChange={(val) => updatePrompt('namePrompt', val)}
+                placeholder="If bot forgot to ask name..."
+              />
+            </div>
+          </div>
 
-          <PromptInput 
-            label="Program List Prompt" 
-            icon={GraduationCap}
-            value={settings.aiPrompts.programListPrompt}
-            onChange={(val) => updatePrompt('programListPrompt', val)}
-            placeholder="Asking user to select a course..."
-            hint="Supports: {{name}}"
-          />
+          <div className="space-y-6">
+            <PromptInput 
+              label="Success Proof / Social Proof" 
+              icon={AlertTriangle}
+              value={settings.aiPrompts.successProofMessage}
+              onChange={(val) => updatePrompt('successProofMessage', val)}
+              placeholder="Mentioning success stories..."
+              hint="Supports: {{name}}"
+            />
+            <PromptInput 
+              label="Success Proof Image URL" 
+              icon={AlertTriangle}
+              value={settings.aiPrompts.successProofImage}
+              onChange={(val) => updatePrompt('successProofImage', val)}
+              placeholder="https://example.com/success.jpg"
+              hint="Requires direct link (jpg/png)"
+            />
+          </div>
 
-          <PromptInput 
-            label="Success Proof / Social Proof" 
-            icon={AlertTriangle}
-            value={settings.aiPrompts.successProofMessage}
-            onChange={(val) => updatePrompt('successProofMessage', val)}
-            placeholder="Mentioning success stories..."
-            hint="Supports: {{name}}"
-          />
-
-          <PromptInput 
-            label="Call Time Request" 
-            icon={PhoneCall}
-            value={settings.aiPrompts.callTimePrompt}
-            onChange={(val) => updatePrompt('callTimePrompt', val)}
-            placeholder="Asking when to call back..."
-            hint="Supports: {{name}}"
-          />
-
-          <PromptInput 
-            label="Agent Transfer Message" 
-            icon={Headphones}
-            value={settings.aiPrompts.agentTransferPrompt}
-            onChange={(val) => updatePrompt('agentTransferPrompt', val)}
-            placeholder="When handing over to a human..."
-          />
+          <div className="space-y-6">
+            <PromptInput 
+              label="Call Time Request" 
+              icon={PhoneCall}
+              value={settings.aiPrompts.callTimePrompt}
+              onChange={(val) => updatePrompt('callTimePrompt', val)}
+              placeholder="Asking when to call back..."
+              hint="Supports: {{name}}"
+            />
+            <PromptInput 
+              label="Agent Transfer Message" 
+              icon={Headphones}
+              value={settings.aiPrompts.agentTransferPrompt}
+              onChange={(val) => updatePrompt('agentTransferPrompt', val)}
+              placeholder="When handing over to a human..."
+            />
+          </div>
 
           <PromptInput 
             label="Fallback / Don't Understand" 

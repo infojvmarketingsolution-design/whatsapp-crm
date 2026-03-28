@@ -2,9 +2,11 @@ const mongoose = require('mongoose');
 
 const AIPromptsSchema = new mongoose.Schema({
   greetingMessage: { type: String, default: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?' },
+  greetingImage: { type: String, default: '' },
   namePrompt: { type: String, default: 'Great! May I know your name?' },
   programListPrompt: { type: String, default: '{{name}}, which career path or program are you interested in?' },
   successProofMessage: { type: String, default: '🎉 Success Stories, {{name}}!\n\nOur students are already working in top companies 🚀\nYou could be next!' },
+  successProofImage: { type: String, default: '' },
   callTimePrompt: { type: String, default: '{{name}}, what is your preferred time for our counsellor to call you? 📞' },
   agentTransferPrompt: { type: String, default: 'Transferring you to a human agent... 👨‍💻' },
   fallbackMessage: { type: String, default: "I'm sorry, I didn't quite get that. Could you please rephrase?" },
