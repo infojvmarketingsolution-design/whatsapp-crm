@@ -192,15 +192,16 @@ app.use('/api/plans', planRoutes);
 app.use('/api/admin/settings', adminSettingsRoutes);
 
 // Main Media Route (Matches generated URLs /uploads/...)
-// Resolves uploads path based on the project's real structure to ensure public accessibility
-const uploadPaths = [
+// Try multiple paths to find the uploads folder on various server environments
+const possibleUploadPaths = [
   path.join(__dirname, 'public/uploads'),
   path.join(__dirname, 'uploads'),
+  path.join(__dirname, '../public/uploads'),
   path.join(process.cwd(), 'public/uploads'),
   path.join(process.cwd(), 'uploads')
 ];
 
-uploadPaths.forEach(uPath => {
+possibleUploadPaths.forEach(uPath => {
   if (fs.existsSync(uPath)) {
     console.log(`[Server] ✅ Serving static files from: ${uPath} via /uploads`);
     app.use('/uploads', express.static(uPath, {
@@ -212,8 +213,9 @@ uploadPaths.forEach(uPath => {
   }
 });
 
-
+// Last resort: If still not caught, let the general static handler try /public
 app.use(express.static(path.join(__dirname, 'public')));
+
 
 // SPA Routing: Serve index.html for any request that doesn't match an API route
 app.get('*', (req, res) => {
