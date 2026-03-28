@@ -1,5 +1,73 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Save, Bot, Clock, AlertTriangle, MessageSquare, User, GraduationCap, PhoneCall, Headphones, HelpCircle, Upload } from 'lucide-react';
+// Standalone PromptInput component for better performance and safety
+const PromptInput = ({ label, icon: Icon, value, onChange, placeholder, hint, isImage, fieldKey, handleUploadClick, uploading }) => {
+  const safeValue = typeof value === 'string' ? value : '';
+  
+  return (
+    <div className="space-y-1.5">
+      <label className="flex items-center text-xs font-bold text-gray-700 uppercase tracking-wider">
+        <Icon size={14} className="mr-1.5 text-teal-600" />
+        {label}
+      </label>
+      
+      {isImage ? (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1 group">
+              <input 
+                type="text"
+                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 shadow-sm"
+                value={safeValue}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder="Manual Image URL or ID"
+              />
+              {safeValue && (
+                <button 
+                  onClick={() => onChange('')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 transition-colors"
+                  title="Clear Value"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                </button>
+              )}
+            </div>
+            <button 
+              onClick={() => handleUploadClick(fieldKey)}
+              disabled={uploading === fieldKey}
+              className="flex items-center justify-center px-4 bg-teal-50 border border-teal-100 rounded-xl text-teal-700 hover:bg-teal-100 hover:border-teal-200 transition-all font-bold text-xs shadow-sm disabled:opacity-50"
+              title="Upload from computer"
+            >
+              {uploading === fieldKey ? (
+                <span className="w-4 h-4 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></span>
+              ) : (
+                <>
+                  <Upload size={14} className="mr-2" />
+                  Upload
+                </>
+              )}
+            </button>
+          </div>
+          {safeValue && safeValue.startsWith('http') && (
+            <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center">
+              <img src={safeValue} alt="Preview" className="w-full h-full object-cover" onError={(e) => e.target.style.display='none'} />
+              <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition-colors pointer-events-none" />
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className="relative group">
+          <textarea 
+            className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 min-h-[80px] resize-none shadow-sm"
+            value={safeValue}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={placeholder}
+          />
+        </div>
+      )}
+      
+      {hint && <p className="text-[10px] text-gray-400 italic mt-1">{hint}</p>}
+    </div>
+  );
+};
 
 export default function AutomationSettings() {
   const [loading, setLoading] = useState(true);
@@ -144,72 +212,6 @@ export default function AutomationSettings() {
     </div>
   );
 
-  const PromptInput = ({ label, icon: Icon, value, onChange, placeholder, hint, isImage, fieldKey }) => (
-    <div className="space-y-1.5">
-      <label className="flex items-center text-xs font-bold text-gray-700 uppercase tracking-wider">
-        <Icon size={14} className="mr-1.5 text-teal-600" />
-        {label}
-      </label>
-      
-      {isImage ? (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <div className="relative flex-1 group">
-              <input 
-                type="text"
-                className="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 shadow-sm"
-                value={value}
-                onChange={(e) => onChange(e.target.value)}
-                placeholder="Manual Image URL or ID"
-              />
-              {value && (
-                <button 
-                  onClick={() => onChange('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 transition-colors"
-                  title="Clear Value"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
-                </button>
-              )}
-            </div>
-            <button 
-              onClick={() => handleUploadClick(fieldKey)}
-              disabled={uploading === fieldKey}
-              className="flex items-center justify-center px-4 bg-teal-50 border border-teal-100 rounded-xl text-teal-700 hover:bg-teal-100 hover:border-teal-200 transition-all font-bold text-xs shadow-sm disabled:opacity-50"
-              title="Upload from computer"
-            >
-              {uploading === fieldKey ? (
-                <span className="w-4 h-4 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></span>
-              ) : (
-                <>
-                  <Upload size={14} className="mr-2" />
-                  Upload
-                </>
-              )}
-            </button>
-          </div>
-          {value && value.startsWith('http') && (
-            <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-100 shadow-sm bg-gray-50 flex items-center justify-center">
-              <img src={value} alt="Preview" className="w-full h-full object-cover" onError={(e) => e.target.style.display='none'} />
-              <div className="absolute inset-0 bg-black/0 hover:bg-black/5 transition-colors pointer-events-none" />
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="relative group">
-          <textarea 
-            className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 min-h-[80px] resize-none shadow-sm"
-            value={value}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder={placeholder}
-          />
-        </div>
-      )}
-      
-      {hint && <p className="text-[10px] text-gray-400 italic mt-1">{hint}</p>}
-    </div>
-  );
-
   if (loading) return <div className="animate-pulse space-y-4"><div className="h-20 bg-gray-200 rounded-xl"></div><div className="h-20 bg-gray-200 rounded-xl"></div></div>;
 
   return (
@@ -296,6 +298,8 @@ export default function AutomationSettings() {
               hint="Upload a welcoming image or add a manual link"
               isImage={true}
               fieldKey="greetingImage"
+              handleUploadClick={handleUploadClick}
+              uploading={uploading}
             />
           </div>
 
@@ -337,6 +341,8 @@ export default function AutomationSettings() {
               hint="Select a success story image or add manual link"
               isImage={true}
               fieldKey="successProofImage"
+              handleUploadClick={handleUploadClick}
+              uploading={uploading}
             />
           </div>
 
@@ -377,7 +383,7 @@ export default function AutomationSettings() {
             className="flex items-center px-6 py-3 bg-[var(--theme-bg)] text-white rounded-xl text-sm font-bold hover:opacity-90 transition shadow-lg shadow-teal-500/20 disabled:opacity-50"
           >
             {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={18} className="mr-2" />}
-            Save Automation Script
+            Save Automation Settings
           </button>
         </div>
       </div>
