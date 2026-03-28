@@ -10,6 +10,7 @@ export default function ApiSetup() {
   const [limitTier, setLimitTier] = useState('');
   const [callbackUrl, setCallbackUrl] = useState('');
   const [verifyToken, setVerifyToken] = useState('');
+  const [openaiApiKey, setOpenaiApiKey] = useState('');
 
   useEffect(() => {
     fetchConfig();
@@ -32,6 +33,7 @@ export default function ApiSetup() {
         if (data.limitTier) setLimitTier(data.limitTier);
         if (data.callbackUrl) setCallbackUrl(data.callbackUrl);
         if (data.verifyToken) setVerifyToken(data.verifyToken);
+        if (data.openaiApiKey) setOpenaiApiKey(data.openaiApiKey);
       }
     } catch (err) {
       console.error('Failed to fetch config', err);
@@ -223,6 +225,26 @@ export default function ApiSetup() {
 
               <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end items-center">
                  <p className="text-sm font-medium text-gray-400">These credentials are managed by the system and cannot be edited.</p>
+              </div>
+           </div>
+
+           {/* OpenAI API Key Panel */}
+           <div className="bg-crm-card border border-crm-border rounded-2xl shadow-soft p-8">
+              <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
+                 <Zap className="mr-2 text-purple-500" size={20} />
+                 AI Services Configuration
+              </h2>
+              <div>
+                  <label className="block text-[13px] font-bold text-gray-700 mb-2 uppercase tracking-wide">OpenAI API Key</label>
+                  <div className="relative">
+                     <input 
+                       type="text" 
+                       value={openaiApiKey}
+                       readOnly
+                       className="w-full bg-gray-50 border border-gray-200 rounded-xl py-3 pl-4 pr-10 text-sm font-medium text-purple-700 cursor-not-allowed outline-none font-mono tracking-wider"
+                     />
+                  </div>
+                  <p className="text-[11px] text-gray-400 mt-2 font-medium">This key powers Conversation Summarization and AI classification. It is securely managed via server environment.</p>
               </div>
            </div>
         </div>

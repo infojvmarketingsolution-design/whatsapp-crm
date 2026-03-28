@@ -365,6 +365,14 @@ const getApiConfig = async (req, res) => {
     const baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').replace(/\/$/, '');
     configData.callbackUrl = `${baseUrl}/api/whatsapp/webhook/${req.tenantId}`;
     configData.verifyToken = process.env.META_WEBHOOK_VERIFY_TOKEN || 'jv_crm_webhook_token_2026';
+    
+    // Mask OpenAI API Key for frontend display
+    if (process.env.OPENAI_API_KEY) {
+       const key = process.env.OPENAI_API_KEY;
+       configData.openaiApiKey = key.substring(0, 7) + '*'.repeat(16) + key.slice(-4);
+    } else {
+       configData.openaiApiKey = 'Not Configured';
+    }
 
     res.json(configData);
   } catch (error) {
