@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, PlayCircle, Plus, ChevronDown, Download, Upload } from 'lucide-react';
+import { Search, PlayCircle, Plus, ChevronDown, Download, Upload, Trash2, MoreVertical, AlertCircle, Clock } from 'lucide-react';
 
 export default function Contacts() {
   const navigate = useNavigate();
@@ -10,6 +10,7 @@ export default function Contacts() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newLeadName, setNewLeadName] = useState('');
   const [newLeadPhone, setNewLeadPhone] = useState('');
+  const [activeDropdown, setActiveDropdown] = useState(null);
 
   const fetchContacts = async () => {
     try {
@@ -59,8 +60,10 @@ export default function Contacts() {
   };
 
   const filteredContacts = contacts.filter(c => 
-    (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-    (c.phone || '').includes(searchTerm)
+    !c.isArchived && (
+      (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (c.phone || '').includes(searchTerm)
+    )
   );
 
   const handleExport = () => {
@@ -85,6 +88,28 @@ export default function Contacts() {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+  
+  const handleAction = async (contactId, action) => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch('/api/chat/action', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'x-tenant-id': tenantId, 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({ contactId, action, payload: {} })
+      });
+      if (res.ok) {
+        setActiveDropdown(null);
+        fetchContacts(); // Refresh list after deletion
+      }
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   // Need to trick grep syntax replacement bounds
@@ -170,12 +195,13 @@ export default function Contacts() {
                   <th className="py-4 px-6 text-sm font-semibold text-[var(--theme-text)]">Mobile Number</th>
                   <th className="py-4 px-6 text-sm font-semibold text-gray-400">Tags</th>
                   <th className="py-4 px-6 text-sm font-semibold text-gray-400">Source</th>
+                  <th className="py-4 px-6 text-sm font-semibold text-gray-400 text-right">Actions</th>
                </tr>
              </thead>
              <tbody>
                {filteredContacts.length === 0 && (
                  <tr>
-                   <td colSpan="5" className="py-8 text-center text-gray-400 font-medium">
+                   <td colSpan="6" className="py-8 text-center text-gray-400 font-medium">
                      No contacts matched your search criteria.
                    </td>
                  </tr>
@@ -191,6 +217,41 @@ export default function Contacts() {
                       </span>
                    </td>
                    <td className="py-4 px-6 text-[13px] font-bold text-gray-600">{c.tags?.[0] || 'AD'}</td>
+                   <td className="py-4 px-6 text-right relative">
+                      <button 
+                        onClick={() => setActiveDropdown(activeDropdown === c._id ? null : c._id)}
+                        className="p-2 text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+                      
+                      {activeDropdown === c._id && (
+                        <div className="absolute right-6 top-10 w-56 bg-white border border-gray-100 shadow-xl rounded-xl py-2 z-50 animate-pop-in">
+                           <button 
+                             onClick={() => {
+                               if (window.confirm("Archive this lead? It will be hidden from fronthead view.")) {
+                                 handleAction(c._id, 'archive_lead');
+                               }
+                             }}
+                             className="w-full text-left px-4 py-2.5 text-xs font-bold text-orange-600 hover:bg-orange-50 flex items-center space-x-2"
+                           >
+                             <Clock size={14} />
+                             <span>Delete lead only fronthead</span>
+                           </button>
+                           <button 
+                             onClick={() => {
+                               if (window.confirm("PERMANENTLY delete this lead and all history from the database? This cannot be undone.")) {
+                                 handleAction(c._id, 'hard_delete_lead');
+                               }
+                             }}
+                             className="w-full text-left px-4 py-2.5 text-xs font-bold text-red-600 hover:bg-red-50 flex items-center space-x-2 border-t border-gray-50"
+                           >
+                             <AlertCircle size={14} />
+                             <span>Delete this lead from database also</span>
+                           </button>
+                        </div>
+                      )}
+                   </td>
                  </tr>
                ))}
              </tbody>
