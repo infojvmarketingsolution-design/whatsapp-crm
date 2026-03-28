@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getContacts, getMessages, sendMessage, performContactAction, createContact, getDashboardStats, getContactStats } = require('../controllers/chat.controller');
+const { getContacts, getMessages, sendMessage, performContactAction, createContact, getDashboardStats, getContactStats, getAgents, updateFcmToken, summarizeLead } = require('../controllers/chat.controller');
 const tenantMiddleware = require('../middleware/tenant');
 const { protect } = require('../middleware/auth');
 const multer = require('multer');
