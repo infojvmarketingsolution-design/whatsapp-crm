@@ -23,6 +23,8 @@ export default function AIChatbot() {
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
     botEnabled: false,
+    botMode: 'PRD',
+    customGreetingFlowId: null,
     fallbackToHuman: true,
     aiPrompts: {
       greetingMessage: '',
@@ -38,13 +40,30 @@ export default function AIChatbot() {
   });
 
   const [uploading, setUploading] = useState(null);
+  const [flows, setFlows] = useState([]);
   const fileInputRef = useRef(null);
   const activeFieldRef = useRef(null);
 
   useEffect(() => {
     fetchSettings();
+    fetchFlows();
   }, []);
 
+  const fetchFlows = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/flows`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFlows(data.filter(f => f.status === 'ACTIVE'));
+      }
+    } catch (err) {
+      console.error('Failed to fetch custom flows', err);
+    }
+  };
   const fetchSettings = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -262,9 +281,63 @@ export default function AIChatbot() {
           </div>
         </div>
 
-        <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between">
+           <div>
+              <h2 className="text-lg font-bold text-gray-800 tracking-tight">AI Strategy Mode</h2>
+              <p className="text-sm text-gray-500 mt-1">Choose between the fixed Education Template or your custom dragged sequences.</p>
+           </div>
+           <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-3 w-full md:w-auto">
+              <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto">
+                 <button 
+                   onClick={() => setSettings({ ...settings, botMode: 'PRD' })}
+                   className={`px-5 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all w-1/2 md:w-auto ${settings.botMode === 'PRD' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                 >
+                   Education Template
+                 </button>
+                 <button 
+                   onClick={() => setSettings({ ...settings, botMode: 'CUSTOM' })}
+                   className={`px-5 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all w-1/2 md:w-auto ${settings.botMode === 'CUSTOM' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                 >
+                   Custom Flow Canvas
+                 </button>
+              </div>
+           </div>
+        </div>
 
-        <div className="flex flex-col items-center space-y-2 pb-20">
+        {settings.botMode === 'CUSTOM' && (
+           <div className="bg-gradient-to-br from-teal-50 to-blue-50 border border-teal-100 rounded-2xl p-8 mb-8 flex flex-col items-center text-center shadow-inner">
+              <div className="w-16 h-16 bg-white rounded-2xl border border-teal-200 shadow flex items-center justify-center mb-6">
+                 <Bot className="text-teal-500" size={32} />
+              </div>
+              <h2 className="text-2xl font-black text-gray-800 mb-2">Advanced Custom Automation</h2>
+              <p className="text-gray-600 max-w-lg mb-8">
+                 You have selected Custom Freedom mode. Your bot will now completely ignore the default Education prompts and instead map incoming users to your visual reactive flow.
+              </p>
+              
+              <div className="w-full max-w-md bg-white p-5 border border-teal-100 rounded-2xl shadow-sm text-left mb-6">
+                 <label className="block text-xs font-bold text-teal-600 uppercase tracking-widest mb-2">Select Active Greeting Flow</label>
+                 <select 
+                   className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm font-bold text-gray-800 outline-none focus:ring-2 focus:ring-teal-500"
+                   value={settings.customGreetingFlowId || ''}
+                   onChange={(e) => setSettings({ ...settings, customGreetingFlowId: e.target.value })}
+                 >
+                   <option value="">-- Choose Custom Flow --</option>
+                   {flows.map(f => (
+                     <option key={f._id} value={f._id}>{f.name}</option>
+                   ))}
+                 </select>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                 <a href="/flows" target="_blank" className="px-6 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl shadow-sm hover:border-teal-300 hover:text-teal-600 transition-colors uppercase text-sm tracking-wider">
+                    Open Visual Builder
+                 </a>
+              </div>
+           </div>
+        )}
+
+        {settings.botMode === 'PRD' && (
+          <div className="flex flex-col items-center space-y-2 pb-20">
           
           {/* STEP 1: TRIGGER */}
           <div className="w-full max-w-2xl bg-white border border-teal-200 rounded-2xl shadow-sm p-4 flex items-center justify-between bg-teal-50/30">
@@ -402,6 +475,7 @@ export default function AIChatbot() {
           </div>
 
         </div>
+        )}
       </div>
     </div>
   );

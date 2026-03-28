@@ -209,6 +209,34 @@ class WhatsAppService {
       throw new Error(error.response?.data?.error?.message || 'Failed to send List message');
     }
   }
+
+  async sendCtaMessage(to, { type, body, title, value }) {
+    const sanitizedTo = String(to).replace(/\D/g, '');
+    const payload = {
+      messaging_product: 'whatsapp',
+      to: sanitizedTo,
+      type: 'interactive',
+      interactive: {
+        type: type === 'url' ? 'cta_url' : 'cta_call',
+        body: { text: body },
+        action: {
+           name: type === 'url' ? 'cta_url' : 'cta_call',
+           parameters: {
+             display_text: title.substring(0, 20),
+             ...(type === 'url' ? { url: value } : { phone_number: String(value).replace(/\D/g, '') })
+           }
+        }
+      }
+    };
+
+    try {
+      const response = await axios.post(this.baseUrl, payload, { headers: this.headers });
+      return response.data;
+    } catch (error) {
+      console.error('WhatsApp API CTA Error:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.error?.message || 'Failed to send CTA message');
+    }
+  }
 }
 
 module.exports = WhatsAppService;

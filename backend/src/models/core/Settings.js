@@ -39,6 +39,8 @@ const CRMSettingsSchema = new mongoose.Schema({
 
 const AutomationSettingsSchema = new mongoose.Schema({
   botEnabled: { type: Boolean, default: false },
+  botMode: { type: String, enum: ['PRD', 'CUSTOM'], default: 'PRD' },
+  customGreetingFlowId: { type: String, default: null },
   fallbackToHuman: { type: Boolean, default: true },
   workingHours: { type: Object, default: {} },
   rateLimit: { type: Number, default: 0 },

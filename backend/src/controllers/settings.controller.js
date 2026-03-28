@@ -21,6 +21,8 @@ exports.getSettings = async (req, res) => {
           crm: { duplicateDetection: true, autoAssignment: false },
           automation: { 
             botEnabled: false, 
+            botMode: 'PRD',
+            customGreetingFlowId: null,
             fallbackToHuman: true, 
             rateLimit: 50,
             aiPrompts: {

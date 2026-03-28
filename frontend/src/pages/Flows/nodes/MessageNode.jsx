@@ -112,44 +112,57 @@ export default function MessageNode({ id, data }) {
             <option value="DOCUMENT">📄 Document Message</option>
             <option value="INTERACTIVE_MESSAGE">🔘 Interactive Buttons</option>
             <option value="LIST_MESSAGE">📋 List Menu</option>
+            <option value="CTA_URL">🔗 Website Link Button</option>
+            <option value="CTA_CALL">📞 Phone Call Button</option>
             <option value="QUESTION">❓ Ask Question (Input)</option>
          </select>
 
-         {(msgType === 'IMAGE' || msgType === 'VIDEO' || msgType === 'DOCUMENT') && (
+         {(msgType === 'IMAGE' || msgType === 'VIDEO' || msgType === 'DOCUMENT' || msgType === 'INTERACTIVE_MESSAGE') && (
             <div className="space-y-2">
-               <div className="flex items-center justify-between bg-gray-50 p-2 rounded border border-dashed border-gray-300">
-                  <span className="text-[10px] text-gray-500 font-bold truncate pr-2">{data.mediaId ? `File Attached: ${data.mediaId.substring(0,15)}...` : `No ${msgType.toLowerCase()} selected`}</span>
-                  <label className="cursor-pointer bg-white px-2 py-1 rounded border border-gray-200 text-[10px] font-bold text-blue-600 hover:bg-blue-50 transition-colors flex items-center shrink-0">
-                     <Upload size={10} className="mr-1" /> Browse
-                     <input type="file" className="hidden" accept={msgType === 'IMAGE' ? "image/*" : msgType === 'VIDEO' ? "video/*" : ".pdf,.doc,.docx"} onChange={(e) => e.target.files[0] && handleUpload(e.target.files[0])} />
-                  </label>
-               </div>
+               {msgType === 'INTERACTIVE_MESSAGE' && (
+                  <div className="flex space-x-2 mb-2">
+                     <select className="text-[10px] w-full border rounded p-1" value={data.headerType || 'image'} onChange={(e) => updateField('headerType', e.target.value)}>
+                        <option value="image">Image Header</option>
+                        <option value="video">Video Header</option>
+                        <option value="document">Document Header</option>
+                        <option value="text">Text Header Only</option>
+                     </select>
+                  </div>
+               )}
+               {(!data.headerType || data.headerType !== 'text') && (
+                 <div className="flex items-center justify-between bg-gray-50 p-2 rounded border border-dashed border-gray-300">
+                    <span className="text-[10px] text-gray-500 font-bold truncate pr-2">{data.mediaId ? `File Attached` : `No Media selected`}</span>
+                    <label className="cursor-pointer bg-white px-2 py-1 rounded border border-gray-200 text-[10px] font-bold text-blue-600 hover:bg-blue-50 transition-colors flex items-center shrink-0">
+                       <Upload size={10} className="mr-1" /> Browse
+                       <input type="file" className="hidden" accept="*/*" onChange={(e) => e.target.files[0] && handleUpload(e.target.files[0])} />
+                    </label>
+                 </div>
+               )}
             </div>
          )}
 
          <textarea 
             className="w-full text-sm border-gray-200 border rounded p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[80px] resize-none outline-none" 
-            placeholder={msgType === 'QUESTION' ? "Ask something (e.g. What is your email?)" : (msgType === 'INTERACTIVE_MESSAGE' || msgType === 'LIST_MESSAGE') ? "Main Body Description..." : "Type your message/caption..."} 
+            placeholder={(msgType === 'QUESTION') ? "Ask something (e.g. What is your email?)" : (msgType === 'INTERACTIVE_MESSAGE' || msgType === 'LIST_MESSAGE' || msgType === 'CTA_URL' || msgType === 'CTA_CALL') ? "Main Body Description..." : "Type your message/caption..."} 
             value={data.text || ''} 
             onChange={(e) => updateField('text', e.target.value)}
          />
 
-         {(msgType === 'INTERACTIVE' || msgType === 'INTERACTIVE_MESSAGE') && (
+         {msgType === 'INTERACTIVE_MESSAGE' && data.headerType === 'text' && (
+             <div className="space-y-1">
+                <span className="text-[10px] uppercase font-bold text-gray-400 block">Header Text</span>
+                <input 
+                   type="text" 
+                   className="w-full text-xs border border-gray-200 rounded p-1.5 outline-none focus:border-blue-400" 
+                   placeholder="Heading text..."
+                   value={data.headerText || ''}
+                   onChange={(e) => updateField('headerText', e.target.value)}
+                />
+             </div>
+         )}
+
+         {(msgType === 'INTERACTIVE_MESSAGE') && (
             <div className="space-y-3 border-t border-gray-100 pt-3 pr-4">
-               {msgType === 'INTERACTIVE_MESSAGE' && (
-                 <>
-                    <div className="space-y-1">
-                       <span className="text-[10px] uppercase font-bold text-gray-400 block">Header (Optional)</span>
-                       <input 
-                          type="text" 
-                          className="w-full text-xs border border-gray-200 rounded p-1.5 outline-none focus:border-blue-400" 
-                          placeholder="Heading text..."
-                          value={data.header?.text || ''}
-                          onChange={(e) => updateField('header', { ...data.header, type: 'text', text: e.target.value })}
-                       />
-                    </div>
-                 </>
-               )}
                <span className="text-[10px] uppercase font-bold text-gray-400 block">Buttons</span>
                {[0, 1, 2].map(idx => (
                  <div key={idx} className="relative">
@@ -174,6 +187,31 @@ export default function MessageNode({ id, data }) {
                     )}
                  </div>
                ))}
+            </div>
+         )}
+         
+         {(msgType === 'CTA_URL' || msgType === 'CTA_CALL') && (
+            <div className="space-y-3 border-t border-gray-100 pt-3">
+               <div>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Button Title</span>
+                  <input 
+                     type="text" 
+                     className="w-full text-xs border border-gray-200 rounded p-1.5 outline-none focus:border-blue-400" 
+                     placeholder={msgType === 'CTA_URL' ? "Visit Website" : "Call Us"}
+                     value={data.ctaTitle || ''}
+                     onChange={(e) => updateField('ctaTitle', e.target.value)}
+                  />
+               </div>
+               <div>
+                  <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">{msgType === 'CTA_URL' ? "Website URL" : "Phone Number (with country code)"}</span>
+                  <input 
+                     type="text" 
+                     className="w-full text-xs border border-gray-200 rounded p-1.5 outline-none focus:border-blue-400" 
+                     placeholder={msgType === 'CTA_URL' ? "https://example.com" : "+1234567890"}
+                     value={data.ctaValue || ''}
+                     onChange={(e) => updateField('ctaValue', e.target.value)}
+                  />
+               </div>
             </div>
          )}
 

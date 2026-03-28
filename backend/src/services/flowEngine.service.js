@@ -8,6 +8,7 @@ const MessageSchema = require('../models/tenant/Message');
 const AIService = require('./ai.service');
 const PRDFlowService = require('./prdFlow.service');
 const ClientSchema = require('../models/core/Client');
+const Settings = require('../models/core/Settings');
 
 /**
  * Traverses a visually-built ReactFlow JSON graph synchronously.
@@ -187,15 +188,25 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
                    });
                    await saveAndEmit('interactive', `[List]\n${interpolatedText}\nOptions: ${listOptions.join(', ')}`, res);
                }
+               else if (msgType === 'CTA_URL' || msgType === 'CTA_CALL') {
+                   const { ctaTitle, ctaValue = '' } = currentNode.data;
+                   let res = await waService.sendCtaMessage(contact.phone, {
+                       type: msgType === 'CTA_URL' ? 'url' : 'call',
+                       title: interpolate(ctaTitle || 'Click Here'),
+                       body: interpolatedText,
+                       value: interpolate(ctaValue)
+                   });
+                   await saveAndEmit('interactive', `[CTA ${msgType.split('_')[1]}]\n${interpolatedText}\nButton: ${ctaTitle || 'Click'} -> ${ctaValue}`, res);
+               }
            } catch (sendErr) {
                console.error(`[Flow Engine] Send Error:`, sendErr.message);
            }
            
-           if (msgType === 'QUESTION' || msgType === 'INTERACTIVE_MESSAGE' || msgType === 'LIST_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0)) {
+           if (msgType === 'QUESTION' || msgType === 'INTERACTIVE_MESSAGE' || msgType === 'LIST_MESSAGE' || (msgType === 'INTERACTIVE' && buttons.length > 0) || msgType === 'CTA_URL' || msgType === 'CTA_CALL') {
                console.log(`[Flow Engine] Waiting for user input. Halted at ${currentNode.id}`);
                break; 
            }
-       } 
+       }  
        else if (currentNode.type === 'actionNode') {
            const tag = interpolate(currentNode.data?.tag || '');
            const actionType = currentNode.data?.actionType || 'ADD';
@@ -235,6 +246,9 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          accessToken: client.whatsappConfig.accessToken,
          phoneNumberId: client.whatsappConfig.phoneNumberId
      });
+
+     const settings = await Settings.findOne({ tenantId });
+     const botMode = settings?.automation?.botMode || 'PRD';
 
      // 0. PRD Flow Session Resume
      const prdStates = ['START_PRD_FLOW', 'AWAITING_NAME', 'AWAITING_QUALIFICATION', 'AWAITING_PROGRAM', 'AWAITING_CALL_TIME', 'AWAITING_ADDITIONAL_HELP'];
@@ -276,11 +290,17 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          }
      }
 
-      // 4. TRIGGER PRD GREETING FLOW
-      // ✅ MISSION: If the user has no active flow session, ALWAYS start with the PRD Greeting (Image + Text + Name Prompt)
-      // This ensures that even if they ask a question first, they get the professional welcome.
+      // 4. TRIGGER AI GREETING (PRD OR CUSTOM)
       if (!activeContact.currentFlowStep) {
           console.log(`[Flow Engine] 🤖 Starting AI Greeting Journey for ${activeContact.phone} (No active session detected)`);
+          
+          if (botMode === 'CUSTOM' && settings?.automation?.customGreetingFlowId) {
+             console.log(`[Flow Engine] 🎨 Launching CUSTOM Flow: ${settings.automation.customGreetingFlowId}`);
+             executeFlow(tenantId, settings.automation.customGreetingFlowId, activeContact, io);
+             return;
+          }
+
+          console.log(`[Flow Engine] Triggering rigid PRD fallback Template Workflow`);
           await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
           return;
       }
