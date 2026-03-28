@@ -10,6 +10,8 @@ router.use(protect, tenantMiddleware);
 
 router.get('/contacts', getContacts);
 router.post('/contacts', createContact);
+router.post('/bulk-action', performBulkContactAction);
+router.post('/action', performContactAction); // Fix for current frontend
 router.put('/contacts/:contactId/action', performContactAction);
 router.get('/stats', getDashboardStats);
 router.get('/stats/contacts', getContactStats);

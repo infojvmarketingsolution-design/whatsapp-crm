@@ -127,6 +127,43 @@ const performContactAction = async (req, res) => {
   }
 };
 
+const performBulkContactAction = async (req, res) => {
+  try {
+    const { contactIds, action, payload } = req.body;
+    if (!Array.isArray(contactIds) || contactIds.length === 0) {
+      return res.status(400).json({ error: 'No contact IDs provided' });
+    }
+
+    const ContactModel = req.tenantDb.model('Contact', ContactSchema);
+    const MessageModel = req.tenantDb.model('Message', MessageSchema);
+
+    if (action === 'archive_leads') {
+      await ContactModel.updateMany(
+        { _id: { $in: contactIds } },
+        { 
+          $set: { isArchived: true },
+          $push: { 
+            timeline: { 
+              eventType: 'LEAD_ARCHIVED', 
+              description: 'Lead archived in bulk', 
+              timestamp: new Date() 
+            } 
+          }
+        }
+      );
+      return res.json({ success: true, message: `${contactIds.length} leads archived` });
+    } else if (action === 'hard_delete_leads') {
+      await MessageModel.deleteMany({ contactId: { $in: contactIds } });
+      await ContactModel.deleteMany({ _id: { $in: contactIds } });
+      return res.json({ success: true, message: `${contactIds.length} leads and their messages permanently deleted` });
+    } else {
+      return res.status(400).json({ error: 'Invalid bulk action type' });
+    }
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const getMessages = async (req, res) => {
   try {
     console.log(`[GET /messages] Request received for contactId: ${req.params.contactId}`);
@@ -378,6 +415,7 @@ module.exports = {
   getMessages,
   sendMessage,
   performContactAction,
+  performBulkContactAction,
   createContact,
   getDashboardStats,
   getContactStats,

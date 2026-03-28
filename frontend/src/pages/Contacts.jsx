@@ -11,6 +11,8 @@ export default function Contacts() {
   const [newLeadName, setNewLeadName] = useState('');
   const [newLeadPhone, setNewLeadPhone] = useState('');
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isBulkLoading, setIsBulkLoading] = useState(false);
 
   const fetchContacts = async () => {
     try {
@@ -90,6 +92,53 @@ export default function Contacts() {
     document.body.removeChild(link);
   };
   
+  const toggleSelectAll = () => {
+    if (selectedIds.length > 0 && selectedIds.length === filteredContacts.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredContacts.map(c => c._id));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleBulkAction = async (action) => {
+    if (selectedIds.length === 0) return;
+    
+    const confirmMsg = action === 'hard_delete_leads' 
+      ? `PERMANENTLY delete ${selectedIds.length} leads from database? This cannot be undone.`
+      : `Archive ${selectedIds.length} leads? They will be hidden from the fronthead.`;
+      
+    if (!window.confirm(confirmMsg)) return;
+
+    setIsBulkLoading(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch('/api/chat/bulk-action', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'x-tenant-id': tenantId, 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify({ contactIds: selectedIds, action })
+      });
+      if (res.ok) {
+        setSelectedIds([]);
+        fetchContacts();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsBulkLoading(false);
+    }
+  };
+
   const handleAction = async (contactId, action) => {
     try {
       const token = localStorage.getItem('token');
@@ -105,36 +154,11 @@ export default function Contacts() {
       });
       if (res.ok) {
         setActiveDropdown(null);
-        fetchContacts(); // Refresh list after deletion
+        fetchContacts();
       }
     } catch (err) {
       console.error(err);
     }
-  };
-
-  // Need to trick grep syntax replacement bounds
-  const x = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const tenantId = localStorage.getItem('tenantId');
-        if (!token) return;
-
-        const res = await fetch('/api/chat/contacts', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'x-tenant-id': tenantId
-          }
-        });
-        
-        if (res.ok) {
-           const data = await res.json();
-           setContacts(data);
-        }
-      } catch (err) {
-        console.error("Backend API unavailable.", err);
-      } finally {
-        setLoading(false);
-      }
   };
 
   return (
@@ -185,12 +209,54 @@ export default function Contacts() {
           </div>
       </div>
 
+      {selectedIds.length > 0 && (
+        <div className="flex items-center justify-between bg-teal-50 border border-teal-100 p-4 rounded-xl mb-6 animate-fade-in-up w-full max-w-5xl">
+          <div className="flex items-center space-x-3">
+             <span className="flex items-center justify-center w-6 h-6 bg-[var(--theme-bg)] text-white text-[10px] font-bold rounded-full">
+               {selectedIds.length}
+             </span>
+             <span className="text-sm font-bold text-teal-900">Contacts Selected</span>
+          </div>
+          <div className="flex items-center space-x-3">
+             <button 
+               onClick={() => handleBulkAction('archive_leads')}
+               disabled={isBulkLoading}
+               className="flex items-center space-x-2 px-4 py-2 bg-white border border-orange-200 text-orange-600 rounded-lg text-xs font-bold hover:bg-orange-50 transition-colors disabled:opacity-50"
+             >
+               <Clock size={14} />
+               <span>Bulk Archive (Hide)</span>
+             </button>
+             <button 
+               onClick={() => handleBulkAction('hard_delete_leads')}
+               disabled={isBulkLoading}
+               className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg text-xs font-bold hover:bg-red-700 transition-colors shadow-sm disabled:opacity-50"
+             >
+               <AlertCircle size={14} />
+               <span>Bulk Delete (Database)</span>
+             </button>
+             <button 
+               onClick={() => setSelectedIds([])}
+               className="text-gray-400 hover:text-gray-600 p-1"
+             >
+               <Plus size={18} className="rotate-45" />
+             </button>
+          </div>
+        </div>
+      )}
+
       <div className="flex-1 w-full max-w-5xl overflow-y-auto custom-scrollbar">
         <div className="rounded-xl border border-gray-100 overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)] mb-8">
           <table className="w-full text-left border-collapse">
              <thead>
                <tr className="border-b border-gray-100 bg-white">
-                  <th className="py-4 px-6"><input type="checkbox" className="w-4 h-4 accent-brand-dark rounded" defaultChecked /></th>
+                  <th className="py-4 px-6">
+                    <input 
+                      type="checkbox" 
+                      className="w-4 h-4 accent-brand-dark rounded cursor-pointer" 
+                      checked={selectedIds.length > 0 && selectedIds.length === filteredContacts.length}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
                   <th className="py-4 px-6 text-sm font-semibold text-[var(--theme-text)]">Name</th>
                   <th className="py-4 px-6 text-sm font-semibold text-[var(--theme-text)]">Mobile Number</th>
                   <th className="py-4 px-6 text-sm font-semibold text-gray-400">Tags</th>
@@ -207,8 +273,15 @@ export default function Contacts() {
                  </tr>
                )}
                {filteredContacts.map((c, i) => (
-                 <tr key={c._id || i} className={i % 2 === 0 ? 'bg-[#fbfbfb]' : 'bg-white'}>
-                   <td className="py-4 px-6"><input type="checkbox" className="w-4 h-4 accent-brand-dark rounded" /></td>
+                 <tr key={c._id || i} className={`${i % 2 === 0 ? 'bg-[#fbfbfb]' : 'bg-white'} ${selectedIds.includes(c._id) ? 'bg-teal-50/50' : ''}`}>
+                   <td className="py-4 px-6">
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 accent-brand-dark rounded cursor-pointer" 
+                        checked={selectedIds.includes(c._id)}
+                        onChange={() => toggleSelect(c._id)}
+                      />
+                   </td>
                    <td className="py-4 px-6 text-sm font-bold text-gray-800">{c.name}</td>
                    <td className="py-4 px-6 text-sm font-semibold text-gray-600">{c.phone}</td>
                    <td className="py-4 px-6">

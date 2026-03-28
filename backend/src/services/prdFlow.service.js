@@ -117,6 +117,11 @@ class PRDFlowService {
           const res = await waService.sendTextMessage(contact.phone, greeting);
           await saveAndEmit('text', greeting, res);
         }
+
+        // PRD Step 1.5: Send Name Prompt as a separate message (User Request)
+        const nPrompt = replaceVars(prompts.namePrompt);
+        await waService.sendTextMessage(contact.phone, nPrompt);
+        await saveAndEmit('text', nPrompt, null);
         
         await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: 'AWAITING_NAME' });
         triggerScoreUpdate();
@@ -124,13 +129,14 @@ class PRDFlowService {
       }
 
       case 'AWAITING_NAME': {
-        const words = messageText.trim().split(/\s+/);
-        let name = messageText.trim();
+        const cleanMessage = messageText.trim();
+        const words = cleanMessage.split(/\s+/);
+        let name = cleanMessage;
         
         // Fast-Mode: If message is 1-2 words, skip OpenAI to save 3-5 seconds
         if (words.length > 2) {
           console.log(`[PRD Flow] Complex name detected, calling AI extraction...`);
-          name = await AIService.extractData(messageText, 'NAME');
+          name = await AIService.extractData(cleanMessage, 'NAME');
         } else {
           console.log(`[PRD Flow] Fast-mode name capture: ${name}`);
         }
@@ -160,7 +166,7 @@ class PRDFlowService {
       }
 
       case 'AWAITING_QUALIFICATION': {
-        let qual = messageText;
+        let qual = messageText.trim();
         // If it's a list reply, it might be in messageText if the controller passed it
         if (!this.QUALIFICATION_OPTIONS.includes(qual)) {
            qual = await AIService.extractData(messageText, 'QUALIFICATION');
