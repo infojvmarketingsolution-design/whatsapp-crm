@@ -36,7 +36,7 @@ const deleteContacts = async () => {
                 console.log(`\n--- Searching in Tenant: ${client.tenantId} ---`);
                 
                 // Tenant DB connection
-                const tenantUri = `mongodb://127.0.0.1:27017/tenant_${client.tenantId}`;
+                const tenantUri = `mongodb://127.0.0.1:27017/jv_tenant_${client.tenantId}`;
                 const tenantDb = mongoose.createConnection(tenantUri, { maxPoolSize: 10 });
                 
                 try {
