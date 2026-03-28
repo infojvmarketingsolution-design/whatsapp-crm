@@ -353,6 +353,11 @@ const getApiConfig = async (req, res) => {
       }
     }
     
+    // Add Dynamic Callback URL for Webhook Configuration
+    const baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').replace(/\/$/, '');
+    configData.callbackUrl = `${baseUrl}/api/whatsapp/webhook/${req.tenantId}`;
+    configData.verifyToken = process.env.META_WEBHOOK_VERIFY_TOKEN || 'jv_crm_webhook_token_2026';
+
     res.json(configData);
   } catch (error) {
     res.status(500).json({ message: error.message });
