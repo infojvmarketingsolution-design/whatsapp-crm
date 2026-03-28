@@ -401,10 +401,11 @@ const summarizeLead = async (req, res) => {
     const summary = await aiService.summarizeConversation(messages.reverse(), contact);
 
     if (!summary) {
-      const isConfigured = !!aiService.openai;
-      return res.status(isConfigured ? 500 : 400).json({ 
-        message: isConfigured ? 'Failed to generate summary' : 'AI service is not configured. Please check your OpenAI API key.' 
-      });
+      if (!aiService.apiKey) {
+         return res.status(400).json({ message: 'AI service is not configured. Please check your OPENAI_API_KEY inside the .env file.' });
+      } else {
+         return res.status(500).json({ message: 'Failed to generate summary from OpenAI. Check server logs for the detailed error.' });
+      }
     }
 
     res.json(summary);
