@@ -123,18 +123,18 @@ class PRDFlowService {
         if (greetingImg) {
           try {
             const isId = /^\d+$/.test(greetingImg);
-            console.log(`[PRD Flow] Attempting Joint Send: ${greetingImg} with caption: "${greeting.substring(0, 20)}..."`);
-            // Send image WITH text as caption
+            console.log(`[PRD Flow] 🚀 Attempting Joint Greeting: ${isId ? 'ID' : 'URL'} | Contact: ${contact.phone}`);
+            
             const imgRes = await waService.sendMedia(contact.phone, 'image', isId ? greetingImg : null, greeting, isId ? null : greetingImg);
             await saveAndEmit('image', `[Media] ${greetingImg}\n${greeting}`, imgRes);
+            console.log(`[PRD Flow] ✅ Joint Greeting Sent.`);
           } catch (mediaErr) {
-            console.error(`[PRD Flow] ❌ Joint Greeting Image failed:`, mediaErr.message);
-            console.log(`[PRD Flow] 🔄 Falling back to text-only greeting...`);
+            console.error(`[PRD Flow] ❌ Joint Send Failed, Falling back:`, mediaErr.message);
             const gRes = await waService.sendTextMessage(contact.phone, greeting);
             await saveAndEmit('text', greeting, gRes);
           }
         } else {
-            console.log(`[PRD Flow] No image found. Sending text-only greeting.`);
+            console.log(`[PRD Flow] 📝 No image set. Sending text-only greeting.`);
             const gRes = await waService.sendTextMessage(contact.phone, greeting);
             await saveAndEmit('text', greeting, gRes);
         }

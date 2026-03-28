@@ -248,6 +248,13 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      });
 
      const settings = await Settings.findOne({ tenantId });
+      
+     // 🛡️ Global Kill Switch: Respect "BOT ACTIVE" toggle
+     if (!settings?.automation?.botEnabled) {
+         console.log(`[Flow Engine] 💤 Bot is DISABLED for tenant: ${tenantId}. Ignoring message.`);
+         return;
+     }
+
      const botMode = settings?.automation?.botMode || 'PRD';
 
      // 🌟 NEW: Forced Restart Logic for Greeting Keywords

@@ -134,7 +134,7 @@ class WhatsAppService {
       const response = await axios.post(this.baseUrl, payload, { headers: this.headers });
       return response.data;
     } catch (error) {
-      console.error('WhatsApp API Media Send Error:', error.response?.data || error.message);
+      console.error('[WhatsApp Service] Media Error Details:', JSON.stringify(error.response?.data?.error || error.message, null, 2));
       throw new Error(error.response?.data?.error?.message || 'Failed to send WhatsApp media');
     }
   }
