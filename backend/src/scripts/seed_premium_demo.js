@@ -5,14 +5,15 @@ require('dotenv').config();
 
 async function seedPremiumDemo() {
   try {
-    const dbUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/crm_core';
+    const dbUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/jv_cloud_crm_core';
+    console.log(`📡 Connecting to: ${dbUri}`);
     await mongoose.connect(dbUri);
     
     // Dynamically find the main client/tenant
     const Client = require('../models/core/Client');
     const firstClient = await Client.findOne({});
     if (!firstClient) {
-      console.error('❌ No Client found in database!');
+      console.error('❌ No Client found in database! Please check your CORE_DB_URI.');
       process.exit(1);
     }
 
