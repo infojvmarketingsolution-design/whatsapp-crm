@@ -193,6 +193,22 @@ export default function AutomationSettings() {
           Bot & Automation Rules
         </h2>
 
+        <div className="mb-6 p-4 bg-gradient-to-r from-teal-500 to-blue-600 rounded-xl text-white shadow-lg shadow-teal-500/20 flex flex-col md:flex-row items-center justify-between">
+           <div className="mb-4 md:mb-0">
+              <div className="flex items-center space-x-2">
+                 <Bot size={20} />
+                 <h3 className="font-black uppercase tracking-tighter">Advanced AI Flow Builder</h3>
+              </div>
+              <p className="text-xs font-medium text-white/80 mt-1">Unlock 100% Freedom with Video, CTA Links, and Custom Drag-and-Drop Sequences.</p>
+           </div>
+           <a 
+             href="/ai-chatbot" 
+             className="px-6 py-2 bg-white text-teal-600 font-bold rounded-lg text-sm hover:bg-gray-100 transition-colors shadow-sm whitespace-nowrap"
+           >
+             Open Advanced Builder
+           </a>
+        </div>
+
         <div className="space-y-4">
           <Toggle 
             label="Enable Meta AI / Reply Bot" 
