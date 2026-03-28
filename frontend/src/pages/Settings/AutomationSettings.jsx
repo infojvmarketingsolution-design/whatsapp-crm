@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Save, Bot, Clock, AlertTriangle, MessageSquare, User, GraduationCap, PhoneCall, Headphones, HelpCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Save, Bot, Clock, AlertTriangle, MessageSquare, User, GraduationCap, PhoneCall, Headphones, HelpCircle, Upload } from 'lucide-react';
 
 export default function AutomationSettings() {
   const [loading, setLoading] = useState(true);
@@ -10,14 +10,20 @@ export default function AutomationSettings() {
     rateLimit: 50,
     aiPrompts: {
       greetingMessage: '',
+      greetingImage: '',
       namePrompt: '',
       programListPrompt: '',
       successProofMessage: '',
+      successProofImage: '',
       callTimePrompt: '',
       agentTransferPrompt: '',
       fallbackMessage: ''
     }
   });
+
+  const [uploading, setUploading] = useState(null); // stores the key being uploaded
+  const fileInputRef = useRef(null);
+  const activeFieldRef = useRef(null);
 
   useEffect(() => {
     fetchSettings();
@@ -79,6 +85,48 @@ export default function AutomationSettings() {
     });
   };
 
+  const handleUploadClick = (field) => {
+    activeFieldRef.current = field;
+    fileInputRef.current.click();
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const field = activeFieldRef.current;
+    setUploading(field);
+
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const formData = new FormData();
+      formData.append('image', file);
+
+      const res = await fetch('/api/settings/upload-image', {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'x-tenant-id': tenantId 
+        },
+        body: formData
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        updatePrompt(field, data.url);
+      } else {
+        alert('Failed to upload image. Please try again.');
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+      alert('Error uploading image');
+    } finally {
+      setUploading(null);
+      e.target.value = ''; // reset file input
+    }
+  };
+
   // Switch Toggle Component
   const Toggle = ({ label, description, checked, onChange }) => (
     <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-teal-100 transition-colors">
@@ -96,18 +144,34 @@ export default function AutomationSettings() {
     </div>
   );
 
-  const PromptInput = ({ label, icon: Icon, value, onChange, placeholder, hint }) => (
+  const PromptInput = ({ label, icon: Icon, value, onChange, placeholder, hint, isImage, fieldKey }) => (
     <div className="space-y-1.5">
       <label className="flex items-center text-xs font-bold text-gray-700 uppercase tracking-wider">
         <Icon size={14} className="mr-1.5 text-teal-600" />
         {label}
       </label>
-      <textarea 
-        className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 min-h-[80px] resize-none"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
+      <div className="relative group">
+        <textarea 
+          className="w-full bg-white border border-gray-200 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 min-h-[80px] resize-none"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={placeholder}
+        />
+        {isImage && (
+          <button 
+            onClick={() => handleUploadClick(fieldKey)}
+            disabled={uploading === fieldKey}
+            className="absolute right-3 bottom-3 p-2 bg-gray-50 border border-gray-200 rounded-lg text-gray-500 hover:text-teal-600 hover:border-teal-200 transition-all opacity-0 group-hover:opacity-100 shadow-sm"
+            title="Upload Image"
+          >
+            {uploading === fieldKey ? (
+              <span className="w-4 h-4 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></span>
+            ) : (
+              <Upload size={16} />
+            )}
+          </button>
+        )}
+      </div>
       {hint && <p className="text-[10px] text-gray-400 italic mt-1">{hint}</p>}
     </div>
   );
@@ -116,6 +180,13 @@ export default function AutomationSettings() {
 
   return (
     <div className="max-w-4xl space-y-6 pb-20">
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept="image/*"
+        onChange={handleFileChange}
+      />
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center">
           <Bot className="mr-2 text-teal-600" size={20} />
@@ -158,12 +229,18 @@ export default function AutomationSettings() {
       </div>
 
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-        <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center">
-          <MessageSquare className="mr-2 text-teal-600" size={20} />
-          Bot Script & Prompts
-        </h2>
+        <div className="flex justify-between items-start mb-2">
+          <h2 className="text-lg font-bold text-gray-900 flex items-center">
+            <MessageSquare className="mr-2 text-teal-600" size={20} />
+            Bot Script & Prompts
+          </h2>
+          <div className="flex items-center text-[10px] uppercase font-bold text-gray-400 tracking-widest bg-gray-50 px-2 py-1 rounded">
+             <Upload size={10} className="mr-1" />
+             Auto-Upload Enabled
+          </div>
+        </div>
         <p className="text-sm text-gray-500 mb-8 border-b border-gray-50 pb-4">
-          Customize what the AI bot says during the automated onboarding process.
+          Customize what the AI bot says during the automated onboarding process. Hover over Image URL boxes to upload from your computer.
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -182,7 +259,9 @@ export default function AutomationSettings() {
               value={settings.aiPrompts.greetingImage}
               onChange={(val) => updatePrompt('greetingImage', val)}
               placeholder="https://example.com/image.jpg"
-              hint="Requires direct link (jpg/png)"
+              hint="Hover to upload from computer"
+              isImage={true}
+              fieldKey="greetingImage"
             />
           </div>
 
@@ -221,7 +300,9 @@ export default function AutomationSettings() {
               value={settings.aiPrompts.successProofImage}
               onChange={(val) => updatePrompt('successProofImage', val)}
               placeholder="https://example.com/success.jpg"
-              hint="Requires direct link (jpg/png)"
+              hint="Hover to upload from computer"
+              isImage={true}
+              fieldKey="successProofImage"
             />
           </div>
 

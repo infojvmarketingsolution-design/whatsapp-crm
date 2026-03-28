@@ -1,5 +1,7 @@
 const Settings = require('../models/core/Settings');
 const mongoose = require('mongoose');
+const path = require('path');
+const fs = require('fs');
 
 let offlineSettingsStore = {}; // Memory store for offline mode
 
@@ -99,5 +101,33 @@ exports.updateSettings = async (req, res) => {
   } catch (err) {
     console.error('Error updating settings:', err);
     res.status(500).json({ error: 'Failed to update settings' });
+  }
+};
+
+exports.uploadImage = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file uploaded' });
+    }
+
+    const tenantId = req.tenantId;
+    const targetDir = path.join(__dirname, '../../public/uploads/prompts', tenantId);
+    
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    const fileExt = path.extname(req.file.originalname);
+    const fileName = `prompt_${Date.now()}${fileExt}`;
+    const targetPath = path.join(targetDir, fileName);
+
+    fs.renameSync(req.file.path, targetPath);
+
+    const publicUrl = `/uploads/prompts/${tenantId}/${fileName}`;
+    
+    res.json({ success: true, url: publicUrl });
+  } catch (err) {
+    console.error('Error uploading setting image:', err);
+    res.status(500).json({ error: 'Failed to upload image' });
   }
 };
