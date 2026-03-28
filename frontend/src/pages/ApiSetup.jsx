@@ -8,6 +8,8 @@ export default function ApiSetup() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [wabaName, setWabaName] = useState('');
   const [limitTier, setLimitTier] = useState('');
+  const [callbackUrl, setCallbackUrl] = useState('');
+  const [verifyToken, setVerifyToken] = useState('');
 
   useEffect(() => {
     fetchConfig();
@@ -28,6 +30,8 @@ export default function ApiSetup() {
         if (data.phoneNumber) setPhoneNumber(data.phoneNumber);
         if (data.wabaName) setWabaName(data.wabaName);
         if (data.limitTier) setLimitTier(data.limitTier);
+        if (data.callbackUrl) setCallbackUrl(data.callbackUrl);
+        if (data.verifyToken) setVerifyToken(data.verifyToken);
       }
     } catch (err) {
       console.error('Failed to fetch config', err);
@@ -246,12 +250,16 @@ export default function ApiSetup() {
                  <div className="flex justify-between items-center">
                     <span className="text-xs font-bold tracking-wide text-teal-200 uppercase">Callback URL</span>
                  </div>
-                 <p className="text-[11px] font-mono text-white mt-1 break-all bg-black/30 p-2 rounded-md">
-                    https://your-crm-domain.com/api/webhook
-                 </p>
-                 <button className="text-[10px] uppercase font-bold text-brand-light mt-3 hover:text-white transition w-full text-center">
-                    Copy Callback URL
-                 </button>
+                  <p className="text-[11px] font-mono text-white mt-1 break-all bg-black/30 p-2 rounded-md">
+                     {callbackUrl || 'Fetching...'}
+                  </p>
+                  <p className="text-[10px] font-bold text-teal-200 mt-3 uppercase tracking-wide">Verify Token</p>
+                  <p className="text-[11px] font-mono text-white mt-1 break-all bg-black/30 p-2 rounded-md">
+                     {verifyToken || 'Fetching...'}
+                  </p>
+                  <button onClick={() => handleCopy(callbackUrl)} className="text-[10px] uppercase font-bold text-brand-light mt-3 hover:text-white transition w-full text-center">
+                     Copy Callback URL
+                  </button>
               </div>
            </div>
 
