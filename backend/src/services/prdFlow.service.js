@@ -164,18 +164,8 @@ class PRDFlowService {
 
         const reply = replaceVars(prompts.programListPrompt).replace(/{{name}}/g, name);
         
-        const res = await waService.sendListMessage(contact.phone, {
-          header: 'Education Qualification',
-          body: reply,
-          footer: 'Choose one option',
-          buttonText: 'Qualifications',
-          sections: [{
-            title: 'Options',
-            rows: this.QUALIFICATION_OPTIONS.map((opt, i) => ({ id: `qual_${i}`, title: opt }))
-          }]
-        });
-        
-        await saveAndEmit('interactive', reply, res);
+        await waService.sendSmartButtons(contact.phone, { body: reply, buttons: this.QUALIFICATION_OPTIONS });
+        await saveAndEmit('interactive', reply, null); // Manual save as we use smart buttons
         await Contact.findByIdAndUpdate(contact._id, { 
           name, 
           currentFlowStep: 'AWAITING_QUALIFICATION',
@@ -203,28 +193,20 @@ class PRDFlowService {
         let reply = `${contact.name || 'Friend'}, here are the programs for ${qual}:`;
         
         if (Array.isArray(programs)) {
-          const res = await waService.sendListMessage(contact.phone, {
-            body: reply,
-            buttonText: 'Select Program',
-            sections: [{ title: 'Programs', rows: programs.map((p, i) => ({ id: `prog_${i}`, title: p })) }]
-          });
-          await saveAndEmit('interactive', reply, res);
+          await waService.sendSmartButtons(contact.phone, { body: reply, buttons: programs });
+          await saveAndEmit('interactive', reply, null);
         } else {
           // Nested categories like Trending/Traditional
           reply += `\n\nWe have Trending and Traditional options.`;
-          const allRows = [];
+          const allOptions = [];
           Object.keys(programs).forEach(cat => {
-            programs[cat].forEach((p, i) => {
-              allRows.push({ id: `${cat}_${i}`, title: p, description: cat });
+            programs[cat].forEach(p => {
+              allOptions.push(p);
             });
           });
 
-          const res = await waService.sendListMessage(contact.phone, {
-            body: reply,
-            buttonText: 'Select Program',
-            sections: [{ title: 'Available Programs', rows: allRows.slice(0, 10) }] // WhatsApp limit 10 rows
-          });
-          await saveAndEmit('interactive', reply, res);
+          await waService.sendSmartButtons(contact.phone, { body: reply, buttons: allOptions.slice(0, 9) });
+          await saveAndEmit('interactive', reply, null);
         }
 
         await Contact.findByIdAndUpdate(contact._id, { 

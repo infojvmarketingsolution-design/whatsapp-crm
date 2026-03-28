@@ -182,6 +182,38 @@ class WhatsAppService {
     }
   }
 
+  async sendSmartButtons(to, { header, body, footer, buttons }) {
+    const MAX_BUTTONS = 3;
+    const sanitizedButtons = buttons.filter(b => b && b.trim() !== '');
+
+    if (sanitizedButtons.length <= MAX_BUTTONS) {
+      return this.sendInteractiveButtonMessage(to, { header, body, footer, buttons: sanitizedButtons });
+    }
+
+    // Split into chunks of 3
+    let lastResult;
+    for (let i = 0; i < sanitizedButtons.length; i += MAX_BUTTONS) {
+      const chunk = sanitizedButtons.slice(i, i + MAX_BUTTONS);
+      const isFirst = (i === 0);
+      
+      // For subsequent messages, we don't repeat the header/footer to avoid clutter
+      // unless specified otherwise, but usually a simple body is better.
+      const res = await this.sendInteractiveButtonMessage(to, {
+        header: isFirst ? header : null,
+        body: isFirst ? body : `More options (${Math.floor(i / MAX_BUTTONS) + 1}):`,
+        footer: isFirst ? footer : null,
+        buttons: chunk
+      });
+      lastResult = res;
+
+      // Small delay to ensure message order in WhatsApp
+      if (i + MAX_BUTTONS < sanitizedButtons.length) {
+        await new Promise(resolve => setTimeout(resolve, 600));
+      }
+    }
+    return lastResult;
+  }
+
   async sendListMessage(to, { header, body, footer, buttonText, sections }) {
     const sanitizedTo = String(to).replace(/\D/g, '');
     const payload = {
