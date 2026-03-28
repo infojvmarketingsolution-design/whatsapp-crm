@@ -119,21 +119,21 @@ class PRDFlowService {
         
         console.log(`[PRD Flow] START_PRD_FLOW for ${contact.phone}. Image: ${greetingImg}`);
 
-        // PRD Step 1: Send Greeting Text (Guaranteed to arrive)
-        const gRes = await waService.sendTextMessage(contact.phone, greeting);
-        await saveAndEmit('text', greeting, gRes);
-
-        // PRD Step 2: Send Greeting Image (Arrives immediately after)
+        // PRD Step 1: Send Greeting Image + Text (Joined as one message)
         if (greetingImg) {
           try {
             const isId = /^\d+$/.test(greetingImg);
-            // Send image WITHOUT caption to keep it separate and clean
-            const imgRes = await waService.sendMedia(contact.phone, 'image', isId ? greetingImg : null, null, isId ? null : greetingImg);
-            await saveAndEmit('image', greetingImg, imgRes);
+            // Send image WITH text as caption
+            const imgRes = await waService.sendMedia(contact.phone, 'image', isId ? greetingImg : null, greeting, isId ? null : greetingImg);
+            await saveAndEmit('image', `[Media] ${greetingImg}\n${greeting}`, imgRes);
           } catch (mediaErr) {
-            console.error(`[PRD Flow] Optional Greeting Image failed:`, mediaErr.message);
-            // We don't need a fallback here because the text greeting already arrived!
+            console.error(`[PRD Flow] Joint Greeting Image failed, falling back to text:`, mediaErr.message);
+            const gRes = await waService.sendTextMessage(contact.phone, greeting);
+            await saveAndEmit('text', greeting, gRes);
           }
+        } else {
+            const gRes = await waService.sendTextMessage(contact.phone, greeting);
+            await saveAndEmit('text', greeting, gRes);
         }
 
         // PRD Step 3: Send Name Prompt as a separate message

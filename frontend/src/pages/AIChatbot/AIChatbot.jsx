@@ -306,7 +306,7 @@ export default function AIChatbot() {
                 fieldKey="greetingImage"
                 onChange={(val) => updatePrompt('greetingImage', val)}
                 placeholder="https://image-url.com/welcome.jpg"
-                hint="Image shown immediately after text greeting."
+                hint="Image will be sent with the greeting text as its caption."
                 icon={ImageIcon}
              />
           </FlowNode>
