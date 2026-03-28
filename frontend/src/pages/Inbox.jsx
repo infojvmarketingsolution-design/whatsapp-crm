@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile } from 'lucide-react';
+import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle } from 'lucide-react';
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -31,6 +31,9 @@ export default function Inbox() {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [attachment, setAttachment] = useState(null);
+  const [isPrivateNote, setIsPrivateNote] = useState(false);
+  const [aiSummary, setAiSummary] = useState(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
   const [showProfile, setShowProfile] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const fileInputRef = useRef(null);
@@ -131,6 +134,7 @@ export default function Inbox() {
       formData.append('contactId', activeChat._id);
       if (newMessage.trim()) formData.append('content', newMessage.trim());
       if (attachment) formData.append('media', attachment);
+      if (isPrivateNote) formData.append('isInternal', 'true');
 
       const res = await fetch('/api/chat/send', {
         method: 'POST',
@@ -144,6 +148,7 @@ export default function Inbox() {
       if (res.ok) {
         const sentMsg = await res.json();
         setMessages(prev => [...prev, sentMsg]);
+        setIsPrivateNote(false);
         
         // BUMP CONTACT TO TOP
         setContacts(prev => {
@@ -165,6 +170,28 @@ export default function Inbox() {
     } catch (err) {
       console.error("Failed to send message", err);
       alert(`Network/Client Error: ${err.message}`);
+    }
+  };
+
+  const handleSummarize = async () => {
+    if (!activeChat || loadingSummary) return;
+    setLoadingSummary(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/chat/summarize/${activeChat._id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'x-tenant-id': tenantId
+        }
+      });
+      if (res.ok) {
+        setAiSummary(await res.json());
+      }
+    } catch (err) {
+      console.error("AI Summarization failed", err);
+    } finally {
+      setLoadingSummary(false);
     }
   };
 
@@ -202,6 +229,23 @@ export default function Inbox() {
           }
           return prev;
        });
+    });
+
+    socket.on('message_status_update', (data) => {
+      console.log(`[Socket] Received status update: ${data.status} for msg ${data.messageId}`);
+      setMessages(prev => prev.map(m => 
+        m.messageId === data.messageId ? { ...m, status: data.status } : m
+      ));
+    });
+
+    socket.on('lead_score_updated', (data) => {
+      console.log(`[Socket] Lead Priority Updated: Contact ${data.contactId} -> Score ${data.score}`);
+      setContacts(prev => prev.map(c => 
+        c._id === data.contactId ? { ...c, score: data.score, heatLevel: data.heatLevel } : c
+      ));
+      if (activeChatRef.current && activeChatRef.current._id === data.contactId) {
+        setActiveChat(prev => ({ ...prev, score: data.score, heatLevel: data.heatLevel }));
+      }
     });
 
     return () => socket.disconnect();
@@ -264,13 +308,15 @@ export default function Inbox() {
      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=114a43&color=fff&size=100&font-size=0.4&bold=true`;
   };
 
-  const filteredContacts = contacts.filter(c => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    const nameMatch = c.name?.toLowerCase().includes(q);
-    const phoneMatch = c.phone?.toLowerCase().includes(q);
-    return nameMatch || phoneMatch;
-  });
+  const filteredContacts = contacts
+    .filter(c => {
+      if (!searchQuery) return true;
+      const q = searchQuery.toLowerCase();
+      const nameMatch = c.name?.toLowerCase().includes(q);
+      const phoneMatch = c.phone?.toLowerCase().includes(q);
+      return nameMatch || phoneMatch;
+    })
+    .sort((a, b) => (b.score || 0) - (a.score || 0));
 
   return (
     <div className="flex h-full bg-white rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex-row animate-fade-in relative z-10 w-[calc(100%-12px)] ml-3 my-3">
@@ -319,24 +365,50 @@ export default function Inbox() {
             filteredContacts.map((c) => (
               <div 
                 key={c._id} 
-              onClick={() => setActiveChat(c)}
-              className={`p-4 cursor-pointer flex items-center space-x-4 transition-colors relative border-b border-gray-50 ${
-                activeChat && activeChat._id === c._id 
-                  ? 'bg-[#eef5fa] border-l-4 border-blue-500' 
-                  : 'hover:bg-gray-50 border-l-4 border-transparent'
-              }`}
-            >
-              <div className="relative">
-                <img src={getAvatarUrl(c.name)} className="w-11 h-11 rounded-full shadow-sm object-cover border border-white" />
+                onClick={() => setActiveChat(c)}
+                className={`p-4 cursor-pointer flex items-center space-x-4 transition-colors relative border-b border-gray-50 ${
+                  activeChat && activeChat._id === c._id 
+                    ? 'bg-[#eef5fa] border-l-4 border-blue-500' 
+                    : 'hover:bg-gray-50 border-l-4 border-transparent'
+                } ${c.status === 'FOLLOW_UP' ? 'bg-orange-50/30' : ''}`}
+              >
+                <div className="relative">
+                  <img src={getAvatarUrl(c.name)} className="w-11 h-11 rounded-full shadow-sm object-cover border border-white" />
+                  {c.status === 'FOLLOW_UP' && (
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500 border border-white"></span>
+                    </span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-center">
+                    <div className="flex items-center space-x-1.5 flex-1 min-w-0">
+                      <h3 className={`text-sm font-bold truncate ${
+                          activeChat && activeChat._id === c._id ? 'text-gray-900' : 'text-gray-800'
+                        }`}>{c.name}</h3>
+                      {c.heatLevel === 'Hot' && <Flame size={14} className="text-red-500 animate-pulse fill-red-500/20" />}
+                      {c.heatLevel === 'Warm' && <Flame size={13} className="text-orange-400 fill-orange-400/10" />}
+                    </div>
+                    <div className="flex flex-col items-end">
+                      {c.score > 0 && (
+                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border shadow-sm ${
+                          c.score >= 70 ? 'bg-red-50 text-red-600 border-red-100' : 
+                          c.score >= 40 ? 'bg-orange-50 text-orange-600 border-orange-100' : 
+                          'bg-gray-50 text-gray-500 border-gray-100'
+                        }`}>
+                          {c.score}
+                        </span>
+                      )}
+                      {c.status === 'FOLLOW_UP' && (
+                        <span className="text-[8px] font-bold bg-orange-100 text-orange-600 px-1 py-0.5 rounded border border-orange-200 uppercase tracking-tighter mt-1">Waiting</span>
+                      )}
+                    </div>
+                  </div>
+                  <p className="text-[12px] text-gray-500 truncate mt-0.5">{c.role}</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h3 className={`text-sm font-bold truncate ${
-                    activeChat && activeChat._id === c._id ? 'text-gray-900' : 'text-gray-800'
-                  }`}>{c.name}</h3>
-                <p className="text-[12px] text-gray-500 truncate mt-0.5">{c.role}</p>
-              </div>
-            </div>
-          ))
+            ))
         )}
         </div>
       </div>
@@ -375,7 +447,20 @@ export default function Inbox() {
            {messages.length > 0 ? (
               messages.map((m, idx) => (
                  <div key={m._id || idx} className={`relative group max-w-[70%] w-fit animate-msg-enter ${m.direction === 'OUTBOUND' ? 'self-end' : 'self-start'}`} style={{ animationDelay: `${idx * 0.1}s` }}>
-                   <div className={`${m.direction === 'OUTBOUND' ? 'bg-[var(--theme-bg)] text-white rounded-tr-sm' : 'bg-white text-gray-800 rounded-tl-sm'} p-4 rounded-2xl shadow-md border border-gray-100`}>
+                   
+                   {/* Internal Team Note Decoration */}
+                   {m.isInternal && (
+                     <div className="flex items-center space-x-1 mb-1 px-1">
+                       <Lock size={10} className="text-amber-600" />
+                       <span className="text-[9px] font-bold text-amber-700 uppercase tracking-widest">Internal Team Note</span>
+                     </div>
+                   )}
+
+                   <div className={`${
+                     m.isInternal 
+                       ? 'bg-amber-50 border-amber-200 text-amber-900 rounded-sm italic shadow-sm' 
+                       : (m.direction === 'OUTBOUND' ? 'bg-[var(--theme-bg)] text-white rounded-tr-sm' : 'bg-white text-gray-800 rounded-tl-sm')
+                   } p-4 rounded-2xl shadow-md border border-gray-100`}>
                      {/* Image Message */}
                      {m.type === 'image' && (
                        <div className="mb-2">
@@ -393,14 +478,14 @@ export default function Inbox() {
                              />
                            </div>
                          ) : (
-                           <div className="flex items-center space-x-2 text-white/90 bg-black/20 p-2 rounded-lg text-xs"><ImageIcon size={14}/> <span>Image Attached</span></div>
+                           <div className={`flex items-center space-x-2 p-2 rounded-lg text-xs ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}><ImageIcon size={14}/> <span>Image Attached</span></div>
                          )}
                        </div>
                      )}
 
                      {/* Video/Doc Placeholders */}
-                     {m.type === 'video' && <div className="mb-2 flex items-center space-x-2 text-white/90 bg-black/20 p-2 rounded-lg text-xs"><ImageIcon size={14}/> <span>Video Attached</span></div>}
-                     {m.type === 'document' && <div className="mb-2 flex items-center space-x-2 text-white/90 bg-black/20 p-2 rounded-lg text-xs"><FileText size={14}/> <span>Document Attached</span></div>}
+                     {m.type === 'video' && <div className={`mb-2 flex items-center space-x-2 p-2 rounded-lg text-xs ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}><ImageIcon size={14}/> <span>Video Attached</span></div>}
+                     {m.type === 'document' && <div className={`mb-2 flex items-center space-x-2 p-2 rounded-lg text-xs ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}><FileText size={14}/> <span>Document Attached</span></div>}
                      
                      {/* Message Text Content */}
                      {(!m.content || typeof m.content !== 'string' || !m.content.startsWith('/') || m.type === 'text') && (
@@ -412,7 +497,26 @@ export default function Inbox() {
                         </p>
                      )}
                    </div>
-                   <span className="text-[10px] text-gray-400 block mt-1 font-medium px-2">{m.direction === 'OUTBOUND' ? 'You' : activeChat.name} • {new Date(m.timestamp || Date.now()).toLocaleTimeString()}</span>
+                    <div className="flex items-center justify-end space-x-1 mt-1 px-1">
+                      <span className="text-[10px] text-gray-400 font-medium">
+                        {m.isInternal ? `Internal Note by ${m.sender?.name || 'Agent'}` : (m.direction === 'OUTBOUND' ? 'You' : activeChat.name)} • {new Date(m.timestamp || Date.now()).toLocaleTimeString()}
+                      </span>
+                      {m.direction === 'OUTBOUND' && !m.isInternal && (
+                        <div className="ml-1 flex items-center">
+                          {m.status === 'READ' ? (
+                            <CheckCheck size={14} className="text-blue-500" />
+                          ) : m.status === 'DELIVERED' ? (
+                            <CheckCheck size={14} className="text-gray-400" />
+                          ) : m.status === 'SENT' ? (
+                            <Check size={14} className="text-gray-400" />
+                          ) : m.status === 'FAILED' ? (
+                            <AlertCircle size={14} className="text-red-500" />
+                          ) : (
+                            <Clock size={12} className="text-gray-300" />
+                          )}
+                        </div>
+                      )}
+                    </div>
                  </div>
               ))
            ) : (
@@ -465,10 +569,18 @@ export default function Inbox() {
               )}
            </div>
            
-           <form onSubmit={handleSendMessage} className="flex-1 flex items-center space-x-3 bg-gray-50 rounded-full px-4 border border-gray-100 focus-within:ring-2 ring-teal-500/20 focus-within:border-teal-400 transition-all">
+           <button 
+             onClick={() => setIsPrivateNote(!isPrivateNote)}
+             className={`p-2.5 rounded-full transition-all shrink-0 border border-gray-100/50 ${isPrivateNote ? 'bg-amber-100 border-amber-300 shadow-sm' : 'text-gray-400 hover:bg-gray-50'}`}
+             title={isPrivateNote ? "Private Note Mode Active" : "Regular WhatsApp Message"}
+           >
+             <Lock size={20} className={isPrivateNote ? "text-amber-600" : "text-gray-400"} />
+           </button>
+
+           <form onSubmit={handleSendMessage} className={`flex-1 flex items-center space-x-3 rounded-full px-4 border transition-all ${isPrivateNote ? 'bg-amber-50/50 border-amber-200' : 'bg-gray-50 border-gray-100 focus-within:ring-2 ring-teal-500/20 focus-within:border-teal-400'}`}>
              <input 
                type="text" 
-               placeholder="Type a message..." 
+               placeholder={isPrivateNote ? "Type a private internal note..." : "Type a message..."}
                value={newMessage}
                onChange={(e) => setNewMessage(e.target.value)}
                className="w-full bg-transparent border-none py-3 text-sm font-medium outline-none text-gray-800 placeholder-gray-400"
@@ -604,6 +716,85 @@ export default function Inbox() {
                  </div>
                </div>
             )}
+         </div>
+
+         {/* AI Lead Intelligence Block */}
+         <div className="px-6 py-2 pb-3">
+             {/* AI Summary Action */}
+             {!aiSummary ? (
+                <button 
+                  onClick={handleSummarize}
+                  disabled={loadingSummary}
+                  className="w-full mb-4 py-2 bg-gradient-to-r from-teal-500 to-emerald-500 text-white rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-95 flex items-center justify-center space-x-2 disabled:opacity-50"
+                >
+                  <Sparkles size={14} className={loadingSummary ? "animate-spin" : "animate-pulse"} />
+                  <span>{loadingSummary ? "Summarizing Lead..." : "✨ Generate AI Summary"}</span>
+                </button>
+             ) : (
+                <div className="mb-4 bg-gradient-to-br from-indigo-50 to-blue-50 border border-indigo-100 rounded-xl p-4 shadow-sm relative animate-fade-in">
+                   <div className="absolute top-0 right-0 p-1 bg-indigo-100 rounded-bl-lg">
+                      <Sparkles size={12} className="text-indigo-600" />
+                   </div>
+                   <h3 className="text-[10px] font-bold text-indigo-800 mb-3 tracking-widest uppercase">
+                     AI Conversation Summary
+                   </h3>
+                   <div className="space-y-3">
+                      <div>
+                         <span className="text-[9px] font-bold text-indigo-400 uppercase">🎯 Lead Goal</span>
+                         <p className="text-xs text-indigo-900 font-medium leading-relaxed">{aiSummary.goal}</p>
+                      </div>
+                      <div>
+                         <span className="text-[9px] font-bold text-indigo-400 uppercase">🚩 Pain Point</span>
+                         <p className="text-xs text-indigo-900 font-medium leading-relaxed">{aiSummary.painPoint}</p>
+                      </div>
+                      <div className="pt-2 border-t border-indigo-200/50">
+                         <span className="text-[9px] font-bold text-emerald-500 uppercase">🚀 Suggested Next Step</span>
+                         <p className="text-xs text-indigo-900 font-bold bg-white/50 p-2 rounded-lg mt-1 italic leading-relaxed border border-emerald-100">
+                           {aiSummary.nextStep}
+                         </p>
+                      </div>
+                   </div>
+                   <button 
+                     onClick={() => setAiSummary(null)}
+                     className="mt-3 text-[9px] font-bold text-indigo-400 hover:text-indigo-600 underline"
+                   >
+                     Refresh Summary
+                   </button>
+                </div>
+             )}
+
+             {(activeChat?.qualification || activeChat?.selectedProgram || activeChat?.preferredCallTime) && (
+                <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 shadow-sm relative overflow-hidden">
+                   <div className="absolute top-0 right-0 p-1 bg-emerald-100 rounded-bl-lg">
+                     <ShieldCheck size={12} className="text-emerald-600" />
+                   </div>
+                   <h3 className="text-[10px] font-bold text-emerald-800 mb-3 tracking-widest uppercase flex items-center">
+                     AI Lead Intelligence
+                   </h3>
+                  <div className="space-y-2.5">
+                     {activeChat.qualification && (
+                        <div className="flex flex-col">
+                           <span className="text-[9px] font-bold text-emerald-600/70 uppercase">Qualification</span>
+                           <span className="text-xs font-bold text-emerald-900">{activeChat.qualification}</span>
+                        </div>
+                     )}
+                     {activeChat.selectedProgram && (
+                        <div className="flex flex-col">
+                           <span className="text-[9px] font-bold text-emerald-600/70 uppercase">Selected Program</span>
+                           <span className="text-xs font-bold text-emerald-900 leading-tight">{activeChat.selectedProgram}</span>
+                        </div>
+                     )}
+                     {activeChat.preferredCallTime && (
+                        <div className="flex flex-col">
+                           <span className="text-[9px] font-bold text-emerald-600/70 uppercase">Preferred Call Time</span>
+                           <span className="text-xs font-bold text-emerald-900 leading-tight flex items-center">
+                             <Clock size={12} className="mr-1 mt-0.5" /> {activeChat.preferredCallTime}
+                           </span>
+                        </div>
+                     )}
+                   </div>
+                </div>
+             )}
          </div>
 
          <div className="px-6 py-2 pb-5">

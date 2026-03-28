@@ -1,0 +1,266 @@
+const MessageSchema = require('../models/tenant/Message');
+const ContactSchema = require('../models/tenant/Contact');
+const LeadSchema = require('../models/crm/Lead');
+const { getTenantConnection } = require('../config/db');
+const AIService = require('./ai.service');
+
+class PRDFlowService {
+  constructor() {
+    this.QUALIFICATION_OPTIONS = [
+      '10th Pass',
+      '12th Pass',
+      'Diploma Completed',
+      'Graduation Completed',
+      'Master Completed'
+    ];
+
+    this.PROGRAM_MAP = {
+      '10th Pass': ['Diploma in Engineering', 'IT Diploma', 'Animation Diploma'],
+      '12th Pass': {
+        'Trending': ['B.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
+        'Traditional': ['BBA', 'B.Com', 'BCA', 'B.Sc']
+      },
+      'Diploma Completed': ['Electrical Engineering', 'Civil Engineering', 'Mechanical Engineering'],
+      'Graduation Completed': {
+        'Trending Master': ['M.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
+        'Traditional Master': ['MBA', 'M.Com', 'MCA', 'M.Sc']
+      },
+      'Master Completed': ['PhD in Marketing', 'PhD in Civil Engineering', 'PhD in IT']
+    };
+  }
+
+  async processStep(tenantId, contact, messageText, waService, io) {
+    const tenantDb = getTenantConnection(tenantId);
+    const Contact = tenantDb.model('Contact', ContactSchema);
+    const Message = tenantDb.model('Message', MessageSchema);
+    
+    // Pass io and tenantId to score update calls
+    const triggerScoreUpdate = () => this.updateLeadScore(Contact, Message, contact._id, io, tenantId);
+    const Lead = tenantDb.model('Lead', LeadSchema);
+
+    const currentState = contact.currentFlowStep || 'START_PRD_FLOW';
+    console.log(`[PRD Flow] Processing Step: ${currentState} for ${contact.phone}`);
+
+    const saveAndEmit = async (type, payload, waResult) => {
+      const savedMsg = await Message.create({
+        contactId: contact._id,
+        messageId: waResult?.messages?.[0]?.id || `prd_${Date.now()}`,
+        direction: 'OUTBOUND',
+        type: type,
+        content: payload,
+        status: 'SENT'
+      });
+      if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact });
+    };
+
+    switch (currentState) {
+      case 'START_PRD_FLOW': {
+        const greeting = `Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀\n\nMay I know your name?`;
+        // PRD Step 1: Send Greeting Message + Image
+        const greetingImg = 'https://images.unsplash.com/photo-1523050335392-9ae95356c5e8?q=80&w=800&auto=format&fit=crop';
+        const res = await waService.sendMedia(contact.phone, 'image', null, greeting, greetingImg);
+        await saveAndEmit('image', greetingImg, res); // Save image URL for inbox display
+        
+        await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: 'AWAITING_NAME' });
+        triggerScoreUpdate();
+        break;
+      }
+
+      case 'AWAITING_NAME': {
+        const name = await AIService.extractData(message, 'NAME');
+        const reply = `Nice to meet you, ${name} 😊\n\n${name}, please select your last qualification 👇`;
+        
+        const res = await waService.sendListMessage(contact.phone, {
+          header: 'Education Qualification',
+          body: reply,
+          footer: 'Choose one option',
+          buttonText: 'Qualifications',
+          sections: [{
+            title: 'Options',
+            rows: this.QUALIFICATION_OPTIONS.map((opt, i) => ({ id: `qual_${i}`, title: opt }))
+          }]
+        });
+        
+        await saveAndEmit('interactive', reply, res);
+        await Contact.findByIdAndUpdate(contact._id, { 
+          name, 
+          currentFlowStep: 'AWAITING_QUALIFICATION',
+          [`flowVariables.name`]: name,
+          $push: { timeline: { eventType: 'AI_MILESTONE', description: `Name captured: ${name}`, timestamp: new Date() } }
+        });
+        triggerScoreUpdate();
+        break;
+      }
+
+      case 'AWAITING_QUALIFICATION': {
+        let qual = message;
+        // If it's a list reply, it might be in message if the controller passed it
+        if (!this.QUALIFICATION_OPTIONS.includes(qual)) {
+           qual = await AIService.extractData(message, 'QUALIFICATION');
+        }
+
+        if (!this.PROGRAM_MAP[qual]) {
+          const retry = `Please select a valid qualification from the list.`;
+          await waService.sendTextMessage(contact.phone, retry);
+          return;
+        }
+
+        const programs = this.PROGRAM_MAP[qual];
+        let reply = `${contact.name || 'Friend'}, here are the programs for ${qual}:`;
+        
+        if (Array.isArray(programs)) {
+          const res = await waService.sendListMessage(contact.phone, {
+            body: reply,
+            buttonText: 'Select Program',
+            sections: [{ title: 'Programs', rows: programs.map((p, i) => ({ id: `prog_${i}`, title: p })) }]
+          });
+          await saveAndEmit('interactive', reply, res);
+        } else {
+          // Nested categories like Trending/Traditional
+          reply += `\n\nWe have Trending and Traditional options.`;
+          const allRows = [];
+          Object.keys(programs).forEach(cat => {
+            programs[cat].forEach((p, i) => {
+              allRows.push({ id: `${cat}_${i}`, title: p, description: cat });
+            });
+          });
+
+          const res = await waService.sendListMessage(contact.phone, {
+            body: reply,
+            buttonText: 'Select Program',
+            sections: [{ title: 'Available Programs', rows: allRows.slice(0, 10) }] // WhatsApp limit 10 rows
+          });
+          await saveAndEmit('interactive', reply, res);
+        }
+
+        await Contact.findByIdAndUpdate(contact._id, { 
+          currentFlowStep: 'AWAITING_PROGRAM',
+          qualification: qual,
+          [`flowVariables.qualification`]: qual,
+          $push: { timeline: { eventType: 'AI_MILESTONE', description: `Qualification captured: ${qual}`, timestamp: new Date() } }
+        });
+        triggerScoreUpdate();
+        break;
+      }
+
+      case 'AWAITING_PROGRAM': {
+        const selectedProgram = message;
+        
+        // 1. Show Program Details (Placeholder)
+        await waService.sendTextMessage(contact.phone, `Great choice! ${selectedProgram} is an excellent program.`);
+
+        // 2. CONVERSION BOOSTERS
+        // Urgency
+        const urgency = `⚠️ Hurry ${contact.name || ''}!\n\nOnly limited seats available in this program 🚀\nAdmissions are filling fast for this intake.\n\nWould you like to secure your spot early?`;
+        await waService.sendTextMessage(contact.phone, urgency);
+
+        // Scholarship
+        const scholarship = `🎁 Good News ${contact.name || ''}!\n\nYou may be eligible for a Scholarship up to 30% 🎓\n\nOur counsellor will guide you on how to claim it.`;
+        await waService.sendTextMessage(contact.phone, scholarship);
+
+        // Success Proof (PRD Step 4)
+        const success = `🎉 Success Stories, ${contact.name || ''}!\n\nOur students are already working in top companies 🚀\nYou could be next!`;
+        const successImg = 'https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=800&auto=format&fit=crop';
+        const sRes = await waService.sendMedia(contact.phone, 'image', null, success, successImg);
+        await saveAndEmit('image', successImg, sRes); // Save image URL for inbox display
+
+        // 3. Ask Call Time
+        const timeMsg = `${contact.name || ''}, what is your preferred time for our counsellor to call you? 📞`;
+        const res = await waService.sendInteractiveButtonMessage(contact.phone, {
+          body: timeMsg,
+          buttons: ['Morning (10AM-1PM)', 'Afternoon (1PM-5PM)', 'Evening (5PM-8PM)']
+        });
+        await saveAndEmit('interactive', timeMsg, res);
+
+        await Contact.findByIdAndUpdate(contact._id, { 
+          currentFlowStep: 'AWAITING_CALL_TIME',
+          selectedProgram: selectedProgram,
+          [`flowVariables.selectedProgram`]: selectedProgram,
+          $push: { timeline: { eventType: 'AI_MILESTONE', description: `Program selected: ${selectedProgram}`, timestamp: new Date() } }
+        });
+        break;
+      }
+
+      case 'AWAITING_CALL_TIME': {
+        const preferredTime = message;
+        const vars = contact.flowVariables || {};
+        
+        // Final Summary
+        const summary = `Thank you ${contact.name || ''} 🙌\n\nHere are your details:\n🎓 Qualification: ${vars.qualification}\n📘 Selected Program: ${vars.selectedProgram}\n⏰ Preferred Time: ${preferredTime}\n\nOur counsellor will call you at your selected time 📞`;
+        await waService.sendTextMessage(contact.phone, summary);
+
+        // Create Lead in CRM
+        try {
+          await Lead.create({
+            name: contact.name || 'WhatsApp User',
+            phone: contact.phone,
+            qualification: vars.qualification,
+            selectedProgram: vars.selectedProgram,
+            preferredCallTime: preferredTime,
+            leadSource: 'whatsapp_ai_bot',
+            status: 'QUALIFIED'
+          });
+        } catch (err) {
+          console.error('[PRD Flow] Lead creation error:', err.message);
+        }
+
+        const helpMsg = `May I help you with anything else?`;
+        const res = await waService.sendInteractiveButtonMessage(contact.phone, {
+          body: helpMsg,
+          buttons: ['Yes', 'No']
+        });
+        await saveAndEmit('interactive', helpMsg, res);
+
+        await Contact.findByIdAndUpdate(contact._id, { 
+          currentFlowStep: 'AWAITING_ADDITIONAL_HELP',
+          preferredCallTime: preferredTime,
+          $push: { timeline: { eventType: 'AI_MILESTONE', description: `Counsellor call scheduled for: ${preferredTime}`, timestamp: new Date() } }
+        });
+        break;
+      }
+
+      case 'AWAITING_ADDITIONAL_HELP': {
+        if (message.toLowerCase().includes('yes')) {
+          const transferMsg = `Connecting you to our expert agent 👨💼`;
+          await waService.sendTextMessage(contact.phone, transferMsg);
+          // Flag for human agent
+          await Contact.findByIdAndUpdate(contact._id, { 
+            status: 'FOLLOW_UP',
+            $unset: { currentFlowStep: "" },
+            $push: { timeline: { eventType: 'HANDOVER', description: `User requested human assistance.`, timestamp: new Date() } }
+          });
+        } else {
+          const bye = `Thank you ${contact.name || ''}, have a great day! 🌟`;
+          await waService.sendTextMessage(contact.phone, bye);
+          await Contact.findByIdAndUpdate(contact._id, { 
+            $unset: { currentFlowStep: "" },
+            $push: { timeline: { eventType: 'AI_JOURNEY_COMPLETE', description: `User finished flow without assistance.`, timestamp: new Date() } }
+          });
+        }
+        break;
+      }
+
+      default:
+        // Reset or fallback
+        await Contact.findByIdAndUpdate(contact._id, { $unset: { currentFlowStep: "" } });
+        break;
+    }
+  }
+
+  async updateLeadScore(Contact, Message, contactId, io, tenantId) {
+    try {
+      const contact = await Contact.findById(contactId);
+      const messages = await Message.find({ contactId }).sort({ timestamp: -1 }).limit(10);
+      const { score, heatLevel } = await AIService.calculateLeadScore(contact, messages);
+      await Contact.findByIdAndUpdate(contactId, { score, heatLevel });
+      
+      if (io && tenantId) {
+        io.to(tenantId).emit('lead_score_updated', { contactId, score, heatLevel });
+      }
+    } catch (e) {
+      console.warn('[PRD Flow] Score update failed:', e.message);
+    }
+  }
+}
+
+module.exports = new PRDFlowService();

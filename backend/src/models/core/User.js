@@ -7,7 +7,8 @@ const UserSchema = new mongoose.Schema({
   password: { type: String, required: true },
   role: { type: String, enum: ['SUPER_ADMIN', 'ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'], default: 'SUPER_ADMIN' },
   tenantId: { type: String }, // Binds Agents and Admins to explicit SaaS instances
-  status: { type: String, enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' }
+  status: { type: String, enum: ['ACTIVE', 'INACTIVE'], default: 'ACTIVE' },
+  fcmTokens: [String] // Store multiple device tokens for cloud messaging
 }, { timestamps: true });
 
 UserSchema.pre('save', async function(next) {

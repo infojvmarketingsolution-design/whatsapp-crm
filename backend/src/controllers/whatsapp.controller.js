@@ -99,13 +99,48 @@ const handleIncomingMessage = async (req, res) => {
     const tenantDb = getTenantConnection(client.tenantId);
     const Contact = tenantDb.model('Contact', ContactSchema);
     const Message = tenantDb.model('Message', MessageSchema);
-    const io = req.app.get('io');
 
+    // 2. ⚡ New Feature: Handle Message Status Updates (Delivered, Read)
+    if (value.statuses && value.statuses.length > 0) {
+      console.log(`[Webhook Status] Found ${value.statuses.length} status updates for tenant ${client.tenantId}`);
+      for (const statusObj of value.statuses) {
+        const { id: messageId, status, recipient_id: phone } = statusObj;
+        console.log(`[Webhook Status] Msg ${messageId} -> ${status} for ${phone}`);
+        
+        // Update database (Meta status: delivered, read, failed, sent)
+        const updatedMsg = await Message.findOneAndUpdate(
+          { messageId: messageId },
+          { status: status.toUpperCase() },
+          { new: true }
+        );
+
+        if (updatedMsg) {
+          // Emit socket event for real-time tick updates
+          const io = req.app.get('io');
+          if (io) {
+            io.to(client.tenantId).emit('message_status_update', {
+              messageId,
+              status: status.toUpperCase(),
+              contactId: updatedMsg.contactId
+            });
+          }
+        }
+      }
+      return res.status(200).send('EVENT_RECEIVED');
+    }
+
+    // 3. Handle Incoming Messages (Text, Image, etc.)
+    const messages = value.messages;
+    if (!messages || messages.length === 0) {
+      return res.status(200).send('EVENT_RECEIVED');
+    }
+    
     // 2. Handle Messages
     if (value.messages && value.messages[0]) {
       const message = value.messages[0];
       const from = message.from;
       const msgId = message.id;
+      const io = req.app.get('io');
       
       let msgBody = "";
       if (message.text) {

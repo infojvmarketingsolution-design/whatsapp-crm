@@ -14,23 +14,66 @@ const STATUSES = [
 export default function Pipeline() {
   const navigate = useNavigate();
   const [contacts, setContacts] = useState([]);
+  const [agents, setAgents] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [newLeadName, setNewLeadName] = useState('');
   const [newLeadPhone, setNewLeadPhone] = useState('');
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const [qualificationFilter, setQualificationFilter] = useState('ALL');
+
+  const QUALIFICATIONS = [
+    '10th Pass',
+    '12th Pass',
+    'Diploma Completed',
+    'Graduation Completed',
+    'Master Completed'
+  ];
 
   useEffect(() => {
     fetchContacts();
-  }, []);
+    fetchAgents();
+  }, [qualificationFilter]);
 
   const fetchContacts = async () => {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch('/api/chat/contacts', {
+      let url = '/api/chat/contacts';
+      if (qualificationFilter !== 'ALL') url += `?qualification=${encodeURIComponent(qualificationFilter)}`;
+      
+      const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) setContacts(await res.json());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchAgents = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch('/api/agents', {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) setAgents(await res.json());
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleAssignAgent = async (contactId, agentId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      await fetch(`/api/chat/contacts/${contactId}/action`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'assign_agent', payload: { agentId } })
+      });
+      fetchContacts();
+      setActiveDropdown(null);
     } catch (err) {
       console.error(err);
     }
@@ -88,6 +131,17 @@ export default function Pipeline() {
         </div>
         <div className="flex space-x-3">
           <div className="relative">
+            <Filter className="absolute left-3 top-2.5 text-gray-400" size={16} />
+            <select 
+              value={qualificationFilter}
+              onChange={(e) => setQualificationFilter(e.target.value)}
+              className="bg-gray-50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm font-bold focus:ring-2 focus:ring-brand-light/50 outline-none appearance-none cursor-pointer text-gray-700"
+            >
+              <option value="ALL">All Qualifications</option>
+              {QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}
+            </select>
+          </div>
+          <div className="relative">
             <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <input type="text" placeholder="Search..." className="bg-gray-50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm font-medium focus:ring-2 focus:ring-brand-light/50 outline-none" />
           </div>
@@ -129,16 +183,42 @@ export default function Pipeline() {
                             <MoreVertical size={14}/>
                           </button>
                           {activeDropdown === c._id && (
-                             <div className="absolute right-0 top-6 mt-1 w-32 bg-white border border-gray-100 shadow-xl rounded-lg py-1 z-50">
-                               <button onClick={() => navigate('/inbox')} className="w-full text-left px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50">Open Chat</button>
-                               <button onClick={() => { setActiveDropdown(null); handleDrop({preventDefault:()=>null, dataTransfer:{getData:()=>c._id}}, 'CLOSED_LOST'); }} className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50">Mark Lost</button>
+                             <div className="absolute right-0 top-6 mt-1 w-48 bg-white border border-gray-100 shadow-xl rounded-lg py-1 z-50">
+                               <button onClick={() => navigate('/inbox')} className="w-full text-left px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 border-b border-gray-50">Open Chat</button>
+                               <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50/50">Assign Counsellor</div>
+                               <div className="max-h-32 overflow-y-auto">
+                                 {agents.map(agent => (
+                                    <button 
+                                      key={agent._id} 
+                                      onClick={() => handleAssignAgent(c._id, agent._id)}
+                                      className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-teal-50 border-l-2 transition-all ${c.assignedAgent?._id === agent._id ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-transparent text-gray-600'}`}
+                                    >
+                                      {agent.name}
+                                    </button>
+                                 ))}
+                               </div>
+                               <button onClick={() => { setActiveDropdown(null); handleDrop({preventDefault:()=>null, dataTransfer:{getData:()=>c._id}}, 'CLOSED_LOST'); }} className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 border-t border-gray-50">Mark Lost</button>
                              </div>
                           )}
                         </div>
                       </div>
-                      <div className="text-xs text-gray-500 font-medium flex items-center mb-3">
+                      <div className="text-xs text-gray-500 font-medium flex items-center mb-2">
                          <Phone size={12} className="mr-1.5 opacity-70"/> {c.phone}
                       </div>
+
+                      {(c.qualification || c.selectedProgram) && (
+                        <div className="flex flex-wrap gap-1 mb-3">
+                          {c.qualification && <span className="text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase">{c.qualification}</span>}
+                          {c.selectedProgram && <span className="text-[9px] font-bold bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 uppercase">{c.selectedProgram.substring(0, 20)}...</span>}
+                        </div>
+                      )}
+
+                      {c.assignedAgent && (
+                        <div className="flex items-center space-x-1.5 mb-3 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
+                          <div className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[8px] font-bold uppercase">{c.assignedAgent.name?.substring(0,2)}</div>
+                          <span className="text-[10px] font-bold text-gray-600 truncate">{c.assignedAgent.name}</span>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                         <span className="text-[10px] uppercase font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded">{c.source || 'Lead'}</span>
                         <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -5,6 +5,9 @@ const ContactSchema = require('../models/tenant/Contact');
 const Client = require('../models/core/Client');
 const WhatsAppService = require('./whatsapp.service');
 const MessageSchema = require('../models/tenant/Message');
+const AIService = require('./ai.service');
+const PRDFlowService = require('./prdFlow.service');
+const ClientSchema = require('../models/core/Client');
 
 /**
  * Traverses a visually-built ReactFlow JSON graph synchronously.
@@ -227,7 +230,21 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      const dbContact = await Contact.findOne({ phone: contact.phone });
      const activeContact = dbContact ? dbContact.toObject() : contact;
 
-     // 1. Session Resume
+     const client = await Client.findOne({ tenantId });
+     const waService = new WhatsAppService({
+         accessToken: client.whatsappConfig.accessToken,
+         phoneNumberId: client.whatsappConfig.phoneNumberId
+     });
+
+     // 0. PRD Flow Session Resume
+     const prdStates = ['START_PRD_FLOW', 'AWAITING_NAME', 'AWAITING_QUALIFICATION', 'AWAITING_PROGRAM', 'AWAITING_CALL_TIME', 'AWAITING_ADDITIONAL_HELP'];
+     if (activeContact.currentFlowStep && prdStates.includes(activeContact.currentFlowStep)) {
+         console.log(`[Flow Engine] Resuming PRD AI Flow for ${activeContact.phone}: ${activeContact.currentFlowStep}`);
+         await PRDFlowService.processStep(tenantId, activeContact, replyValue || messageText, waService, io);
+         return;
+     }
+
+     // 1. Standard Flow Session Resume
      if (activeContact.currentFlowStep && activeContact.lastFlowId) {
          console.log(`[Flow Engine] Resuming Session for ${activeContact.phone}: ${activeContact.currentFlowStep}`);
          const activeFlow = await Flow.findById(activeContact.lastFlowId);
@@ -300,7 +317,26 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          return;
      }
 
-     // 4. Catch-all Fallback
+     // 4. AI Intent Detection (PRD Requirement)
+     console.log(`[Flow Engine] Analyzing AI Intent for: "${messageText}"`);
+     const intent = await AIService.detectIntent(messageText);
+     console.log(`[Flow Engine] AI Detected Intent: ${intent}`);
+
+     if (intent === 'START_FLOW') {
+         await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
+         return;
+     } else if (intent === 'AGENT_TRANSFER') {
+         const msg = "Sure! I'm connecting you to one of our expert agents. Please wait a moment... 👨💼";
+         await waService.sendTextMessage(activeContact.phone, msg);
+         await Contact.findOneAndUpdate({ phone: activeContact.phone }, { status: 'FOLLOW_UP' });
+         return;
+     } else if (intent === 'QUESTION') {
+         const answer = await AIService.askAI(messageText, "You are JV Marketing Education Support assistant.");
+         await waService.sendTextMessage(activeContact.phone, answer);
+         return;
+     }
+
+     // 5. Catch-all Fallback
      console.log(`[Flow Engine] No match found. Checking for Catch-all...`);
      const catchAllFlow = await Flow.findOne({ 
          status: 'ACTIVE', 
@@ -314,6 +350,10 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      } else {
          console.log(`[Flow Engine] No catch-all flow found. Silent.`);
      }
+
+     // FINAL: Trigger universal score update for every message
+     // This catches buying signals even in manual/casual conversation
+     await PRDFlowService.updateLeadScore(Contact, Message, activeContact._id, io, tenantId);
 
   } catch (err) {
      console.error('[Flow Engine] Logic Error:', err);

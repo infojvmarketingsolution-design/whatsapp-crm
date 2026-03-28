@@ -12,11 +12,34 @@ import {
 const AdminAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
+  const [qualStats, setQualStats] = useState([]);
+  const [heatStats, setHeatStats] = useState([]);
+  const [avgScore, setAvgScore] = useState(0);
   const [timeRange, setTimeRange] = useState(7);
 
   useEffect(() => {
     setLoading(true);
-    // Simulated fetch - in real app, fetch from /api/clients/analytics/detailed?days=timeRange
+    const fetchStats = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const tenantId = localStorage.getItem('tenantId');
+        const res = await fetch('/api/chat/stats/contacts', {
+          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+        });
+        if (res.ok) {
+           const data = await res.json();
+           setQualStats(data.qualifications || []);
+           setHeatStats(data.heatLevels || []);
+           setAvgScore(data.avgScore || 0);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchStats();
+    
+    // Simulated fetch for other metrics
     setTimeout(() => {
       setData({
         messagesSent: timeRange === 7 ? 12540 : 54200,
@@ -119,6 +142,61 @@ const AdminAnalytics = () => {
                     <span className="text-[10px] font-bold text-slate-400 mt-4 uppercase">Day {i+1}</span>
                 </div>
             ))}
+        </div>
+      </div>
+
+      <div className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+           <h3 className="text-lg font-bold text-slate-900 mb-6">Qualification Breakdown</h3>
+           <div className="space-y-4">
+              {qualStats.length === 0 ? (
+                <p className="text-slate-400 text-sm italic">No qualification data captured yet.</p>
+              ) : qualStats.map((stat, i) => (
+                <div key={i} className="flex flex-col">
+                   <div className="flex justify-between items-center mb-1.5 text-xs font-bold text-slate-600 uppercase tracking-wide">
+                      <span>{stat._id}</span>
+                      <span>{stat.count} Leads</span>
+                   </div>
+                   <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div className="bg-teal-500 h-full rounded-full transition-all duration-500" style={{ width: `${(stat.count / Math.max(...qualStats.map(s => s.count))) * 100}%` }}></div>
+                   </div>
+                </div>
+              ))}
+           </div>
+        </div>
+
+        <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm">
+           <h3 className="text-lg font-bold text-slate-900 mb-6 font-display">Lead Priority Distribution</h3>
+           <div className="space-y-5">
+              {['Hot', 'Warm', 'Cold'].map(level => {
+                const stat = heatStats.find(h => h._id === level) || { count: 0 };
+                const total = heatStats.reduce((acc, h) => acc + h.count, 0) || 1;
+                const percentage = Math.round((stat.count / total) * 100);
+                return (
+                  <div key={level} className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className={`p-1.5 rounded-lg ${level === 'Hot' ? 'bg-red-50 text-red-600' : level === 'Warm' ? 'bg-orange-50 text-orange-600' : 'bg-slate-50 text-slate-400'}`}>
+                        <Zap size={14} fill={level !== 'Cold' ? 'currentColor' : 'none'} />
+                      </div>
+                      <span className="text-sm font-bold text-slate-700">{level} Leads</span>
+                    </div>
+                    <div className="flex items-center space-x-4">
+                      <div className="w-24 bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full ${level === 'Hot' ? 'bg-red-500' : level === 'Warm' ? 'bg-orange-500' : 'bg-slate-300'}`} 
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-xs font-black text-slate-900 w-8 text-right">{percentage}%</span>
+                    </div>
+                  </div>
+                );
+              })}
+           </div>
+           <div className="mt-8 pt-6 border-t border-slate-50 flex justify-between items-center">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Avg Conversion Score</span>
+              <span className="text-2xl font-black text-slate-900">{Math.round(avgScore)}<span className="text-sm font-bold text-slate-300 ml-1">/100</span></span>
+           </div>
         </div>
       </div>
     </div>

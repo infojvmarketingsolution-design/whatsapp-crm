@@ -19,9 +19,12 @@ const createContact = async (req, res) => {
 
 const getContacts = async (req, res) => {
   try {
-    const { status } = req.query;
+    const { status, qualification } = req.query;
     const Contact = req.tenantDb.model('Contact', ContactSchema);
-    const filter = status ? { status } : {};
+    const filter = {};
+    if (status) filter.status = status;
+    if (qualification) filter.qualification = qualification;
+
     const contacts = await Contact.find(filter).sort({ lastMessageAt: -1 }).populate('assignedAgent', 'name email');
     res.json(contacts);
   } catch (error) {
@@ -128,13 +131,37 @@ const getMessages = async (req, res) => {
 
 const sendMessage = async (req, res) => {
   try {
-    const { contactId, content } = req.body;
-    console.log(`[POST /send] ContactId: ${contactId}, Content: ${content}`);
-    let contact;
+    const { contactId, content, isInternal } = req.body;
+    console.log(`[POST /send] ContactId: ${contactId}, Content: ${content}, Internal: ${isInternal}`);
     
     const Contact = req.tenantDb.model('Contact', ContactSchema);
-    contact = await Contact.findById(contactId);
+    const Message = req.tenantDb.model('Message', MessageSchema);
+    const User = require('../models/core/User');
+
+    const contact = await Contact.findById(contactId);
     if (!contact) return res.status(404).json({ error: 'Contact not found' });
+
+    // Handle Internal Team Note
+    if (isInternal) {
+      const user = await User.findById(req.userId);
+      const internalMsg = await Message.create({
+        contactId: contact._id,
+        messageId: `note_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        direction: 'OUTBOUND',
+        type: 'text',
+        content: content,
+        status: 'SENT',
+        isInternal: true,
+        sender: { id: user?._id, name: user?.name || 'Agent' }
+      });
+
+      // Emit to socket for real-time team view
+      if (req.app.get('io')) {
+        req.app.get('io').to(req.tenantId).emit('new_message', { ...internalMsg._doc, contact });
+      }
+
+      return res.json(internalMsg);
+    }
 
     // 2. Get Client credentials
     let client = await Client.findOne({ tenantId: req.tenantId });
@@ -207,7 +234,6 @@ const sendMessage = async (req, res) => {
        status: isFailed ? 'FAILED' : 'SENT'
     };
     
-    const Message = req.tenantDb.model('Message', MessageSchema);
     let newMessage = await Message.create(msgData);
 
     // 4b. Update Contact's Last Message Timestamp
@@ -241,10 +267,24 @@ const getDashboardStats = async (req, res) => {
     
     const totalCampaigns = await Campaign.countDocuments({});
     
+    // Qualified Leads: contacts with a qualification field set
+    const qualifiedLeads = await Contact.countDocuments({ qualification: { $exists: true, $ne: null } });
+    
+    // Waiting for Agent: FOLLOW_UP status
+    const waitingForAgent = await Contact.countDocuments({ status: 'FOLLOW_UP' });
+    
+    // Priority Leads: Hot and Warm
+    const hotLeads = await Contact.countDocuments({ heatLevel: 'Hot' });
+    const warmLeads = await Contact.countDocuments({ heatLevel: 'Warm' });
+    
     res.json({
       leads: totalContacts,
       activeChats,
-      campaigns: totalCampaigns
+      campaigns: totalCampaigns,
+      qualifiedLeads,
+      waitingForAgent,
+      hotLeads,
+      warmLeads
     });
   } catch (error) {
     console.error(`[GET /stats] FAILED! Error:`, error);
@@ -252,4 +292,87 @@ const getDashboardStats = async (req, res) => {
   }
 };
 
-module.exports = { getContacts, createContact, getMessages, sendMessage, performContactAction, getDashboardStats };
+const getContactStats = async (req, res) => {
+  try {
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+    const qualStats = await Contact.aggregate([
+      { $match: { qualification: { $exists: true, $ne: null } } },
+      { $group: { _id: "$qualification", count: { $sum: 1 } } }
+    ]);
+    
+    const heatStats = await Contact.aggregate([
+      { $group: { _id: "$heatLevel", count: { $sum: 1 } } }
+    ]);
+
+    res.json({
+      qualifications: qualStats,
+      heatLevels: heatStats,
+      avgScore: (await Contact.aggregate([{ $group: { _id: null, avg: { $avg: "$score" } } }]))[0]?.avg || 0
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getAgents = async (req, res) => {
+  try {
+    const User = require('../models/core/User');
+    const agents = await User.find({ tenantId: req.tenantId, status: 'ACTIVE' }).select('name email role');
+    res.json(agents);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const updateFcmToken = async (req, res) => {
+  try {
+    const User = require('../models/core/User');
+    const { token, action } = req.body; // action: 'register' or 'unregister'
+
+    if (action === 'register') {
+      await User.findByIdAndUpdate(req.userId, { $addToSet: { fcmTokens: token } });
+    } else {
+      await User.findByIdAndUpdate(req.userId, { $pull: { fcmTokens: token } });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const summarizeLead = async (req, res) => {
+  try {
+    const { contactId } = req.params;
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+    const Message = req.tenantDb.model('Message', MessageSchema);
+    const aiService = require('../services/ai.service');
+
+    const contact = await Contact.findById(contactId);
+    if (!contact) return res.status(404).json({ error: 'Contact not found' });
+
+    // Fetch last 50 messages for context
+    const messages = await Message.find({ contactId }).sort({ timestamp: -1 }).limit(50);
+    const summary = await aiService.summarizeConversation(messages.reverse(), contact);
+
+    if (!summary) {
+      return res.status(500).json({ message: 'Failed to generate summary' });
+    }
+
+    res.json(summary);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  getContacts,
+  getMessages,
+  sendMessage,
+  performContactAction,
+  createContact,
+  getDashboardStats,
+  getContactStats,
+  getAgents,
+  updateFcmToken,
+  summarizeLead
+};

@@ -9,9 +9,13 @@ import CampaignsScreen from '../screens/main/CampaignsScreen';
 
 import { Colors } from '../theme/colors';
 
+import { useCrmStore } from '../store/crmStore';
+
 const Tab = createBottomTabNavigator();
 
 export default function MainTabs() {
+  const waitingCount = useCrmStore(state => state.waitingCount);
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -32,7 +36,14 @@ export default function MainTabs() {
       })}
     >
       <Tab.Screen name="Dashboard" component={DashboardScreen} />
-      <Tab.Screen name="Chats" component={ChatListScreen} />
+      <Tab.Screen 
+        name="Chats" 
+        component={ChatListScreen} 
+        options={{ 
+          tabBarBadge: waitingCount > 0 ? waitingCount : undefined,
+          tabBarBadgeStyle: { backgroundColor: '#ff9800' }
+        }} 
+      />
       <Tab.Screen name="Contacts" component={ContactsScreen} />
       <Tab.Screen name="Campaigns" component={CampaignsScreen} />
     </Tab.Navigator>

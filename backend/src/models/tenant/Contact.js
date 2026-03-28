@@ -22,7 +22,13 @@ const ContactSchema = new mongoose.Schema({
   lastMessageAt: { type: Date },
   currentFlowStep: { type: String }, // Node ID for session tracking
   lastFlowId: { type: mongoose.Schema.Types.ObjectId, ref: 'Flow' },
-  flowVariables: { type: mongoose.Schema.Types.Mixed, default: {} }
+  flowVariables: { type: mongoose.Schema.Types.Mixed, default: {} },
+  // AI Bot & PRD Specific explicit fields
+  qualification: { type: String },
+  selectedProgram: { type: String },
+  preferredCallTime: { type: String },
+  score: { type: Number, default: 0 },
+  heatLevel: { type: String, enum: ['Cold', 'Warm', 'Hot'], default: 'Cold' }
 }, { timestamps: true });
 
 // Exporting Schema, not model, because models are bound to tenant DB dynamically

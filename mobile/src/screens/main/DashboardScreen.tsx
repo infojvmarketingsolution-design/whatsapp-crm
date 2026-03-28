@@ -1,34 +1,22 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { Text, Card, useTheme, ActivityIndicator } from 'react-native-paper';
-import { apiClient } from '../../services/api';
+import { useCrmStore } from '../../store/crmStore';
 
 export default function DashboardScreen() {
   const theme = useTheme();
-  const [stats, setStats] = useState({ leads: 0, activeChats: 0, campaigns: 0 });
-  const [loading, setLoading] = useState(true);
+  const { stats, loading, fetchStats } = useCrmStore();
   const [refreshing, setRefreshing] = useState(false);
-
-  const fetchStats = async () => {
-    try {
-      const res = await apiClient.get('/chat/stats');
-      setStats(res.data);
-    } catch (e) {
-      console.warn('Failed to fetch dashboard stats', e);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   useEffect(() => {
     fetchStats();
   }, []);
 
-  const onRefresh = useCallback(() => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    fetchStats();
-  }, []);
+    await fetchStats();
+    setRefreshing(false);
+  }, [fetchStats]);
 
   if (loading && !refreshing) {
     return (
@@ -64,13 +52,35 @@ export default function DashboardScreen() {
       </View>
 
       <View style={[styles.row, { marginTop: 12 }]}>
-        <Card style={styles.card}>
-          <Card.Title title="Campaigns" />
+        <Card style={[styles.card, { backgroundColor: '#e8f5e9' }]}>
+          <Card.Title title="Qualified Leads" titleStyle={{ color: '#2e7d32' }} />
           <Card.Content>
-            <Text variant="headlineSmall" style={styles.statValue}>{stats.campaigns}</Text>
+            <Text variant="headlineSmall" style={[styles.statValue, { color: '#2e7d32' }]}>{stats.qualifiedLeads || 0}</Text>
           </Card.Content>
         </Card>
-        <View style={styles.card} /> 
+        
+        <Card style={[styles.card, { backgroundColor: '#fff3e0' }]}>
+          <Card.Title title="Waiting Agent" titleStyle={{ color: '#e65100' }} />
+          <Card.Content>
+            <Text variant="headlineSmall" style={[styles.statValue, { color: '#e65100' }]}>{stats.waitingForAgent || 0}</Text>
+          </Card.Content>
+        </Card>
+      </View>
+
+      <View style={[styles.row, { marginTop: 12, marginBottom: 20 }]}>
+        <Card style={[styles.card, { backgroundColor: '#ffebee' }]}>
+          <Card.Title title="🔥 Hot Leads" titleStyle={{ color: '#c62828' }} />
+          <Card.Content>
+            <Text variant="headlineSmall" style={[styles.statValue, { color: '#c62828' }]}>{stats.hotLeads || 0}</Text>
+          </Card.Content>
+        </Card>
+        
+        <Card style={styles.card}>
+          <Card.Title title="Warm Leads" />
+          <Card.Content>
+            <Text variant="headlineSmall" style={styles.statValue}>{stats.warmLeads || 0}</Text>
+          </Card.Content>
+        </Card>
       </View>
     </ScrollView>
   );

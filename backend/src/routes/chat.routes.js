@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getContacts, getMessages, sendMessage, performContactAction, createContact, getDashboardStats } = require('../controllers/chat.controller');
+const { getContacts, getMessages, sendMessage, performContactAction, createContact, getDashboardStats, getContactStats } = require('../controllers/chat.controller');
 const tenantMiddleware = require('../middleware/tenant');
 const { protect } = require('../middleware/auth');
 const multer = require('multer');
@@ -12,7 +12,11 @@ router.get('/contacts', getContacts);
 router.post('/contacts', createContact);
 router.put('/contacts/:contactId/action', performContactAction);
 router.get('/stats', getDashboardStats);
+router.get('/stats/contacts', getContactStats);
 router.get('/messages/:contactId', getMessages);
 router.post('/send', upload.single('media'), sendMessage);
+router.get('/agents', getAgents);
+router.post('/fcm-token', updateFcmToken);
+router.get('/summarize/:contactId', summarizeLead);
 
 module.exports = router;

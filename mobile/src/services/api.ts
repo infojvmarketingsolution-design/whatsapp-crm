@@ -24,3 +24,11 @@ apiClient.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+export const crmApi = {
+  getAgents: () => apiClient.get('/chat/agents'),
+  performAction: (contactId: string, action: string, payload: any) => 
+    apiClient.put(`/chat/contacts/${contactId}/action`, { action, payload }),
+  updatePushToken: (token: string, action: 'register' | 'unregister') => 
+    apiClient.post('/chat/fcm-token', { token, action }),
+};
