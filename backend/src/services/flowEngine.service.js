@@ -250,6 +250,19 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      const settings = await Settings.findOne({ tenantId });
      const botMode = settings?.automation?.botMode || 'PRD';
 
+     // 🌟 NEW: Forced Restart Logic for Greeting Keywords
+     const greetingKeywords = ['hi', 'hello', 'start', 'get started', 'hey', 'ola', 'menu', 'reset'];
+     const isGreeting = greetingKeywords.includes(messageText.toLowerCase().trim());
+     
+     if (isGreeting && !replyValue) {
+         console.log(`[Flow Engine] 👋 Greeting detected from ${activeContact.phone}. Resetting session for fresh start.`);
+         await Contact.findOneAndUpdate({ phone: activeContact.phone }, { 
+             $unset: { currentFlowStep: "", lastFlowId: "" } 
+         });
+         activeContact.currentFlowStep = null;
+         activeContact.lastFlowId = null;
+     }
+
      // 0. PRD Flow Session Resume
      const prdStates = ['START_PRD_FLOW', 'AWAITING_NAME', 'AWAITING_QUALIFICATION', 'AWAITING_PROGRAM', 'AWAITING_CALL_TIME', 'AWAITING_ADDITIONAL_HELP'];
      if (activeContact.currentFlowStep && prdStates.includes(activeContact.currentFlowStep)) {
