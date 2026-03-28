@@ -266,14 +266,18 @@ export default function AIChatbot() {
             <p className="text-sm text-gray-500 mt-1 font-medium">Design your automated conversation flow in real-time.</p>
           </div>
           <div className="flex items-center space-x-4">
-             <div className={`px-4 py-2 rounded-xl flex items-center space-x-2 border transition-all ${settings.botEnabled ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-gray-100 border-gray-200 text-gray-500'}`}>
+             <button 
+               onClick={() => setSettings({ ...settings, botEnabled: !settings.botEnabled })}
+               className={`px-4 py-2 rounded-xl flex items-center space-x-2 border transition-all cursor-pointer hover:shadow-md active:scale-95 ${settings.botEnabled ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-gray-100 border-gray-200 text-gray-500'}`}
+               title={settings.botEnabled ? "Click to Disable Bot" : "Click to Enable Bot"}
+             >
                 <div className={`w-2 h-2 rounded-full ${settings.botEnabled ? 'bg-teal-500 animate-pulse' : 'bg-gray-400'}`}></div>
                 <span className="text-xs font-black uppercase tracking-widest">{settings.botEnabled ? 'Bot Active' : 'Bot Disabled'}</span>
-             </div>
+             </button>
              <button 
                onClick={handleSave}
                disabled={saving}
-               className="px-8 py-3 bg-[var(--theme-bg)] text-white rounded-xl text-sm font-bold hover:opacity-90 transition shadow-lg shadow-teal-500/20 flex items-center disabled:opacity-50"
+               className="px-8 py-3 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-700 transition shadow-lg shadow-teal-500/20 flex items-center disabled:opacity-50"
              >
                {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={18} className="mr-2" />}
                Publish Bot Changes
@@ -476,6 +480,13 @@ export default function AIChatbot() {
 
         </div>
         )}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+          style={{ display: 'none' }} 
+          accept="image/*" 
+        />
       </div>
     </div>
   );
