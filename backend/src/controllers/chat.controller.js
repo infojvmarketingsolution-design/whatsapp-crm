@@ -5,6 +5,7 @@ const Client = require('../models/core/Client');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
+const CampaignSchema = require('../models/tenant/Campaign');
 
 const createContact = async (req, res) => {
   try {
@@ -227,4 +228,28 @@ const sendMessage = async (req, res) => {
   }
 };
 
-module.exports = { getContacts, createContact, getMessages, sendMessage, performContactAction };
+const getDashboardStats = async (req, res) => {
+  try {
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+    const Campaign = req.tenantDb.model('Campaign', CampaignSchema);
+    
+    const totalContacts = await Contact.countDocuments({});
+    
+    // Active chats: contacts with activity in the last 24 hours
+    const activeThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const activeChats = await Contact.countDocuments({ lastMessageAt: { $gte: activeThreshold } });
+    
+    const totalCampaigns = await Campaign.countDocuments({});
+    
+    res.json({
+      leads: totalContacts,
+      activeChats,
+      campaigns: totalCampaigns
+    });
+  } catch (error) {
+    console.error(`[GET /stats] FAILED! Error:`, error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getContacts, createContact, getMessages, sendMessage, performContactAction, getDashboardStats };
