@@ -35,6 +35,11 @@ class PRDFlowService {
   makeAbsolute(url) {
     if (!url || typeof url !== 'string' || url.trim() === '') return '';
     const trimmedUrl = url.trim();
+    
+    // ✅ Fix: Don't prepend domain to Meta Media IDs (Numeric strings)
+    // This allows users to use IDs from their Meta Dashboard directly
+    if (/^\d+$/.test(trimmedUrl)) return trimmedUrl;
+    
     if (trimmedUrl.startsWith('http')) return trimmedUrl;
     
     // Use BASE_URL if available, otherwise fallback to wapipulse.com
@@ -114,8 +119,9 @@ class PRDFlowService {
         // PRD Step 1: Send Greeting Message
         if (greetingImg) {
           try {
-            console.log(`[PRD Flow] Sending Media Greeting to ${contact.phone}. Image: ${greetingImg}`);
-            const res = await waService.sendMedia(contact.phone, 'image', null, greeting, greetingImg);
+            const isId = /^\d+$/.test(greetingImg);
+            console.log(`[PRD Flow] Sending Media Greeting to ${contact.phone}. ${isId ? 'Media ID' : 'URL'}: ${greetingImg}`);
+            const res = await waService.sendMedia(contact.phone, 'image', isId ? greetingImg : null, greeting, isId ? null : greetingImg);
             console.log(`[PRD Flow] ✅ Media Greeting Sent Successfully to ${contact.phone}`);
             await saveAndEmit('image', greetingImg, res);
           } catch (mediaErr) {
@@ -250,8 +256,9 @@ class PRDFlowService {
         
         if (successImg) {
           try {
-            console.log(`[PRD Flow] Sending Success Image to ${contact.phone}...`);
-            const sRes = await waService.sendMedia(contact.phone, 'image', null, success, successImg);
+            const isId = /^\d+$/.test(successImg);
+            console.log(`[PRD Flow] Sending Success media to ${contact.phone}. ${isId ? 'Media ID' : 'URL'}: ${successImg}`);
+            const sRes = await waService.sendMedia(contact.phone, 'image', isId ? successImg : null, success, isId ? null : successImg);
             await saveAndEmit('image', successImg, sRes);
           } catch (mediaErr) {
             console.error(`[PRD Flow] ❌ Success Image Failed for ${contact.phone}:`, mediaErr.message);

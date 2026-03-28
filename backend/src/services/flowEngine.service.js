@@ -276,78 +276,28 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          }
      }
 
-     // 1.5 Fast-Track Greeting (FOR ALL CONTACTS WITHOUT AN ACTIVE SESSION)
-     // Skip AI latency for simple greetings to provide instant response
-     const msg = (messageText || "").toLowerCase().trim();
-     const fastGreets = ['hi', 'hello', 'hey', 'start', 'interested', 'demo'];
-     if (!activeContact.currentFlowStep && fastGreets.includes(msg)) {
-         console.log(`[Flow Engine] 🚀 Universal Fast-Track Greeting triggered for "${msg}" (Phone: ${activeContact.phone})`);
-         await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
-         return;
-     }
+      // 4. TRIGGER PRD GREETING FLOW
+      // ✅ MISSION: If the user has no active flow session, ALWAYS start with the PRD Greeting (Image + Text + Name Prompt)
+      // This ensures that even if they ask a question first, they get the professional welcome.
+      if (!activeContact.currentFlowStep) {
+          console.log(`[Flow Engine] 🤖 Starting AI Greeting Journey for ${activeContact.phone} (No active session detected)`);
+          await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
+          return;
+      }
 
-     // 2. New Contact Trigger (Flow Builder)
-     if (isNewContact) {
-         console.log(`[Flow Engine] 🆕 New Contact detected: ${activeContact.phone}. Checking for NEW_MESSAGE flow...`);
-         const welcomeFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
-         if (welcomeFlow) {
-             console.log(`[Flow Engine] ✅ Triggered Welcome Flow: "${welcomeFlow.name}"`);
-             executeFlow(tenantId, welcomeFlow._id, activeContact, io);
-             return;
-         } else {
-             // ⚡ FIX: If no custom welcome flow, automatically trigger the PRD AI Greeting for the new contact
-             // This ensures that even if they say something other than "Hi", they get the greeting text+image
-             console.log(`[Flow Engine] No custom welcome flow found. Triggering AI Greeting for NEW contact: ${activeContact.phone}`);
-             await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
-             return;
-         }
-     }
-
-     // 3. Keyword Match
-     console.log(`[Flow Engine] Searching for KEYWORD match for "${messageText}"...`);
-     const activeFlows = await Flow.find({ status: 'ACTIVE', triggerType: 'KEYWORD' });
-     console.log(`[Flow Engine] Found ${activeFlows.length} active keyword flows to check.`);
-     
-     let matchedFlow = null;
-     for (const flow of activeFlows) {
-         const keywords = (flow.triggerKeywords || []).filter(kw => kw.trim() !== '');
-         if (keywords.length === 0) continue;
-
-         console.log(`[Flow Engine] Checking flow "${flow.name}" keywords: [${keywords.join(', ')}]`);
-         const isMatch = keywords.some(k => {
-             if (flow.isSmartMatch) return messageText.toLowerCase().includes(k.toLowerCase());
-             return messageText.toLowerCase() === k.toLowerCase();
-         });
-
-         if (isMatch) {
-             matchedFlow = flow;
-             console.log(`[Flow Engine] 🎯 Match found! Triggering flow: "${flow.name}"`);
-             break;
-         }
-     }
-
-     if (matchedFlow) {
-         executeFlow(tenantId, matchedFlow._id, activeContact, io);
-         return;
-     }
-
-     // 4. AI Intent Detection (PRD Requirement)
-     console.log(`[Flow Engine] Analyzing AI Intent for: "${messageText}"`);
-     const intent = await AIService.detectIntent(messageText);
-     console.log(`[Flow Engine] AI Detected Intent: ${intent}`);
-
-     // TRIGGER PRD GREETING FLOW
-     // Trigger if: AI says START_FLOW OR (No Active Session AND AI is UNCLEAR)
-     if (intent === 'START_FLOW' || (!activeContact.currentFlowStep && intent === 'UNCLEAR')) {
-         console.log(`[Flow Engine] Triggering PRD Greeting Flow (Intent: ${intent}, No Active Session: ${!activeContact.currentFlowStep})`);
-         await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
-         return;
-     } else if (intent === 'AGENT_TRANSFER') {
-         const msg = "Sure! I'm connecting you to one of our expert agents. Please wait a moment... 👨💼";
-         await waService.sendTextMessage(activeContact.phone, msg);
-         await Contact.findOneAndUpdate({ phone: activeContact.phone }, { status: 'FOLLOW_UP' });
-         return;
-     } else if (intent === 'QUESTION') {
+      // 5. IF SESSION IS ACTIVE (or manually triggered), Process based on AI Intent
+      const intent = await AIService.detectIntent(messageText);
+      if (intent === 'AGENT_TRANSFER') {
+          console.log(`[Flow Engine] 👨‍💼 Agent Transfer requested by ${activeContact.phone}`);
+          const transferPrompt = "Transferring you to a human agent... 👨‍💻";
+          await waService.sendTextMessage(activeContact.phone, transferPrompt);
+          
+          await Contact.findByIdAndUpdate(dbContact._id, { 
+              status: 'FOLLOW_UP',
+              $set: { lastInteraction: new Date() }
+          });
+          return;
+      } else if (intent === 'QUESTION') {
          const answer = await AIService.askAI(messageText, "You are JV Marketing Education Support assistant.");
          await waService.sendTextMessage(activeContact.phone, answer);
          return;
