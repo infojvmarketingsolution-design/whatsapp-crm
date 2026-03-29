@@ -17,39 +17,42 @@ class PRDFlowService {
       { id: 'step_5', type: 'SUCCESS_PROOF', title: 'Success & Proof', message: '🎉 Success Stories, {{name}}!\n\nOur students are working in top companies 🚀', image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=60' },
       { id: 'step_6', type: 'CALL_TIME', title: 'Consultation Call', message: '{{name}}, what is your preferred time for a call? 📞', options: ['Morning', 'Afternoon', 'Evening'] }
     ];
+    this.activeTimers = new Map();
+  }
+
+  clearTimer(contactId) {
+    if (this.activeTimers.has(contactId)) {
+      clearTimeout(this.activeTimers.get(contactId));
+      this.activeTimers.delete(contactId);
+    }
   }
 
   makeAbsolute(url) {
     if (!url || typeof url !== 'string' || url.trim() === '') return '';
     const trimmedUrl = url.trim();
     
-    // ✅ Fix: Don't prepend domain to Meta Media IDs (Numeric strings)
-    // This allows users to use IDs from their Meta Dashboard directly
     if (/^\d+$/.test(trimmedUrl)) return trimmedUrl;
     
     if (trimmedUrl.startsWith('http')) return trimmedUrl;
     
-    // Use BASE_URL if available, otherwise fallback to wapipulse.com
     let baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').trim();
-    baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
+    baseUrl = baseUrl.replace(/\/$/, ''); 
     
     const normalizedPath = trimmedUrl.startsWith('/') ? trimmedUrl : `/${trimmedUrl}`;
     return `${baseUrl}${normalizedPath}`;
   }
 
-  async processStep(tenantId, contact, messageText, waService, io) {
+  async processStep(tenantId, contact, messageText, waService, io, isAutoFollowup = false) {
     const tenantDb = getTenantConnection(tenantId);
     const Contact = tenantDb.model('Contact', ContactSchema);
     const Message = tenantDb.model('Message', MessageSchema);
-    
-    // Pass io and tenantId to score update calls
-    const triggerScoreUpdate = () => this.updateLeadScore(Contact, Message, contact._id, io, tenantId);
     const Lead = tenantDb.model('Lead', LeadSchema);
+    
+    this.clearTimer(contact._id.toString());
 
     const currentState = contact.currentFlowStep || 'START_PRD_FLOW';
-    console.log(`[PRD Flow] Processing Step: ${currentState} for ${contact.phone}`);
+    console.log(`[PRD Flow] Processing Step: ${currentState} for ${contact.phone} | AutoFollowup: ${isAutoFollowup}`);
 
-    // Fetch dynamic prompts from settings
     let prompts = {
       greetingMessage: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀',
       greetingImage: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=60',
@@ -65,20 +68,14 @@ class PRDFlowService {
     try {
       const settings = await Settings.findOne({ tenantId });
       if (settings?.automation?.aiPrompts) {
-        // Merge with defaults to ensure no missing keys
         prompts = { ...prompts, ...settings.automation.aiPrompts.toObject() };
       }
     } catch (err) {
       console.warn('[PRD Flow] Could not fetch settings, using defaults:', err.message);
     }
 
-    // Ensure image URLs are absolute for Meta API
     prompts.greetingImage = this.makeAbsolute(prompts.greetingImage);
     prompts.successProofImage = this.makeAbsolute(prompts.successProofImage);
-
-    // Extraction of dynamic branching lists
-    const qualOptions = prompts.qualificationOptions || this.DEFAULT_QUALIFICATION_OPTIONS;
-    const progMap = prompts.programMap || this.DEFAULT_PROGRAM_MAP;
 
     const replaceVars = (str) => {
       if (!str) return '';
@@ -105,15 +102,12 @@ class PRDFlowService {
       : this.DEFAULT_PRD_FLOW_STEPS;
 
     let currentStep = null;
-    let nextStep = null;
 
     if (!contact.currentFlowStep || contact.currentFlowStep === 'START_PRD_FLOW') {
       currentStep = flowSteps[0];
-      nextStep = flowSteps[1];
     } else {
       const currentIndex = flowSteps.findIndex(s => s.id === contact.currentFlowStep);
       currentStep = currentIndex !== -1 ? flowSteps[currentIndex] : flowSteps[0];
-      nextStep = flowSteps[currentIndex + 1];
     }
 
     if (!currentStep) {
@@ -125,11 +119,12 @@ class PRDFlowService {
     let stepToProcess = currentStep;
     let iterations = 0;
 
+    if (!isAutoFollowup) {
+      await Contact.findByIdAndUpdate(contact._id, { 'flowVariables.consecutiveTimeouts': 0 });
+    }
+
     while (stepToProcess && iterations < 5) {
       iterations++;
-      console.log(`[PRD Flow] Iteration ${iterations} | Executing Type: ${stepToProcess.type} | ID: ${stepToProcess.id}`);
-      
-      let nextStepId = null;
       const currentIndex = flowSteps.findIndex(s => s.id === stepToProcess.id);
       const possibleNextStep = flowSteps[currentIndex + 1];
 
@@ -152,26 +147,23 @@ class PRDFlowService {
           }
 
           if (possibleNextStep) {
-             nextStepId = possibleNextStep.id;
-             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: nextStepId });
+             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
+             contact.currentFlowStep = possibleNextStep.id;
              stepToProcess = possibleNextStep;
-             // Delay for visual order
-             await new Promise(r => setTimeout(r, 800));
-             continue; // Chaining!
+             continue;
           }
           break;
         }
 
         case 'NAME_CAPTURE': {
-          if (contact.currentFlowStep === stepToProcess.id) {
+          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup) {
              const name = await AIService.extractData(messageText.trim(), 'NAME');
-             contact.name = name; // Update local for variables in next step
+             contact.name = name;
              
              await Contact.findByIdAndUpdate(contact._id, { 
                 name, 
                 currentFlowStep: possibleNextStep?.id || '',
-                [`flowVariables.name`]: name,
-                $push: { timeline: { eventType: 'AI_MILESTONE', description: `Name captured: ${name}`, timestamp: new Date() } }
+                [`flowVariables.name`]: name
              });
              
              if (possibleNextStep) {
@@ -184,18 +176,18 @@ class PRDFlowService {
              const res = await waService.sendTextMessage(contact.phone, msg);
              await saveAndEmit('text', msg, res);
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
-             contact.currentFlowStep = stepToProcess.id; // Sync local
+             contact.currentFlowStep = stepToProcess.id;
+             this.startActivityTimer(tenantId, contact, waService, io);
              stepToProcess = null; 
              break;
           }
         }
 
         case 'QUALIFICATION': {
-          if (contact.currentFlowStep === stepToProcess.id) {
+          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup) {
              let qual = messageText.trim();
              const opts = prompts.qualificationOptions || [];
              
-             // Smart Matching: find based on lowercase or direct match
              const matched = opts.find(opt => opt.toLowerCase() === qual.toLowerCase());
              if (matched) {
                 qual = matched;
@@ -231,14 +223,15 @@ class PRDFlowService {
              });
              await saveAndEmit('interactive', reply, null);
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
-             contact.currentFlowStep = stepToProcess.id; // Sync local
+             contact.currentFlowStep = stepToProcess.id;
+             this.startActivityTimer(tenantId, contact, waService, io);
              stepToProcess = null;
              break;
           }
         }
 
         case 'PROGRAM_SELECTION': {
-          if (contact.currentFlowStep === stepToProcess.id) {
+          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup) {
              const prog = messageText.trim();
              contact.selectedProgram = prog;
              
@@ -255,8 +248,7 @@ class PRDFlowService {
              }
              break;
           } else {
-             const prompts = (await Settings.findOne({ tenantId }))?.automation?.aiPrompts || {};
-             const qual = contact.qualification; // Already synced in previous step
+             const qual = contact.qualification;
              const pMap = prompts.programMap || {};
              const qualMap = pMap[qual] || {};
 
@@ -275,6 +267,7 @@ class PRDFlowService {
              await saveAndEmit('interactive', reply, null);
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
              contact.currentFlowStep = stepToProcess.id;
+             this.startActivityTimer(tenantId, contact, waService, io);
              stepToProcess = null;
              break;
           }
@@ -302,7 +295,6 @@ class PRDFlowService {
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
              contact.currentFlowStep = possibleNextStep.id;
              stepToProcess = possibleNextStep;
-             await new Promise(r => setTimeout(r, 800));
              continue;
           }
           stepToProcess = null;
@@ -310,9 +302,8 @@ class PRDFlowService {
         }
 
         case 'CALL_TIME': {
-          if (contact.currentFlowStep === stepToProcess.id) {
+          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup) {
              const time = messageText.trim();
-             // Finalize Lead
              const fullContact = await Contact.findById(contact._id);
              const vars = fullContact.flowVariables || {};
              
@@ -344,6 +335,7 @@ class PRDFlowService {
              await saveAndEmit('interactive', timeMsg, res);
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
              contact.currentFlowStep = stepToProcess.id;
+             this.startActivityTimer(tenantId, contact, waService, io);
              stepToProcess = null;
              break;
           }
@@ -357,7 +349,6 @@ class PRDFlowService {
               await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
               contact.currentFlowStep = possibleNextStep.id;
               stepToProcess = possibleNextStep;
-              await new Promise(r => setTimeout(r, 800));
               continue;
            }
            stepToProcess = null;
@@ -365,7 +356,7 @@ class PRDFlowService {
         }
 
         case 'CUSTOM_QUESTION': {
-           if (contact.currentFlowStep === stepToProcess.id) {
+           if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup) {
               await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep?.id || '' });
               if (possibleNextStep) { 
                  contact.currentFlowStep = possibleNextStep.id;
@@ -379,6 +370,7 @@ class PRDFlowService {
               await saveAndEmit('text', msg, res);
               await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
               contact.currentFlowStep = stepToProcess.id;
+              this.startActivityTimer(tenantId, contact, waService, io);
               stepToProcess = null;
               break;
            }
@@ -389,6 +381,38 @@ class PRDFlowService {
           break;
       }
     }
+  }
+
+  startActivityTimer(tenantId, contact, waService, io) {
+    const contactId = contact._id.toString();
+    this.clearTimer(contactId);
+
+    const timer = setTimeout(async () => {
+      try {
+        const tenantDb = getTenantConnection(tenantId);
+        const Contact = tenantDb.model('Contact', ContactSchema);
+        const freshContact = await Contact.findById(contactId);
+        
+        if (!freshContact || freshContact.currentFlowStep === '') return;
+
+        const consecutiveTimeouts = (freshContact.flowVariables?.consecutiveTimeouts || 0) + 1;
+        
+        if (consecutiveTimeouts >= 2) {
+           console.log(`[PRD Flow] User ghosted twice. Stopping flow for ${freshContact.phone}`);
+           await Contact.findByIdAndUpdate(contactId, { 'flowVariables.consecutiveTimeouts': 0 });
+           return;
+        }
+
+        console.log(`[PRD Flow] 15s Timeout fired for ${freshContact.phone}. Auto-following up...`);
+        await Contact.findByIdAndUpdate(contactId, { 'flowVariables.consecutiveTimeouts': consecutiveTimeouts });
+        
+        await this.processStep(tenantId, freshContact, "TIMEOUT", waService, io, true);
+      } catch (e) {
+        console.error('[PRD Flow] Timeout execution failed:', e.message);
+      }
+    }, 15000);
+
+    this.activeTimers.set(contactId, timer);
   }
 
   async updateLeadScore(Contact, Message, contactId, io, tenantId) {
