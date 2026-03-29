@@ -218,8 +218,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 
 // SPA Routing: Serve index.html for any request that doesn't match an API route
-app.get('*', (req, res) => {
-  if (req.path.startsWith('/api')) return;
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api')) return res.status(404).json({ error: "API Route Not Found" });
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

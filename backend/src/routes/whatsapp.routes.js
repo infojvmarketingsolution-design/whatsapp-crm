@@ -7,9 +7,11 @@ const { processIncomingMessage } = require('../services/flowEngine.service');
 
 // Meta Verification GET Challenge
 router.get('/webhook', verifyWebhook);
+router.get('/webhook/:tenantId', verifyWebhook);
 
 // Meta Real-Time Message POST Payloads
 router.post('/webhook', handleIncomingMessage);
+router.post('/webhook/:tenantId', handleIncomingMessage);
 
 // WhatsApp UI Config Routes
 router.get('/config', protect, tenantMiddleware, getApiConfig);
