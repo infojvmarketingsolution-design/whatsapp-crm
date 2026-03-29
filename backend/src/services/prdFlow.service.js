@@ -163,9 +163,10 @@ class PRDFlowService {
         }
 
         case 'NAME_CAPTURE': {
-          // If we are currently AT this step, it means we are processing the ANSWER
           if (contact.currentFlowStep === stepToProcess.id) {
              const name = await AIService.extractData(messageText.trim(), 'NAME');
+             contact.name = name; // Update local for variables in next step
+             
              await Contact.findByIdAndUpdate(contact._id, { 
                 name, 
                 currentFlowStep: possibleNextStep?.id || '',
@@ -175,25 +176,23 @@ class PRDFlowService {
              
              if (possibleNextStep) {
                 stepToProcess = possibleNextStep;
-                continue; // Process next step immediately!
+                continue; 
              }
              break;
           } else {
-             // Otherwise, we are ASKING the name
              const msg = replaceVars(stepToProcess.message);
              const res = await waService.sendTextMessage(contact.phone, msg);
              await saveAndEmit('text', msg, res);
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
-             stepToProcess = null; // Wait for answer
+             contact.currentFlowStep = stepToProcess.id; // Sync local
+             stepToProcess = null; 
              break;
           }
         }
 
         case 'QUALIFICATION': {
-          // Processing ANSWER
           if (contact.currentFlowStep === stepToProcess.id) {
              let qual = messageText.trim();
-             const prompts = (await Settings.findOne({ tenantId }))?.automation?.aiPrompts || {};
              const opts = prompts.qualificationOptions || [];
              if (!opts.includes(qual)) {
                 const matched = opts.find(opt => opt.toLowerCase() === qual.toLowerCase());
@@ -201,6 +200,7 @@ class PRDFlowService {
                 else { stepToProcess = null; break; }
              }
 
+             contact.qualification = qual;
              await Contact.findByIdAndUpdate(contact._id, { 
                 qualification: qual,
                 [`flowVariables.qualification`]: qual,
@@ -213,9 +213,7 @@ class PRDFlowService {
              }
              break;
           } else {
-             // ASKING
              const reply = replaceVars(stepToProcess.message);
-             const prompts = (await Settings.findOne({ tenantId }))?.automation?.aiPrompts || {};
              const opts = prompts.qualificationOptions || [];
 
              await waService.sendListMessage(contact.phone, {
@@ -229,6 +227,7 @@ class PRDFlowService {
              });
              await saveAndEmit('interactive', reply, null);
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
+             contact.currentFlowStep = stepToProcess.id; // Sync local
              stepToProcess = null;
              break;
           }
