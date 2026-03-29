@@ -126,8 +126,8 @@ export default function AIChatbot() {
     });
   };
 
-  const handleUploadClick = (field) => {
-    activeFieldRef.current = field;
+  const handleUploadClick = (fieldKey) => {
+    activeFieldRef.current = fieldKey;
     fileInputRef.current.click();
   };
 
@@ -135,13 +135,11 @@ export default function AIChatbot() {
     const file = e.target.files[0];
     if (!file) return;
 
-    const field = activeFieldRef.current;
+    const dataRef = activeFieldRef.current; 
+    const isStep = typeof dataRef === 'object' && dataRef.stepId;
+    const uploadKey = isStep ? `${dataRef.stepId}_${dataRef.field}` : dataRef;
     
-    // Check if we are updating a deep path (e.g., programMap proxy)
-    const isDeep = typeof field === 'object';
-    const targetField = isDeep ? field.key : field;
-    
-    setUploading(targetField);
+    setUploading(uploadKey);
 
     try {
       const token = localStorage.getItem('token');
@@ -160,12 +158,12 @@ export default function AIChatbot() {
 
       if (res.ok) {
         const data = await res.json();
-        if (isDeep) {
-            field.callback(data.url);
+        if (isStep) {
+           updateStep(dataRef.stepId, dataRef.field, data.url);
         } else {
-            updatePrompt(field, data.url);
+           updatePrompt(dataRef, data.url);
         }
-        toast.success('Image uploaded successfully!');
+        toast.success(`${isStep ? 'Cart' : 'Prompt'} image updated!`);
       } else {
         toast.error('Failed to upload image');
       }
@@ -178,114 +176,50 @@ export default function AIChatbot() {
     }
   };
 
-  // --- Branching Logic Editor Handlers ---
+  // --- Dynamic Flow Step Handlers ---
   
-  const addQualification = () => {
-    const newQual = "New Level";
+  const updateStep = (id, field, value) => {
     setSettings(prev => ({
        ...prev,
        aiPrompts: {
           ...prev.aiPrompts,
-          qualificationOptions: [...(prev.aiPrompts.qualificationOptions || []), newQual],
-          programMap: {
-             ...(prev.aiPrompts.programMap || {}),
-             [newQual]: { 'Default Category': ['New Program'] }
-          }
+          prdFlowSteps: (prev.aiPrompts.prdFlowSteps || []).map(s => s.id === id ? { ...s, [field]: value } : s)
        }
     }));
   };
 
-  const removeQualification = (qual) => {
-    setSettings(prev => {
-       const newQuals = (prev.aiPrompts.qualificationOptions || []).filter(q => q !== qual);
-       const newMap = { ...(prev.aiPrompts.programMap || {}) };
-       delete newMap[qual];
-       return {
-          ...prev,
-          aiPrompts: { ...prev.aiPrompts, qualificationOptions: newQuals, programMap: newMap }
-       };
-    });
+  const addStep = (index) => {
+     const newStep = {
+        id: `step_${Date.now()}`,
+        type: 'CUSTOM_MESSAGE',
+        title: 'New Information Step',
+        message: 'Your message here...'
+     };
+     setSettings(prev => {
+        const steps = [...(prev.aiPrompts?.prdFlowSteps || [])];
+        steps.splice(index + 1, 0, newStep);
+        return { ...prev, aiPrompts: { ...prev.aiPrompts, prdFlowSteps: steps } };
+     });
   };
 
-  const updateQualName = (oldName, newName) => {
-    if (oldName === newName) return;
-    setSettings(prev => {
-        const newQuals = (prev.aiPrompts.qualificationOptions || []).map(q => q === oldName ? newName : q);
-        const newMap = { ...(prev.aiPrompts.programMap || {}) };
-        newMap[newName] = newMap[oldName];
-        delete newMap[oldName];
-        return {
-            ...prev,
-            aiPrompts: { ...prev.aiPrompts, qualificationOptions: newQuals, programMap: newMap }
-        };
-    });
+  const removeStep = (id) => {
+     setSettings(prev => ({
+        ...prev,
+        aiPrompts: {
+           ...prev.aiPrompts,
+           prdFlowSteps: (prev.aiPrompts?.prdFlowSteps || []).filter(s => s.id !== id)
+        }
+     }));
   };
 
-  const addSection = (qual) => {
-    setSettings(prev => {
-        const newMap = { ...prev.aiPrompts.programMap };
-        const qualData = { ...newMap[qual] };
-        qualData['New Section'] = ['New Program'];
-        newMap[qual] = qualData;
-        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
-    });
-  };
-
-  const removeSection = (qual, section) => {
-    setSettings(prev => {
-        const newMap = { ...prev.aiPrompts.programMap };
-        const qualData = { ...newMap[qual] };
-        delete qualData[section];
-        newMap[qual] = qualData;
-        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
-    });
-  };
-
-  const updateSectionName = (qual, oldSection, newSection) => {
-    if (oldSection === newSection) return;
-    setSettings(prev => {
-        const newMap = { ...prev.aiPrompts.programMap };
-        const qualData = { ...newMap[qual] };
-        qualData[newSection] = qualData[oldSection];
-        delete qualData[oldSection];
-        newMap[qual] = qualData;
-        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
-    });
-  };
-
-  const updateProgram = (qual, section, index, value) => {
-    setSettings(prev => {
-        const newMap = { ...prev.aiPrompts.programMap };
-        const qualData = { ...newMap[qual] };
-        const secData = [...qualData[section]];
-        secData[index] = value;
-        qualData[section] = secData;
-        newMap[qual] = qualData;
-        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
-    });
-  };
-
-  const addProgram = (qual, section) => {
-    setSettings(prev => {
-        const newMap = { ...prev.aiPrompts.programMap };
-        const qualData = { ...newMap[qual] };
-        const secData = [...(qualData[section] || [])];
-        secData.push('New Program');
-        qualData[section] = secData;
-        newMap[qual] = qualData;
-        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
-    });
-  };
-
-  const removeProgram = (qual, section, index) => {
-    setSettings(prev => {
-        const newMap = { ...prev.aiPrompts.programMap };
-        const qualData = { ...newMap[qual] };
-        const secData = qualData[section].filter((_, i) => i !== index);
-        qualData[section] = secData;
-        newMap[qual] = qualData;
-        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
-    });
+  const moveStep = (index, direction) => {
+     setSettings(prev => {
+        const steps = [...(prev.aiPrompts.prdFlowSteps || [])];
+        const newIndex = index + direction;
+        if (newIndex < 0 || newIndex >= steps.length) return prev;
+        [steps[index], steps[newIndex]] = [steps[newIndex], steps[index]];
+        return { ...prev, aiPrompts: { ...prev.aiPrompts, prdFlowSteps: steps } };
+     });
   };
 
   const NodeLine = () => (
@@ -347,10 +281,10 @@ export default function AIChatbot() {
                 )}
                 <button 
                   onClick={() => handleUploadClick(fieldKey)}
-                  disabled={uploading === fieldKey}
+                  disabled={uploading === (typeof fieldKey === 'object' ? `${fieldKey.stepId}_${fieldKey.field}` : fieldKey)}
                   className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-teal-600 hover:border-teal-200 transition-all shadow-sm font-bold"
                 >
-                  {uploading === fieldKey ? (
+                  {uploading === (typeof fieldKey === 'object' ? `${fieldKey.stepId}_${fieldKey.field}` : fieldKey) ? (
                     <span className="w-4 h-4 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></span>
                   ) : (
                     <>
@@ -462,239 +396,101 @@ export default function AIChatbot() {
         {settings.botMode === 'PRD' && (
           <div className="flex flex-col items-center space-y-2 pb-20">
           
-          {/* STEP 1: TRIGGER */}
-          <div className="w-full max-w-2xl bg-white border border-teal-200 rounded-2xl shadow-sm p-4 flex items-center justify-between bg-teal-50/30">
-             <div className="flex items-center space-x-3">
-                <div className="bg-emerald-500 p-2 rounded-lg shadow-sm">
-                   <Play size={18} className="text-white fill-white" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Start Trigger</div>
-                  <div className="text-sm font-bold text-gray-800">Every Incoming Message</div>
-                </div>
+          <FlowNode title="Start Trigger" icon={Play} colorClass="bg-emerald-500" id="node-start">
+             <div className="flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-widest">
+                <span>Every Incoming Message</span>
+                <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded">Any Keyword</span>
              </div>
-             <div className="px-3 py-1 bg-white border border-teal-100 rounded-lg text-[10px] font-bold text-teal-600 uppercase">
-                Any Keyword
-             </div>
-          </div>
-
-          <NodeLine />
-
-          {/* STEP 2: GREETING */}
-          <FlowNode 
-            title="Greeting Message" 
-            icon={MessageSquare} 
-            colorClass="bg-blue-600"
-            id="node-greeting"
-          >
-             <div className="flex flex-col md:flex-row gap-6">
-                <div className="flex-1">
-                  <NodeInput 
-                      label="Greeting Text" 
-                      value={settings.aiPrompts.greetingMessage}
-                      onChange={(val) => updatePrompt('greetingMessage', val)}
-                      placeholder="Welcome to our business! How can I help you?"
-                      hint="Use {{name}} for dynamic name tag."
-                      icon={MessageSquare}
-                  />
-                </div>
-                <div className="w-full md:w-64">
-                   <NodeInput 
-                      label="Name Request" 
-                      value={settings.aiPrompts.namePrompt}
-                      onChange={(val) => updatePrompt('namePrompt', val)}
-                      placeholder="May I know your name?"
-                      icon={User}
-                   />
-                </div>
-             </div>
-             <NodeInput 
-                label="Greeting Image" 
-                value={settings.aiPrompts.greetingImage}
-                isImage={true}
-                fieldKey="greetingImage"
-                onChange={(val) => updatePrompt('greetingImage', val)}
-                placeholder="https://image-url.com/welcome.jpg"
-                hint="Image will be sent with the greeting text as its caption."
-                icon={ImageIcon}
-             />
           </FlowNode>
 
-          <NodeLine />
+          {(settings.aiPrompts.prdFlowSteps || []).map((step, index) => (
+             <React.Fragment key={step.id}>
+                <div className="flex flex-col items-center group/add relative">
+                    <div className="w-0.5 h-8 bg-gray-200 group-hover/add:bg-indigo-300 transition-colors"></div>
+                    <button 
+                      onClick={() => addStep(index - 1)}
+                      className="absolute top-1/2 -translate-y-1/2 opacity-0 group-hover/add:opacity-100 flex items-center bg-indigo-600 text-white rounded-full p-1 shadow-lg hover:scale-110 transition z-10"
+                    >
+                       <Plus size={14} />
+                    </button>
+                    <div className="w-0.5 h-8 bg-gray-200 group-hover/add:bg-indigo-300 transition-colors"></div>
+                </div>
 
-          {/* STEP 3 & 4: QUALIFICATION & BRANCHING */}
-          <FlowNode 
-            title="Qualification & Branching Logic" 
-            icon={GraduationCap} 
-            colorClass="bg-indigo-600"
-            id="node-qual"
-          >
-             <div className="space-y-6">
-                <NodeInput 
-                  label="Qualification Question" 
-                  value={settings.aiPrompts.programListPrompt}
-                  onChange={(val) => updatePrompt('programListPrompt', val)}
-                  placeholder="Select your last qualification 👇"
-                  hint="This triggers the initial menu selection."
-                  icon={User}
-                />
-                
-                <div className="bg-gray-50 border border-gray-100 rounded-3xl p-6 sm:p-8">
-                   <div className="flex items-center justify-between mb-8">
-                      <div>
-                        <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest flex items-center">
-                           <Play size={14} className="mr-2 text-indigo-500" />
-                           Branching Logic Editor
-                        </h3>
-                        <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Configure what users see after clicking a level</p>
-                      </div>
+                <FlowNode 
+                  title={step.title} 
+                  icon={step.type === 'GREETING' ? MessageSquare : step.type === 'NAME_CAPTURE' ? User : step.type === 'QUALIFICATION' ? GraduationCap : MessageSquare} 
+                  colorClass={step.type === 'GREETING' ? "bg-blue-600" : step.type === 'QUALIFICATION' ? "bg-indigo-600" : "bg-gray-100"}
+                  id={step.id}
+                >
+                   <div className="relative group">
                       <button 
-                        onClick={addQualification}
-                        className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/20 active:scale-95"
+                        onClick={() => removeStep(step.id)}
+                        className="absolute -right-2 -top-12 opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-red-500 transition-all bg-white rounded-full shadow-sm border border-red-50"
                       >
-                         <Plus size={14} />
-                         <span>Add Level</span>
+                         <Plus size={16} className="rotate-45" />
                       </button>
+
+                      <div className="space-y-4">
+                         <div className="flex items-center space-x-3">
+                            <select 
+                              className="bg-gray-50 border-none text-[10px] font-black text-gray-400 uppercase tracking-widest focus:ring-0 rounded-lg py-1 px-2"
+                              value={step.type}
+                              onChange={(e) => updateStep(step.id, 'type', e.target.value)}
+                            >
+                               <option value="GREETING">Greeting Node</option>
+                               <option value="NAME_CAPTURE">Name Capture</option>
+                               <option value="QUALIFICATION">Qualification Choice</option>
+                               <option value="PROGRAM_SELECTION">Program Branching</option>
+                               <option value="SUCCESS_PROOF">Success/Media Proof</option>
+                               <option value="CALL_TIME">Call Scheduling</option>
+                               <option value="CUSTOM_MESSAGE">Simple Message</option>
+                               <option value="CUSTOM_QUESTION">Simple Question</option>
+                            </select>
+                            <input 
+                              className="flex-1 bg-transparent border-none text-xs font-black text-gray-800 uppercase focus:ring-0 p-0"
+                              value={step.title}
+                              onChange={(e) => updateStep(step.id, 'title', e.target.value)}
+                            />
+                         </div>
+
+                         <div className="grid grid-cols-1 gap-4">
+                            {(step.type === 'GREETING' || step.type === 'SUCCESS_PROOF') && (
+                               <NodeInput 
+                                  label="Image Attachment" 
+                                  value={step.image}
+                                  isImage={true}
+                                  fieldKey={{ stepId: step.id, field: 'image' }}
+                                  onChange={(val) => updateStep(step.id, 'image', val)}
+                                  placeholder="Upload or paste URL"
+                                  icon={ImageIcon}
+                               />
+                            )}
+                            
+                            <NodeInput 
+                               label="Message Body" 
+                               value={step.message}
+                               onChange={(val) => updateStep(step.id, 'message', val)}
+                               placeholder="Type your message here..."
+                               hint="Use {{name}} for user name."
+                               icon={MessageSquare}
+                            />
+                         </div>
+                      </div>
                    </div>
+                </FlowNode>
+             </React.Fragment>
+          ))}
 
-                   <div className="space-y-6">
-                      {(settings.aiPrompts.qualificationOptions || []).map((qual) => (
-                        <div key={qual} className="group relative bg-white border border-gray-200 rounded-2xl p-6 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md">
-                           <button 
-                              onClick={() => removeQualification(qual)}
-                              className="absolute -right-2 -top-2 w-7 h-7 bg-red-50 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all shadow-sm border border-red-100"
-                              title="Delete Level"
-                           >
-                              <Plus size={14} className="rotate-45" />
-                           </button>
-                           
-                           <div className="flex items-center space-x-3 mb-6">
-                              <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600">
-                                 <GraduationCap size={16} />
-                              </div>
-                              <input 
-                                className="bg-transparent border-none text-sm font-black text-gray-800 uppercase tracking-wide focus:ring-0 w-full p-0"
-                                value={qual}
-                                onChange={(e) => updateQualName(qual, e.target.value)}
-                              />
-                           </div>
-                           
-                           <div className="pl-4 border-l-2 border-indigo-50 space-y-6">
-                              {Object.keys(settings.aiPrompts.programMap?.[qual] || {}).map(section => (
-                                 <div key={section} className="relative group/sec">
-                                    <button 
-                                      onClick={() => removeSection(qual, section)}
-                                      className="absolute -left-7 top-0 text-gray-300 hover:text-red-400 opacity-0 group-hover/sec:opacity-100 transition-opacity"
-                                      title="Remove Category"
-                                    >
-                                       <Plus size={14} className="rotate-45" />
-                                    </button>
-                                    
-                                    <input 
-                                       className="bg-transparent border-none text-[10px] font-bold text-gray-400 uppercase italic mb-3 focus:ring-0 block w-full p-0"
-                                       value={section}
-                                       onChange={(e) => updateSectionName(qual, section, e.target.value)}
-                                    />
-                                    
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                       {(settings.aiPrompts.programMap[qual][section] || []).map((prog, idx) => (
-                                          <div key={`${qual}-${section}-${idx}`} className="flex items-center bg-gray-50 border border-gray-100 rounded-lg pr-2 group/prog overflow-hidden transition-colors hover:bg-white hover:border-indigo-100">
-                                             <input 
-                                                className="flex-1 bg-transparent border-none text-[10px] font-medium text-gray-700 py-2 px-3 focus:ring-0 min-w-0"
-                                                value={prog}
-                                                onChange={(e) => updateProgram(qual, section, idx, e.target.value)}
-                                             />
-                                             <button 
-                                                onClick={() => removeProgram(qual, section, idx)}
-                                                className="text-gray-300 hover:text-red-400 opacity-0 group-hover/prog:opacity-100 transition-opacity p-1"
-                                             >
-                                                <Plus size={12} className="rotate-45" />
-                                             </button>
-                                          </div>
-                                       ))}
-                                       <button 
-                                          onClick={() => addProgram(qual, section)}
-                                          className="flex items-center justify-center p-2 border border-dashed border-gray-200 rounded-lg text-gray-400 hover:text-indigo-500 hover:border-indigo-300 transition-all hover:bg-indigo-50/30"
-                                       >
-                                          <Plus size={12} />
-                                       </button>
-                                    </div>
-                                 </div>
-                              ))}
-                              
-                              <button 
-                                onClick={() => addSection(qual)}
-                                className="flex items-center space-x-2 text-[10px] font-bold text-indigo-400 hover:text-indigo-600 transition-colors bg-indigo-50/50 px-3 py-1.5 rounded-lg border border-dashed border-indigo-100 hover:bg-indigo-50"
-                              >
-                                 <Plus size={12} />
-                                 <span>Add New Category</span>
-                              </button>
-                           </div>
-                        </div>
-                      ))}
-                   </div>
-                   
-                   <p className="text-[10px] text-gray-400 mt-8 italic text-center bg-white/50 py-2 rounded-xl border border-gray-50">
-                      Changes above are saved only when you click "Publish Bot Changes".
-                   </p>
-                </div>
-             </div>
-          </FlowNode>
-
-          <NodeLine />
-
-          {/* STEP 4: SUCCESS PROOF */}
-          <FlowNode 
-            title="Success & Social Proof" 
-            icon={CheckCircle2} 
-            colorClass="bg-teal-600"
-            id="node-success"
-          >
-             <NodeInput 
-                label="Success Proof Text" 
-                value={settings.aiPrompts.successProofMessage}
-                onChange={(val) => updatePrompt('successProofMessage', val)}
-                placeholder="Our students love us! Here is our success..."
-                hint="Increases lead trust and conversion."
-                icon={MessageSquare}
-             />
-             <NodeInput 
-                label="Success Proof Image (Optional)" 
-                value={settings.aiPrompts.successProofImage}
-                isImage={true}
-                fieldKey="successProofImage"
-                onChange={(val) => updatePrompt('successProofImage', val)}
-                placeholder="https://image-url.com/proof.jpg"
-                icon={ImageIcon}
-             />
-          </FlowNode>
-
-          <NodeLine />
-
-          {/* STEP 5: FALLBACK & TRANSFER */}
-          <FlowNode 
-            title="Advanced Recovery" 
-            icon={AlertCircle} 
-            colorClass="bg-orange-600"
-            id="node-fallback"
-          >
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <NodeInput 
-                  label="Agent Transfer Message" 
-                  value={settings.aiPrompts.agentTransferPrompt}
-                  onChange={(val) => updatePrompt('agentTransferPrompt', val)}
-                  placeholder="Transferring you to a live chat..."
-                  icon={Headphones}
-                />
-                <NodeInput 
-                  label="Fallback (Didn't Understand)" 
-                  value={settings.aiPrompts.fallbackMessage}
-                  onChange={(val) => updatePrompt('fallbackMessage', val)}
-                  placeholder="Sorry, I didn't get that. Say it again?"
-                  icon={HelpCircle}
-                />
-             </div>
-          </FlowNode>
+          <div className="flex flex-col items-center group/add relative mt-4">
+              <div className="w-0.5 h-8 bg-gray-200 group-hover/add:bg-indigo-300 transition-colors"></div>
+              <button 
+                onClick={() => addStep(settings.aiPrompts.prdFlowSteps.length - 1)}
+                className="flex items-center space-x-2 bg-gray-100 text-gray-500 px-4 py-2 rounded-xl text-[10px] font-black uppercase hover:bg-indigo-50 hover:text-indigo-600 transition border border-dashed border-gray-200"
+              >
+                 <Plus size={14} />
+                 <span>Add One More Cart</span>
+              </button>
+          </div>
 
           <div className="pt-10 flex flex-col items-center">
              <div className="p-4 bg-white border border-gray-100 rounded-2xl shadow-sm text-center">

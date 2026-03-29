@@ -23,7 +23,18 @@ const AIPromptsSchema = new mongoose.Schema({
       'Traditional Master Programs': ['MBA', 'M.Com', 'MCA', 'M.Sc']
     },
     'Master Completed': { 'PhD Programs': ['PhD in Marketing', 'PhD in Civil Engineering', 'PhD in IT'] }
-  } }
+  } },
+  prdFlowSteps: { 
+    type: [mongoose.Schema.Types.Mixed], 
+    default: [
+      { id: 'step_1', type: 'GREETING', title: 'Greeting Message', message: 'Hello 👋 Welcome to JV Marketing Support!', image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=60' },
+      { id: 'step_2', type: 'NAME_CAPTURE', title: 'Name Request', message: 'Great! May I know your name?' },
+      { id: 'step_3', type: 'QUALIFICATION', title: 'Qualification Choice', message: '{{name}}, please select your last qualification 👇' },
+      { id: 'step_4', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Great, {{name}}! Please select your preferred program:' },
+      { id: 'step_5', type: 'SUCCESS_PROOF', title: 'Success & Proof', message: '🎉 Success Stories, {{name}}!\n\nOur students are working in top companies 🚀', image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=60' },
+      { id: 'step_6', type: 'CALL_TIME', title: 'Consultation Call', message: '{{name}}, what is your preferred time for a call? 📞', options: ['Morning', 'Afternoon', 'Evening'] }
+    ] 
+  }
 });
 
 
