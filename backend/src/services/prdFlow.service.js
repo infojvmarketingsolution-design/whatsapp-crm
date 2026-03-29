@@ -194,10 +194,14 @@ class PRDFlowService {
           if (contact.currentFlowStep === stepToProcess.id) {
              let qual = messageText.trim();
              const opts = prompts.qualificationOptions || [];
-             if (!opts.includes(qual)) {
-                const matched = opts.find(opt => opt.toLowerCase() === qual.toLowerCase());
-                if (matched) qual = matched;
-                else { stepToProcess = null; break; }
+             
+             // Smart Matching: find based on lowercase or direct match
+             const matched = opts.find(opt => opt.toLowerCase() === qual.toLowerCase());
+             if (matched) {
+                qual = matched;
+             } else {
+                stepToProcess = null; 
+                break;
              }
 
              contact.qualification = qual;

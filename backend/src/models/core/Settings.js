@@ -15,10 +15,10 @@ const AIPromptsSchema = new mongoose.Schema({
     default: [
       '10th Pass', 
       '12th Pass', 
-      'Diploma Completed', 
-      'Graduation Completed', 
-      'Master Completed',
-      'PhD Completed'
+      'Diploma Complete', 
+      'Graduation complete', 
+      'Master complete',
+      'phD complete'
     ]
   },
   programMap: {
@@ -31,17 +31,17 @@ const AIPromptsSchema = new mongoose.Schema({
         'Trending Programs': ['B.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
         'Traditional Programs': ['BBA', 'B.Com', 'BCA', 'B.Sc']
       },
-      'Diploma Completed': {
+      'Diploma Complete': {
         'Bachelor Programs': ['Electrical Engineering', 'Civil Engineering', 'Mechanical Engineering']
       },
-      'Graduation Completed': {
+      'Graduation complete': {
         'Trending Master Programs': ['M.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
         'Traditional Master Programs': ['MBA', 'M.Com', 'MCA', 'M.Sc']
       },
-      'Master Completed': {
+      'Master complete': {
         'PhD Programs': ['PhD in Marketing', 'PhD in Civil Engineering', 'PhD in IT']
       },
-      'PhD Completed': {
+      'phD complete': {
         'Post-Doc': ['Research Fellowship', 'Academic Leadership']
       }
     }
