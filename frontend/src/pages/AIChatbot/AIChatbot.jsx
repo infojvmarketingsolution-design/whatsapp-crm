@@ -14,7 +14,11 @@ import {
   Plus,
   Image as ImageIcon,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Layers,
+  ShieldCheck,
+  Calendar,
+  Mail
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
