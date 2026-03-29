@@ -403,26 +403,41 @@ export default function AIChatbot() {
              </div>
           </FlowNode>
 
-          {(settings.aiPrompts.prdFlowSteps || []).map((step, index) => (
-             <React.Fragment key={step.id}>
-                <div className="flex flex-col items-center group/add relative">
-                    <div className="w-0.5 h-8 bg-gray-200 group-hover/add:bg-indigo-300 transition-colors"></div>
-                    <button 
-                      onClick={() => addStep(index - 1)}
-                      className="absolute top-1/2 -translate-y-1/2 opacity-0 group-hover/add:opacity-100 flex items-center bg-indigo-600 text-white rounded-full p-1 shadow-lg hover:scale-110 transition z-10"
-                    >
-                       <Plus size={14} />
-                    </button>
-                    <div className="w-0.5 h-8 bg-gray-200 group-hover/add:bg-indigo-300 transition-colors"></div>
-                </div>
+          {(settings.aiPrompts.prdFlowSteps || []).map((step, index) => {
+            let colorClass = "bg-gray-400";
+            let icon = MessageSquare;
 
-                <FlowNode 
-                  title={step.title} 
-                  icon={step.type === 'GREETING' ? MessageSquare : step.type === 'NAME_CAPTURE' ? User : step.type === 'QUALIFICATION' ? GraduationCap : MessageSquare} 
-                  colorClass={step.type === 'GREETING' ? "bg-blue-600" : step.type === 'QUALIFICATION' ? "bg-indigo-600" : "bg-gray-100"}
-                  id={step.id}
-                >
-                   <div className="relative group">
+            switch(step.type) {
+              case 'GREETING': colorClass = "bg-blue-600"; icon = MessageSquare; break;
+              case 'NAME_CAPTURE': colorClass = "bg-teal-600"; icon = User; break;
+              case 'QUALIFICATION': colorClass = "bg-indigo-600"; icon = GraduationCap; break;
+              case 'PROGRAM_SELECTION': colorClass = "bg-purple-600"; icon = Layers; break;
+              case 'SUCCESS_PROOF': colorClass = "bg-rose-500"; icon = ShieldCheck; break;
+              case 'CALL_TIME': colorClass = "bg-emerald-600"; icon = Calendar; break;
+              case 'CUSTOM_MESSAGE': colorClass = "bg-amber-500"; icon = Mail; break;
+              case 'CUSTOM_QUESTION': colorClass = "bg-cyan-600"; icon = HelpCircle; break;
+            }
+
+            return (
+              <React.Fragment key={step.id}>
+                 <div className="flex flex-col items-center group/add relative">
+                     <div className="w-0.5 h-8 bg-gray-200 group-hover/add:bg-indigo-300 transition-colors"></div>
+                     <button 
+                       onClick={() => addStep(index - 1)}
+                       className="absolute top-1/2 -translate-y-1/2 opacity-0 group-hover/add:opacity-100 flex items-center bg-indigo-600 text-white rounded-full p-1 shadow-lg hover:scale-110 transition z-10"
+                     >
+                        <Plus size={14} />
+                     </button>
+                     <div className="w-0.5 h-8 bg-gray-200 group-hover/add:bg-indigo-300 transition-colors"></div>
+                 </div>
+
+                 <FlowNode 
+                   title={step.title} 
+                   icon={icon} 
+                   colorClass={colorClass}
+                   id={step.id}
+                 >
+                    <div className="relative group">
                       <button 
                         onClick={() => removeStep(step.id)}
                         className="absolute -right-2 -top-12 opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-red-500 transition-all bg-white rounded-full shadow-sm border border-red-50"
@@ -477,9 +492,10 @@ export default function AIChatbot() {
                          </div>
                       </div>
                    </div>
-                </FlowNode>
-             </React.Fragment>
-          ))}
+                 </FlowNode>
+              </React.Fragment>
+            );
+          })}
 
           <div className="flex flex-col items-center group/add relative mt-4">
               <div className="w-0.5 h-8 bg-gray-200 group-hover/add:bg-indigo-300 transition-colors"></div>
