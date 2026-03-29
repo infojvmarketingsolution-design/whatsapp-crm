@@ -121,13 +121,35 @@ export default function AIChatbot() {
   };
 
   const updatePrompt = (key, value) => {
-    setSettings({
-      ...settings,
+    setSettings(prev => ({
+      ...prev,
       aiPrompts: {
-        ...settings.aiPrompts,
+        ...prev.aiPrompts,
         [key]: value
       }
-    });
+    }));
+  };
+
+  const updateProgramMap = (qual, category, pIndex, newVal) => {
+    const newMap = { ...settings.aiPrompts.programMap };
+    if (!newMap[qual][category]) return;
+    
+    if (newVal === null) {
+       // Delete
+       newMap[qual][category].splice(pIndex, 1);
+    } else {
+       // Edit or Add
+       if (pIndex === -1) newMap[qual][category].push(newVal);
+       else newMap[qual][category][pIndex] = newVal;
+    }
+    updatePrompt('programMap', newMap);
+  };
+
+  const addCategory = (qual, name) => {
+    const newMap = { ...settings.aiPrompts.programMap };
+    if (!newMap[qual]) newMap[qual] = {};
+    newMap[qual][name] = [];
+    updatePrompt('programMap', newMap);
   };
 
   const handleUploadClick = (fieldKey) => {
@@ -485,14 +507,110 @@ export default function AIChatbot() {
                                />
                             )}
                             
-                            <NodeInput 
-                               label="Message Body" 
-                               value={step.message}
-                               onChange={(val) => updateStep(step.id, 'message', val)}
-                               placeholder="Type your message here..."
-                               hint="Use {{name}} for user name."
-                               icon={MessageSquare}
-                            />
+                             <NodeInput 
+                                label="Message Body" 
+                                value={step.message}
+                                onChange={(val) => updateStep(step.id, 'message', val)}
+                                placeholder="Type your message here..."
+                                hint="Use {{name}} for user name."
+                                icon={MessageSquare}
+                             />
+
+                             {/* PROGRAM MAPPING DETAILS */}
+                             {step.type === 'PROGRAM_SELECTION' && (
+                               <div className="mt-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                                  <div className="flex items-center justify-between mb-4">
+                                     <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Program Details Mapper</div>
+                                     <Layers size={14} className="text-indigo-300" />
+                                  </div>
+                                  
+                                  <div className="space-y-4">
+                                     {(settings.aiPrompts.qualificationOptions || []).map(qual => (
+                                       <div key={qual} className="bg-white p-3 rounded-xl border border-indigo-50 shadow-sm">
+                                          <div className="flex items-center justify-between mb-2">
+                                             <div className="text-xs font-bold text-gray-700">{qual}</div>
+                                             <button 
+                                               onClick={() => {
+                                                  const cat = prompt('New Category Name (e.g. "Trending Programs")');
+                                                  if (cat) addCategory(qual, cat);
+                                               }}
+                                               className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 uppercase"
+                                             >
+                                                + Add Category
+                                             </button>
+                                          </div>
+
+                                          <div className="space-y-3">
+                                             {Object.entries(settings.aiPrompts.programMap[qual] || {}).map(([cat, programs]) => (
+                                               <div key={cat} className="pl-2 border-l-2 border-indigo-100">
+                                                  <div className="text-[10px] font-black text-gray-400 uppercase mb-1">{cat}</div>
+                                                  <div className="flex flex-wrap gap-2">
+                                                     {programs.map((p, pIdx) => (
+                                                       <div key={pIdx} className="group relative">
+                                                          <input 
+                                                            className="text-[11px] font-medium bg-gray-50 border-none rounded-lg py-1 px-3 w-32 focus:ring-1 focus:ring-indigo-300"
+                                                            value={p}
+                                                            onChange={(e) => updateProgramMap(qual, cat, pIdx, e.target.value)}
+                                                          />
+                                                          <button 
+                                                            onClick={() => updateProgramMap(qual, cat, pIdx, null)}
+                                                            className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full p-0.5"
+                                                          >
+                                                             <Plus size={8} className="rotate-45" />
+                                                          </button>
+                                                       </div>
+                                                     ))}
+                                                     <button 
+                                                       onClick={() => updateProgramMap(qual, cat, -1, 'New Program')}
+                                                       className="text-[11px] font-medium text-indigo-400 hover:text-indigo-500 px-2 py-1 border border-dashed border-indigo-200 rounded-lg"
+                                                     >
+                                                        + Program
+                                                     </button>
+                                                  </div>
+                                               </div>
+                                             ))}
+                                          </div>
+                                       </div>
+                                     ))}
+                                  </div>
+                               </div>
+                             )}
+
+                             {step.type === 'QUALIFICATION' && (
+                                <div className="mt-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
+                                   <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-3">Qualification Options</div>
+                                   <div className="flex flex-wrap gap-2">
+                                      {(settings.aiPrompts.qualificationOptions || []).map((q, i) => (
+                                         <div key={i} className="group relative">
+                                            <input 
+                                              className="text-[11px] font-medium bg-white border-none rounded-lg py-1 px-3 focus:ring-1 focus:ring-indigo-300 shadow-sm"
+                                              value={q}
+                                              onChange={(e) => {
+                                                 const newQuals = [...settings.aiPrompts.qualificationOptions];
+                                                 newQuals[i] = e.target.value;
+                                                 updatePrompt('qualificationOptions', newQuals);
+                                              }}
+                                            />
+                                            <button 
+                                              onClick={() => {
+                                                 const newQuals = settings.aiPrompts.qualificationOptions.filter((_, idx) => idx !== i);
+                                                 updatePrompt('qualificationOptions', newQuals);
+                                              }}
+                                              className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full p-0.5"
+                                            >
+                                               <Plus size={8} className="rotate-45" />
+                                            </button>
+                                         </div>
+                                      ))}
+                                      <button 
+                                         onClick={() => updatePrompt('qualificationOptions', [...settings.aiPrompts.qualificationOptions, 'New Option'])}
+                                         className="text-[11px] font-medium text-indigo-400 hover:text-indigo-500 px-3 py-1 border border-dashed border-indigo-200 rounded-lg bg-white"
+                                      >
+                                         + Option
+                                      </button>
+                                   </div>
+                                </div>
+                             )}
                          </div>
                       </div>
                    </div>
