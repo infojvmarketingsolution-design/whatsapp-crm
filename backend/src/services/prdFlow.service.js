@@ -236,19 +236,23 @@ class PRDFlowService {
         case 'PROGRAM_SELECTION': {
           if (contact.currentFlowStep === stepToProcess.id) {
              const prog = messageText.trim();
+             contact.selectedProgram = prog;
+             
              await Contact.findByIdAndUpdate(contact._id, { 
                 selectedProgram: prog,
                 [`flowVariables.selectedProgram`]: prog,
                 currentFlowStep: possibleNextStep?.id || ''
              });
+             
              if (possibleNextStep) {
+                contact.currentFlowStep = possibleNextStep.id;
                 stepToProcess = possibleNextStep;
                 continue;
              }
              break;
           } else {
              const prompts = (await Settings.findOne({ tenantId }))?.automation?.aiPrompts || {};
-             const qual = contact.qualification || (await Contact.findById(contact._id)).qualification;
+             const qual = contact.qualification; // Already synced in previous step
              const pMap = prompts.programMap || {};
              const qualMap = pMap[qual] || {};
 
@@ -266,6 +270,7 @@ class PRDFlowService {
              });
              await saveAndEmit('interactive', reply, null);
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
+             contact.currentFlowStep = stepToProcess.id;
              stepToProcess = null;
              break;
           }
@@ -291,6 +296,7 @@ class PRDFlowService {
 
           if (possibleNextStep) {
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
+             contact.currentFlowStep = possibleNextStep.id;
              stepToProcess = possibleNextStep;
              await new Promise(r => setTimeout(r, 800));
              continue;
@@ -303,17 +309,25 @@ class PRDFlowService {
           if (contact.currentFlowStep === stepToProcess.id) {
              const time = messageText.trim();
              // Finalize Lead
-             const vars = (await Contact.findById(contact._id)).flowVariables || {};
+             const fullContact = await Contact.findById(contact._id);
+             const vars = fullContact.flowVariables || {};
+             
              await Lead.create({
-                name: contact.name, phone: contact.phone,
-                qualification: vars.qualification, selectedProgram: vars.selectedProgram,
-                preferredCallTime: time, leadSource: 'proactive_ai_bot', status: 'QUALIFIED'
+                tenantId,
+                name: contact.name, 
+                phone: contact.phone,
+                qualification: vars.qualification || contact.qualification, 
+                selectedProgram: vars.selectedProgram || contact.selectedProgram,
+                preferredCallTime: time, 
+                leadSource: 'proactive_ai_bot', 
+                status: 'QUALIFIED'
              });
 
-             const summary = `Thank you ${contact.name || ''} 🙌\n\nDetails Submitted:\n🎓 Qual: ${vars.qualification}\n📘 Program: ${vars.selectedProgram}\n⏰ Time: ${time}\n\nOur counsellor will call you! 📞`;
+             const summary = `Thank you ${contact.name || ''} 🙌\n\nDetails Submitted:\n🎓 Qual: ${vars.qualification || contact.qualification}\n📘 Program: ${vars.selectedProgram || contact.selectedProgram}\n⏰ Time: ${time}\n\nOur counsellor will call you! 📞`;
              await waService.sendTextMessage(contact.phone, summary);
 
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: '' });
+             contact.currentFlowStep = '';
              stepToProcess = null;
              break;
           } else {
@@ -325,6 +339,7 @@ class PRDFlowService {
              });
              await saveAndEmit('interactive', timeMsg, res);
              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
+             contact.currentFlowStep = stepToProcess.id;
              stepToProcess = null;
              break;
           }
@@ -336,6 +351,7 @@ class PRDFlowService {
            await saveAndEmit('text', msg, res);
            if (possibleNextStep) {
               await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
+              contact.currentFlowStep = possibleNextStep.id;
               stepToProcess = possibleNextStep;
               await new Promise(r => setTimeout(r, 800));
               continue;
@@ -346,15 +362,19 @@ class PRDFlowService {
 
         case 'CUSTOM_QUESTION': {
            if (contact.currentFlowStep === stepToProcess.id) {
-              // Answer received, continue!
               await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep?.id || '' });
-              if (possibleNextStep) { stepToProcess = possibleNextStep; continue; }
+              if (possibleNextStep) { 
+                 contact.currentFlowStep = possibleNextStep.id;
+                 stepToProcess = possibleNextStep; 
+                 continue; 
+              }
               break;
            } else {
               const msg = replaceVars(stepToProcess.message);
               const res = await waService.sendTextMessage(contact.phone, msg);
               await saveAndEmit('text', msg, res);
               await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
+              contact.currentFlowStep = stepToProcess.id;
               stepToProcess = null;
               break;
            }
