@@ -136,7 +136,12 @@ export default function AIChatbot() {
     if (!file) return;
 
     const field = activeFieldRef.current;
-    setUploading(field);
+    
+    // Check if we are updating a deep path (e.g., programMap proxy)
+    const isDeep = typeof field === 'object';
+    const targetField = isDeep ? field.key : field;
+    
+    setUploading(targetField);
 
     try {
       const token = localStorage.getItem('token');
@@ -155,7 +160,11 @@ export default function AIChatbot() {
 
       if (res.ok) {
         const data = await res.json();
-        updatePrompt(field, data.url);
+        if (isDeep) {
+            field.callback(data.url);
+        } else {
+            updatePrompt(field, data.url);
+        }
         toast.success('Image uploaded successfully!');
       } else {
         toast.error('Failed to upload image');
@@ -167,6 +176,116 @@ export default function AIChatbot() {
       setUploading(null);
       e.target.value = '';
     }
+  };
+
+  // --- Branching Logic Editor Handlers ---
+  
+  const addQualification = () => {
+    const newQual = "New Level";
+    setSettings(prev => ({
+       ...prev,
+       aiPrompts: {
+          ...prev.aiPrompts,
+          qualificationOptions: [...(prev.aiPrompts.qualificationOptions || []), newQual],
+          programMap: {
+             ...(prev.aiPrompts.programMap || {}),
+             [newQual]: { 'Default Category': ['New Program'] }
+          }
+       }
+    }));
+  };
+
+  const removeQualification = (qual) => {
+    setSettings(prev => {
+       const newQuals = (prev.aiPrompts.qualificationOptions || []).filter(q => q !== qual);
+       const newMap = { ...(prev.aiPrompts.programMap || {}) };
+       delete newMap[qual];
+       return {
+          ...prev,
+          aiPrompts: { ...prev.aiPrompts, qualificationOptions: newQuals, programMap: newMap }
+       };
+    });
+  };
+
+  const updateQualName = (oldName, newName) => {
+    if (oldName === newName) return;
+    setSettings(prev => {
+        const newQuals = (prev.aiPrompts.qualificationOptions || []).map(q => q === oldName ? newName : q);
+        const newMap = { ...(prev.aiPrompts.programMap || {}) };
+        newMap[newName] = newMap[oldName];
+        delete newMap[oldName];
+        return {
+            ...prev,
+            aiPrompts: { ...prev.aiPrompts, qualificationOptions: newQuals, programMap: newMap }
+        };
+    });
+  };
+
+  const addSection = (qual) => {
+    setSettings(prev => {
+        const newMap = { ...prev.aiPrompts.programMap };
+        const qualData = { ...newMap[qual] };
+        qualData['New Section'] = ['New Program'];
+        newMap[qual] = qualData;
+        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
+    });
+  };
+
+  const removeSection = (qual, section) => {
+    setSettings(prev => {
+        const newMap = { ...prev.aiPrompts.programMap };
+        const qualData = { ...newMap[qual] };
+        delete qualData[section];
+        newMap[qual] = qualData;
+        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
+    });
+  };
+
+  const updateSectionName = (qual, oldSection, newSection) => {
+    if (oldSection === newSection) return;
+    setSettings(prev => {
+        const newMap = { ...prev.aiPrompts.programMap };
+        const qualData = { ...newMap[qual] };
+        qualData[newSection] = qualData[oldSection];
+        delete qualData[oldSection];
+        newMap[qual] = qualData;
+        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
+    });
+  };
+
+  const updateProgram = (qual, section, index, value) => {
+    setSettings(prev => {
+        const newMap = { ...prev.aiPrompts.programMap };
+        const qualData = { ...newMap[qual] };
+        const secData = [...qualData[section]];
+        secData[index] = value;
+        qualData[section] = secData;
+        newMap[qual] = qualData;
+        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
+    });
+  };
+
+  const addProgram = (qual, section) => {
+    setSettings(prev => {
+        const newMap = { ...prev.aiPrompts.programMap };
+        const qualData = { ...newMap[qual] };
+        const secData = [...(qualData[section] || [])];
+        secData.push('New Program');
+        qualData[section] = secData;
+        newMap[qual] = qualData;
+        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
+    });
+  };
+
+  const removeProgram = (qual, section, index) => {
+    setSettings(prev => {
+        const newMap = { ...prev.aiPrompts.programMap };
+        const qualData = { ...newMap[qual] };
+        const secData = qualData[section].filter((_, i) => i !== index);
+        qualData[section] = secData;
+        newMap[qual] = qualData;
+        return { ...prev, aiPrompts: { ...prev.aiPrompts, programMap: newMap } };
+    });
   };
 
   const NodeLine = () => (
@@ -420,43 +539,103 @@ export default function AIChatbot() {
                   icon={User}
                 />
                 
-                <div className="bg-gray-50 border border-gray-100 rounded-2xl p-6">
-                   <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-widest flex items-center">
-                         <Play size={10} className="mr-2 text-indigo-500" />
-                         Branching Logic Preview
-                      </h3>
-                      <div className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded font-bold uppercase">Manual Control</div>
+                <div className="bg-gray-50 border border-gray-100 rounded-3xl p-6 sm:p-8">
+                   <div className="flex items-center justify-between mb-8">
+                      <div>
+                        <h3 className="text-sm font-black text-gray-800 uppercase tracking-widest flex items-center">
+                           <Play size={14} className="mr-2 text-indigo-500" />
+                           Branching Logic Editor
+                        </h3>
+                        <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wider">Configure what users see after clicking a level</p>
+                      </div>
+                      <button 
+                        onClick={addQualification}
+                        className="flex items-center space-x-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition shadow-lg shadow-indigo-500/20 active:scale-95"
+                      >
+                         <Plus size={14} />
+                         <span>Add Level</span>
+                      </button>
                    </div>
 
-                   <div className="space-y-3">
+                   <div className="space-y-6">
                       {(settings.aiPrompts.qualificationOptions || []).map((qual) => (
-                        <div key={qual} className="group relative bg-white border border-gray-100 rounded-xl p-4 shadow-sm transition-all hover:border-indigo-200 hover:shadow-md">
-                           <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-black text-gray-800 uppercase tracking-wide">{qual}</span>
-                              <div className="h-px flex-1 mx-4 bg-gray-50 group-hover:bg-indigo-50 transition-colors"></div>
-                              <ArrowRight size={12} className="text-indigo-400" />
+                        <div key={qual} className="group relative bg-white border border-gray-200 rounded-2xl p-6 shadow-sm transition-all hover:border-indigo-300 hover:shadow-md">
+                           <button 
+                              onClick={() => removeQualification(qual)}
+                              className="absolute -right-2 -top-2 w-7 h-7 bg-red-50 text-red-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all shadow-sm border border-red-100"
+                              title="Delete Level"
+                           >
+                              <Plus size={14} className="rotate-45" />
+                           </button>
+                           
+                           <div className="flex items-center space-x-3 mb-6">
+                              <div className="bg-indigo-100 p-2 rounded-lg text-indigo-600">
+                                 <GraduationCap size={16} />
+                              </div>
+                              <input 
+                                className="bg-transparent border-none text-sm font-black text-gray-800 uppercase tracking-wide focus:ring-0 w-full p-0"
+                                value={qual}
+                                onChange={(e) => updateQualName(qual, e.target.value)}
+                              />
                            </div>
-                           <div className="flex flex-wrap gap-2">
+                           
+                           <div className="pl-4 border-l-2 border-indigo-50 space-y-6">
                               {Object.keys(settings.aiPrompts.programMap?.[qual] || {}).map(section => (
-                                 <div key={section} className="flex flex-col space-y-1">
-                                    <span className="text-[9px] font-bold text-gray-400 uppercase italic mb-1">{section}</span>
-                                    <div className="flex flex-wrap gap-1.5">
-                                       {(settings.aiPrompts.programMap[qual][section] || []).map(prog => (
-                                          <span key={prog} className="px-2 py-0.5 bg-gray-50 text-gray-600 rounded text-[9px] font-medium border border-gray-100 group-hover:bg-indigo-50/30 group-hover:border-indigo-100 transition-all font-mono">
-                                             {prog}
-                                          </span>
+                                 <div key={section} className="relative group/sec">
+                                    <button 
+                                      onClick={() => removeSection(qual, section)}
+                                      className="absolute -left-7 top-0 text-gray-300 hover:text-red-400 opacity-0 group-hover/sec:opacity-100 transition-opacity"
+                                      title="Remove Category"
+                                    >
+                                       <Plus size={14} className="rotate-45" />
+                                    </button>
+                                    
+                                    <input 
+                                       className="bg-transparent border-none text-[10px] font-bold text-gray-400 uppercase italic mb-3 focus:ring-0 block w-full p-0"
+                                       value={section}
+                                       onChange={(e) => updateSectionName(qual, section, e.target.value)}
+                                    />
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                       {(settings.aiPrompts.programMap[qual][section] || []).map((prog, idx) => (
+                                          <div key={`${qual}-${section}-${idx}`} className="flex items-center bg-gray-50 border border-gray-100 rounded-lg pr-2 group/prog overflow-hidden transition-colors hover:bg-white hover:border-indigo-100">
+                                             <input 
+                                                className="flex-1 bg-transparent border-none text-[10px] font-medium text-gray-700 py-2 px-3 focus:ring-0 min-w-0"
+                                                value={prog}
+                                                onChange={(e) => updateProgram(qual, section, idx, e.target.value)}
+                                             />
+                                             <button 
+                                                onClick={() => removeProgram(qual, section, idx)}
+                                                className="text-gray-300 hover:text-red-400 opacity-0 group-hover/prog:opacity-100 transition-opacity p-1"
+                                             >
+                                                <Plus size={12} className="rotate-45" />
+                                             </button>
+                                          </div>
                                        ))}
+                                       <button 
+                                          onClick={() => addProgram(qual, section)}
+                                          className="flex items-center justify-center p-2 border border-dashed border-gray-200 rounded-lg text-gray-400 hover:text-indigo-500 hover:border-indigo-300 transition-all hover:bg-indigo-50/30"
+                                       >
+                                          <Plus size={12} />
+                                       </button>
                                     </div>
                                  </div>
                               ))}
+                              
+                              <button 
+                                onClick={() => addSection(qual)}
+                                className="flex items-center space-x-2 text-[10px] font-bold text-indigo-400 hover:text-indigo-600 transition-colors bg-indigo-50/50 px-3 py-1.5 rounded-lg border border-dashed border-indigo-100 hover:bg-indigo-50"
+                              >
+                                 <Plus size={12} />
+                                 <span>Add New Category</span>
+                              </button>
                            </div>
                         </div>
                       ))}
                    </div>
                    
-                   <p className="text-[10px] text-gray-400 mt-4 italic text-center">
-                      The programs above are fixed according to your "Select Qualification" choice.
+                   <p className="text-[10px] text-gray-400 mt-8 italic text-center bg-white/50 py-2 rounded-xl border border-gray-50">
+                      Changes above are saved only when you click "Publish Bot Changes".
                    </p>
                 </div>
              </div>
