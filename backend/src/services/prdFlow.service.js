@@ -159,14 +159,16 @@ class PRDFlowService {
           if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup) {
              const name = await AIService.extractData(messageText.trim(), 'NAME');
              contact.name = name;
+             const nextId = possibleNextStep?.id || '';
              
              await Contact.findByIdAndUpdate(contact._id, { 
                 name, 
-                currentFlowStep: possibleNextStep?.id || '',
+                currentFlowStep: nextId,
                 [`flowVariables.name`]: name
              });
              
              if (possibleNextStep) {
+                contact.currentFlowStep = nextId; // Crucial: Sync memory for the next loop iteration
                 stepToProcess = possibleNextStep;
                 continue; 
              }
@@ -197,13 +199,16 @@ class PRDFlowService {
              }
 
              contact.qualification = qual;
+             const nextId = possibleNextStep?.id || '';
+             
              await Contact.findByIdAndUpdate(contact._id, { 
                 qualification: qual,
                 [`flowVariables.qualification`]: qual,
-                currentFlowStep: possibleNextStep?.id || ''
+                currentFlowStep: nextId
              });
-
+             
              if (possibleNextStep) {
+                contact.currentFlowStep = nextId; // Sync memory correctly
                 stepToProcess = possibleNextStep;
                 continue;
              }
@@ -234,15 +239,16 @@ class PRDFlowService {
           if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup) {
              const prog = messageText.trim();
              contact.selectedProgram = prog;
+             const nextId = possibleNextStep?.id || '';
              
              await Contact.findByIdAndUpdate(contact._id, { 
                 selectedProgram: prog,
                 [`flowVariables.selectedProgram`]: prog,
-                currentFlowStep: possibleNextStep?.id || ''
+                currentFlowStep: nextId
              });
              
              if (possibleNextStep) {
-                contact.currentFlowStep = possibleNextStep.id;
+                contact.currentFlowStep = nextId; // Sync memory correctly
                 stepToProcess = possibleNextStep;
                 continue;
              }
@@ -357,9 +363,11 @@ class PRDFlowService {
 
         case 'CUSTOM_QUESTION': {
            if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup) {
-              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep?.id || '' });
+              const nextId = possibleNextStep?.id || '';
+              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: nextId });
+              
               if (possibleNextStep) { 
-                 contact.currentFlowStep = possibleNextStep.id;
+                 contact.currentFlowStep = nextId; // Sync memory
                  stepToProcess = possibleNextStep; 
                  continue; 
               }
