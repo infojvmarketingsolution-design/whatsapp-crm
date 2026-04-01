@@ -219,6 +219,33 @@ function PlaceholderPage({ title }) {
   );
 }
 
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) { return { hasError: true, error }; }
+  componentDidCatch(error, errorInfo) { console.error("Global Catch:", error, errorInfo); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-10 font-sans">
+          <div className="bg-white p-10 rounded-3xl shadow-2xl border border-rose-100 max-w-xl w-full">
+            <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-2xl flex items-center justify-center mb-6"><AlertCircle size={32} /></div>
+            <h1 className="text-2xl font-black text-slate-800 mb-2 tracking-tight">Application Shell Failure</h1>
+            <p className="text-sm font-bold text-slate-500 mb-8 lowercase tracking-wide">A critical runtime error has occurred in the UI layer.</p>
+            <div className="bg-slate-900 rounded-2xl p-6 mb-8 overflow-x-auto">
+               <code className="text-rose-400 text-xs font-mono">{this.state.error?.toString()}</code>
+            </div>
+            <button onClick={() => window.location.reload()} className="w-full py-4 bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">Attempt System Recovery</button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -386,7 +413,9 @@ function AppLayout() {
 function App() {
   return (
     <BrowserRouter>
-      <AppLayout />
+      <ErrorBoundary>
+        <AppLayout />
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }
