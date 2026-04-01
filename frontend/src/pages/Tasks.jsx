@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle2, PhoneCall, Calendar, Clock, AlertCircle, 
   Search, Filter, ChevronRight, User, Check, CalendarDays,
@@ -12,6 +12,7 @@ export default function Tasks() {
   const [searchQuery, setSearchQuery] = useState('');
   const [view, setView] = useState('PENDING'); // PENDING, COMPLETED, OVERDUE
   const [activeDropdown, setActiveDropdown] = useState(null);
+  const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -19,9 +20,13 @@ export default function Tasks() {
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = () => setActiveDropdown(null);
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   const fetchTasks = async () => {
@@ -302,13 +307,16 @@ export default function Tasks() {
                            </>
                         )}
                         <button 
-                          onClick={() => navigate('/inbox', { state: { selectedContact: t.phone } })}
+                          onClick={() => {
+                            localStorage.setItem('activeChatId', t.contactId);
+                            navigate('/inbox', { state: { selectedContact: t.phone } });
+                          }}
                           className="h-9 px-4 bg-slate-50 text-slate-600 text-xs font-black rounded-xl hover:bg-white hover:text-slate-800 hover:border-slate-200 border border-transparent transition-all flex items-center active:scale-95"
                         >
                           Chat <ArrowUpRight size={14} className="ml-2 opacity-60" />
                         </button>
                         
-                        <div className="relative">
+                        <div className="relative" ref={activeDropdown === t._id ? dropdownRef : null}>
                            <button 
                               onClick={(e) => {
                                  e.stopPropagation();
@@ -338,7 +346,10 @@ export default function Tasks() {
                                     </>
                                  )}
                                  <button 
-                                    onClick={() => navigate('/inbox', { state: { selectedContact: t.phone } })}
+                                    onClick={() => {
+                                       localStorage.setItem('activeChatId', t.contactId);
+                                       navigate('/inbox', { state: { selectedContact: t.phone } });
+                                    }}
                                     className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center"
                                  >
                                     <ArrowUpRight size={14} className="mr-3 text-slate-400" /> Go to Chat
