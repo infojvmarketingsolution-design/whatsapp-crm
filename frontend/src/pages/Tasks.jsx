@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle2, PhoneCall, Calendar, Clock, AlertCircle, 
   Search, Filter, ChevronRight, User, Check, CalendarDays,
