@@ -43,6 +43,10 @@ const ContactSchema = new mongoose.Schema({
   statusUpdatedAt: { type: Date, default: Date.now },
   interests: [{ type: String }],
   leadConsiderDate: { type: Date },
+  pipelineStage: { type: String, enum: ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing', 'Won', 'Lost'], default: 'Discovery' },
+  estimatedValue: { type: Number, default: 0 },
+  leadSource: { type: String, default: 'Manual Entry' },
+  nextFollowUp: { type: Date },
   isArchived: { type: Boolean, default: false }
 }, { timestamps: true });
 

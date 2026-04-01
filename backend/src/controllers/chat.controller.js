@@ -121,6 +121,13 @@ const performContactAction = async (req, res) => {
         if (payload.firstName !== undefined) contact.firstName = payload.firstName;
         if (payload.lastName !== undefined) contact.lastName = payload.lastName;
         if (payload.secondaryPhone !== undefined) contact.secondaryPhone = payload.secondaryPhone;
+        if (payload.pipelineStage !== undefined) {
+           contact.pipelineStage = payload.pipelineStage;
+           contact.timeline.push({ eventType: 'PIPELINE_MOVE', description: `Moved to ${payload.pipelineStage} stage`, timestamp: new Date() });
+        }
+        if (payload.estimatedValue !== undefined) contact.estimatedValue = payload.estimatedValue;
+        if (payload.leadSource !== undefined) contact.leadSource = payload.leadSource;
+        if (payload.nextFollowUp !== undefined) contact.nextFollowUp = payload.nextFollowUp;
 
         if (payload.status !== undefined && payload.status !== contact.status) {
            contact.status = payload.status;
