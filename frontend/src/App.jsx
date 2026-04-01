@@ -370,36 +370,39 @@ function AppLayout() {
     <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden`}>
       <Toaster position="top-right" reverseOrder={false} />
       {!isAuthPage && (userRole === 'SUPER_ADMIN' ? <AdminSidebar onLogout={handleLogout} /> : <Sidebar whatsappConfig={whatsappConfig} />)}
-      <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-y-auto custom-scrollbar">
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/pipeline" element={<Pipeline />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/inbox" element={<Inbox />} />
-          <Route path="/campaigns" element={<Campaigns />} />
-          <Route path="/campaigns/create" element={<CreateCampaign />} />
-          <Route path="/flows" element={<Flows />} />
-          <Route path="/flows/:id" element={<FlowBuilder />} />
-          <Route path="/agents" element={<AgentsDashboard />} />
-          <Route path="/widget" element={<WebWidget />} />
-          <Route path="/contacts" element={<Contacts />} />
-          <Route path="/templates" element={<Templates />} />
-          <Route path="/api" element={<ApiSetup />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/ai-chatbot" element={<AIChatbot />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-hidden">
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <Routes>
+            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/pipeline" element={<Pipeline />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/inbox" element={<Inbox />} />
+            <Route path="/campaigns" element={<Campaigns />} />
+            <Route path="/campaigns/create" element={<CreateCampaign />} />
+            <Route path="/flows" element={<Flows />} />
+            <Route path="/flows/:id" element={<FlowBuilder />} />
+            <Route path="/agents" element={<AgentsDashboard />} />
+            <Route path="/widget" element={<WebWidget />} />
+            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/templates" element={<Templates />} />
+            <Route path="/api" element={<ApiSetup />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/ai-chatbot" element={<AIChatbot />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
-          {/* Super Admin Routes */}
-          <Route path="/admin/dashboard" element={<AdminDashboard />} />
-          <Route path="/admin/clients" element={<ClientManagement />} />
-          <Route path="/admin/analytics" element={<AdminAnalytics />} />
-          <Route path="/admin/plans" element={<PlanManagement />} />
-          <Route path="/admin/settings" element={<AdminSettings />} />
-        </Routes>
+            {/* Super Admin Routes */}
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/clients" element={<ClientManagement />} />
+            <Route path="/admin/analytics" element={<AdminAnalytics />} />
+            <Route path="/admin/plans" element={<PlanManagement />} />
+            <Route path="/admin/settings" element={<AdminSettings />} />
+          </Routes>
+        </div>
+
         {!isAuthPage && (
-          <div className="w-full py-1.5 px-8 bg-white border-t border-slate-200 flex flex-col sm:flex-row justify-center items-center gap-y-1 sm:gap-y-0 sm:gap-x-12 bg-slate-50/50 shrink-0 relative z-20">
+          <div className="w-full py-1.5 px-8 bg-white border-t border-slate-200 flex flex-col sm:flex-row justify-center items-center gap-y-1 sm:gap-y-0 sm:gap-x-12 shrink-0">
              <div className="flex items-center space-x-2">
                 <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse"></div>
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">System Online</span>
