@@ -139,6 +139,7 @@ const performContactAction = async (req, res) => {
         }
         
         contact.timeline.push({ eventType: 'CONTACT_UPDATED', description: 'Contact details updated', timestamp: new Date() });
+        await contact.save();
         if (payload.status) {
            contact.timeline.push({ eventType: 'STATUS_CHANGE', description: `Moved to ${payload.status}`, timestamp: new Date() });
         }

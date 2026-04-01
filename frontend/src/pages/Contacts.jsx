@@ -329,14 +329,17 @@ export default function Contacts() {
                   </div>
               </div>
 
-              {/* THEME SYNCHRONIZED PIPELINE */}
-              <div className="bg-[var(--theme-bg)] opacity-95 px-8 pb-8 pt-2 flex items-center justify-between shrink-0 shadow-inner overflow-x-auto no-scrollbar">
-                  <div className="flex items-center flex-1 min-w-[700px]">
+              {/* THEME SYNCHRONIZED PIPELINE + CLICK SAFETY */}
+              <div className="bg-[var(--theme-bg)] relative z-[100] px-8 pb-8 pt-2 flex items-center justify-between shrink-0 shadow-inner overflow-x-auto no-scrollbar pointer-events-auto">
+                  <div className="flex items-center flex-1 min-w-[700px] pointer-events-auto">
                       {PIPELINE_STAGES.map((stage, idx) => (
                          <React.Fragment key={stage}>
                             <button 
-                              onClick={() => handleFieldChange('pipelineStage', stage)}
-                              className={`flex flex-col items-center group relative ${idx < PIPELINE_STAGES.length - 1 ? 'flex-1' : ''}`}
+                              onClick={() => {
+                                 console.log("Pipeline Stage Clicked:", stage);
+                                 handleFieldChange('pipelineStage', stage);
+                              }}
+                              className={`flex flex-col items-center group relative z-[110] px-2 py-1 cursor-pointer pointer-events-auto ${idx < PIPELINE_STAGES.length - 1 ? 'flex-1' : ''}`}
                             >
                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-black transition-all border-4 shadow-xl ${
                                   editedContact.pipelineStage === stage 
