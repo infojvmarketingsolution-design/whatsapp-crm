@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, PlayCircle, Plus, ChevronDown, Download, Upload, Trash2, 
-  MoreVertical, AlertCircle, Clock, Mail, MapPin, Phone, User, 
-  MessageCircle, Calendar, CheckCircle2, X, ArrowUpRight, History,
-  LayoutGrid, ClipboardList, Info, Star, Send, ExternalLink, ShieldCheck,
-  Zap, Target, Activity, FileText, TrendingUp, Flame, Snowflake, Sun, Save,
-  Briefcase, Building2, Linkedin, Globe, Hash, Tag, Filter
+  Search, Plus, X, Mail, MapPin, Phone, User, 
+  Clock, Activity, Target, Tag, Save, Filter, 
+  Briefcase, Building2, Download, MoreVertical, 
+  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History
 } from 'lucide-react';
 
 export default function Contacts() {
@@ -17,9 +15,7 @@ export default function Contacts() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newLeadName, setNewLeadName] = useState('');
   const [newLeadPhone, setNewLeadPhone] = useState('');
-  const [activeDropdown, setActiveDropdown] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [isBulkLoading, setIsBulkLoading] = useState(false);
   
   // Profile Detail States
   const [selectedContact, setSelectedContact] = useState(null);
@@ -29,7 +25,7 @@ export default function Contacts() {
   const [isUpdatingContact, setIsUpdatingContact] = useState(false);
 
   // Design states
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('timeline');
   const [noteInput, setNoteInput] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
 
@@ -170,7 +166,7 @@ export default function Contacts() {
      setShowProfile(true);
      fetchRecentMessages(contact._id);
      setShowSaveFab(false);
-     setActiveTab('overview');
+     setActiveTab('timeline');
   };
 
   const handleFieldChange = (field, value) => {
@@ -192,108 +188,103 @@ export default function Contacts() {
   };
 
   return (
-    <div className="bg-[#f8fafc] min-h-screen flex flex-col relative animate-fade-in">
-      {/* Top Professional Header Bar */}
-      <div className="bg-white border-b border-slate-200 px-10 py-6 sticky top-0 z-40 flex items-center justify-between shadow-sm">
+    <div className="bg-crm-bg min-h-screen flex flex-col animate-fade-in font-sans">
+      {/* Synchronization with Global Theme */}
+      <div className="bg-white border-b border-gray-200 px-8 py-4 sticky top-0 z-40 flex items-center justify-between shadow-sm">
          <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight flex items-center">
-               <User className="mr-3 text-teal-600" size={24} /> Contacts Manager
+            <h1 className="text-sm font-bold text-gray-500 tracking-wider uppercase flex items-center">
+               <Users className="mr-2 text-[var(--theme-text)]" size={16} /> Contacts DB
             </h1>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Unified Customer Relationship Database</p>
          </div>
-         <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2 bg-slate-50 px-4 py-2 rounded-xl border border-slate-100">
-               <div className="text-right pr-3 border-r border-slate-200">
-                  <p className="text-[8px] font-black text-slate-400 uppercase">Database Size</p>
-                  <p className="text-sm font-black text-slate-800">{contacts.length}</p>
+         <div className="flex items-center space-x-6">
+            <div className="flex items-center space-x-3 text-xs">
+               <div className="text-right">
+                  <p className="text-gray-400 font-bold uppercase tracking-tighter text-[9px]">Total Records</p>
+                  <p className="font-bold text-gray-700">{contacts.length}</p>
                </div>
-               <div className="pl-1">
-                  <p className="text-[8px] font-black text-teal-600 uppercase tracking-tighter">Ready Leads</p>
-                  <p className="text-sm font-black text-teal-700">{contacts.filter(c => c.score > 70).length}</p>
+               <div className="w-[1px] h-6 bg-gray-100 mx-2"></div>
+               <div>
+                  <p className="text-[var(--theme-text)] font-bold uppercase tracking-tighter text-[9px]">High Intent</p>
+                  <p className="font-bold text-gray-700">{contacts.filter(c => c.score > 70).length}</p>
                </div>
             </div>
-            <button onClick={() => setShowAddModal(true)} className="flex items-center space-x-2 bg-slate-800 text-white px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-black transition shadow-lg active:scale-95">
-               <Plus size={16} />
-               <span>New Contact</span>
+            <button 
+              onClick={() => setShowAddModal(true)} 
+              className="px-5 py-2 bg-[var(--theme-bg)] text-white text-xs font-bold rounded-lg hover:shadow-glow transition transform hover:-translate-y-0.5 active:scale-95"
+            >
+               <span>+ Add Contact</span>
             </button>
          </div>
       </div>
 
-      <div className="p-10 flex-1 flex flex-col">
-          {/* Filter & Search Bar */}
+      <div className="p-8 flex-1 flex flex-col max-w-7xl mx-auto w-full">
+          {/* Dashboard-Style Header */}
           <div className="flex justify-between items-center mb-8">
-              <div className="relative w-[400px]">
-                 <Search className="absolute left-4 top-3 text-slate-300" size={18} />
-                 <input 
-                   type="text" 
-                   value={searchTerm}
-                   onChange={(e) => setSearchTerm(e.target.value)}
-                   placeholder="Search by name, mobile, or company..." 
-                   className="w-full bg-white border border-slate-200 rounded-2xl py-3 pl-12 pr-4 text-sm font-bold text-slate-700 placeholder-slate-300 shadow-sm focus:ring-4 ring-teal-50 transition-all outline-none"
-                 />
-              </div>
+              <h2 className="text-2xl font-bold text-gray-800">Workspace Contacts</h2>
               <div className="flex items-center space-x-3">
-                 <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-teal-600 hover:border-teal-100 transition shadow-sm"><Filter size={18} /></button>
-                 <button onClick={() => {}} className="flex items-center space-x-2 bg-white border border-slate-200 text-slate-600 px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-50 transition shadow-sm"><Download size={14} /><span>Export CSV</span></button>
+                 <div className="relative">
+                    <Search className="absolute left-3 top-2.5 text-gray-300" size={16} />
+                    <input 
+                      type="text" 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      placeholder="Search identity or mobile..." 
+                      className="bg-white border border-gray-200 rounded-lg py-2 pl-9 pr-4 text-sm font-medium text-gray-700 placeholder-gray-300 focus:ring-2 focus:ring-[var(--theme-border)]/20 outline-none transition-all w-[300px]"
+                    />
+                 </div>
+                 <button className="p-2.5 bg-white border border-gray-200 rounded-lg text-gray-400 hover:text-[var(--theme-text)] hover:border-[var(--theme-border)]/50 transition"><Filter size={16} /></button>
+                 <button className="flex items-center space-x-2 bg-white border border-gray-200 text-gray-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-50 transition"><Download size={14} /><span>Export</span></button>
               </div>
           </div>
 
-          {/* Contacts Table - High Density */}
-          <div className="flex-1 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/40">
-             <div className="overflow-y-auto h-full custom-scrollbar">
+          {/* Clean Table Sync */}
+          <div className="bg-white rounded-xl border border-gray-100 shadow-premium overflow-hidden">
+             <div className="overflow-x-auto h-full custom-scrollbar">
                 <table className="w-full text-left border-collapse">
-                   <thead className="sticky top-0 bg-white z-10 border-b border-slate-100">
+                   <thead className="bg-gray-50/50 border-b border-gray-100">
                      <tr>
-                        <th className="py-5 px-8 w-12"><input type="checkbox" className="w-4 h-4 accent-teal-600 rounded-lg cursor-pointer" /></th>
-                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Professional Identity</th>
-                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Engagement Score</th>
-                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Heat Level</th>
-                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-slate-400">Lifecycle Status</th>
-                        <th className="py-5 px-8 text-right text-[10px] font-black uppercase tracking-widest text-slate-400">Actions</th>
+                        <th className="py-4 px-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">Context</th>
+                        <th className="py-4 px-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">Engagement</th>
+                        <th className="py-4 px-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">Persona</th>
+                        <th className="py-4 px-6 text-[10px] font-bold uppercase tracking-widest text-gray-400">Lifecycle</th>
+                        <th className="py-4 px-8 text-right text-[10px] font-bold uppercase tracking-widest text-gray-400">Actions</th>
                      </tr>
                    </thead>
                    <tbody>
                      {filteredContacts.map((c, i) => (
-                       <tr key={c._id || i} onClick={() => handleRowClick(c)} className="cursor-pointer group hover:bg-slate-50 border-b border-slate-50/60 transition-all">
-                          <td className="py-5 px-8" onClick={e=>e.stopPropagation()}><input type="checkbox" className="w-4 h-4 accent-teal-600 rounded-lg" /></td>
-                          <td className="py-5 px-6">
-                             <div className="flex items-center space-x-4">
-                                <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center font-black text-slate-400 transition-colors group-hover:bg-teal-600 group-hover:text-white">{c.name?.charAt(0) || 'U'}</div>
+                       <tr key={c._id || i} onClick={() => handleRowClick(c)} className="cursor-pointer group hover:bg-[var(--theme-bg)]/5 transition-colors">
+                          <td className="py-4 px-6">
+                             <div className="flex items-center space-x-3">
+                                <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center font-bold text-gray-400 group-hover:bg-[var(--theme-bg)] group-hover:text-white transition-colors">{c.name?.charAt(0) || 'U'}</div>
                                 <div>
-                                   <p className="text-sm font-black text-slate-800 leading-none mb-1">{c.name}</p>
-                                   <p className="text-[10px] font-bold text-slate-400">{c.phone}</p>
+                                   <p className="text-sm font-bold text-gray-800 leading-none mb-1">{c.name}</p>
+                                   <p className="text-[10px] font-semibold text-gray-400">{c.phone}</p>
                                 </div>
                              </div>
                           </td>
-                          <td className="py-5 px-6">
+                          <td className="py-4 px-6">
                              <div className="flex items-center space-x-2">
-                                <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                   <div className="h-full bg-teal-500 transition-all" style={{ width: `${c.score || 0}%` }}></div>
+                                <div className="w-16 h-1 bg-gray-100 rounded-full overflow-hidden">
+                                   <div className="h-full bg-[var(--theme-bg)] transition-all" style={{ width: `${c.score || 0}%` }}></div>
                                 </div>
-                                <span className="text-[9px] font-black text-slate-400">{c.score || 0}%</span>
+                                <span className="text-[10px] font-bold text-gray-400">{c.score || 0}%</span>
                              </div>
                           </td>
-                          <td className="py-5 px-6">
-                             <div className={`inline-flex items-center px-1.5 py-1 rounded-lg ${
+                          <td className="py-4 px-6">
+                             <div className={`inline-flex items-center px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-wider ${
                                 c.heatLevel === 'Hot' ? 'bg-rose-50 text-rose-500' : 
-                                c.heatLevel === 'Warm' ? 'bg-amber-50 text-amber-500' : 'bg-blue-50 text-blue-400'
+                                c.heatLevel === 'Warm' ? 'bg-amber-50 text-amber-500' : 'bg-blue-50 text-blue-500'
                              }`}>
-                                {c.heatLevel === 'Hot' ? <Flame size={12} className="mr-1" /> : 
-                                 c.heatLevel === 'Warm' ? <Sun size={12} className="mr-1" /> : <Snowflake size={12} className="mr-1" />}
-                                <span className="text-[8px] font-black uppercase tracking-widest">{c.heatLevel || 'Cold'}</span>
+                                {c.heatLevel === 'Hot' ? <Flame size={10} className="mr-1" /> : 
+                                 c.heatLevel === 'Warm' ? <Sun size={10} className="mr-1" /> : <Snowflake size={10} className="mr-1" />}
+                                {c.heatLevel || 'Cold'}
                              </div>
                           </td>
-                          <td className="py-5 px-6">
-                             <div className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-wider inline-block ${
-                                c.status === 'CLOSED_WON' ? 'bg-teal-100 text-teal-800' :
-                                c.status === 'NEW LEAD' ? 'bg-blue-100 text-blue-800' :
-                                'bg-slate-100 text-slate-500'
-                             }`}>
-                                {c.status?.replace('_', ' ')}
-                             </div>
+                          <td className="py-4 px-6">
+                             <span className="text-[9px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded uppercase">{c.status?.replace('_', ' ')}</span>
                           </td>
-                          <td className="py-5 px-8 text-right">
-                             <button className="p-2 text-slate-300 hover:text-slate-800 transition-colors"><MoreVertical size={16} /></button>
+                          <td className="py-4 px-8 text-right">
+                             <button className="p-2 text-gray-300 hover:text-gray-800 transition-colors"><MoreVertical size={16} /></button>
                           </td>
                        </tr>
                      ))}
@@ -303,251 +294,195 @@ export default function Contacts() {
           </div>
       </div>
 
-      {/* Redesigned Twin-Column Contact Profile Slideover */}
+      {/* Redesigned Thematic Profile Slideover */}
       {showProfile && selectedContact && editedContact && (
-        <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowProfile(false)}>
+        <div className="fixed inset-0 z-[150] flex justify-end bg-black/40 backdrop-blur-[2px] animate-fade-in" onClick={() => setShowProfile(false)}>
            <div 
-             className="w-[750px] h-full bg-white shadow-2xl flex flex-col animate-slide-left relative overflow-hidden"
+             className="w-[700px] h-full bg-white shadow-2xl flex flex-col animate-slide-up relative"
              onClick={(e) => e.stopPropagation()}
            >
-              {/* Profile Header Card */}
-              <div className="bg-slate-800 p-8 text-white relative">
-                  <div className="absolute top-6 right-6 flex items-center space-x-3">
-                     <button onClick={() => setShowProfile(false)} className="p-2.5 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition"><X size={20} /></button>
+              {/* Thematic Header - WhatsApp Dark or Custom Theme */}
+              <div className="bg-[var(--theme-bg)] p-8 text-white relative shadow-lg">
+                  <div className="absolute top-6 right-6 flex items-center space-x-2">
+                     <button onClick={() => setShowProfile(false)} className="p-2 bg-white/10 hover:bg-white/20 rounded-md text-white transition"><X size={18} /></button>
                   </div>
                   
-                  <div className="flex items-center space-x-8">
-                      <div className="w-24 h-24 rounded-[32px] bg-white p-1 shadow-2xl">
-                         <div className="w-full h-full rounded-[28px] bg-slate-50 text-slate-800 flex items-center justify-center font-black text-4xl border border-slate-200">
-                            {selectedContact.name?.charAt(0) || 'U'}
-                         </div>
+                  <div className="flex items-center space-x-6">
+                      <div className="w-16 h-16 rounded-xl bg-white/10 text-white flex items-center justify-center font-bold text-2xl border border-white/20">
+                         {selectedContact.name?.charAt(0) || 'U'}
                       </div>
                       <div className="flex-1">
                           <input 
                              value={editedContact.name} 
                              onChange={(e) => handleFieldChange('name', e.target.value)}
-                             className="text-3xl font-black bg-transparent outline-none border-b-2 border-transparent focus:border-teal-400 transition-all w-full tracking-tight"
-                             placeholder="Contact Identity"
+                             className="text-2xl font-bold bg-transparent outline-none border-b border-transparent focus:border-white/50 transition-all w-full truncate"
                           />
-                          <div className="flex items-center space-x-4 mt-2">
-                             <span className="flex items-center text-xs font-black text-teal-400 items-center"><Phone size={12} className="mr-1.5" /> {editedContact.phone}</span>
-                             <span className="w-1 h-1 bg-slate-500 rounded-full"></span>
-                             <span className="flex items-center text-xs font-black text-slate-400 items-center"><Briefcase size={12} className="mr-1.5" /> {editedContact.profession || 'Lead Contact'}</span>
+                          <div className="flex items-center space-x-3 mt-1.5 opacity-80">
+                             <span className="flex items-center text-xs font-semibold"><Phone size={12} className="mr-1.5" /> {editedContact.phone}</span>
+                             <span className="w-1 h-1 bg-white/30 rounded-full"></span>
+                             <span className="flex items-center text-xs font-semibold capitalize"><Briefcase size={12} className="mr-1.5" /> {editedContact.status?.toLowerCase().replace('_', ' ')}</span>
                           </div>
                       </div>
                       <div className="flex flex-col items-end space-y-3">
                           <select 
                             value={editedContact.status} 
                             onChange={(e) => handleFieldChange('status', e.target.value)}
-                            className={`px-4 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest outline-none border-2 transition-all ${
-                               editedContact.status === 'CLOSED_WON' ? 'bg-teal-500 border-teal-400 text-white shadow-xl' :
-                               editedContact.status === 'CLOSED_LOST' ? 'bg-rose-500 border-rose-400 text-white shadow-xl' :
-                               'bg-white text-slate-800 border-slate-700'
-                            }`}
+                            className="bg-white/10 text-white text-[10px] font-bold uppercase tracking-wider py-2 px-4 rounded-lg border border-white/20 outline-none cursor-pointer hover:bg-white/20 transition-all"
                           >
                              {['NEW LEAD', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => (
-                                <option key={s} value={s} className="text-slate-800">{s.replace('_', ' ')}</option>
+                                <option key={s} value={s} className="text-gray-800">{s.replace('_', ' ')}</option>
                              ))}
                           </select>
-                          <div className="flex -space-x-1">
-                             {['Cold', 'Warm', 'Hot'].map(lvl => (
-                                <button key={lvl} onClick={() => handleFieldChange('heatLevel', lvl)} className={`p-1.5 rounded-full border-2 border-slate-800 transition-all ${editedContact.heatLevel === lvl ? (lvl === 'Hot' ? 'bg-rose-500 scale-110' : lvl === 'Warm' ? 'bg-amber-500 scale-110' : 'bg-blue-500 scale-110') : 'bg-slate-700 opacity-30 hover:opacity-100'}`}>
-                                   {lvl === 'Hot' ? <Flame size={12} /> : lvl === 'Warm' ? <Sun size={12} /> : <Snowflake size={12} />}
-                                </button>
-                             ))}
-                          </div>
                       </div>
                   </div>
               </div>
 
-              {/* Main Content Area - Split Column */}
+              {/* Main Content - Theme Aligned Column Split */}
               <div className="flex-1 flex overflow-hidden">
-                 {/* Left Column: Context & Identity */}
-                 <div className="w-[350px] border-r border-slate-100 bg-slate-50/30 overflow-y-auto custom-scrollbar p-8 space-y-8">
-                    {/* Professional Info */}
+                 {/* Left Profile Info */}
+                 <div className="w-[280px] border-r border-gray-100 bg-gray-50/30 overflow-y-auto custom-scrollbar p-6 space-y-6">
                     <section className="space-y-4">
-                       <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center"><Info size={14} className="mr-2" /> Primary Profile Details</h3>
+                       <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Contact Info</h3>
                        <div className="space-y-3">
-                          <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm group">
-                             <label className="text-[8px] font-black text-slate-400 uppercase block mb-1">Professional Email</label>
-                             <div className="flex items-center space-x-2">
-                                <Mail size={14} className="text-slate-300 group-focus-within:text-teal-600" />
-                                <input value={editedContact.email || ''} onChange={e=>handleFieldChange('email', e.target.value)} placeholder="Enter email..." className="w-full text-xs font-black text-slate-700 outline-none bg-transparent" />
+                          {[
+                            { label: 'Email Address', icon: Mail, field: 'email', placeholder: 'Enter email...' },
+                            { label: 'Postal Location', icon: MapPin, field: 'address', placeholder: 'Lead address...' },
+                            { label: 'Job Designation', icon: Briefcase, field: 'profession', placeholder: 'Designation...' },
+                            { label: 'Enterprise/Club', icon: Building2, field: 'companyName', placeholder: 'Company...' },
+                          ].map((item, idx) => (
+                             <div key={idx} className="p-3 bg-white rounded-lg border border-gray-100 shadow-sm transition-focus focus-within:border-[var(--theme-border)]">
+                                <label className="text-[8px] font-bold text-gray-400 uppercase block mb-1">{item.label}</label>
+                                <div className="flex items-center space-x-2">
+                                   <item.icon size={13} className="text-gray-300" />
+                                   <input value={editedContact[item.field] || ''} onChange={e=>handleFieldChange(item.field, e.target.value)} placeholder={item.placeholder} className="w-full text-xs font-semibold text-gray-700 outline-none bg-transparent" />
+                                </div>
                              </div>
-                          </div>
-                          <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm group">
-                             <label className="text-[8px] font-black text-slate-400 uppercase block mb-1">Postal Address</label>
-                             <div className="flex items-center space-x-2">
-                                <MapPin size={14} className="text-slate-300 group-focus-within:text-teal-600" />
-                                <input value={editedContact.address || ''} onChange={e=>handleFieldChange('address', e.target.value)} placeholder="Lead address..." className="w-full text-xs font-black text-slate-700 outline-none bg-transparent" />
-                             </div>
-                          </div>
-                          <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm group">
-                             <label className="text-[8px] font-black text-slate-400 uppercase block mb-1">Current Organization</label>
-                             <div className="flex items-center space-x-2">
-                                <Building2 size={14} className="text-slate-300 group-focus-within:text-teal-600" />
-                                <input value={editedContact.companyName || ''} onChange={e=>handleFieldChange('companyName', e.target.value)} placeholder="Company name..." className="w-full text-xs font-black text-slate-700 outline-none bg-transparent" />
-                             </div>
-                          </div>
+                          ))}
                        </div>
                     </section>
 
-                    {/* Lead Discovery */}
                     <section className="space-y-4">
-                       <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center"><Target size={14} className="mr-2" /> Sales Intelligence</h3>
-                       <div className="grid grid-cols-2 gap-3">
-                          <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                             <label className="text-[8px] font-black text-slate-400 uppercase block mb-2">Budget Intel</label>
-                             <select value={editedContact.budget || ''} onChange={e=>handleFieldChange('budget', e.target.value)} className="w-full text-xs font-black text-slate-800 outline-none bg-transparent cursor-pointer">
-                                <option value="">Unknown</option>
-                                <option value="Under 50k">Under 50k</option>
-                                <option value="50k-1L">50k-1L</option>
-                                <option value="1L-5L">1L-5L</option>
-                                <option value="Above 5L">Above 5L</option>
-                             </select>
+                       <h3 className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Discovery</h3>
+                       <div className="space-y-3">
+                          <div className="p-3 bg-white rounded-lg border border-gray-100 shadow-sm">
+                             <label className="text-[8px] font-bold text-gray-400 uppercase block mb-1.5">Lead Consider Date</label>
+                             <input type="date" value={editedContact.leadConsiderDate ? new Date(editedContact.leadConsiderDate).toISOString().split('T')[0] : ''} onChange={e=>handleFieldChange('leadConsiderDate', e.target.value)} className="w-full text-xs font-semibold text-gray-700 outline-none bg-transparent cursor-pointer" />
                           </div>
-                          <div className="p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                             <label className="text-[8px] font-black text-slate-400 uppercase block mb-2">Consideration Date</label>
-                             <input type="date" value={editedContact.leadConsiderDate ? new Date(editedContact.leadConsiderDate).toISOString().split('T')[0] : ''} onChange={e=>handleFieldChange('leadConsiderDate', e.target.value)} className="w-full text-[10px] font-black text-slate-800 outline-none bg-transparent cursor-pointer" />
-                          </div>
-                       </div>
-                    </section>
-
-                    {/* Interests / Tags */}
-                    <section className="space-y-4 pb-12">
-                       <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center"><Tag size={14} className="mr-2" /> Interested Areas</h3>
-                       <div className="space-y-4">
-                          <div className="flex flex-wrap gap-2">
-                             {(editedContact.interests || []).map(tag => (
-                                <span key={tag} className="flex items-center bg-teal-50 text-teal-700 px-3 py-1.5 rounded-xl text-[10px] font-black border border-teal-100">
-                                   {tag}
-                                   <button onClick={() => removeInterest(tag)} className="ml-2 hover:text-teal-900"><X size={10} /></button>
-                                </span>
-                             ))}
-                             {(editedContact.interests || []).length === 0 && <p className="text-[10px] font-bold text-slate-300 italic">No interests logged yet</p>}
-                          </div>
-                          <div className="relative">
-                             <input value={interestInput} onChange={e=>setInterestInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && addInterest()} placeholder="Add lead interest..." className="w-full bg-white border border-slate-200 rounded-2xl py-3 px-4 text-xs font-bold text-slate-700 outline-none focus:ring-4 ring-teal-50 transition-all pl-10" />
-                             <Plus className="absolute left-4 top-3.5 text-slate-300" size={14} />
+                          <div className="p-3 bg-white rounded-lg border border-gray-100 shadow-sm">
+                             <label className="text-[8px] font-bold text-gray-400 uppercase block mb-1.5">Intents & Tags</label>
+                             <div className="flex flex-wrap gap-1.5 mb-2">
+                                {(editedContact.interests || []).slice(0, 3).map(tag => (
+                                   <span key={tag} className="flex items-center bg-gray-50 text-[var(--theme-text)] px-2 py-0.5 rounded text-[9px] font-bold border border-gray-100">
+                                      {tag}
+                                      <button onClick={() => removeInterest(tag)} className="ml-1 opacity-50 hover:opacity-100"><X size={10} /></button>
+                                   </span>
+                                ))}
+                             </div>
+                             <input value={interestInput} onChange={e=>setInterestInput(e.target.value)} onKeyDown={e=>e.key==='Enter' && addInterest()} placeholder="Enter intent..." className="w-full text-xs font-semibold text-gray-700 outline-none pt-1" />
                           </div>
                        </div>
                     </section>
                  </div>
 
-                 {/* Right Column: unified Activity Feed */}
-                 <div className="flex-1 flex flex-col bg-slate-50/20">
-                    <div className="px-8 flex space-x-8 border-b border-slate-100 bg-white">
-                       {['Timeline', 'Inbox Log', 'Internal Notes'].map(tab => (
-                          <button key={tab} onClick={() => setActiveTab(tab.toLowerCase().replace(' ', ''))} className={`py-4 text-[10px] font-black uppercase tracking-widest relative transition-all ${activeTab === tab.toLowerCase().replace(' ', '') ? 'text-teal-600' : 'text-slate-400 hover:text-slate-600'}`}>
-                             {tab}
-                             {activeTab === tab.toLowerCase().replace(' ', '') && <div className="absolute bottom-0 left-0 right-0 h-1 bg-teal-500 rounded-t-full shadow-[0_-2px_8px_rgba(20,184,166,0.2)]"></div>}
+                 {/* Right Activity Column */}
+                 <div className="flex-1 flex flex-col">
+                    <div className="px-6 flex space-x-6 border-b border-gray-100 bg-white">
+                       {['Timeline', 'Inbox', 'Internal'].map(tab => (
+                          <button key={tab} onClick={() => setActiveTab(tab.toLowerCase().replace(' ', ''))} className={`py-4 text-[10px] font-bold uppercase tracking-widest relative transition-all ${activeTab === tab.toLowerCase() ? 'text-[var(--theme-text)]' : 'text-gray-400 hover:text-gray-600'}`}>
+                             {tab} Mode
+                             {activeTab === tab.toLowerCase() && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--theme-bg)] rounded-t-full shadow-glow"></div>}
                           </button>
                        ))}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 bg-gray-50/30">
                        {activeTab === 'timeline' && (
-                          <div className="space-y-6 relative before:absolute before:left-[13px] before:top-4 before:bottom-4 before:w-[2px] before:bg-slate-100">
+                          <div className="space-y-4 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gray-100">
                               {(selectedContact.timeline || []).slice().reverse().map((event, idx) => (
-                                 <div key={idx} className="relative pl-10 animate-fade-in-up">
-                                    <div className="absolute left-0 top-1 w-7 h-7 rounded-xl bg-white border-2 border-slate-100 flex items-center justify-center z-10"><Activity size={12} className="text-teal-500" /></div>
-                                    <div className="p-5 bg-white border border-slate-100 rounded-[24px] shadow-sm">
-                                       <p className="text-sm font-black text-slate-800 mb-1 leading-snug">{event.description}</p>
-                                       <p className="text-[10px] font-black text-slate-300 uppercase flex items-center"><Clock size={10} className="mr-1.5" /> {new Date(event.timestamp).toLocaleString()}</p>
+                                 <div key={idx} className="relative pl-8">
+                                    <div className="absolute left-0 top-1 w-6 h-6 rounded-lg bg-white border border-gray-100 flex items-center justify-center z-10"><Activity size={10} className="text-[var(--theme-text)]" /></div>
+                                    <div className="p-4 bg-white border border-gray-100 rounded-xl shadow-premium">
+                                       <p className="text-xs font-semibold text-gray-700 leading-relaxed">{event.description}</p>
+                                       <p className="text-[9px] font-bold text-gray-300 uppercase mt-1 flex items-center"><Clock size={10} className="mr-1.5" /> {new Date(event.timestamp).toLocaleString()}</p>
                                     </div>
                                  </div>
                               ))}
                           </div>
                        )}
 
-                       {activeTab === 'inboxlog' && (
-                          <div className="space-y-4 animate-fade-in">
-                             <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-lg shadow-slate-200/20">
-                                 <div className="flex items-center justify-between mb-8">
-                                    <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Inbox Snippet</h3>
-                                    <button onClick={()=>{ localStorage.setItem('activeChatId', selectedContact._id); navigate('/inbox'); }} className="text-[9px] font-black text-teal-600 uppercase tracking-widest flex items-center border border-teal-100 px-3 py-1.5 rounded-xl hover:bg-teal-50 transition">Open Full Conversation <ArrowUpRight size={12} className="ml-1" /></button>
-                                 </div>
-                                 <div className="space-y-4 mb-4">
-                                    {recentMessages.map((msg, idx) => (
-                                       <div key={idx} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
-                                          <div className={`p-4 rounded-2xl text-xs font-bold leading-relaxed max-w-[85%] ${msg.direction === 'OUTBOUND' ? 'bg-slate-800 text-white rounded-tr-none' : 'bg-slate-50 text-slate-600 rounded-tl-none shadow-sm border border-slate-100'}`}>{msg.content}</div>
-                                       </div>
-                                    ))}
-                                    {recentMessages.length === 0 && <p className="text-center text-[10px] font-black text-slate-300 py-10 uppercase tracking-[0.2em]">No recent messages captured</p>}
-                                 </div>
+                       {activeTab === 'inbox' && (
+                          <div className="space-y-3">
+                             {recentMessages.map((msg, idx) => (
+                                <div key={idx} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
+                                   <div className={`p-3 rounded-xl text-xs font-medium leading-relaxed max-w-[85%] ${msg.direction === 'OUTBOUND' ? 'bg-gray-800 text-white rounded-tr-none' : 'bg-white text-gray-600 rounded-tl-none shadow-premium border border-gray-100'}`}>{msg.content}</div>
+                                </div>
+                             ))}
+                             <div className="pt-4 text-center">
+                                <button onClick={()=>{ localStorage.setItem('activeChatId', selectedContact._id); navigate('/inbox'); }} className="text-[9px] font-bold text-[var(--theme-text)] uppercase tracking-widest hover:underline">Full Analytics Page &rarr;</button>
                              </div>
                           </div>
                        )}
 
-                       {activeTab === 'internalnotes' && (
-                          <div className="space-y-6 animate-fade-in pb-20">
+                       {activeTab === 'internal' && (
+                          <div className="space-y-4 pb-20">
                              <div className="relative">
-                                <textarea value={noteInput} onChange={e=>setNoteInput(e.target.value)} placeholder="Internal agent notes & follow-up updates..." className="w-full bg-white border border-slate-200 rounded-[28px] p-6 text-sm font-bold text-slate-800 outline-none focus:ring-4 ring-teal-50 transition-all shadow-sm" rows={5} />
-                                <button onClick={()=>addInternalNote(selectedContact._id)} disabled={isAddingNote || !noteInput.trim()} className="absolute bottom-6 right-6 p-3 bg-slate-800 text-white rounded-2xl shadow-xl hover:bg-black transition-all flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest">
-                                   {isAddingNote ? <Clock size={16} className="animate-spin" /> : <><Send size={16} /><span>Post Entry</span></>}
+                                <textarea value={noteInput} onChange={e=>setNoteInput(e.target.value)} placeholder="Type private team note..." className="w-full bg-white border border-gray-200 rounded-xl p-4 text-xs font-semibold text-gray-700 outline-none focus:ring-2 focus:ring-[var(--theme-border)]/20 transition-all shadow-premium" rows={4} />
+                                <button onClick={()=>addInternalNote(selectedContact._id)} disabled={isAddingNote || !noteInput.trim()} className="absolute bottom-4 right-4 p-2.5 bg-[var(--theme-bg)] text-white rounded-lg shadow-glow hover:-translate-y-0.5 transition-all text-[9px] font-bold uppercase tracking-widest">
+                                   {isAddingNote ? <Clock size={14} className="animate-spin" /> : <Send size={14} />}
                                 </button>
                              </div>
-                             <div className="space-y-4">
-                                {(selectedContact.notes || []).slice().reverse().map((note, idx) => (
-                                   <div key={idx} className="p-6 bg-white border border-slate-100 rounded-[28px] shadow-sm hover:shadow-md transition-all">
-                                      <div className="flex items-center justify-between mb-4 border-b border-slate-50 pb-3">
-                                         <div className="flex items-center space-x-2">
-                                            <div className="w-7 h-7 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center font-black text-[10px] uppercase">{note.createdBy?.charAt(0) || 'A'}</div>
-                                            <span className="text-[10px] font-black text-slate-800 uppercase tracking-tight">{note.createdBy || 'Agent Workspace'}</span>
-                                         </div>
-                                         <span className="text-[9px] font-black text-slate-300 italic">{new Date(note.createdAt).toLocaleDateString()}</span>
-                                      </div>
-                                      <p className="text-sm font-bold text-slate-600 leading-relaxed italic">"{note.content}"</p>
+                             {(selectedContact.notes || []).slice().reverse().map((note, idx) => (
+                                <div key={idx} className="p-4 bg-white border border-gray-100 rounded-xl shadow-premium">
+                                   <p className="text-xs font-medium text-gray-600 italic">"{note.content}"</p>
+                                   <div className="flex items-center justify-between mt-3 opacity-50">
+                                      <span className="text-[9px] font-bold uppercase tracking-tighter">{note.createdBy}</span>
+                                      <span className="text-[9px] font-bold">{new Date(note.createdAt).toLocaleDateString()}</span>
                                    </div>
-                                ))}
-                             </div>
+                                </div>
+                             ))}
                           </div>
                        )}
                     </div>
                  </div>
               </div>
 
-              {/* Fixed Save Floating Button */}
-              <div className={`absolute bottom-8 left-0 right-0 flex justify-center z-50 transition-all duration-500 translate-y-0 ${showSaveFab ? 'opacity-100' : 'opacity-0 translate-y-20 pointer-events-none'}`}>
+              {/* Theme-Synced Save Action */}
+              <div className={`absolute bottom-6 left-0 right-0 flex justify-center z-50 transition-all duration-300 ${showSaveFab ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`}>
                  <button 
                    onClick={() => updateContactDetail(selectedContact._id, editedContact)}
                    disabled={isUpdatingContact}
-                   className="bg-slate-800 text-white px-10 py-4 rounded-full shadow-[0_25px_60px_rgba(0,0,0,0.5)] hover:bg-black hover:scale-105 active:scale-95 transition-all flex items-center space-x-4 group border border-white/20"
+                   className="bg-[var(--theme-bg)] text-white px-8 py-3 rounded-full shadow-glow hover:scale-105 active:scale-95 transition-all flex items-center space-x-3"
                  >
-                    {isUpdatingContact ? <Clock size={20} className="animate-spin" /> : <Save size={20} className="group-hover:rotate-12 transition-transform" />}
-                    <span className="text-xs font-black uppercase tracking-widest">Confirm Profile Redesign Update</span>
+                    {isUpdatingContact ? <Clock size={18} className="animate-spin" /> : <Save size={18} />}
+                    <span className="text-[10px] font-bold uppercase tracking-widest">Save Workspace Profile</span>
                  </button>
               </div>
 
-              {/* Branding Footer */}
-              <div className="px-8 py-5 border-t border-slate-100 bg-white flex items-center justify-between text-[9px] font-black text-slate-300 uppercase tracking-[0.2em] relative z-10">
-                 <div className="flex items-center"><ShieldCheck size={12} className="mr-2 text-teal-500" /> Identity Protected CRM Core</div>
-                 <div className="flex items-center space-x-4">
-                    <History size={12} className="mr-1" /> Initial Record: {new Date(selectedContact.createdAt).toLocaleDateString()}
-                 </div>
+              <div className="px-6 py-4 border-t border-gray-100 bg-white flex items-center justify-between text-[9px] font-bold text-gray-300 uppercase tracking-widest">
+                 <div className="flex items-center"><ShieldCheck size={11} className="mr-2 text-[var(--theme-text)] opacity-40 " /> Data Vault Secured</div>
+                 <div className="flex items-center"><History size={11} className="mr-1.5" /> Record Open: 1.2.0</div>
               </div>
            </div>
         </div>
       )}
 
-      {/* Manual Import Modal */}
+      {/* Simplified Add Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/70 backdrop-blur-md animate-fade-in" onClick={() => setShowAddModal(false)}>
-           <div className="bg-white p-12 rounded-[40px] w-[450px] shadow-2xl animate-pop-in border border-slate-100" onClick={e=>e.stopPropagation()}>
-              <h2 className="text-3xl font-black text-slate-800 mb-2 tracking-tight">Add Verified Lead</h2>
-              <p className="text-[10px] font-black text-slate-400 mb-10 uppercase tracking-[0.3em] border-b border-slate-100 pb-5">Manual Data Ingestion Pipeline</p>
-              <form onSubmit={handleAddContact} className="space-y-6">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-[1px] animate-fade-in" onClick={() => setShowAddModal(false)}>
+           <div className="bg-white p-8 rounded-2xl w-[400px] shadow-2xl animate-pop-in border border-gray-100" onClick={e=>e.stopPropagation()}>
+              <h2 className="text-xl font-bold text-gray-800 mb-6">New Customer Lead</h2>
+              <form onSubmit={handleAddContact} className="space-y-5">
                  <div>
-                    <label className="text-[10px] font-black text-slate-800 mb-2 block uppercase tracking-widest">Full Legal Name</label>
-                    <input autoFocus type="text" value={newLeadName} onChange={e=>setNewLeadName(e.target.value)} required className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4.5 outline-none focus:border-teal-500 focus:bg-white transition-all text-sm font-bold text-slate-700 shadow-inner" placeholder="e.g. Samuel L. Jackson" />
+                    <label className="text-[10px] font-bold text-gray-400 mb-1.5 block uppercase">Customer Hub Identity</label>
+                    <input autoFocus type="text" value={newLeadName} onChange={e=>setNewLeadName(e.target.value)} required className="w-full bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 outline-none focus:border-[var(--theme-border)] text-sm font-semibold text-gray-700" placeholder="e.g. John Doe" />
                  </div>
                  <div>
-                    <label className="text-[10px] font-black text-slate-800 mb-2 block uppercase tracking-widest">WhatsApp Identity</label>
-                    <input type="tel" value={newLeadPhone} onChange={e=>setNewLeadPhone(e.target.value)} required className="w-full bg-slate-50 border-2 border-slate-50 rounded-2xl px-6 py-4.5 outline-none focus:border-teal-500 focus:bg-white transition-all text-sm font-bold text-slate-700 shadow-inner" placeholder="+1 XXX XXX XXXX" />
+                    <label className="text-[10px] font-bold text-gray-400 mb-1.5 block uppercase">WhatsApp Phone ID</label>
+                    <input type="tel" value={newLeadPhone} onChange={e=>setNewLeadPhone(e.target.value)} required className="w-full bg-gray-50 border border-gray-100 rounded-lg px-4 py-3 outline-none focus:border-[var(--theme-border)] text-sm font-semibold text-gray-700" placeholder="+91 98XXX XXXXX" />
                  </div>
-                 <div className="flex pt-6 space-x-4">
-                    <button type="button" onClick={()=>setShowAddModal(false)} className="flex-1 py-5 font-black text-[10px] text-slate-400 uppercase tracking-widest hover:bg-slate-50 rounded-2xl transition">Dismiss</button>
-                    <button type="submit" className="flex-1 py-5 font-black text-[10px] text-white bg-slate-800 hover:bg-black uppercase tracking-widest rounded-2xl shadow-2xl transition active:scale-95">Authorize & Create</button>
+                 <div className="flex pt-4 space-x-3">
+                    <button type="button" onClick={()=>setShowAddModal(false)} className="flex-1 py-3 text-[10px] font-bold text-gray-400 uppercase tracking-widest hover:bg-gray-50 rounded-lg transition">Cancel</button>
+                    <button type="submit" className="flex-1 py-3 text-[10px] font-bold text-white bg-[var(--theme-bg)] rounded-lg shadow-glow transition active:scale-95 uppercase tracking-widest">Ingest Lead</button>
                  </div>
               </form>
            </div>
