@@ -25,6 +25,8 @@ const ContactSchema = new mongoose.Schema({
   flowVariables: { type: mongoose.Schema.Types.Mixed, default: {} },
   email: { type: String },
   address: { type: String },
+  pincode: { type: String },
+  state: { type: String },
   // AI Bot & PRD Specific explicit fields
   qualification: { type: String },
   selectedProgram: { type: String },

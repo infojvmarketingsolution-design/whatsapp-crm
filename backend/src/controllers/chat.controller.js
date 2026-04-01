@@ -107,6 +107,9 @@ const performContactAction = async (req, res) => {
         if (payload.name !== undefined) contact.name = payload.name;
         if (payload.email !== undefined) contact.email = payload.email;
         if (payload.address !== undefined) contact.address = payload.address;
+        if (payload.pincode !== undefined) contact.pincode = payload.pincode;
+        if (payload.state !== undefined) contact.state = payload.state;
+        if (payload.qualification !== undefined) contact.qualification = payload.qualification;
         if (payload.status !== undefined) contact.status = payload.status;
         if (payload.budget !== undefined) contact.budget = payload.budget;
         if (payload.purchaseTimeline !== undefined) contact.purchaseTimeline = payload.purchaseTimeline;
