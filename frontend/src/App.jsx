@@ -26,7 +26,7 @@ import AdminSettings from './pages/Admin/AdminSettings';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import Maintenance from './pages/Maintenance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, AlertCircle, History } from 'lucide-react';
+import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, AlertCircle, History, Clock } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge }) {
   return (
@@ -63,6 +63,7 @@ function Dashboard() {
         const token = localStorage.getItem('token');
         const tenantId = localStorage.getItem('tenantId');
         
+        // Fetch data in parallel
         const [contactRes, wabaRes, campRes, tempRes] = await Promise.all([
           fetch('/api/chat/contacts', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
           fetch('/api/whatsapp/config', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
@@ -77,36 +78,10 @@ function Dashboard() {
 
         let realContacts = 0;
         let realChats = 0;
-        let tStats = { overdue: 0, today: 0, upcoming: 0, efficiency: 0 };
-        
         if (contactRes.ok) {
            const cpts = await contactRes.json();
            realContacts = cpts.length;
            realChats = cpts.filter(c => c.status !== 'CLOSED_WON' && c.status !== 'CLOSED_LOST').length;
-
-           // Task Analytics Calculation
-           let totalTasks = 0;
-           let completedTasks = 0;
-           const now = new Date();
-           const todayStart = new Date(now.setHours(0,0,0,0));
-           const todayEnd = new Date(now.setHours(23,59,59,999));
-
-           cpts.forEach(c => {
-              if (c.tasks) {
-                 c.tasks.forEach(t => {
-                    totalTasks++;
-                    if (t.status === 'COMPLETED') {
-                       completedTasks++;
-                    } else if (t.status === 'PENDING' || t.status === 'OVERDUE') {
-                       const dueDate = new Date(t.dueDate);
-                       if (dueDate < todayStart) tStats.overdue++;
-                       else if (dueDate >= todayStart && dueDate <= todayEnd) tStats.today++;
-                       else tStats.upcoming++;
-                    }
-                 });
-              }
-           });
-           tStats.efficiency = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 100;
         }
 
         let campaignsArr = [];
@@ -120,8 +95,7 @@ function Dashboard() {
           recentCampaign: campaignsArr[0]?.name || 'No campaigns yet',
           templates: templatesArr.length, 
           contacts: realContacts, 
-          chats: realChats,
-          tasks: tStats
+          chats: realChats 
         });
     } catch (err) {
         console.error('Failed to refresh dashboard stats', err);
@@ -152,53 +126,6 @@ function Dashboard() {
       </div>
 
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Welcome back, <span className="capitalize">{userName}</span> 👋</h2>
-
-      {/* TASK ANALYTICS & EFFICIENCY CARDS */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
-          <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center space-x-5 group hover:border-red-200 transition-all">
-              <div className={`p-4 rounded-2xl ${stats.tasks?.overdue > 0 ? 'bg-red-50 text-red-600 animate-pulse' : 'bg-gray-50 text-gray-300'}`}>
-                 <AlertCircle size={24} />
-              </div>
-              <div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Overdue Hunt</p>
-                 <h3 className="text-2xl font-black text-slate-800">{stats.tasks?.overdue || 0}</h3>
-              </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center space-x-5 group hover:border-orange-200 transition-all">
-              <div className={`p-4 rounded-2xl ${stats.tasks?.today > 0 ? 'bg-orange-50 text-orange-500' : 'bg-gray-50 text-gray-300'}`}>
-                 <Clock size={24} />
-              </div>
-              <div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Due Today</p>
-                 <h3 className="text-2xl font-black text-slate-800">{stats.tasks?.today || 0}</h3>
-              </div>
-          </div>
-
-          <div className="bg-white p-6 rounded-[2rem] shadow-sm border border-slate-100 flex items-center space-x-5 group hover:border-blue-200 transition-all">
-              <div className={`p-4 rounded-2xl ${stats.tasks?.upcoming > 0 ? 'bg-blue-50 text-blue-600' : 'bg-gray-50 text-gray-300'}`}>
-                 <CalendarDays size={24} />
-              </div>
-              <div>
-                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Upcoming Pulse</p>
-                 <h3 className="text-2xl font-black text-slate-800">{stats.tasks?.upcoming || 0}</h3>
-              </div>
-          </div>
-
-          <div className="bg-slate-900 p-6 rounded-[2.5rem] shadow-xl flex items-center space-x-5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
-              <div className="p-4 rounded-2xl bg-teal-500 text-white shadow-glow">
-                 <TrendingUp size={24} />
-              </div>
-              <div className="z-10">
-                 <p className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Team Efficiency</p>
-                 <h3 className="text-2xl font-black text-teal-400">{stats.tasks?.efficiency || 0}%</h3>
-              </div>
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/5">
-                 <div className="h-full bg-teal-500 transition-all duration-1000" style={{ width: `${stats.tasks?.efficiency || 0}%` }}></div>
-              </div>
-          </div>
-      </div>
 
       <div className="flex flex-wrap items-center gap-4 mb-8">
         <button onClick={() => navigate('/campaigns')} className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-soft">
