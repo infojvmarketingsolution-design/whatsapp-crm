@@ -4,7 +4,7 @@ import {
   Search, Plus, X, Mail, MapPin, Phone, Users, 
   Clock, Activity, Target, Tag, Save, Filter, 
   Briefcase, Building2, Download, MoreVertical, 
-  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash
+  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet
 } from 'lucide-react';
 
 export default function Contacts() {
