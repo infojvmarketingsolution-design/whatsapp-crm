@@ -947,14 +947,6 @@ export default function Tasks() {
            </div>
         </div>
       )}
-      {/* Professional Footer Bar */}
-      <div className="px-8 py-1.5 bg-white border-t border-slate-200 flex justify-between items-center bg-slate-50/50 relative z-10">
-         <div className="flex items-center space-x-2">
-            <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse"></div>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">System Online</span>
-         </div>
-         <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">WapiPulse Task Engine · v1.2.0 Final</p>
-      </div>
 
     </div>
   );

@@ -399,10 +399,14 @@ function AppLayout() {
           <Route path="/admin/settings" element={<AdminSettings />} />
         </Routes>
         {!isAuthPage && (
-          <div className="w-full py-4 text-center mt-auto bg-crm-bg shrink-0">
-             <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 block">
-                Developed by J.V group | v1.2.0-FINAL
-             </span>
+          <div className="w-full py-1.5 px-8 bg-white border-t border-slate-200 flex justify-between items-center bg-slate-50/50 shrink-0 relative z-20">
+             <div className="flex items-center space-x-2">
+                <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse"></div>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">System Online</span>
+             </div>
+             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">
+                Developed by J.V group | WapiPulse v1.2.0-FINAL
+             </p>
           </div>
         )}
       </div>
