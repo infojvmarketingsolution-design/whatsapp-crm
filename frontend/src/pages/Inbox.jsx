@@ -385,8 +385,6 @@ export default function Inbox() {
         <div className="bg-[var(--theme-bg)] text-white flex items-center px-4 py-2.5 text-[10px] font-bold tracking-wider justify-between">
            <div className="flex space-x-4">
              <span className="border-b-2 border-[var(--theme-border)] pb-1">ACTIVE ({contacts.length})</span>
-             <span className="text-teal-400/80 cursor-pointer">REQUESTING (0)</span>
-             <span className="text-teal-400/80 cursor-pointer">INTERVENED (0)</span>
            </div>
            <ChevronDown size={14} className="cursor-pointer" />
         </div>
