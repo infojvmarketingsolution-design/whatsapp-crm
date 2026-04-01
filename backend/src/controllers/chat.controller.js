@@ -56,7 +56,11 @@ const getContacts = async (req, res) => {
           score: 1,
           heatLevel: 1,
           source: 1,
-          tasks: 1, // Include tasks in projection
+          tasks: 1, 
+          email: 1,
+          address: 1,
+          timeline: 1,
+          createdAt: 1,
           lastMessageAt: { $ifNull: ['$lastMsgDoc.timestamp', '$updatedAt'] },
           lastMessage: { $ifNull: ['$lastMsgDoc.content', ''] },
           lastMessageType: { $ifNull: ['$lastMsgDoc.type', 'text'] }
@@ -97,7 +101,15 @@ const performContactAction = async (req, res) => {
           });
        }
     } else if (action === 'update_status') {
-       contact.status = payload.status;
+        contact.status = payload.status;
+        contact.timeline.push({ eventType: 'STATUS_UPDATED', description: `Status updated to ${payload.status}`, timestamp: new Date() });
+     } else if (action === 'update_contact') {
+        if (payload.name) contact.name = payload.name;
+        if (payload.email) contact.email = payload.email;
+        if (payload.address) contact.address = payload.address;
+        if (payload.status) contact.status = payload.status;
+        contact.timeline.push({ eventType: 'CONTACT_UPDATED', description: 'Contact details updated', timestamp: new Date() });
+     
        contact.timeline.push({ eventType: 'STATUS_CHANGE', description: `Moved to ${payload.status}`, timestamp: new Date() });
     } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };

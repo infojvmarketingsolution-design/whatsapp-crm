@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, PlayCircle, Plus, ChevronDown, Download, Upload, Trash2, MoreVertical, AlertCircle, Clock } from 'lucide-react';
+import { 
+  Search, PlayCircle, Plus, ChevronDown, Download, Upload, Trash2, 
+  MoreVertical, AlertCircle, Clock, Mail, MapPin, Phone, User, 
+  MessageCircle, Calendar, CheckCircle2, X, ArrowUpRight, History
+} from 'lucide-react';
 
 export default function Contacts() {
   const navigate = useNavigate();
@@ -13,6 +17,13 @@ export default function Contacts() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [selectedIds, setSelectedIds] = useState([]);
   const [isBulkLoading, setIsBulkLoading] = useState(false);
+  
+  // Profile Detail States
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [recentMessages, setRecentMessages] = useState([]);
+  const [isRefreshingMessages, setIsRefreshingMessages] = useState(false);
+  const [isUpdatingContact, setIsUpdatingContact] = useState(false);
 
   const fetchContacts = async () => {
     try {
@@ -39,6 +50,48 @@ export default function Contacts() {
   useEffect(() => {
     fetchContacts();
   }, []);
+
+  const fetchRecentMessages = async (contactId) => {
+    if (!contactId) return;
+    setIsRefreshingMessages(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/chat/messages/${contactId}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRecentMessages(data.slice(-5)); // Last 5 messages
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRefreshingMessages(false);
+    }
+  };
+
+  const updateContactDetail = async (contactId, updates) => {
+    setIsUpdatingContact(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/chat/action`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contactId, action: 'update_contact', payload: updates })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedContact(data.contact);
+        fetchContacts();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsUpdatingContact(false);
+    }
+  };
 
   const handleAddContact = async (e) => {
     e.preventDefault();
@@ -161,6 +214,12 @@ export default function Contacts() {
     }
   };
 
+  const handleRowClick = (contact) => {
+     setSelectedContact(contact);
+     setShowProfile(true);
+     fetchRecentMessages(contact._id);
+  };
+
   return (
     <div className="bg-white rounded-2xl shadow-sm border border-gray-100 min-h-full flex flex-col pt-10 px-10 relative overflow-hidden animate-fade-in">
       <div className="mb-8 relative z-10">
@@ -273,10 +332,14 @@ export default function Contacts() {
                  </tr>
                )}
                {filteredContacts.map((c, i) => (
-                 <tr key={c._id || i} className={`${i % 2 === 0 ? 'bg-[#fbfbfb]' : 'bg-white'} ${selectedIds.includes(c._id) ? 'bg-teal-50/50' : ''}`}>
-                   <td className="py-4 px-6">
-                      <input 
-                        type="checkbox" 
+                 <tr 
+                    key={c._id || i} 
+                    onClick={() => handleRowClick(c)}
+                    className={`${i % 2 === 0 ? 'bg-[#fbfbfb]' : 'bg-white'} ${selectedIds.includes(c._id) ? 'bg-teal-50/50' : ''} cursor-pointer hover:bg-teal-50/30 transition-colors group relative`}
+                  >
+                   <td className="py-4 px-6" onClick={(e) => e.stopPropagation()}>
+                       <input 
+                         type="checkbox" 
                         className="w-4 h-4 accent-brand-dark rounded cursor-pointer" 
                         checked={selectedIds.includes(c._id)}
                         onChange={() => toggleSelect(c._id)}
@@ -290,9 +353,9 @@ export default function Contacts() {
                       </span>
                    </td>
                    <td className="py-4 px-6 text-[13px] font-bold text-gray-600">{c.tags?.[0] || 'AD'}</td>
-                   <td className="py-4 px-6 text-right relative">
-                      <button 
-                        onClick={() => setActiveDropdown(activeDropdown === c._id ? null : c._id)}
+                   <td className="py-4 px-6 text-right relative" onClick={(e) => e.stopPropagation()}>
+                       <button 
+                         onClick={() => setActiveDropdown(activeDropdown === c._id ? null : c._id)}
                         className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                       >
                         <MoreVertical size={16} />
@@ -353,6 +416,151 @@ export default function Contacts() {
                     <button type="submit" className="px-5 py-2.5 font-bold text-sm text-white bg-[var(--theme-bg)] hover:bg-teal-900 rounded-xl transition-transform hover:scale-105 active:scale-95 shadow-[0_4px_10px_rgba(17,74,67,0.2)]">Create Lead</button>
                  </div>
               </form>
+           </div>
+        </div>
+      )}
+      {/* Contact Profile Slideover */}
+      {showProfile && selectedContact && (
+        <div className="fixed inset-0 z-[120] flex justify-end bg-black/20 backdrop-blur-[2px] animate-fade-in" onClick={() => setShowProfile(false)}>
+           <div 
+             className="w-[500px] h-full bg-white shadow-2xl flex flex-col animate-slide-left border-l border-gray-100"
+             onClick={(e) => e.stopPropagation()}
+           >
+              {/* Header */}
+              <div className="p-6 border-b border-gray-50 flex items-center justify-between bg-white sticky top-0 z-10">
+                 <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 rounded-2xl bg-[var(--theme-bg)] text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-teal-900/20">
+                       {selectedContact.name?.charAt(0) || 'U'}
+                    </div>
+                    <div>
+                       <h2 className="text-xl font-bold text-gray-800 tracking-tight">{selectedContact.name}</h2>
+                       <p className="text-xs font-black text-gray-400 uppercase tracking-widest">{selectedContact.phone}</p>
+                    </div>
+                 </div>
+                 <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-gray-50 rounded-xl transition text-gray-400 hover:text-gray-600">
+                    <X size={20} />
+                 </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                 {/* Quick Details Grid */}
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100 hover:border-[var(--theme-border)] transition-colors group">
+                       <div className="flex items-center space-x-2 text-gray-400 mb-2 group-hover:text-[var(--theme-text)] transition-colors">
+                          <Mail size={14} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Email Address</span>
+                       </div>
+                       <input 
+                         type="email" 
+                         defaultValue={selectedContact.email || ''} 
+                         onBlur={(e) => updateContactDetail(selectedContact._id, { email: e.target.value })}
+                         placeholder="Add email..."
+                         className="w-full bg-transparent text-sm font-bold text-gray-700 outline-none placeholder:font-medium placeholder:text-gray-300"
+                       />
+                    </div>
+                    <div className="p-4 bg-gray-50/50 rounded-2xl border border-gray-100 hover:border-[var(--theme-border)] transition-colors group">
+                       <div className="flex items-center space-x-2 text-gray-400 mb-2 group-hover:text-[var(--theme-text)] transition-colors">
+                          <MapPin size={14} />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Location / Address</span>
+                       </div>
+                       <input 
+                         type="text" 
+                         defaultValue={selectedContact.address || ''} 
+                         onBlur={(e) => updateContactDetail(selectedContact._id, { address: e.target.value })}
+                         placeholder="Add address..."
+                         className="w-full bg-transparent text-sm font-bold text-gray-700 outline-none placeholder:font-medium placeholder:text-gray-300"
+                       />
+                    </div>
+                 </div>
+
+                 {/* Status & Engagement */}
+                 <div className="space-y-4">
+                    <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center">
+                       <ArrowUpRight size={14} className="mr-2" /> Lead Engagement
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                       {['NEW LEAD', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map((status) => (
+                          <button
+                            key={status}
+                            onClick={() => updateContactDetail(selectedContact._id, { status })}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                              selectedContact.status === status 
+                              ? 'bg-[var(--theme-bg)] text-white shadow-md shadow-teal-900/20' 
+                              : 'bg-gray-50 text-gray-400 hover:bg-gray-100'
+                            }`}
+                          >
+                             {status.replace('_', ' ')}
+                          </button>
+                       ))}
+                    </div>
+                 </div>
+
+                 {/* Recent Activity Feed */}
+                 <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                       <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center">
+                          <History size={14} className="mr-2" /> Recent Activity
+                       </h3>
+                       <span className="text-[10px] font-bold text-gray-300 italic">Timeline View</span>
+                    </div>
+                    <div className="space-y-4 relative before:absolute before:left-3 before:top-2 before:bottom-2 before:w-px before:bg-gray-100">
+                       {(selectedContact.timeline || []).slice(-3).reverse().map((event, idx) => (
+                          <div key={idx} className="relative pl-8 animate-fade-in" style={{ animationDelay: `${idx * 100}ms` }}>
+                             <div className="absolute left-1.5 top-1.5 w-3 h-3 rounded-full bg-white border-2 border-[var(--theme-border)] z-10"></div>
+                             <div className="p-3 bg-white border border-gray-100 rounded-xl shadow-sm">
+                                <p className="text-xs font-bold text-gray-700">{event.description}</p>
+                                <p className="text-[10px] text-gray-400 mt-1 font-medium">{new Date(event.timestamp).toLocaleString()}</p>
+                             </div>
+                          </div>
+                       ))}
+                       {(!selectedContact.timeline || selectedContact.timeline.length === 0) && (
+                          <div className="pl-8 text-xs font-bold text-gray-300 italic">No activity recorded yet.</div>
+                       )}
+                    </div>
+                 </div>
+
+                 {/* Recent Conversations */}
+                 <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                       <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest flex items-center">
+                          <MessageCircle size={14} className="mr-2" /> Recent Chat Snippet
+                       </h3>
+                       <button onClick={() => fetchRecentMessages(selectedContact._id)} className={`p-1 hover:bg-gray-100 rounded transition ${isRefreshingMessages ? 'animate-spin' : ''}`}>
+                          <Clock size={12} className="text-gray-400" />
+                       </button>
+                    </div>
+                    <div className="bg-gray-50/50 rounded-2xl p-4 space-y-3 border border-gray-100">
+                       {recentMessages.length > 0 ? recentMessages.map((msg, idx) => (
+                          <div key={idx} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
+                             <div className={`max-w-[80%] p-2.5 rounded-2xl text-[11px] font-bold ${
+                               msg.direction === 'OUTBOUND' 
+                               ? 'bg-[var(--theme-bg)] text-white rounded-tr-none' 
+                               : 'bg-white text-gray-600 border border-gray-100 rounded-tl-none shadow-sm'
+                             }`}>
+                                {msg.content}
+                             </div>
+                          </div>
+                       )) : (
+                          <div className="text-center py-4 text-xs font-bold text-gray-300">No recent WhatsApp logs found.</div>
+                       )}
+                       <button 
+                         onClick={() => {
+                           localStorage.setItem('activeChatId', selectedContact._id);
+                           navigate('/inbox', { state: { selectedContact: selectedContact.phone } });
+                         }}
+                         className="w-full mt-4 py-2 bg-white border border-gray-200 rounded-xl text-[10px] font-black text-gray-500 hover:text-[var(--theme-text)] hover:border-[var(--theme-border)] transition-all uppercase tracking-widest flex items-center justify-center"
+                       >
+                          Open Full Chat <ArrowUpRight size={12} className="ml-2" />
+                       </button>
+                    </div>
+                 </div>
+
+                 {/* Creation Details */}
+                 <div className="pt-6 border-t border-gray-50 flex items-center justify-between text-[10px] font-black text-gray-300 uppercase tracking-widest">
+                    <span className="flex items-center"><Plus size={10} className="mr-1" /> Created: {new Date(selectedContact.createdAt).toLocaleDateString()}</span>
+                    <span className="flex items-center"><History size={10} className="mr-1" /> Source: {selectedContact.source || 'Manual Entry'}</span>
+                 </div>
+              </div>
            </div>
         </div>
       )}

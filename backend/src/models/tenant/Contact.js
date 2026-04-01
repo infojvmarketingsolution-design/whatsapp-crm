@@ -23,6 +23,8 @@ const ContactSchema = new mongoose.Schema({
   currentFlowStep: { type: String }, // Node ID for session tracking
   lastFlowId: { type: mongoose.Schema.Types.ObjectId, ref: 'Flow' },
   flowVariables: { type: mongoose.Schema.Types.Mixed, default: {} },
+  email: { type: String },
+  address: { type: String },
   // AI Bot & PRD Specific explicit fields
   qualification: { type: String },
   selectedProgram: { type: String },
