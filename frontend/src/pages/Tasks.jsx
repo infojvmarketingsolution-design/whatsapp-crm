@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle2, PhoneCall, Calendar, Clock, AlertCircle, 
   Search, Filter, ChevronRight, User, Check, CalendarDays,
-  MoreVertical, MoreHorizontal, ArrowUpRight, ExternalLink
+  MoreVertical, MoreHorizontal, ArrowUpRight, ExternalLink,
+  X, Mail, MapPin, Phone, Users, Activity, Target, Tag, Save,
+  Briefcase, Building2, Download, Flame, Sun, Snowflake, Send, 
+  ShieldCheck, History, TrendingUp, Globe, Smartphone, Bell, 
+  Landmark, Hash, Wallet
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 export default function Tasks() {
   const [tasks, setTasks] = useState([]);
@@ -14,6 +18,20 @@ export default function Tasks() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  
+  // Profile Navigation & Detail States
+  const [selectedContact, setSelectedContact] = useState(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [recentMessages, setRecentMessages] = useState([]);
+  const [isRefreshingMessages, setIsRefreshingMessages] = useState(false);
+  const [isUpdatingContact, setIsUpdatingContact] = useState(false);
+  const [activeTab, setActiveTab] = useState('timeline');
+  const [noteInput, setNoteInput] = useState('');
+  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [editedContact, setEditedContact] = useState(null);
+  const [showSaveFab, setShowSaveFab] = useState(false);
+
+  const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing'];
 
   useEffect(() => {
     fetchTasks();
@@ -56,10 +74,111 @@ export default function Tasks() {
         
         allTasks.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
         setTasks(allTasks);
+
+        // Update selected contact if profile is open
+        if (selectedContact) {
+           const updated = contacts.find(c => c._id === selectedContact._id);
+           if (updated) {
+              setSelectedContact(updated);
+              setEditedContact(updated);
+              setShowSaveFab(false);
+           }
+        }
       }
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const fetchRecentMessages = async (contactId) => {
+    if (!contactId) return;
+    setIsRefreshingMessages(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/chat/messages/${contactId}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRecentMessages(data.slice(-5));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsRefreshingMessages(false);
+    }
+  };
+
+  const updateContactDetail = async (contactId, updates) => {
+    setIsUpdatingContact(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/chat/action`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contactId, action: 'update_contact', payload: updates })
+      });
+      if (res.ok) {
+        toast.success("Profile Updated Successfully");
+        fetchTasks();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save changes");
+    } finally {
+      setIsUpdatingContact(false);
+    }
+  };
+
+  const addInternalNote = async (contactId) => {
+    if (!noteInput.trim()) return;
+    setIsAddingNote(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/chat/action`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contactId, action: 'add_note', payload: { note: noteInput } })
+      });
+      if (res.ok) {
+        setNoteInput('');
+        fetchTasks();
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsAddingNote(false);
+    }
+  };
+
+  const handleFieldChange = (field, value) => {
+    setEditedContact(prev => ({ ...prev, [field]: value }));
+    setShowSaveFab(true);
+  };
+
+  const openContactProfile = async (contactId) => {
+     try {
+       const token = localStorage.getItem('token');
+       const tenantId = localStorage.getItem('tenantId');
+       const res = await fetch('/api/chat/contacts', {
+         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+       });
+       if (res.ok) {
+         const data = await res.json();
+         const contact = data.find(c => c._id === contactId);
+         if (contact) {
+            setSelectedContact(contact);
+            setEditedContact(contact);
+            setShowProfile(true);
+            fetchRecentMessages(contactId);
+         }
+       }
+     } catch (err) {
+       console.error(err);
+     }
   };
 
   const completeTask = async (contactId, taskId) => {
@@ -194,7 +313,6 @@ export default function Tasks() {
         !t.contactName.toLowerCase().includes(searchQuery.toLowerCase()) &&
         !(t.phone && t.phone.includes(searchQuery))
     ) return false;
-
     return true;
   });
 
@@ -202,8 +320,29 @@ export default function Tasks() {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   }
 
+  const formatDateTime = (dateString) => {
+    if (!dateString) return 'Not Set';
+    return new Date(dateString).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+  };
+
   return (
     <div className="flex-1 bg-[#f8fafc] flex flex-col h-full overflow-hidden">
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes slide-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes pop-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        .animate-slide-up { animation: slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-slide-in-right { animation: slide-in-right 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-pop-in { animation: pop-in 0.2s ease-out forwards; }
+        .shadow-3xl { box-shadow: 0 32px 64px -12px rgba(0, 0, 0, 0.2); }
+        .shadow-glow { box-shadow: 0 0 20px rgba(20, 184, 166, 0.3); }
+      `}</style>
       
       {/* Header with Stats */}
       <div className="px-8 pt-8 pb-6 bg-white border-b border-slate-200 shadow-sm">
@@ -329,8 +468,11 @@ export default function Tasks() {
                return (
                   <div key={t._id} className="group bg-white rounded-2xl border border-slate-200 p-4 flex items-center justify-between hover:border-teal-200 hover:shadow-lg hover:shadow-teal-900/5 transition-all animate-fade-in relative hover:z-10">
                      <div className="flex items-center space-x-5">
-                        <div className="relative">
-                           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-transform group-hover:scale-105 ${
+                        <button 
+                          onClick={() => openContactProfile(t.contactId)}
+                          className="relative group/avatar"
+                        >
+                           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all group-hover/avatar:scale-105 group-hover/avatar:shadow-lg ${
                              t.type === 'CALL' ? 'bg-blue-50 text-blue-600' : 
                              t.type === 'MEETING' ? 'bg-purple-50 text-purple-600' : 
                              'bg-orange-50 text-orange-600'
@@ -346,7 +488,7 @@ export default function Tasks() {
                              {t.type === 'MEETING' && <Calendar size={10} />}
                              {t.type === 'FOLLOW_UP' && <Clock size={10} />}
                            </div>
-                        </div>
+                        </button>
 
                         <div>
                            <div className="flex items-center space-x-3 mb-1">
@@ -357,10 +499,13 @@ export default function Tasks() {
                               {t.status === 'CANCELLED' && <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase rounded">Cancelled</span>}
                            </div>
                            <div className="flex items-center space-x-4">
-                              <div className="flex items-center text-[11px] font-bold text-slate-400">
-                                 <User size={12} className="mr-1.5 opacity-60" />
-                                 {t.contactName}
-                              </div>
+                               <button 
+                                 onClick={() => openContactProfile(t.contactId)}
+                                 className="flex items-center text-[11px] font-bold text-slate-400 hover:text-teal-600 transition-colors"
+                               >
+                                  <User size={12} className="mr-1.5 opacity-60" />
+                                  {t.contactName}
+                               </button>
                               <div className={`flex items-center text-[11px] font-bold ${isOverdue ? 'text-rose-500' : 'text-slate-400'}`}>
                                  <Calendar size={12} className="mr-1.5 opacity-60" />
                                  {new Date(t.dueDate).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
@@ -494,8 +639,315 @@ export default function Tasks() {
          </div>
       </div>
 
+      {/* FULL CONTACT PROFILE SLIDE-OVER (REPLICATED FROM CONTACTS) */}
+      {showProfile && selectedContact && editedContact && (
+        <div 
+          className="fixed inset-0 z-[100] flex justify-end bg-black/60 backdrop-blur-sm transition-all animate-fade-in"
+          onClick={() => {
+              if (showSaveFab) {
+                  if (window.confirm("You have unsaved changes. Discard them?")) {
+                      setShowProfile(false);
+                  }
+              } else {
+                  setShowProfile(false);
+              }
+          }}
+        >
+           <div 
+             className="w-[920px] h-full bg-white shadow-3xl flex flex-col animate-slide-in-right relative"
+             onClick={(e) => e.stopPropagation()}
+           >
+              {/* THEME SYNCHRONIZED HEADER */}
+              <div className="bg-[var(--theme-bg)] p-8 text-white relative shadow-2xl shrink-0 flex items-center justify-between z-10 border-b border-white/10">
+                  <div className="flex items-center space-x-6 flex-1">
+                      <div className="relative group">
+                         <div className="w-16 h-16 rounded-2xl bg-white/20 border border-white/20 flex items-center justify-center font-black text-2xl text-white transform group-hover:scale-105 transition-transform">
+                            {editedContact.firstName ? editedContact.firstName.charAt(0) : (selectedContact.name?.charAt(0) || 'U')}
+                         </div>
+                         <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-white border-4 border-[var(--theme-bg)] rounded-full flex items-center justify-center text-[10px] font-black text-[var(--theme-text)] shadow-xl">{editedContact.score || 0}%</div>
+                      </div>
+                      <div className="flex-1">
+                          <h2 className="text-2xl font-black tracking-tight mb-1">
+                             {editedContact.firstName && editedContact.lastName ? `${editedContact.firstName} ${editedContact.lastName}` : (editedContact.name || 'Profile Identity')}
+                          </h2>
+                          <div className="flex items-center space-x-4 opacity-70">
+                             <span className="flex items-center text-[10px] font-black uppercase tracking-[0.2em]"><Phone size={10} className="mr-2" /> {editedContact.phone}</span>
+                             <span className="w-1.5 h-1.5 bg-white/40 rounded-full"></span>
+                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white underline underline-offset-4 decoration-white/30">{editedContact.status || 'Active Record'}</span>
+                          </div>
+                      </div>
+                  </div>
+
+                  <div className="flex items-center space-x-4">
+                      <button 
+                        onClick={() => updateContactDetail(selectedContact._id, editedContact)}
+                        disabled={!showSaveFab || isUpdatingContact}
+                        className={`flex items-center space-x-3 px-8 py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all shadow-xl border border-white/20 ${
+                          showSaveFab 
+                          ? 'bg-white text-[var(--theme-text)] hover:shadow-glow hover:-translate-y-0.5 active:scale-95' 
+                          : 'bg-white/10 text-white/40 cursor-not-allowed'
+                        }`}
+                      >
+                         {isUpdatingContact ? <Clock size={16} className="animate-spin" /> : <Save size={16} />}
+                         <span>Finalize Record</span>
+                      </button>
+                      <button onClick={() => setShowProfile(false)} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-all"><X size={20} /></button>
+                  </div>
+              </div>
+
+              {/* THEME SYNCHRONIZED PIPELINE */}
+              <div className="bg-[var(--theme-bg)] relative z-[100] px-8 pb-8 pt-2 flex items-center justify-between shrink-0 shadow-inner overflow-x-auto no-scrollbar pointer-events-auto">
+                  <div className="flex items-center flex-1 min-w-[700px] pointer-events-auto">
+                      {PIPELINE_STAGES.map((stage, idx) => (
+                         <React.Fragment key={stage}>
+                            <button 
+                              onClick={() => handleFieldChange('pipelineStage', stage)}
+                              className={`flex flex-col items-center group relative z-[110] px-2 py-1 cursor-pointer pointer-events-auto ${idx < PIPELINE_STAGES.length - 1 ? 'flex-1' : ''}`}
+                            >
+                               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-black transition-all border-4 shadow-xl ${
+                                  editedContact.pipelineStage === stage 
+                                  ? 'bg-white border-white/30 text-[var(--theme-text)] scale-110' 
+                                  : PIPELINE_STAGES.indexOf(editedContact.pipelineStage) >= idx 
+                                    ? 'bg-white/30 border-white/20 text-white' 
+                                    : 'bg-white/5 border-white/5 text-white/30 hover:border-white/40'
+                               }`}>
+                                  {PIPELINE_STAGES.indexOf(editedContact.pipelineStage) > idx ? <CheckCircle2 size={18} /> : idx + 1}
+                               </div>
+                               <span className={`mt-3 text-[10px] font-black uppercase tracking-widest transition-all ${editedContact.pipelineStage === stage ? 'opacity-100 text-white' : 'opacity-40 group-hover:opacity-100 text-white'}`}>{stage}</span>
+                            </button>
+                            {idx < PIPELINE_STAGES.length - 1 && <div className={`flex-1 h-0.5 mb-8 transition-colors ${PIPELINE_STAGES.indexOf(editedContact.pipelineStage) > idx ? 'bg-white/40' : 'bg-white/10'}`}></div>}
+                         </React.Fragment>
+                      ))}
+                  </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-10 bg-white grid grid-cols-12 gap-10 custom-scrollbar">
+                 <div className="col-span-12 lg:col-span-7 space-y-10">
+                    
+                    {/* SECTION 1: BASIC INFORMATION */}
+                    <div className="space-y-6">
+                       <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
+                          <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center"><User size={18} /></div>
+                          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">1. Basic Information</h3>
+                       </div>
+                       
+                       <div className="grid grid-cols-2 gap-6">
+                          <div>
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">First Name</label>
+                             <input type="text" value={editedContact.firstName || ''} onChange={e=>handleFieldChange('firstName', e.target.value)} className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl px-4 py-3 text-sm font-bold transition-all outline-none" />
+                          </div>
+                          <div>
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Last Name</label>
+                             <input type="text" value={editedContact.lastName || ''} onChange={e=>handleFieldChange('lastName', e.target.value)} className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl px-4 py-3 text-sm font-bold transition-all outline-none" />
+                          </div>
+                          <div>
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Primary Phone</label>
+                             <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><Smartphone size={14} /></div>
+                                <input type="text" value={editedContact.phone || ''} readOnly className="w-full bg-slate-100 border-none rounded-xl pl-10 pr-4 py-3 text-sm font-bold text-slate-500 cursor-not-allowed" />
+                             </div>
+                          </div>
+                          <div>
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Secondary Phone</label>
+                             <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><Phone size={14} /></div>
+                                <input type="text" value={editedContact.secondaryPhone || ''} onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl pl-10 pr-4 py-3 text-sm font-bold transition-all outline-none" />
+                             </div>
+                          </div>
+                          <div className="col-span-2">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Email Identity</label>
+                             <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"><Mail size={14} /></div>
+                                <input type="email" value={editedContact.email || ''} onChange={e=>handleFieldChange('email', e.target.value)} className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl pl-10 pr-4 py-3 text-sm font-bold transition-all outline-none placeholder-slate-300" placeholder="lead@company.com" />
+                             </div>
+                          </div>
+                          <div className="col-span-2">
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Full Street Address</label>
+                             <div className="relative group">
+                                <div className="absolute left-4 top-4 text-slate-400"><MapPin size={14} /></div>
+                                <textarea value={editedContact.address || ''} onChange={e=>handleFieldChange('address', e.target.value)} className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl pl-10 pr-4 py-3 text-sm font-bold transition-all outline-none h-24" />
+                             </div>
+                          </div>
+                          <div>
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">State / Region</label>
+                             <input type="text" value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl px-4 py-3 text-sm font-bold transition-all outline-none" />
+                          </div>
+                          <div>
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Pincode</label>
+                             <input type="text" value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl px-4 py-3 text-sm font-bold transition-all outline-none" />
+                          </div>
+                       </div>
+                    </div>
+
+                    {/* SECTION 2: QUALIFICATION & SCORING */}
+                    <div className="space-y-6">
+                       <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
+                          <div className="w-8 h-8 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center"><Target size={18} /></div>
+                          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">2. Qualification</h3>
+                       </div>
+                       <div className="p-6 bg-slate-50 rounded-2xl border-2 border-slate-100">
+                          <div className="flex justify-between items-center mb-4">
+                             <span className="text-xs font-black text-slate-600 uppercase tracking-widest">Profiling Score</span>
+                             <span className="text-xl font-black text-teal-600">{editedContact.score || 0}%</span>
+                          </div>
+                          <input type="range" value={editedContact.score || 0} onChange={e=>handleFieldChange('score', parseInt(e.target.value))} className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-teal-600" />
+                       </div>
+                       <div className="grid grid-cols-2 gap-6">
+                          <div>
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Heat Level</label>
+                             <div className="flex p-1 bg-slate-50 rounded-xl space-x-1">
+                                {['COLD', 'WARM', 'HOT'].map(lvl => (
+                                   <button 
+                                     key={lvl} 
+                                     onClick={()=>handleFieldChange('heatLevel', lvl)}
+                                     className={`flex-1 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all flex items-center justify-center space-x-2 ${
+                                       editedContact.heatLevel === lvl 
+                                       ? lvl === 'HOT' ? 'bg-rose-500 text-white shadow-lg shadow-rose-200' : lvl === 'WARM' ? 'bg-orange-400 text-white' : 'bg-blue-400 text-white'
+                                       : 'text-slate-400 hover:text-slate-600'
+                                     }`}
+                                   >
+                                      {lvl === 'HOT' && <Flame size={12} />}
+                                      {lvl === 'WARM' && <Sun size={12} />}
+                                      {lvl === 'COLD' && <Snowflake size={12} />}
+                                      <span>{lvl}</span>
+                                   </button>
+                                ))}
+                             </div>
+                          </div>
+                          <div>
+                             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Lead Status</label>
+                             <select value={editedContact.status || 'NEW'} onChange={e=>handleFieldChange('status', e.target.value)} className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl px-4 py-3 text-sm font-bold transition-all outline-none">
+                                <option value="NEW">NEW LEAD</option>
+                                <option value="OPEN">OPEN RECORRD</option>
+                                <option value="PROGRESS">IN-PROGRESS</option>
+                                <option value="CLOSED">CLOSED WON</option>
+                                <option value="LOST">CLOSED LOST</option>
+                             </select>
+                          </div>
+                       </div>
+                       <div>
+                          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Qualification Detail</label>
+                          <textarea value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 focus:bg-white rounded-xl px-4 py-3 text-sm font-bold transition-all outline-none h-32 placeholder-slate-300" placeholder="Detail the requirements and qualification highlights..." />
+                       </div>
+                    </div>
+                 </div>
+
+                 <div className="col-span-12 lg:col-span-5 space-y-10">
+                    
+                    {/* SECTION 3: LEAD INTELLIGENCE */}
+                    <div className="space-y-6">
+                       <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
+                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center"><TrendingUp size={18} /></div>
+                          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">3. Lead Intelligence</h3>
+                       </div>
+                       <div className="grid gap-6">
+                          <div className="p-4 bg-slate-900 rounded-2xl shadow-xl">
+                             <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] block mb-2">Est. Deal Value</label>
+                             <div className="flex items-center space-x-3">
+                                <span className="text-xl font-black text-white opacity-40">₹</span>
+                                <input type="number" value={editedContact.estimatedValue || 0} onChange={e=>handleFieldChange('estimatedValue', e.target.value)} className="bg-transparent text-2xl font-black text-white outline-none w-full placeholder-white/10" />
+                             </div>
+                          </div>
+                          <div className="p-3 bg-white border border-slate-100 rounded-xl flex items-center space-x-3">
+                             <Globe size={16} className="text-slate-400" />
+                             <div className="flex-1">
+                                <label className="text-[8px] font-black text-slate-400 uppercase block">Lead Source</label>
+                                <input value={editedContact.leadSource || ''} onChange={e=>handleFieldChange('leadSource', e.target.value)} className="text-sm font-bold text-slate-700 w-full outline-none" placeholder="Web, Referral, Ads..." />
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+
+                    {/* SECTION 4: RECORDS & METADATA */}
+                    <div className="space-y-6">
+                       <div className="flex items-center space-x-3 border-b border-slate-100 pb-4">
+                          <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-600 flex items-center justify-center"><History size={18} /></div>
+                          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">4. Metadata Records</h3>
+                       </div>
+                       <div className="bg-slate-50 rounded-2xl p-6 space-y-6 border border-slate-100">
+                          <div className="flex items-center justify-between">
+                             <div className="flex items-center space-x-3">
+                                <Activity size={14} className="text-teal-500" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Creation Identity</span>
+                             </div>
+                             <span className="text-[11px] font-black text-slate-700">{formatDateTime(selectedContact.createdAt)}</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                             <div className="flex items-center space-x-3">
+                                <History size={14} className="text-blue-500" />
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Last Modification</span>
+                             </div>
+                             <span className="text-[11px] font-black text-slate-700">{formatDateTime(selectedContact.updatedAt)}</span>
+                          </div>
+                       </div>
+                    </div>
+
+                    {/* INTERACTION TABS: TIMELINE & MESSAGES */}
+                    <div className="bg-white rounded-3xl border border-slate-100 overflow-hidden shadow-sm">
+                        <div className="flex border-b border-slate-50">
+                           {['timeline', 'messages', 'notes'].map(tab => (
+                              <button key={tab} onClick={()=>setActiveTab(tab)} className={`flex-1 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'bg-slate-50 text-teal-600 border-b-2 border-teal-600' : 'text-slate-400 hover:text-slate-600'}`}>
+                                 {tab}
+                              </button>
+                           ))}
+                        </div>
+                        <div className="p-6 h-80 overflow-y-auto custom-scrollbar">
+                           {activeTab === 'timeline' && (
+                              <div className="space-y-6">
+                                 {selectedContact.timeline?.slice().reverse().map((event, idx) => (
+                                    <div key={idx} className="flex space-x-4">
+                                       <div className="flex flex-col items-center">
+                                          <div className={`w-2.5 h-2.5 rounded-full mt-1 ${idx === 0 ? 'bg-teal-500 ring-4 ring-teal-50' : 'bg-slate-200'}`}></div>
+                                          {idx !== selectedContact.timeline.length - 1 && <div className="w-0.5 h-full bg-slate-50 my-1"></div>}
+                                       </div>
+                                       <div>
+                                          <p className="text-[10px] font-black text-slate-800 leading-tight">{event.description}</p>
+                                          <span className="text-[9px] font-bold text-slate-400 uppercase">{formatDateTime(event.timestamp)}</span>
+                                       </div>
+                                    </div>
+                                 ))}
+                              </div>
+                           )}
+                           {activeTab === 'messages' && (
+                              <div className="space-y-4">
+                                 {recentMessages.map((msg, idx) => (
+                                    <div key={idx} className={`p-4 rounded-2xl text-xs font-bold leading-relaxed ${msg.fromMe ? 'bg-teal-50 text-teal-800 border-l-4 border-teal-500' : 'bg-slate-50 text-slate-700 border-l-4 border-slate-300'}`}>
+                                       {msg.body}
+                                       <div className="mt-2 text-[8px] font-black opacity-40 uppercase">{formatDateTime(msg.timestamp)}</div>
+                                    </div>
+                                 ))}
+                              </div>
+                           )}
+                           {activeTab === 'notes' && (
+                              <div className="space-y-6">
+                                 <div className="flex space-x-3">
+                                    <input value={noteInput} onChange={e=>setNoteInput(e.target.value)} placeholder="Add private note..." className="flex-1 bg-slate-50 border-none rounded-xl px-4 py-2.5 text-xs font-bold outline-none focus:bg-white focus:ring-2 focus:ring-teal-100 transition-all" />
+                                    <button onClick={()=>addInternalNote(selectedContact._id)} disabled={isAddingNote} className="w-10 h-10 bg-teal-600 text-white rounded-xl flex items-center justify-center hover:bg-teal-700 transition-all shadow-lg active:scale-95">
+                                       {isAddingNote ? <Clock size={16} className="animate-spin" /> : <Send size={16} />}
+                                    </button>
+                                 </div>
+                                 <div className="space-y-4">
+                                    {selectedContact.notes?.slice().reverse().map((note, idx) => (
+                                       <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                          <p className="text-xs font-bold text-slate-700 leading-relaxed mb-2">{note.content}</p>
+                                          <div className="flex justify-between items-center text-[8px] font-black uppercase text-slate-400">
+                                             <span>By {note.createdBy || 'System'}</span>
+                                             <span>{formatDateTime(note.createdAt)}</span>
+                                          </div>
+                                       </div>
+                                    ))}
+                                 </div>
+                              </div>
+                           )}
+                        </div>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
       {/* Professional Footer Bar */}
-      <div className="px-8 py-1.5 bg-white border-t border-slate-200 flex justify-between items-center bg-slate-50/50">
+      <div className="px-8 py-1.5 bg-white border-t border-slate-200 flex justify-between items-center bg-slate-50/50 relative z-10">
          <div className="flex items-center space-x-2">
             <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse"></div>
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">System Online</span>
