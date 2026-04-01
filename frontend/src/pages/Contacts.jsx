@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 import { 
   Search, Plus, X, Mail, MapPin, Phone, Users, 
   Clock, Activity, Target, Tag, Save, Filter, 
@@ -186,7 +187,7 @@ export default function Contacts() {
   };
 
   return (
-    <div className="bg-crm-bg min-h-screen flex flex-col animate-fade-in font-sans tracking-tight">
+    <div className="bg-crm-bg min-h-screen flex flex-col animate-fade-in font-sans tracking-normal text-slate-800">
       <div className="bg-white border-b border-gray-100 px-8 py-4 sticky top-0 z-40 flex items-center justify-between shadow-sm">
          <div>
             <h1 className="text-sm font-black text-gray-400 tracking-wider uppercase flex items-center">
@@ -289,47 +290,47 @@ export default function Contacts() {
              className="w-[920px] h-full bg-white shadow-3xl flex flex-col animate-slide-up relative"
              onClick={(e) => e.stopPropagation()}
            >
-              {/* FINALIZED THEME HEADER */}
-              <div className="bg-slate-900 px-8 py-7 text-white relative shadow-2xl shrink-0 flex items-center justify-between z-10 border-b border-white/5">
+              {/* THEME SYNCHRONIZED HEADER */}
+              <div className="bg-[var(--theme-bg)] p-8 text-white relative shadow-2xl shrink-0 flex items-center justify-between z-10 border-b border-white/10">
                   <div className="flex items-center space-x-6 flex-1">
                       <div className="relative group">
-                         <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center font-black text-2xl text-white transform group-hover:scale-105 transition-transform">
+                         <div className="w-16 h-16 rounded-2xl bg-white/20 border border-white/20 flex items-center justify-center font-black text-2xl text-white transform group-hover:scale-105 transition-transform">
                             {editedContact.firstName ? editedContact.firstName.charAt(0) : (selectedContact.name?.charAt(0) || 'U')}
                          </div>
-                         <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-[var(--theme-bg)] border-4 border-slate-900 rounded-full flex items-center justify-center text-[10px] font-black text-white shadow-xl">{editedContact.score || 0}%</div>
+                         <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-white border-4 border-[var(--theme-bg)] rounded-full flex items-center justify-center text-[10px] font-black text-[var(--theme-text)] shadow-xl">{editedContact.score || 0}%</div>
                       </div>
                       <div className="flex-1">
                           <h2 className="text-2xl font-black tracking-tight mb-1">
-                             {editedContact.firstName && editedContact.lastName ? `${editedContact.firstName} ${editedContact.lastName}` : (editedContact.name || 'Private Interaction')}
+                             {editedContact.firstName && editedContact.lastName ? `${editedContact.firstName} ${editedContact.lastName}` : (editedContact.name || 'Profile Identity')}
                           </h2>
-                          <div className="flex items-center space-x-4 opacity-50">
+                          <div className="flex items-center space-x-4 opacity-70">
                              <span className="flex items-center text-[10px] font-black uppercase tracking-[0.2em]"><Phone size={10} className="mr-2" /> {editedContact.phone}</span>
-                             <span className="w-1 h-1 bg-white/30 rounded-full"></span>
-                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-[var(--theme-text)]">{editedContact.status || 'Active Lead'}</span>
+                             <span className="w-1.5 h-1.5 bg-white/40 rounded-full"></span>
+                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white underline underline-offset-4 decoration-white/30">{editedContact.status || 'Active Record'}</span>
                           </div>
                       </div>
                   </div>
 
                   <div className="flex items-center space-x-4">
-                      {/* FIXED SAVE/FINALIZE BUTTON */}
+                      {/* FIXED SAVE/FINALIZE BUTTON (NOW BRAND COLOR) */}
                       <button 
                         onClick={() => updateContactDetail(selectedContact._id, editedContact)}
                         disabled={!showSaveFab || isUpdatingContact}
-                        className={`flex items-center space-x-3 px-8 py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all shadow-2xl ${
+                        className={`flex items-center space-x-3 px-8 py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all shadow-xl border border-white/20 ${
                           showSaveFab 
-                          ? 'bg-[var(--theme-bg)] text-white hover:shadow-glow hover:scale-105 active:scale-95' 
-                          : 'bg-white/10 text-white/30 cursor-not-allowed border border-white/5'
+                          ? 'bg-white text-[var(--theme-text)] hover:shadow-glow hover:-translate-y-0.5 active:scale-95' 
+                          : 'bg-white/10 text-white/40 cursor-not-allowed'
                         }`}
                       >
                          {isUpdatingContact ? <Clock size={16} className="animate-spin" /> : <Save size={16} />}
                          <span>Finalize Record</span>
                       </button>
-                      <button onClick={() => setShowProfile(false)} className="p-3 bg-white/5 hover:bg-white/10 rounded-2xl text-white/50 hover:text-white transition-all"><X size={20} /></button>
+                      <button onClick={() => setShowProfile(false)} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-all"><X size={20} /></button>
                   </div>
               </div>
 
-              {/* RE-ORDERED INTERACTIVE PIPELINE */}
-              <div className="bg-slate-800 px-8 py-5 flex items-center justify-between shrink-0 shadow-inner overflow-x-auto no-scrollbar">
+              {/* THEME SYNCHRONIZED PIPELINE */}
+              <div className="bg-[var(--theme-bg)] opacity-95 px-8 pb-8 pt-2 flex items-center justify-between shrink-0 shadow-inner overflow-x-auto no-scrollbar">
                   <div className="flex items-center flex-1 min-w-[700px]">
                       {PIPELINE_STAGES.map((stage, idx) => (
                          <React.Fragment key={stage}>
@@ -337,18 +338,18 @@ export default function Contacts() {
                               onClick={() => handleFieldChange('pipelineStage', stage)}
                               className={`flex flex-col items-center group relative ${idx < PIPELINE_STAGES.length - 1 ? 'flex-1' : ''}`}
                             >
-                               <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-black transition-all border-4 shadow-xl ${
+                               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-black transition-all border-4 shadow-xl ${
                                   editedContact.pipelineStage === stage 
-                                  ? 'bg-[var(--theme-bg)] border-[var(--theme-bg)]/20 text-white scale-110' 
+                                  ? 'bg-white border-white/30 text-[var(--theme-text)] scale-110' 
                                   : PIPELINE_STAGES.indexOf(editedContact.pipelineStage) >= idx 
-                                    ? 'bg-green-500/10 border-green-500/20 text-green-500' 
-                                    : 'bg-slate-700 border-slate-700 text-slate-500 hover:border-slate-500'
+                                    ? 'bg-white/30 border-white/20 text-white' 
+                                    : 'bg-white/5 border-white/5 text-white/30 hover:border-white/40'
                                }`}>
-                                  {PIPELINE_STAGES.indexOf(editedContact.pipelineStage) > idx ? <CheckCircle2 size={16} /> : idx + 1}
+                                  {PIPELINE_STAGES.indexOf(editedContact.pipelineStage) > idx ? <CheckCircle2 size={18} /> : idx + 1}
                                </div>
-                               <span className={`mt-3 text-[10px] font-black uppercase tracking-widest transition-all ${editedContact.pipelineStage === stage ? 'opacity-100 text-[var(--theme-text)]' : 'opacity-30 group-hover:opacity-100'}`}>{stage}</span>
+                               <span className={`mt-3 text-[10px] font-black uppercase tracking-widest transition-all ${editedContact.pipelineStage === stage ? 'opacity-100 text-white' : 'opacity-40 group-hover:opacity-100 text-white'}`}>{stage}</span>
                             </button>
-                            {idx < PIPELINE_STAGES.length - 1 && <div className={`flex-1 h-0.5 mb-8 transition-colors ${PIPELINE_STAGES.indexOf(editedContact.pipelineStage) > idx ? 'bg-green-500/20' : 'bg-slate-700'}`}></div>}
+                            {idx < PIPELINE_STAGES.length - 1 && <div className={`flex-1 h-0.5 mb-8 transition-colors ${PIPELINE_STAGES.indexOf(editedContact.pipelineStage) > idx ? 'bg-white/40' : 'bg-white/10'}`}></div>}
                          </React.Fragment>
                       ))}
                   </div>
@@ -451,8 +452,8 @@ export default function Contacts() {
                           <div className="p-4 bg-slate-900 rounded-2xl shadow-xl">
                              <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] block mb-2">Est. Deal Value</label>
                              <div className="flex items-center space-x-3">
-                                <span className="text-xl font-black text-[var(--theme-text)]">₹</span>
-                                <input type="number" value={editedContact.estimatedValue || 0} onChange={e=>handleFieldChange('estimatedValue', e.target.value)} className="bg-transparent text-2xl font-black text-white outline-none w-full" />
+                                <span className="text-xl font-black text-white opacity-40">₹</span>
+                                <input type="number" value={editedContact.estimatedValue || 0} onChange={e=>handleFieldChange('estimatedValue', e.target.value)} className="bg-transparent text-2xl font-black text-white outline-none w-full placeholder-white/10" />
                              </div>
                           </div>
                           <div className="p-3 bg-white border border-slate-100 rounded-xl flex items-center space-x-3">
