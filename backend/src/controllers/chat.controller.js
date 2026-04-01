@@ -34,33 +34,31 @@ const getContacts = async (req, res) => {
       {
         $lookup: {
           from: 'messages',
-          let: { contactId: '$_id' },
-          pipeline: [
-            { $match: { $expr: { $eq: ['$contactId', '$$contactId'] } } },
-            { $sort: { timestamp: -1 } },
-            { $limit: 1 }
-          ],
+          localField: '_id',
+          foreignField: 'contactId',
           as: 'lastMsg'
         }
       },
       { $unwind: '$lastMsg' }, // Only keep contacts that have at least one message
+      { $sort: { 'lastMsg.timestamp': -1 } }, // Sort messages per contact to get latest
       {
-        $project: {
-          _id: 1,
-          name: 1,
-          phone: 1,
-          status: 1,
-          qualification: 1,
-          score: 1,
-          heatLevel: 1,
-          source: 1,
-          lastMessage: '$lastMsg.content',
-          lastMessageAt: '$lastMsg.timestamp',
-          lastMessageType: '$lastMsg.type'
+        $group: {
+          _id: '$_id',
+          name: { $first: '$name' },
+          phone: { $first: '$phone' },
+          status: { $first: '$status' },
+          qualification: { $first: '$qualification' },
+          score: { $first: '$score' },
+          heatLevel: { $first: '$heatLevel' },
+          source: { $first: '$source' },
+          lastMessage: { $first: '$lastMsg.content' },
+          lastMessageAt: { $first: '$lastMsg.timestamp' },
+          lastMessageType: { $first: '$lastMsg.type' }
         }
       },
       { $sort: { lastMessageAt: -1 } }
     );
+
 
     const contacts = await Contact.aggregate(pipeline);
     res.json(contacts);

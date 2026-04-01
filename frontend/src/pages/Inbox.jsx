@@ -304,7 +304,7 @@ export default function Inbox() {
 
               // RESTORE SESSION: Restore the previously active chat from localStorage
               const storedId = localStorage.getItem('activeChatId');
-              if (storedId) {
+              if (storedId && storedId !== 'null' && storedId !== 'undefined') {
                 const found = mapped.find(c => c._id === storedId);
                 setActiveChat(found || mapped[0]);
               } else {
@@ -355,7 +355,7 @@ export default function Inbox() {
       const phoneMatch = c.phone?.toLowerCase().includes(q);
       return nameMatch || phoneMatch;
     })
-    .sort((a, b) => (b.score || 0) - (a.score || 0));
+    .sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0));
 
   return (
     <div className="flex h-full bg-white rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex-row animate-fade-in relative z-10 w-[calc(100%-12px)] ml-3 my-3">
