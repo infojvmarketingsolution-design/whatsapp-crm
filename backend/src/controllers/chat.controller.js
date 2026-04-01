@@ -43,7 +43,18 @@ const performContactAction = async (req, res) => {
     contact = await ContactModel.findById(contactId);
     if (!contact) return res.status(404).json({ error: 'Contact not found' });
 
-    if (action === 'update_status') {
+    if (action === 'delete_task') {
+       if (!contact.tasks) contact.tasks = [];
+       const taskIndex = contact.tasks.findIndex(t => t._id.toString() === payload.taskId);
+       if (taskIndex > -1) {
+          const removedTask = contact.tasks.splice(taskIndex, 1)[0];
+          contact.timeline.push({ 
+            eventType: 'TASK_DELETED', 
+            description: `Task deleted: ${removedTask.title}`, 
+            timestamp: new Date() 
+          });
+       }
+    } else if (action === 'update_status') {
        contact.status = payload.status;
        contact.timeline.push({ eventType: 'STATUS_CHANGE', description: `Moved to ${payload.status}`, timestamp: new Date() });
     } else if (action === 'add_note') {

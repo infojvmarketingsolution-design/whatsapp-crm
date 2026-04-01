@@ -11,10 +11,17 @@ export default function Tasks() {
   const [filter, setFilter] = useState('ALL'); // ALL, CALL, MEETING, FOLLOW_UP
   const [searchQuery, setSearchQuery] = useState('');
   const [view, setView] = useState('PENDING'); // PENDING, COMPLETED, OVERDUE
+  const [activeDropdown, setActiveDropdown] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchTasks();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = () => setActiveDropdown(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
   const fetchTasks = async () => {
@@ -81,6 +88,25 @@ export default function Tasks() {
     } catch (err) {
       console.error(err);
     }
+  };
+
+  const deleteTask = async (contactId, taskId) => {
+     if (!window.confirm("Are you sure you want to delete this task?")) return;
+     try {
+       const token = localStorage.getItem('token');
+       const tenantId = localStorage.getItem('tenantId');
+       const res = await fetch(`/api/chat/contacts/${contactId}/action`, {
+         method: 'PUT',
+         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+         body: JSON.stringify({ action: 'delete_task', payload: { taskId } })
+       });
+       if (res.ok) {
+          fetchTasks();
+          setActiveDropdown(null);
+       }
+     } catch (err) {
+       console.error(err);
+     }
   };
 
   const overdueCount = tasks.filter(t => t.status === 'PENDING' && new Date(t.dueDate) < new Date()).length;
@@ -257,7 +283,7 @@ export default function Tasks() {
                         </div>
                      </div>
 
-                     <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 relative">
                         {t.status === 'PENDING' && (
                            <>
                               <button 
@@ -276,14 +302,57 @@ export default function Tasks() {
                            </>
                         )}
                         <button 
-                          onClick={() => navigate('/chat', { state: { selectedContact: t.phone } })}
+                          onClick={() => navigate('/inbox', { state: { selectedContact: t.phone } })}
                           className="h-9 px-4 bg-slate-50 text-slate-600 text-xs font-black rounded-xl hover:bg-white hover:text-slate-800 hover:border-slate-200 border border-transparent transition-all flex items-center active:scale-95"
                         >
                           Chat <ArrowUpRight size={14} className="ml-2 opacity-60" />
                         </button>
-                        <button className="h-9 w-9 text-slate-400 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center">
-                           <MoreHorizontal size={18} />
-                        </button>
+                        
+                        <div className="relative">
+                           <button 
+                              onClick={(e) => {
+                                 e.stopPropagation();
+                                 setActiveDropdown(activeDropdown === t._id ? null : t._id);
+                              }}
+                              className={`h-9 w-9 text-slate-400 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center ${activeDropdown === t._id ? 'bg-slate-100 text-slate-600' : ''}`}
+                           >
+                              <MoreHorizontal size={18} />
+                           </button>
+
+                           {activeDropdown === t._id && (
+                              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-pop-in">
+                                 {t.status === 'PENDING' && (
+                                    <>
+                                       <button 
+                                          onClick={() => { completeTask(t.contactId, t._id); setActiveDropdown(null); }}
+                                          className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center"
+                                       >
+                                          <Check size={14} className="mr-3 text-teal-500" /> Mark as Done
+                                       </button>
+                                       <button 
+                                          onClick={() => { rescheduleToToday(t.contactId, t._id); setActiveDropdown(null); }}
+                                          className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center"
+                                       >
+                                          <Clock size={14} className="mr-3 text-blue-500" /> Reschedule for Today
+                                       </button>
+                                    </>
+                                 )}
+                                 <button 
+                                    onClick={() => navigate('/inbox', { state: { selectedContact: t.phone } })}
+                                    className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center"
+                                 >
+                                    <ArrowUpRight size={14} className="mr-3 text-slate-400" /> Go to Chat
+                                 </button>
+                                 <div className="h-[1px] bg-slate-50 my-1"></div>
+                                 <button 
+                                    onClick={() => deleteTask(t.contactId, t._id)}
+                                    className="w-full text-left px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center"
+                                 >
+                                    <AlertCircle size={14} className="mr-3 text-rose-500" /> Delete Task
+                                 </button>
+                              </div>
+                           )}
+                        </div>
                      </div>
                   </div>
                );
