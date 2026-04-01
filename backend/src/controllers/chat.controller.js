@@ -104,13 +104,20 @@ const performContactAction = async (req, res) => {
         contact.status = payload.status;
         contact.timeline.push({ eventType: 'STATUS_UPDATED', description: `Status updated to ${payload.status}`, timestamp: new Date() });
      } else if (action === 'update_contact') {
-        if (payload.name) contact.name = payload.name;
-        if (payload.email) contact.email = payload.email;
-        if (payload.address) contact.address = payload.address;
-        if (payload.status) contact.status = payload.status;
+        if (payload.name !== undefined) contact.name = payload.name;
+        if (payload.email !== undefined) contact.email = payload.email;
+        if (payload.address !== undefined) contact.address = payload.address;
+        if (payload.status !== undefined) contact.status = payload.status;
+        if (payload.budget !== undefined) contact.budget = payload.budget;
+        if (payload.purchaseTimeline !== undefined) contact.purchaseTimeline = payload.purchaseTimeline;
+        if (payload.decisionMakerStatus !== undefined) contact.decisionMakerStatus = payload.decisionMakerStatus;
+        if (payload.heatLevel !== undefined) contact.heatLevel = payload.heatLevel;
+        if (payload.score !== undefined) contact.score = payload.score;
+        
         contact.timeline.push({ eventType: 'CONTACT_UPDATED', description: 'Contact details updated', timestamp: new Date() });
-     
-       contact.timeline.push({ eventType: 'STATUS_CHANGE', description: `Moved to ${payload.status}`, timestamp: new Date() });
+        if (payload.status) {
+           contact.timeline.push({ eventType: 'STATUS_CHANGE', description: `Moved to ${payload.status}`, timestamp: new Date() });
+        }
     } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
