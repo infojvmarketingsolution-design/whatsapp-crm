@@ -254,7 +254,7 @@ export default function Tasks() {
             {filteredTasks.length > 0 ? filteredTasks.map(t => {
                const isOverdue = t.status === 'PENDING' && new Date(t.dueDate) < new Date();
                return (
-                  <div key={t._id} className="group bg-white rounded-2xl border border-slate-200 p-4 flex items-center justify-between hover:border-teal-200 hover:shadow-lg hover:shadow-teal-900/5 transition-all animate-fade-in">
+                  <div key={t._id} className="group bg-white rounded-2xl border border-slate-200 p-4 flex items-center justify-between hover:border-teal-200 hover:shadow-lg hover:shadow-teal-900/5 transition-all animate-fade-in relative hover:z-10">
                      <div className="flex items-center space-x-5">
                         <div className="relative">
                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-transform group-hover:scale-105 ${
@@ -294,7 +294,7 @@ export default function Tasks() {
                         </div>
                      </div>
 
-                      <div className="flex items-center space-x-2 relative">
+                      <div className="flex items-center space-x-2">
                         {t.status === 'PENDING' && (
                            <>
                               <button 
@@ -334,43 +334,58 @@ export default function Tasks() {
                            </button>
 
                            {activeDropdown === t._id && (
-                              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-slate-100 py-2 z-50 animate-pop-in">
+                              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[100] animate-pop-in divide-y divide-slate-50">
                                  {t.status === 'PENDING' && (
-                                    <>
+                                    <div className="pb-2">
                                        <button 
                                           onClick={() => { completeTask(t.contactId, t._id); setActiveDropdown(null); }}
-                                          className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center"
+                                          className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
                                        >
-                                          <Check size={14} className="mr-3 text-teal-500" /> Mark as Done
+                                          <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center mr-3">
+                                             <Check size={16} />
+                                          </div>
+                                          Mark as Done
                                        </button>
                                        <button 
                                           onClick={() => { rescheduleToToday(t.contactId, t._id); setActiveDropdown(null); }}
-                                          className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center"
+                                          className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
                                        >
-                                          <Clock size={14} className="mr-3 text-blue-500" /> Reschedule for Today
+                                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
+                                             <Clock size={16} />
+                                          </div>
+                                          Reschedule for Today
                                        </button>
-                                    </>
+                                    </div>
                                  )}
-                                 <button 
-                                    onClick={() => {
-                                       localStorage.setItem('activeChatId', t.contactId);
-                                       navigate('/inbox', { state: { selectedContact: t.phone } });
-                                    }}
-                                    className="w-full text-left px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center"
-                                 >
-                                    <ArrowUpRight size={14} className="mr-3 text-slate-400" /> Go to Chat
-                                 </button>
-                                 <div className="h-[1px] bg-slate-50 my-1"></div>
-                                 <button 
-                                    onClick={() => deleteTask(t.contactId, t._id)}
-                                    className="w-full text-left px-4 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center"
-                                 >
-                                    <AlertCircle size={14} className="mr-3 text-rose-500" /> Delete Task
-                                 </button>
+                                 <div className="py-2">
+                                    <button 
+                                       onClick={() => {
+                                          localStorage.setItem('activeChatId', t.contactId);
+                                          navigate('/inbox', { state: { selectedContact: t.phone } });
+                                       }}
+                                       className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
+                                    >
+                                       <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center mr-3">
+                                          <ArrowUpRight size={16} />
+                                       </div>
+                                       Go to Chat
+                                    </button>
+                                 </div>
+                                 <div className="pt-2">
+                                    <button 
+                                       onClick={() => deleteTask(t.contactId, t._id)}
+                                       className="w-full text-left px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center transition-colors"
+                                    >
+                                       <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3">
+                                          <AlertCircle size={16} />
+                                       </div>
+                                       Delete Task
+                                    </button>
+                                 </div>
                               </div>
                            )}
                         </div>
-                     </div>
+                      </div>
                   </div>
                );
             }) : (
