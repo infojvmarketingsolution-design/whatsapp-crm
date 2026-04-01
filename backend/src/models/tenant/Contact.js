@@ -37,6 +37,10 @@ const ContactSchema = new mongoose.Schema({
   profession: { type: String },
   companyName: { type: String },
   linkedinUrl: { type: String },
+  firstName: { type: String },
+  lastName: { type: String },
+  secondaryPhone: { type: String },
+  statusUpdatedAt: { type: Date, default: Date.now },
   interests: [{ type: String }],
   leadConsiderDate: { type: Date },
   isArchived: { type: Boolean, default: false }

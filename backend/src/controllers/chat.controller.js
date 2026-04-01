@@ -118,6 +118,15 @@ const performContactAction = async (req, res) => {
         if (payload.linkedinUrl !== undefined) contact.linkedinUrl = payload.linkedinUrl;
         if (payload.interests !== undefined) contact.interests = payload.interests;
         if (payload.leadConsiderDate !== undefined) contact.leadConsiderDate = payload.leadConsiderDate;
+        if (payload.firstName !== undefined) contact.firstName = payload.firstName;
+        if (payload.lastName !== undefined) contact.lastName = payload.lastName;
+        if (payload.secondaryPhone !== undefined) contact.secondaryPhone = payload.secondaryPhone;
+
+        if (payload.status !== undefined && payload.status !== contact.status) {
+           contact.status = payload.status;
+           contact.statusUpdatedAt = new Date();
+           contact.timeline.push({ eventType: 'STATUS_CHANGE', description: `Moved to ${payload.status}`, timestamp: new Date() });
+        }
         
         contact.timeline.push({ eventType: 'CONTACT_UPDATED', description: 'Contact details updated', timestamp: new Date() });
         if (payload.status) {
