@@ -159,12 +159,17 @@ export default function Inbox() {
         setMessages(prev => [...prev, sentMsg]);
         setIsPrivateNote(false);
         
-        // BUMP CONTACT TO TOP
+        // BUMP CONTACT TO TOP & Update Preview
         setContacts(prev => {
            const exists = prev.find(c => c._id === activeChat._id);
            if (exists) {
               const others = prev.filter(c => c._id !== activeChat._id);
-              return [exists, ...others];
+              const updated = { 
+                ...exists, 
+                lastMessage: sentMsg.content, 
+                lastMessageAt: sentMsg.timestamp || new Date().toISOString() 
+              };
+              return [updated, ...others];
            }
            return prev;
         });
@@ -210,6 +215,9 @@ export default function Inbox() {
   const activeChatRef = useRef(activeChat);
   useEffect(() => {
     activeChatRef.current = activeChat;
+    if (activeChat?._id) {
+       localStorage.setItem('activeChatId', activeChat._id);
+    }
   }, [activeChat]);
 
   // 🔥 Live Socket.io Connection for Real-Time Webhooks
@@ -232,11 +240,22 @@ export default function Inbox() {
           const exists = prev.find(c => c._id === newMsg.contactId);
           if (exists) {
              const others = prev.filter(c => c._id !== newMsg.contactId);
-             return [exists, ...others];
+             // Update last message preview in sidebar immediately
+             const updatedContact = { 
+                ...exists, 
+                lastMessage: newMsg.content, 
+                lastMessageAt: newMsg.timestamp || new Date().toISOString() 
+             };
+             return [updatedContact, ...others];
           }
           
           if (newMsg.contact) {
-            const newContact = { ...newMsg.contact, role: 'WhatsApp Chat' };
+            const newContact = { 
+               ...newMsg.contact, 
+               role: 'WhatsApp Chat',
+               lastMessage: newMsg.content,
+               lastMessageAt: newMsg.timestamp || new Date().toISOString()
+            };
             return [newContact, ...prev];
           }
           return prev;
@@ -282,7 +301,15 @@ export default function Inbox() {
                  role: c.source || 'WhatsApp Chat',
               }));
               setContacts(mapped);
-              setActiveChat(mapped[0]);
+
+              // RESTORE SESSION: Restore the previously active chat from localStorage
+              const storedId = localStorage.getItem('activeChatId');
+              if (storedId) {
+                const found = mapped.find(c => c._id === storedId);
+                setActiveChat(found || mapped[0]);
+              } else {
+                setActiveChat(mapped[0]);
+              }
            }
         }
       } catch (err) {
@@ -294,7 +321,7 @@ export default function Inbox() {
 
   // Fetch Message Thread for Active Contact
   useEffect(() => {
-    if (!activeChat || activeChat._id.length < 5) {
+    if (!activeChat?._id) {
        setMessages([]);
        return;
     }
@@ -417,7 +444,9 @@ export default function Inbox() {
                       )}
                     </div>
                   </div>
-                  <p className="text-[12px] text-gray-500 truncate mt-0.5">{c.role}</p>
+                  <p className="text-[12px] text-gray-500 truncate mt-0.5">
+                    {c.lastMessage || c.role}
+                  </p>
                 </div>
               </div>
             ))

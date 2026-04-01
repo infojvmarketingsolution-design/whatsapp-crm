@@ -21,16 +21,54 @@ const getContacts = async (req, res) => {
   try {
     const { status, qualification } = req.query;
     const Contact = req.tenantDb.model('Contact', ContactSchema);
-    const filter = { isArchived: { $ne: true } };
-    if (status) filter.status = status;
-    if (qualification) filter.qualification = qualification;
+    
+    // Using aggregation to get ONLY contacts with messages, including the last message content
+    const pipeline = [
+      { $match: { isArchived: { $ne: true } } }
+    ];
 
-    const contacts = await Contact.find(filter).sort({ lastMessageAt: -1 }).populate('assignedAgent', 'name email');
+    if (status) pipeline.push({ $match: { status } });
+    if (qualification) pipeline.push({ $match: { qualification } });
+
+    pipeline.push(
+      {
+        $lookup: {
+          from: 'messages',
+          let: { contactId: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$contactId', '$$contactId'] } } },
+            { $sort: { timestamp: -1 } },
+            { $limit: 1 }
+          ],
+          as: 'lastMsg'
+        }
+      },
+      { $unwind: '$lastMsg' }, // Only keep contacts that have at least one message
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          phone: 1,
+          status: 1,
+          qualification: 1,
+          score: 1,
+          heatLevel: 1,
+          source: 1,
+          lastMessage: '$lastMsg.content',
+          lastMessageAt: '$lastMsg.timestamp',
+          lastMessageType: '$lastMsg.type'
+        }
+      },
+      { $sort: { lastMessageAt: -1 } }
+    );
+
+    const contacts = await Contact.aggregate(pipeline);
     res.json(contacts);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 const performContactAction = async (req, res) => {
   try {
