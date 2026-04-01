@@ -33,6 +33,14 @@ export default function Contacts() {
   const [editedContact, setEditedContact] = useState(null);
   const [showSaveFab, setShowSaveFab] = useState(false);
 
+  // Selection & Filtering States
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [filterStatus, setFilterStatus] = useState('ALL');
+  const [filterHeat, setFilterHeat] = useState('ALL');
+  const [filterStage, setFilterStage] = useState('ALL');
+  const [isImporting, setIsImporting] = useState(false);
+  const fileInputRef = React.useRef(null);
+
   const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing'];
 
   const fetchContacts = async () => {
@@ -51,7 +59,7 @@ export default function Contacts() {
             if (updated) {
                setSelectedContact(updated);
                setEditedContact(updated);
-               setShowSaveFab(false); // Reset on refresh
+               setShowSaveFab(false); 
             }
          }
       }
@@ -65,6 +73,128 @@ export default function Contacts() {
   useEffect(() => {
     fetchContacts();
   }, []);
+
+  // Filter Logic
+  const filteredContacts = contacts.filter(c => {
+    const matchesSearch = !searchTerm || (
+      (c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (c.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
+      (c.phone || '').includes(searchTerm)
+    );
+    const matchesStatus = filterStatus === 'ALL' || c.status === filterStatus;
+    const matchesHeat = filterHeat === 'ALL' || c.heatLevel === filterHeat;
+    const matchesStage = filterStage === 'ALL' || c.pipelineStage === filterStage;
+    
+    return !c.isArchived && matchesSearch && matchesStatus && matchesHeat && matchesStage;
+  });
+
+  // Selection Handlers
+  const toggleSelect = (id) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) newSelected.delete(id);
+    else newSelected.add(id);
+    setSelectedIds(newSelected);
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredContacts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredContacts.map(c => c._id)));
+    }
+  };
+
+  // CSV EXPORT
+  const handleExportCSV = () => {
+    const toExport = selectedIds.size > 0 
+      ? contacts.filter(c => selectedIds.has(c._id))
+      : filteredContacts;
+    
+    if (toExport.length === 0) return toast.error("No contacts to export");
+
+    const headers = ["First Name", "Last Name", "Phone", "Status", "Heat Level", "Pipeline Stage", "Estimated Value", "Source"];
+    const rows = toExport.map(c => [
+      c.firstName || c.name || '',
+      c.lastName || '',
+      c.phone || '',
+      c.status || 'NEW LEAD',
+      c.heatLevel || 'Cold',
+      c.pipelineStage || 'Discovery',
+      c.estimatedValue || 0,
+      c.leadSource || 'Manual Entry'
+    ]);
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `WapiPulse_Leads_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success(`Exported ${toExport.length} contacts successfully`);
+  };
+
+  // CSV IMPORT
+  const handleImportCSV = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setIsImporting(true);
+    
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const text = event.target.result;
+      const lines = text.split('\n').filter(line => line.trim());
+      if (lines.length < 2) {
+        setIsImporting(false);
+        return toast.error("CSV file is empty or invalid format");
+      }
+
+      const contactsToImport = lines.slice(1).map(line => {
+        const parts = line.split(',');
+        return {
+          firstName: parts[0]?.trim(),
+          lastName: parts[1]?.trim(),
+          phone: parts[2]?.trim(),
+          status: parts[3]?.trim() || 'NEW LEAD',
+          heatLevel: parts[4]?.trim() || 'Cold',
+          pipelineStage: parts[5]?.trim() || 'Discovery',
+          estimatedValue: parts[6]?.trim() || 0,
+          leadSource: parts[7]?.trim() || 'Manual Entry'
+        };
+      });
+
+      toast.loading(`Importing ${contactsToImport.length} contacts...`, { id: 'import' });
+      
+      try {
+        const token = localStorage.getItem('token');
+        const tenantId = localStorage.getItem('tenantId');
+        
+        let successCount = 0;
+        for (const c of contactsToImport) {
+          if (!c.phone) continue;
+          const res = await fetch('/api/chat/contacts', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...c, name: `${c.firstName} ${c.lastName}`.trim(), source: 'CSV Import' })
+          });
+          if (res.ok) successCount++;
+        }
+        
+        toast.success(`Successfully imported ${successCount} leads!`, { id: 'import' });
+        fetchContacts();
+      } catch (err) {
+        toast.error("Import failed due to connectivity errors", { id: 'import' });
+      } finally {
+        setIsImporting(false);
+        e.target.value = null;
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const fetchRecentMessages = async (contactId) => {
     if (!contactId) return;
@@ -157,15 +287,6 @@ export default function Contacts() {
     }
   };
 
-  const filteredContacts = contacts.filter(c => 
-    !c.isArchived && (
-      (c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (c.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (c.phone || '').includes(searchTerm)
-    )
-  );
-
   const handleRowClick = (contact) => {
      setSelectedContact(contact);
      setEditedContact(contact);
@@ -197,15 +318,32 @@ export default function Contacts() {
          <div className="flex items-center space-x-6">
             <div className="flex items-center space-x-3 text-xs">
                <div className="text-right">
-                  <p className="text-gray-400 font-bold uppercase tracking-tighter text-[9px]">Total</p>
-                  <p className="font-bold text-gray-800">{contacts.length}</p>
+                  <p className="text-gray-400 font-bold uppercase tracking-tighter text-[9px]">Filtered</p>
+                  <p className="font-bold text-gray-800">{filteredContacts.length}</p>
                </div>
                <div className="w-[1px] h-6 bg-gray-100 mx-2"></div>
                <div>
-                  <p className="text-[var(--theme-text)] font-bold uppercase tracking-tighter text-[9px]">High Priority</p>
-                  <p className="font-bold text-gray-800">{contacts.filter(c => c.score > 70).length}</p>
+                  <p className="text-[var(--theme-text)] font-bold uppercase tracking-tighter text-[9px]">Selected</p>
+                  <p className="font-bold text-gray-800">{selectedIds.size}</p>
                </div>
             </div>
+            
+            <input type="file" ref={fileInputRef} onChange={handleImportCSV} accept=".csv" className="hidden" />
+            <button 
+               onClick={() => fileInputRef.current.click()}
+               className="p-2.5 bg-white border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 rounded-xl transition shadow-sm"
+               title="Import CSV"
+            >
+               <TrendingUp size={18} />
+            </button>
+            <button 
+               onClick={handleExportCSV}
+               className="p-2.5 bg-white border border-gray-200 text-gray-400 hover:text-green-600 hover:border-green-200 rounded-xl transition shadow-sm"
+               title="Export Selected/Filtered"
+            >
+               <Download size={18} />
+            </button>
+
             <button 
               onClick={() => setShowAddModal(true)} 
               className="px-5 py-2.5 bg-[var(--theme-bg)] text-white text-xs font-black rounded-xl hover:shadow-glow transition transform hover:-translate-y-0.5 active:scale-95 uppercase tracking-widest"
@@ -216,20 +354,65 @@ export default function Contacts() {
       </div>
 
       <div className="p-8 flex-1 flex flex-col max-w-7xl mx-auto w-full">
-          <div className="flex justify-between items-center mb-8">
-              <h2 className="text-2xl font-black text-slate-800 tracking-tight">Contact Workspace</h2>
-              <div className="flex items-center space-x-3">
-                 <div className="relative">
-                    <Search className="absolute left-3 top-3 text-gray-300" size={16} />
-                    <input 
-                      type="text" 
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Search identity or mobile..." 
-                      className="bg-white border border-gray-100 rounded-xl py-3 pl-10 pr-4 text-sm font-bold text-gray-700 placeholder-gray-300 focus:ring-4 focus:ring-[var(--theme-border)]/10 outline-none transition-all w-[320px]"
-                    />
-                 </div>
-                 <button className="p-3 bg-white border border-gray-100 rounded-xl text-gray-400 hover:text-[var(--theme-text)] hover:border-[var(--theme-border)]/50 transition shadow-sm"><Filter size={18} /></button>
+          <div className="flex flex-col space-y-6 mb-8">
+              <div className="flex justify-between items-center">
+                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">Contact Workspace</h2>
+                  <div className="flex items-center space-x-3">
+                     <div className="relative">
+                        <Search className="absolute left-4 top-3.5 text-gray-300" size={16} />
+                        <input 
+                          type="text" 
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          placeholder="Search identity or mobile..." 
+                          className="bg-white border border-gray-100 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-700 placeholder-gray-300 focus:ring-4 focus:ring-[var(--theme-border)]/10 outline-none transition-all w-[360px] shadow-sm"
+                        />
+                     </div>
+                  </div>
+              </div>
+
+              {/* Advanced Filter Bar */}
+              <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center gap-4">
+                  <div className="flex items-center space-x-2">
+                      <Filter size={14} className="text-gray-300" />
+                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Filters:</span>
+                  </div>
+                  
+                  <select 
+                    value={filterStatus} 
+                    onChange={e => setFilterStatus(e.target.value)}
+                    className="bg-slate-50 border-none text-[10px] font-black text-slate-600 uppercase py-2 px-3 rounded-xl focus:ring-2 focus:ring-[var(--theme-border)]/20 cursor-pointer"
+                  >
+                     <option value="ALL">All Status</option>
+                     {['NEW LEAD', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+
+                  <select 
+                    value={filterHeat} 
+                    onChange={e => setFilterHeat(e.target.value)}
+                    className="bg-slate-50 border-none text-[10px] font-black text-slate-600 uppercase py-2 px-3 rounded-xl focus:ring-2 focus:ring-[var(--theme-border)]/20 cursor-pointer"
+                  >
+                     <option value="ALL">All Heat</option>
+                     {['Cold', 'Warm', 'Hot'].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+
+                  <select 
+                    value={filterStage} 
+                    onChange={e => setFilterStage(e.target.value)}
+                    className="bg-slate-50 border-none text-[10px] font-black text-slate-600 uppercase py-2 px-3 rounded-xl focus:ring-2 focus:ring-[var(--theme-border)]/20 cursor-pointer"
+                  >
+                     <option value="ALL">All Stages</option>
+                     {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+
+                  {(filterStatus !== 'ALL' || filterHeat !== 'ALL' || filterStage !== 'ALL' || searchTerm) && (
+                     <button 
+                       onClick={() => { setFilterStatus('ALL'); setFilterHeat('ALL'); setFilterStage('ALL'); setSearchTerm(''); }}
+                       className="text-[9px] font-black text-red-400 hover:text-red-600 uppercase tracking-[0.2em] px-2"
+                     >
+                        Reset Filters
+                     </button>
+                  )}
               </div>
           </div>
 
@@ -238,6 +421,14 @@ export default function Contacts() {
                 <table className="w-full text-left border-collapse">
                    <thead className="bg-[#fcf8f8]/50 border-b border-gray-100">
                      <tr>
+                        <th className="py-5 px-6 w-10">
+                           <input 
+                             type="checkbox" 
+                             checked={selectedIds.size > 0 && selectedIds.size === filteredContacts.length}
+                             onChange={toggleSelectAll}
+                             className="rounded border-gray-300 text-[var(--theme-bg)] focus:ring-[var(--theme-bg)] cursor-pointer"
+                           />
+                        </th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Profile Identity</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Current Phase</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Lead Health</th>
@@ -246,8 +437,16 @@ export default function Contacts() {
                    </thead>
                    <tbody>
                      {filteredContacts.map((c, i) => (
-                       <tr key={c._id || i} onClick={() => handleRowClick(c)} className="cursor-pointer group hover:bg-[#fafafa] transition-colors relative after:absolute after:left-0 after:top-0 after:bottom-0 after:w-0 group-hover:after:w-1 after:bg-[var(--theme-bg)] after:transition-all">
-                          <td className="py-5 px-6 border-b border-gray-50">
+                       <tr key={c._id || i} className={`cursor-pointer group hover:bg-[#fafafa] transition-colors relative after:absolute after:left-0 after:top-0 after:bottom-0 after:w-0 group-hover:after:w-1 after:bg-[var(--theme-bg)] after:transition-all ${selectedIds.has(c._id) ? 'bg-blue-50/20 shadow-inner' : ''}`}>
+                          <td className="py-5 px-6 border-b border-gray-50" onClick={(e) => e.stopPropagation()}>
+                             <input 
+                               type="checkbox" 
+                               checked={selectedIds.has(c._id)}
+                               onChange={() => toggleSelect(c._id)}
+                               className="rounded border-gray-300 text-[var(--theme-bg)] focus:ring-[var(--theme-bg)] cursor-pointer"
+                             />
+                          </td>
+                          <td className="py-5 px-6 border-b border-gray-50" onClick={() => handleRowClick(c)}>
                              <div className="flex items-center space-x-4">
                                 <div className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center font-black text-sm group-hover:bg-[var(--theme-bg)] group-hover:text-white transition-colors">
                                    {c.firstName ? c.firstName.charAt(0) : (c.name?.charAt(0) || 'U')}
