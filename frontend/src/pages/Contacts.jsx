@@ -54,6 +54,7 @@ export default function Contacts() {
   });
 
   const [isImporting, setIsImporting] = useState(false);
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
   const fileInputRef = React.useRef(null);
 
   const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing', 'Won', 'Lost'];
@@ -347,6 +348,35 @@ export default function Contacts() {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleBulkAction = async (action, value) => {
+    if (selectedIds.size === 0) return;
+    setIsBulkUpdating(true);
+    toast.loading(`Processing ${selectedIds.size} contacts...`, { id: 'bulk' });
+    
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const ids = Array.from(selectedIds);
+      
+      // Process in batches of 5 to avoid overloading
+      for (const id of ids) {
+         await fetch(`/api/chat/action`, {
+           method: 'POST',
+           headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+           body: JSON.stringify({ contactId: id, action: 'update_contact', payload: { [action]: value } })
+         });
+      }
+      
+      toast.success(`Successfully updated ${selectedIds.size} leads!`, { id: 'bulk' });
+      setSelectedIds(new Set());
+      fetchContacts();
+    } catch (err) {
+      toast.error("Bulk update failed", { id: 'bulk' });
+    } finally {
+      setIsBulkUpdating(false);
     }
   };
 
@@ -824,6 +854,67 @@ export default function Contacts() {
               </div>
            </div>
         </div>
+      )}
+
+      {/* FLOATING BULK COMMAND BAR */}
+      {selectedIds.size > 0 && (
+         <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[100] animate-slide-up">
+            <div className="bg-slate-900 text-white rounded-[2.5rem] px-8 py-5 shadow-3xl flex items-center space-x-8 border border-white/10 backdrop-blur-xl">
+               <div className="flex items-center space-x-3 pr-8 border-r border-white/10">
+                  <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center font-black text-white shadow-glow">
+                     {selectedIds.size}
+                  </div>
+                  <div>
+                     <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Leads Selected</p>
+                     <p className="text-xs font-black uppercase tracking-[0.2em]">{isBulkUpdating ? 'Processing...' : 'Bulk Command'}</p>
+                  </div>
+               </div>
+
+               <div className="flex items-center space-x-5">
+                  <div className="group relative">
+                     <button 
+                        disabled={isBulkUpdating}
+                        className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest hover:text-teal-400 transition-colors"
+                     >
+                        <Users size={14} /> <span>Reassign Agent</span>
+                     </button>
+                     <div className="absolute bottom-full mb-4 left-0 bg-slate-800 rounded-2xl p-2 hidden group-hover:block border border-white/5 shadow-2xl min-w-[200px]">
+                        {agents.map(a => (
+                           <button key={a._id} onClick={() => handleBulkAction('assignedAgent', a._id)} className="w-full text-left px-4 py-2 hover:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">{a.name}</button>
+                        ))}
+                     </div>
+                  </div>
+
+                  <div className="group relative">
+                     <button 
+                        disabled={isBulkUpdating}
+                        className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest hover:text-teal-400 transition-colors"
+                     >
+                        <Target size={14} /> <span>Update Stage</span>
+                     </button>
+                     <div className="absolute bottom-full mb-4 left-0 bg-slate-800 rounded-2xl p-2 hidden group-hover:block border border-white/5 shadow-2xl min-w-[160px]">
+                        {PIPELINE_STAGES.map(s => (
+                           <button key={s} onClick={() => handleBulkAction('pipelineStage', s)} className="w-full text-left px-4 py-2 hover:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">{s}</button>
+                        ))}
+                     </div>
+                  </div>
+
+                  <button 
+                    onClick={handleExportCSV}
+                    className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest hover:text-teal-400 transition-colors"
+                  >
+                     <Download size={14} /> <span>Export Set</span>
+                  </button>
+
+                  <button 
+                    onClick={() => setSelectedIds(new Set())}
+                    className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition-colors pl-4 border-l border-white/10"
+                  >
+                     <X size={14} /> <span>Dismiss</span>
+                  </button>
+               </div>
+            </div>
+         </div>
       )}
 
       {/* ADVANCED FILTER PRO CONSOLE (SIDEBAR) */}

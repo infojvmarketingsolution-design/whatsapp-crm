@@ -289,17 +289,22 @@ export default function Tasks() {
     return () => clearInterval(intervalId);
   }, [tasks]);
 
+  const normalizePhone = (num) => {
+    if (!num) return '';
+    return num.toString().replace(/[^0-9]/g, '');
+  };
+
   const filteredTasks = tasks.filter(t => {
-    const isPending = t.status === 'PENDING';
+    const isPending = t.status === 'PENDING' || t.status === 'OVERDUE';
     const isCompleted = t.status === 'COMPLETED';
     const dueDate = new Date(t.dueDate);
     const now = new Date();
-    const isOverdue = isPending && dueDate < now;
+    const isOverdue = dueDate < now;
     const isDueToday = dueDate.toDateString() === now.toDateString();
     
     // Status View Filter
     if (view === 'PENDING') {
-      if (!isPending || (isOverdue && !isDueToday)) return false;
+      if (!isPending || isOverdue) return false;
     }
     if (view === 'COMPLETED' && !isCompleted) return false;
     if (view === 'OVERDUE' && (!isOverdue || isDueToday)) return false;
@@ -308,12 +313,15 @@ export default function Tasks() {
     // Type Filter
     if (filter !== 'ALL' && t.type !== filter) return false;
 
-    // Search Filter
-    if (searchQuery && 
-        !t.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
-        !t.contactName.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        !(t.phone && t.phone.includes(searchQuery))
-    ) return false;
+    // Smart Search Logic (Name or Normalized Phone)
+    if (searchQuery) {
+       const q = searchQuery.toLowerCase();
+       const normalizedQ = normalizePhone(q);
+       const matchesName = t.contactName.toLowerCase().includes(q) || t.title.toLowerCase().includes(q);
+       const matchesPhone = normalizedQ && normalizePhone(t.phone).includes(normalizedQ);
+       
+       if (!matchesName && !matchesPhone) return false;
+    }
     return true;
   });
 
