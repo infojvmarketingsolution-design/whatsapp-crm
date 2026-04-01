@@ -113,6 +113,9 @@ const performContactAction = async (req, res) => {
         if (payload.decisionMakerStatus !== undefined) contact.decisionMakerStatus = payload.decisionMakerStatus;
         if (payload.heatLevel !== undefined) contact.heatLevel = payload.heatLevel;
         if (payload.score !== undefined) contact.score = payload.score;
+        if (payload.profession !== undefined) contact.profession = payload.profession;
+        if (payload.companyName !== undefined) contact.companyName = payload.companyName;
+        if (payload.linkedinUrl !== undefined) contact.linkedinUrl = payload.linkedinUrl;
         
         contact.timeline.push({ eventType: 'CONTACT_UPDATED', description: 'Contact details updated', timestamp: new Date() });
         if (payload.status) {
