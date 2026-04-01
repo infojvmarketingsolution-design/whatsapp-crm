@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Search, Plus, X, Mail, MapPin, Phone, User, 
+  Search, Plus, X, Mail, MapPin, Phone, Users, 
   Clock, Activity, Target, Tag, Save, Filter, 
   Briefcase, Building2, Download, MoreVertical, 
   Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History
