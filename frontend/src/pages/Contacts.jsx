@@ -35,13 +35,28 @@ export default function Contacts() {
 
   // Selection & Filtering States
   const [selectedIds, setSelectedIds] = useState(new Set());
-  const [filterStatus, setFilterStatus] = useState('ALL');
-  const [filterHeat, setFilterHeat] = useState('ALL');
-  const [filterStage, setFilterStage] = useState('ALL');
+  const [showFilters, setShowFilters] = useState(false);
+  const [agents, setAgents] = useState([]);
+  
+  // Advanced Filter States
+  const [filters, setFilters] = useState({
+    status: 'ALL',
+    heat: 'ALL',
+    stage: 'ALL',
+    agent: 'ALL',
+    source: 'ALL',
+    minScore: 0,
+    maxScore: 100,
+    minValue: 0,
+    hasUnread: false,
+    hasTasks: false,
+    dateRange: 'ALL' // ALL, TODAY, WEEK, MONTH
+  });
+
   const [isImporting, setIsImporting] = useState(false);
   const fileInputRef = React.useRef(null);
 
-  const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing'];
+  const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing', 'Won', 'Lost'];
 
   const fetchContacts = async () => {
     try {
@@ -70,11 +85,28 @@ export default function Contacts() {
     }
   };
 
+  const fetchAgents = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch('/api/chat/agents', {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAgents(data);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     fetchContacts();
+    fetchAgents();
   }, []);
 
-  // Filter Logic
+  // Filter Engine
   const filteredContacts = contacts.filter(c => {
     const matchesSearch = !searchTerm || (
       (c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -82,12 +114,43 @@ export default function Contacts() {
       (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
       (c.phone || '').includes(searchTerm)
     );
-    const matchesStatus = filterStatus === 'ALL' || c.status === filterStatus;
-    const matchesHeat = filterHeat === 'ALL' || c.heatLevel === filterHeat;
-    const matchesStage = filterStage === 'ALL' || c.pipelineStage === filterStage;
     
-    return !c.isArchived && matchesSearch && matchesStatus && matchesHeat && matchesStage;
+    const matchesStatus = filters.status === 'ALL' || c.status === filters.status;
+    const matchesHeat = filters.heat === 'ALL' || c.heatLevel === filters.heat;
+    const matchesStage = filters.stage === 'ALL' || c.pipelineStage === filters.stage;
+    const matchesAgent = filters.agent === 'ALL' || c.assignedAgent === filters.agent;
+    const matchesSource = filters.source === 'ALL' || c.leadSource === filters.source;
+    const matchesScore = (c.score || 0) >= filters.minScore && (c.score || 0) <= filters.maxScore;
+    const matchesValue = (c.estimatedValue || 0) >= filters.minValue;
+    const matchesUnread = !filters.hasUnread || (c.lastMessageAt && new Date(c.lastMessageAt) > new Date(c.lastReadAt || 0));
+    const matchesTasks = !filters.hasTasks || (c.tasks && c.tasks.some(t => t.status === 'PENDING'));
+    
+    // Date Range logic
+    let matchesDate = true;
+    if (filters.dateRange !== 'ALL') {
+       const now = new Date();
+       const createdAt = new Date(c.createdAt);
+       if (filters.dateRange === 'TODAY') {
+          matchesDate = createdAt.toDateString() === now.toDateString();
+       } else if (filters.dateRange === 'WEEK') {
+          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          matchesDate = createdAt >= weekAgo;
+       } else if (filters.dateRange === 'MONTH') {
+          const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
+          matchesDate = createdAt >= monthAgo;
+       }
+    }
+
+    return !c.isArchived && matchesSearch && matchesStatus && matchesHeat && matchesStage && matchesAgent && matchesSource && matchesScore && matchesValue && matchesUnread && matchesTasks && matchesDate;
   });
+
+  const activeFilterCount = Object.entries(filters).filter(([key, val]) => {
+     if (key === 'minScore' && val === 0) return false;
+     if (key === 'maxScore' && val === 100) return false;
+     if (key === 'minValue' && val === 0) return false;
+     if (val === 'ALL' || val === false) return false;
+     return true;
+  }).length;
 
   // Selection Handlers
   const toggleSelect = (id) => {
@@ -371,48 +434,44 @@ export default function Contacts() {
                   </div>
               </div>
 
-              {/* Advanced Filter Bar */}
-              <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-wrap items-center gap-4">
-                  <div className="flex items-center space-x-2">
-                      <Filter size={14} className="text-gray-300" />
-                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Filters:</span>
+              {/* Enhanced Quick Filter Bar */}
+              <div className="flex items-center justify-between">
+                  <div className="bg-white p-2.5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-3 overflow-x-auto no-scrollbar max-w-[80%]">
+                      <div className="flex items-center px-4 border-r border-gray-100 space-x-2 mr-1">
+                          <Activity size={14} className="text-teal-500" />
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pulse Hunt:</span>
+                      </div>
+                      
+                      <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
+                         <option value="ALL">Status ALL</option>
+                         {['NEW LEAD', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+
+                      <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
+                         <option value="ALL">Stage ALL</option>
+                         {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                      </select>
+
+                      <select value={filters.agent} onChange={e=>setFilters({...filters, agent: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
+                         <option value="ALL">Agent ALL</option>
+                         {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                      </select>
+
+                      {activeFilterCount > 0 && (
+                         <div className="flex items-center space-x-2 pl-3">
+                            <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-ping"></span>
+                            <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest">{activeFilterCount} Active Filters</span>
+                         </div>
+                      )}
                   </div>
-                  
-                  <select 
-                    value={filterStatus} 
-                    onChange={e => setFilterStatus(e.target.value)}
-                    className="bg-slate-50 border-none text-[10px] font-black text-slate-600 uppercase py-2 px-3 rounded-xl focus:ring-2 focus:ring-[var(--theme-border)]/20 cursor-pointer"
-                  >
-                     <option value="ALL">All Status</option>
-                     {['NEW LEAD', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
 
-                  <select 
-                    value={filterHeat} 
-                    onChange={e => setFilterHeat(e.target.value)}
-                    className="bg-slate-50 border-none text-[10px] font-black text-slate-600 uppercase py-2 px-3 rounded-xl focus:ring-2 focus:ring-[var(--theme-border)]/20 cursor-pointer"
+                  <button 
+                    onClick={() => setShowFilters(true)}
+                    className="flex items-center space-x-3 px-6 py-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm text-slate-700 hover:border-teal-200 hover:text-teal-600 transition-all font-black group"
                   >
-                     <option value="ALL">All Heat</option>
-                     {['Cold', 'Warm', 'Hot'].map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-
-                  <select 
-                    value={filterStage} 
-                    onChange={e => setFilterStage(e.target.value)}
-                    className="bg-slate-50 border-none text-[10px] font-black text-slate-600 uppercase py-2 px-3 rounded-xl focus:ring-2 focus:ring-[var(--theme-border)]/20 cursor-pointer"
-                  >
-                     <option value="ALL">All Stages</option>
-                     {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
-
-                  {(filterStatus !== 'ALL' || filterHeat !== 'ALL' || filterStage !== 'ALL' || searchTerm) && (
-                     <button 
-                       onClick={() => { setFilterStatus('ALL'); setFilterHeat('ALL'); setFilterStage('ALL'); setSearchTerm(''); }}
-                       className="text-[9px] font-black text-red-400 hover:text-red-600 uppercase tracking-[0.2em] px-2"
-                     >
-                        Reset Filters
-                     </button>
-                  )}
+                     <Filter size={18} className={activeFilterCount > 0 ? "text-teal-600 animate-pulse" : "text-gray-400"} />
+                     <span className="text-xs uppercase tracking-widest">Advance Filters</span>
+                  </button>
               </div>
           </div>
 
@@ -764,6 +823,140 @@ export default function Contacts() {
                  </div>
               </div>
            </div>
+        </div>
+      )}
+
+      {/* ADVANCED FILTER PRO CONSOLE (SIDEBAR) */}
+      {showFilters && (
+        <div className="fixed inset-0 z-[200] flex justify-end bg-slate-900/40 backdrop-blur-[4px] animate-fade-in" onClick={() => setShowFilters(false)}>
+            <div 
+              className="w-[480px] h-full bg-white shadow-3xl flex flex-col animate-slide-up relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+               <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-slate-50/50">
+                  <div className="flex items-center space-x-4">
+                     <div className="p-3 bg-teal-500 text-white rounded-2xl shadow-glow">
+                        <Filter size={20} />
+                     </div>
+                     <div>
+                        <h2 className="text-xl font-black text-slate-800 tracking-tight">Filter Console</h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Data Mining & Precision Hunting</p>
+                     </div>
+                  </div>
+                  <button onClick={() => setShowFilters(false)} className="p-3 hover:bg-gray-100 rounded-2xl text-gray-400 transition-all"><X size={24} /></button>
+               </div>
+
+               <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-10">
+                  {/* DATA PULSE SECTION */}
+                  <div className="space-y-6">
+                     <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.25em] flex items-center">
+                        <Activity size={14} className="mr-2" /> Data Pulsing
+                     </h3>
+                     <div className="grid grid-cols-2 gap-4">
+                        <button 
+                          onClick={() => setFilters({...filters, hasUnread: !filters.hasUnread})}
+                          className={`p-5 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center space-y-3 ${filters.hasUnread ? 'bg-teal-50 border-teal-500 shadow-inner' : 'bg-white border-gray-50'}`}
+                        >
+                           <Mail className={filters.hasUnread ? 'text-teal-600' : 'text-gray-300'} />
+                           <span className={`text-[10px] font-black uppercase tracking-widest ${filters.hasUnread ? 'text-teal-700' : 'text-slate-400'}`}>Unread Only</span>
+                        </button>
+                        <button 
+                          onClick={() => setFilters({...filters, hasTasks: !filters.hasTasks})}
+                          className={`p-5 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center space-y-3 ${filters.hasTasks ? 'bg-orange-50 border-orange-500 shadow-inner' : 'bg-white border-gray-50'}`}
+                        >
+                           <Bell className={filters.hasTasks ? 'text-orange-600' : 'text-gray-300'} />
+                           <span className={`text-[10px] font-black uppercase tracking-widest ${filters.hasTasks ? 'text-orange-700' : 'text-slate-400'}`}>With Tasks</span>
+                        </button>
+                     </div>
+                  </div>
+
+                  {/* ATTRIBUTE FILTERS */}
+                  <div className="space-y-6">
+                     <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.25em] flex items-center">
+                        <Target size={14} className="mr-2" /> Lead Attributes
+                     </h3>
+                     
+                     <div className="space-y-4">
+                        <div className="p-4 bg-slate-50 rounded-3xl border border-gray-50">
+                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">origination Source</label>
+                           <select value={filters.source} onChange={e=>setFilters({...filters, source: e.target.value})} className="w-full bg-white border-none text-[11px] font-black text-slate-700 py-3 px-4 rounded-2xl outline-none shadow-sm capitalize">
+                              <option value="ALL">ANY SOURCE</option>
+                              {['Manual Entry', 'Meta Ads', 'Google Ads', 'Referral', 'Email Campaign', 'WhatsApp Blast'].map(s => <option key={s} value={s}>{s}</option>)}
+                           </select>
+                        </div>
+
+                        <div className="p-4 bg-slate-50 rounded-3xl border border-gray-50">
+                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Registration Period</label>
+                           <select value={filters.dateRange} onChange={e=>setFilters({...filters, dateRange: e.target.value})} className="w-full bg-white border-none text-[11px] font-black text-slate-700 py-3 px-4 rounded-2xl outline-none shadow-sm">
+                              <option value="ALL">COMPREHENSIVE HISTORY</option>
+                              <option value="TODAY">INITIALIZED TODAY</option>
+                              <option value="WEEK">PAST 7 DAYS</option>
+                              <option value="MONTH">PAST 30 DAYS</option>
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* VALUE & QUALITY RANGES */}
+                  <div className="space-y-6">
+                     <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.25em] flex items-center">
+                        <TrendingUp size={14} className="mr-2" /> Value & Quality
+                     </h3>
+                     
+                     <div className="space-y-8 p-6 bg-slate-900 rounded-[2.5rem] shadow-xl text-white">
+                        <div>
+                           <div className="flex justify-between items-center mb-4">
+                              <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">MIN Lead Score</label>
+                              <span className="text-xl font-black text-teal-400">{filters.minScore}%</span>
+                           </div>
+                           <input 
+                             type="range" min="0" max="100" 
+                             value={filters.minScore} 
+                             onChange={e=>setFilters({...filters, minScore: parseInt(e.target.value)})}
+                             className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-teal-500"
+                           />
+                        </div>
+
+                        <div>
+                           <div className="flex justify-between items-center mb-4">
+                              <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">MIN Deal Value</label>
+                              <span className="text-xl font-black text-teal-400">₹ {(filters.minValue / 1000).toFixed(0)}K +</span>
+                           </div>
+                           <input 
+                             type="range" min="0" max="200000" step="5000" 
+                             value={filters.minValue} 
+                             onChange={e=>setFilters({...filters, minValue: parseInt(e.target.value)})}
+                             className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-teal-500"
+                           />
+                        </div>
+                     </div>
+                  </div>
+               </div>
+
+               <div className="p-8 border-t border-gray-100 bg-slate-50/50 space-y-4">
+                  <div className="flex items-center justify-between text-xs">
+                     <span className="font-bold text-slate-400 uppercase tracking-tighter">Matches Found:</span>
+                     <span className="font-black text-slate-800 bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">{filteredContacts.length} Profiles</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                     <button 
+                       onClick={() => {
+                          setFilters({ status: 'ALL', heat: 'ALL', stage: 'ALL', agent: 'ALL', source: 'ALL', minScore: 0, maxScore: 100, minValue: 0, hasUnread: false, hasTasks: false, dateRange: 'ALL' });
+                          toast.success("Filters Cleared");
+                       }}
+                       className="py-4 bg-white border border-gray-200 text-slate-600 text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-50 transition-all"
+                     >
+                        Reset All
+                     </button>
+                     <button 
+                       onClick={() => setShowFilters(false)}
+                       className="py-4 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:-translate-y-1 transition-all"
+                     >
+                        Apply Profile
+                     </button>
+                  </div>
+               </div>
+            </div>
         </div>
       )}
 
