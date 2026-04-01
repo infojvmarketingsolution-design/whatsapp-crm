@@ -127,6 +127,27 @@ export default function Tasks() {
     return t.status === 'PENDING' && d > today;
   }).length;
 
+  const completedCount = tasks.filter(t => t.status === 'COMPLETED').length;
+  const totalCount = tasks.length;
+  const efficiency = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+
+  // 15-minute alert for 24-hour overdue tasks
+  useEffect(() => {
+    const checkCriticalOverdue = () => {
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+      const criticalTasks = tasks.filter(t => t.status === 'PENDING' && new Date(t.dueDate) < twentyFourHoursAgo);
+      
+      if (criticalTasks.length > 0) {
+        alert(`CRITICAL ALERT: You have ${criticalTasks.length} tasks that have been pending for more than 24 hours! Please check your Work Console.`);
+      }
+    };
+
+    // Check every 15 minutes
+    const intervalId = setInterval(checkCriticalOverdue, 15 * 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, [tasks]);
+
   const filteredTasks = tasks.filter(t => {
     const isPending = t.status === 'PENDING';
     const isCompleted = t.status === 'COMPLETED';
@@ -137,17 +158,21 @@ export default function Tasks() {
     
     // Status View Filter
     if (view === 'PENDING') {
-      // Show if it's pending AND (not overdue OR due today)
       if (!isPending || (isOverdue && !isDueToday)) return false;
     }
     if (view === 'COMPLETED' && !isCompleted) return false;
     if (view === 'OVERDUE' && (!isOverdue || isDueToday)) return false;
+    if (view === 'UPCOMING' && (!isPending || !(!isOverdue && !isDueToday))) return false;
 
     // Type Filter
     if (filter !== 'ALL' && t.type !== filter) return false;
 
     // Search Filter
-    if (searchQuery && !t.title.toLowerCase().includes(searchQuery.toLowerCase()) && !t.contactName.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (searchQuery && 
+        !t.title.toLowerCase().includes(searchQuery.toLowerCase()) && 
+        !t.contactName.toLowerCase().includes(searchQuery.toLowerCase()) &&
+        !(t.phone && t.phone.includes(searchQuery))
+    ) return false;
 
     return true;
   });
@@ -166,12 +191,20 @@ export default function Tasks() {
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">Work Console</h1>
             <p className="text-slate-500 font-semibold text-sm">Manage your sales activities and follow-ups</p>
           </div>
-          <div className="flex space-x-3">
+          <div className="flex space-x-6">
+             <div className="text-right">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Overall Status</p>
+                <div className="flex items-center space-x-3 text-[11px] font-black uppercase tracking-tight">
+                   <span className="text-teal-600">Done: {completedCount}</span>
+                   <span className="text-rose-500">Pending: {totalCount - completedCount}</span>
+                </div>
+             </div>
+             <div className="h-10 w-[1px] bg-slate-100 mx-1"></div>
              <div className="text-right">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Efficiency</p>
-                <p className="text-lg font-black text-teal-600">84%</p>
+                <p className="text-lg font-black text-teal-600 leading-none mt-1">{efficiency}%</p>
              </div>
-             <div className="h-10 w-[1px] bg-slate-100 mx-2"></div>
+             <div className="h-10 w-[1px] bg-slate-100 mx-1"></div>
              <div className="flex -space-x-2">
                 {[1,2,3].map(i => (
                   <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden">
@@ -201,12 +234,12 @@ export default function Tasks() {
               </div>
               <p className="mt-3 font-bold text-slate-500 text-sm">Due Today</p>
            </div>
-           <div className="cursor-pointer p-4 bg-white border-2 border-slate-100 rounded-2xl hover:border-blue-100 transition-all">
+           <div onClick={() => setView('UPCOMING')} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all ${view === 'UPCOMING' ? 'bg-blue-50 border-blue-200 shadow-md' : 'bg-white border-slate-100 hover:border-blue-100'}`}>
               <div className="flex justify-between items-start">
                  <div className="p-2 bg-blue-100 text-blue-600 rounded-xl">
                     <CalendarDays size={20} />
                  </div>
-                 <span className="text-2xl font-black text-slate-700">{upcomingCount}</span>
+                 <span className={`text-2xl font-black ${view === 'UPCOMING' ? 'text-blue-600' : 'text-slate-700'}`}>{upcomingCount}</span>
               </div>
               <p className="mt-3 font-bold text-slate-500 text-sm">Upcoming</p>
            </div>
@@ -402,15 +435,14 @@ export default function Tasks() {
       </div>
 
       {/* Professional Footer Bar */}
-      <div className="px-8 py-3 bg-white border-t border-slate-200 flex justify-between items-center">
+      <div className="px-8 py-1.5 bg-white border-t border-slate-200 flex justify-between items-center bg-slate-50/50">
          <div className="flex items-center space-x-2">
             <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse"></div>
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">System Online · {new Date().toLocaleDateString()}</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">System Online</span>
          </div>
-         <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">WapiPulse Task Engine v2.0</p>
+         <p className="text-[9px] font-bold text-slate-300 uppercase tracking-widest">WapiPulse Task Engine · v1.2.0 Final</p>
       </div>
 
     </div>
   );
 }
-
