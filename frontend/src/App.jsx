@@ -26,7 +26,7 @@ import AdminSettings from './pages/Admin/AdminSettings';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import Maintenance from './pages/Maintenance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2 } from 'lucide-react';
+import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, AlertCircle, History } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge }) {
   return (
