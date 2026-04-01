@@ -56,6 +56,7 @@ const getContacts = async (req, res) => {
           score: 1,
           heatLevel: 1,
           source: 1,
+          tasks: 1, // Include tasks in projection
           lastMessageAt: { $ifNull: ['$lastMsgDoc.timestamp', '$updatedAt'] },
           lastMessage: { $ifNull: ['$lastMsgDoc.content', ''] },
           lastMessageType: { $ifNull: ['$lastMsgDoc.type', 'text'] }

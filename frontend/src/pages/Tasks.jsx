@@ -118,7 +118,7 @@ export default function Tasks() {
   const todayCount = tasks.filter(t => {
     const d = new Date(t.dueDate);
     const today = new Date();
-    return t.status === 'PENDING' && d.toDateString() === today.toDateString() && d >= today;
+    return t.status === 'PENDING' && d.toDateString() === today.toDateString();
   }).length;
   const upcomingCount = tasks.filter(t => {
     const d = new Date(t.dueDate);
@@ -130,12 +130,18 @@ export default function Tasks() {
   const filteredTasks = tasks.filter(t => {
     const isPending = t.status === 'PENDING';
     const isCompleted = t.status === 'COMPLETED';
-    const isOverdue = isPending && new Date(t.dueDate) < new Date();
+    const dueDate = new Date(t.dueDate);
+    const now = new Date();
+    const isOverdue = isPending && dueDate < now;
+    const isDueToday = dueDate.toDateString() === now.toDateString();
     
     // Status View Filter
-    if (view === 'PENDING' && (!isPending || isOverdue)) return false;
+    if (view === 'PENDING') {
+      // Show if it's pending AND (not overdue OR due today)
+      if (!isPending || (isOverdue && !isDueToday)) return false;
+    }
     if (view === 'COMPLETED' && !isCompleted) return false;
-    if (view === 'OVERDUE' && !isOverdue) return false;
+    if (view === 'OVERDUE' && (!isOverdue || isDueToday)) return false;
 
     // Type Filter
     if (filter !== 'ALL' && t.type !== filter) return false;
