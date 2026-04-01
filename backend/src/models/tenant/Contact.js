@@ -37,6 +37,8 @@ const ContactSchema = new mongoose.Schema({
   profession: { type: String },
   companyName: { type: String },
   linkedinUrl: { type: String },
+  interests: [{ type: String }],
+  leadConsiderDate: { type: Date },
   isArchived: { type: Boolean, default: false }
 }, { timestamps: true });
 

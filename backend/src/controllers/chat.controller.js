@@ -116,6 +116,8 @@ const performContactAction = async (req, res) => {
         if (payload.profession !== undefined) contact.profession = payload.profession;
         if (payload.companyName !== undefined) contact.companyName = payload.companyName;
         if (payload.linkedinUrl !== undefined) contact.linkedinUrl = payload.linkedinUrl;
+        if (payload.interests !== undefined) contact.interests = payload.interests;
+        if (payload.leadConsiderDate !== undefined) contact.leadConsiderDate = payload.leadConsiderDate;
         
         contact.timeline.push({ eventType: 'CONTACT_UPDATED', description: 'Contact details updated', timestamp: new Date() });
         if (payload.status) {
