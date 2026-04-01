@@ -302,12 +302,16 @@ export default function Inbox() {
               }));
               setContacts(mapped);
 
-              // RESTORE SESSION: Restore the previously active chat from localStorage
+              // RESTORE SESSION: Prioritize localStorage for persistence (PRD FR4)
               const storedId = localStorage.getItem('activeChatId');
               if (storedId && storedId !== 'null' && storedId !== 'undefined') {
                 const found = mapped.find(c => c._id === storedId);
-                setActiveChat(found || mapped[0]);
-              } else {
+                if (found) {
+                   setActiveChat(found);
+                } else if (!activeChatRef.current) {
+                   setActiveChat(mapped[0]); // Fallback if stored ID not found
+                }
+              } else if (!activeChatRef.current) {
                 setActiveChat(mapped[0]);
               }
            }
@@ -318,6 +322,7 @@ export default function Inbox() {
     };
     fetchContacts();
   }, []);
+
 
   // Fetch Message Thread for Active Contact
   useEffect(() => {

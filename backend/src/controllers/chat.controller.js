@@ -22,43 +22,47 @@ const getContacts = async (req, res) => {
     const { status, qualification } = req.query;
     const Contact = req.tenantDb.model('Contact', ContactSchema);
     
-    // Using aggregation to get ONLY contacts with messages, including the last message content
+    // Base match for active leads
+    const matchStage = { isArchived: { $ne: true } };
+    if (status) matchStage.status = status;
+    if (qualification) matchStage.qualification = qualification;
+
     const pipeline = [
-      { $match: { isArchived: { $ne: true } } }
-    ];
-
-    if (status) pipeline.push({ $match: { status } });
-    if (qualification) pipeline.push({ $match: { qualification } });
-
-    pipeline.push(
+      { $match: matchStage },
       {
         $lookup: {
           from: 'messages',
-          localField: '_id',
-          foreignField: 'contactId',
-          as: 'lastMsg'
+          let: { contactId: '$_id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$contactId', '$$contactId'] } } },
+            { $sort: { timestamp: -1 } },
+            { $limit: 1 }
+          ],
+          as: 'latestMessage'
         }
       },
-      { $unwind: '$lastMsg' }, // Only keep contacts that have at least one message
-      { $sort: { 'lastMsg.timestamp': -1 } }, // Sort messages per contact to get latest
       {
-        $group: {
-          _id: '$_id',
-          name: { $first: '$name' },
-          phone: { $first: '$phone' },
-          status: { $first: '$status' },
-          qualification: { $first: '$qualification' },
-          score: { $first: '$score' },
-          heatLevel: { $first: '$heatLevel' },
-          source: { $first: '$source' },
-          lastMessage: { $first: '$lastMsg.content' },
-          lastMessageAt: { $first: '$lastMsg.timestamp' },
-          lastMessageType: { $first: '$lastMsg.type' }
+        $addFields: {
+          lastMsgDoc: { $arrayElemAt: ['$latestMessage', 0] }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          name: 1,
+          phone: 1,
+          status: 1,
+          qualification: 1,
+          score: 1,
+          heatLevel: 1,
+          source: 1,
+          lastMessageAt: { $ifNull: ['$lastMsgDoc.timestamp', '$updatedAt'] },
+          lastMessage: { $ifNull: ['$lastMsgDoc.content', ''] },
+          lastMessageType: { $ifNull: ['$lastMsgDoc.type', 'text'] }
         }
       },
       { $sort: { lastMessageAt: -1 } }
-    );
-
+    ];
 
     const contacts = await Contact.aggregate(pipeline);
     res.json(contacts);
@@ -66,6 +70,7 @@ const getContacts = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 
 const performContactAction = async (req, res) => {
