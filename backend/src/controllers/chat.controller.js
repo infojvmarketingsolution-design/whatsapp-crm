@@ -157,7 +157,25 @@ const performContactAction = async (req, res) => {
            contact.tasks[taskIndex].status = 'COMPLETED';
            contact.timeline.push({ eventType: 'TASK_COMPLETED', description: `Task completed: ${contact.tasks[taskIndex].title}`, timestamp: new Date() });
        }
-    } else if (action === 'reschedule_task') {
+    } else if (action === 'in_progress_task') {
+        if (!contact.tasks) contact.tasks = [];
+        const taskIndex = contact.tasks.findIndex(t => t._id.toString() === payload.taskId);
+        if (taskIndex > -1) {
+            contact.tasks[taskIndex].status = 'IN_PROGRESS';
+            contact.timeline.push({ eventType: 'TASK_IN_PROGRESS', description: `Task set to Changing: ${contact.tasks[taskIndex].title}`, timestamp: new Date() });
+        }
+     } else if (action === 'cancel_task') {
+        if (!contact.tasks) contact.tasks = [];
+        const taskIndex = contact.tasks.findIndex(t => t._id.toString() === payload.taskId);
+        if (taskIndex > -1) {
+            contact.tasks[taskIndex].status = 'CANCELLED';
+            contact.timeline.push({ eventType: 'TASK_CANCELLED', description: `Task cancelled: ${contact.tasks[taskIndex].title}`, timestamp: new Date() });
+        }
+     } else if (action === 'delete_task') {
+        if (!contact.tasks) contact.tasks = [];
+        contact.tasks = (contact.tasks || []).filter(t => t._id.toString() !== payload.taskId);
+        contact.timeline.push({ eventType: 'TASK_DELETED', description: `Task deleted from console`, timestamp: new Date() });
+     } else if (action === 'reschedule_task') {
        if (!contact.tasks) contact.tasks = [];
        const taskIndex = contact.tasks.findIndex(t => t._id.toString() === payload.taskId);
        if (taskIndex > -1) {

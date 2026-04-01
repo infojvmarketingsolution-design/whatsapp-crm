@@ -114,6 +114,24 @@ export default function Tasks() {
      }
   };
 
+  const updateTaskStatus = async (contactId, taskId, action) => {
+     try {
+       const token = localStorage.getItem('token');
+       const tenantId = localStorage.getItem('tenantId');
+       const res = await fetch(`/api/chat/contacts/${contactId}/action`, {
+         method: 'PUT',
+         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+         body: JSON.stringify({ action, payload: { taskId } })
+       });
+       if (res.ok) {
+          fetchTasks();
+          setActiveDropdown(null);
+       }
+     } catch (err) {
+       console.error(err);
+     }
+  };
+
   const overdueCount = tasks.filter(t => t.status === 'PENDING' && new Date(t.dueDate) < new Date()).length;
   const todayCount = tasks.filter(t => {
     const d = new Date(t.dueDate);
@@ -127,6 +145,9 @@ export default function Tasks() {
     return t.status === 'PENDING' && d > today;
   }).length;
 
+  const pendingCount = tasks.filter(t => t.status === 'PENDING').length;
+  const inProgressCount = tasks.filter(t => t.status === 'IN_PROGRESS').length;
+  const cancelledCount = tasks.filter(t => t.status === 'CANCELLED').length;
   const completedCount = tasks.filter(t => t.status === 'COMPLETED').length;
   const totalCount = tasks.length;
   const efficiency = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -191,21 +212,40 @@ export default function Tasks() {
             <h1 className="text-2xl font-black text-slate-800 tracking-tight">Work Console</h1>
             <p className="text-slate-500 font-semibold text-sm">Manage your sales activities and follow-ups</p>
           </div>
-          <div className="flex space-x-6">
+          <div className="flex items-center space-x-6">
              <div className="text-right">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Overall Status</p>
-                <div className="flex items-center space-x-3 text-[11px] font-black uppercase tracking-tight">
-                   <span className="text-teal-600">Done: {completedCount}</span>
-                   <span className="text-rose-500">Pending: {totalCount - completedCount}</span>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Work Statistics</p>
+                <div className="flex items-center space-x-4">
+                   <div className="flex flex-col items-end border-r border-slate-100 pr-4">
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Total Task</span>
+                      <span className="text-sm font-black text-slate-700 leading-none">{totalCount}</span>
+                   </div>
+                   <div className="flex flex-col items-end border-r border-slate-100 pr-4">
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Complete Task</span>
+                      <span className="text-sm font-black text-teal-600 leading-none">{completedCount}</span>
+                   </div>
+                   <div className="flex flex-col items-end border-r border-slate-100 pr-4">
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Pending Task</span>
+                      <span className="text-sm font-black text-rose-500 leading-none">{pendingCount}</span>
+                   </div>
+                   <div className="flex flex-col items-end border-r border-slate-100 pr-4">
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Task Changing</span>
+                      <span className="text-sm font-black text-blue-500 leading-none">{inProgressCount}</span>
+                   </div>
+                   <div className="flex flex-col items-end">
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Task Cancellation</span>
+                      <span className="text-sm font-black text-slate-400 leading-none">{cancelledCount}</span>
+                   </div>
                 </div>
              </div>
-             <div className="h-10 w-[1px] bg-slate-100 mx-1"></div>
+             
+             <div className="h-10 w-[1px] bg-slate-100 mx-2"></div>
+             
              <div className="text-right">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Efficiency</p>
                 <p className="text-lg font-black text-teal-600 leading-none mt-1">{efficiency}%</p>
              </div>
-             <div className="h-10 w-[1px] bg-slate-100 mx-1"></div>
-             <div className="flex -space-x-2">
+             <div className="flex -space-x-2 ml-4">
                 {[1,2,3].map(i => (
                   <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden">
                     <img src={`https://i.pravatar.cc/100?u=${i+10}`} alt="avatar" />
@@ -313,6 +353,8 @@ export default function Tasks() {
                               <h3 className="text-sm font-black text-slate-800 tracking-tight">{t.title}</h3>
                               {isOverdue && <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-black uppercase rounded">Overdue</span>}
                               {t.status === 'COMPLETED' && <span className="px-1.5 py-0.5 bg-teal-100 text-teal-600 text-[9px] font-black uppercase rounded">Completed</span>}
+                              {t.status === 'IN_PROGRESS' && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[9px] font-black uppercase rounded">Changing</span>}
+                              {t.status === 'CANCELLED' && <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase rounded">Cancelled</span>}
                            </div>
                            <div className="flex items-center space-x-4">
                               <div className="flex items-center text-[11px] font-bold text-slate-400">
@@ -328,10 +370,10 @@ export default function Tasks() {
                      </div>
 
                       <div className="flex items-center space-x-2">
-                        {t.status === 'PENDING' && (
+                        {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
                            <>
                               <button 
-                                onClick={() => completeTask(t.contactId, t._id)}
+                                onClick={() => updateTaskStatus(t.contactId, t._id, 'complete_task')}
                                 className="h-9 px-4 bg-teal-600 text-white text-xs font-black rounded-xl hover:bg-teal-700 transition-all flex items-center shadow-md shadow-teal-600/10 active:scale-95"
                               >
                                 <Check size={14} className="mr-2" /> Done
@@ -368,16 +410,34 @@ export default function Tasks() {
 
                            {activeDropdown === t._id && (
                               <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[100] animate-pop-in divide-y divide-slate-50">
-                                 {t.status === 'PENDING' && (
+                                 {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
                                     <div className="pb-2">
                                        <button 
-                                          onClick={() => { completeTask(t.contactId, t._id); setActiveDropdown(null); }}
+                                          onClick={() => { updateTaskStatus(t.contactId, t._id, 'complete_task'); }}
                                           className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
                                        >
                                           <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center mr-3">
                                              <Check size={16} />
                                           </div>
                                           Mark as Done
+                                       </button>
+                                       <button 
+                                          onClick={() => { updateTaskStatus(t.contactId, t._id, 'in_progress_task'); }}
+                                          className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
+                                       >
+                                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
+                                             <ArrowUpRight size={16} />
+                                          </div>
+                                          Mark as Changing
+                                       </button>
+                                       <button 
+                                          onClick={() => { updateTaskStatus(t.contactId, t._id, 'cancel_task'); }}
+                                          className="w-full text-left px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center transition-colors"
+                                       >
+                                          <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3">
+                                             <AlertCircle size={16} />
+                                          </div>
+                                          Cancel Task
                                        </button>
                                        <button 
                                           onClick={() => { rescheduleToToday(t.contactId, t._id); setActiveDropdown(null); }}

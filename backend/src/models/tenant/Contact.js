@@ -14,7 +14,7 @@ const ContactSchema = new mongoose.Schema({
     title: String,
     description: String,
     dueDate: Date,
-    status: { type: String, enum: ['PENDING', 'COMPLETED', 'CANCELLED'], default: 'PENDING' },
+    status: { type: String, enum: ['PENDING', 'IN_PROGRESS', 'COMPLETED', 'CANCELLED'], default: 'PENDING' },
     outcome: String,
     metadata: mongoose.Schema.Types.Mixed
   }],
