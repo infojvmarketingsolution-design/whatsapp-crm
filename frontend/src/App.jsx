@@ -184,7 +184,7 @@ function Dashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <DashboardCard title="Reply Bots" value={loading && !wabaConfig ? "..." : "0"} subtext="0 Messages sent" icon={Bot} />
-        <DashboardCard title="Billing Status" value="Meta Managed" subtext="Check Business Suite" icon={Wallet} />
+        <DashboardCard title="Ad Budget Credit" value={loading && !wabaConfig ? "..." : "₹0.00"} subtext="Available Balance" icon={Wallet} />
         <DashboardCard 
           title="WABA Daily Limit" 
           value={loading && !wabaConfig ? "..." : (limitNum === Infinity ? 'Unlimited' : limitNum.toLocaleString())}
