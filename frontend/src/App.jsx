@@ -26,14 +26,25 @@ import AdminSettings from './pages/Admin/AdminSettings';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import Maintenance from './pages/Maintenance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, AlertCircle, History, Clock } from 'lucide-react';
+import AdBudgetRefill from './components/AdBudgetRefill';
+import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, AlertCircle, History, Clock, X, Plus } from 'lucide-react';
 
-function DashboardCard({ title, value, subtext, icon: Icon, greenBadge }) {
+function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add" }) {
   return (
-    <div className="bg-crm-card p-5 rounded-lg shadow-sm border border-crm-border flex flex-col hover:shadow-premium transition-shadow">
+    <div className="bg-crm-card p-5 rounded-lg shadow-sm border border-crm-border flex flex-col hover:shadow-premium transition-shadow group relative">
       <div className="flex justify-between items-start mb-2">
         <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase">{title}</h3>
-        {Icon && <div className="p-2 bg-blue-500 rounded-full text-white"><Icon size={16} /></div>}
+        <div className="flex items-center space-x-2">
+           {onAction && (
+             <button 
+               onClick={(e) => { e.stopPropagation(); onAction(); }}
+               className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black uppercase flex items-center shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white"
+             >
+               <Plus size={10} className="mr-1" /> {actionLabel}
+             </button>
+           )}
+           {Icon && <div className="p-2 bg-blue-500 rounded-full text-white"><Icon size={16} /></div>}
+        </div>
       </div>
       <div className="mb-2">
         {greenBadge ? (
@@ -52,6 +63,7 @@ function Dashboard() {
   const [stats, setStats] = React.useState({ campaigns: 0, recentCampaign: '', templates: 0, contacts: 0, chats: 0 });
   const [loading, setLoading] = React.useState(true);
   const [wabaConfig, setWabaConfig] = React.useState(null);
+  const [showRefillModal, setShowRefillModal] = React.useState(false);
   
   // Pull active user directly from local session context
   const activeUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -184,7 +196,14 @@ function Dashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <DashboardCard title="Reply Bots" value={loading && !wabaConfig ? "..." : "0"} subtext="0 Messages sent" icon={Bot} />
-        <DashboardCard title="Ad Budget Credit" value={loading && !wabaConfig ? "..." : "₹0.00"} subtext="Available Balance" icon={Wallet} />
+        <DashboardCard 
+           title="Ad Budget Credit" 
+           value={loading && !wabaConfig ? "..." : "₹0.00"} 
+           subtext="Available Balance" 
+           icon={Wallet} 
+           onAction={() => setShowRefillModal(true)}
+           actionLabel="Add"
+        />
         <DashboardCard 
           title="WABA Daily Limit" 
           value={loading && !wabaConfig ? "..." : (limitNum === Infinity ? 'Unlimited' : limitNum.toLocaleString())}
@@ -198,6 +217,26 @@ function Dashboard() {
           icon={Database} 
         />
       </div>
+
+      {/* Refill Modal Overlay */}
+      {showRefillModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] animate-fade-in p-4" onClick={() => setShowRefillModal(false)}>
+           <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl relative overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
+              <div className="flex justify-between items-center p-6 border-b border-gray-100">
+                 <div>
+                    <h2 className="text-xl font-black text-slate-800 uppercase tracking-tight">Refill Meta Ad Budget</h2>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest leading-none mt-1">Select quantity and complete payment</p>
+                 </div>
+                 <button onClick={() => setShowRefillModal(false)} className="p-2 bg-gray-50 text-gray-400 hover:text-rose-500 rounded-full transition-colors">
+                    <X size={20} />
+                 </button>
+              </div>
+              <div className="overflow-y-auto max-h-[80vh]">
+                 <AdBudgetRefill isModal={true} />
+              </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }
