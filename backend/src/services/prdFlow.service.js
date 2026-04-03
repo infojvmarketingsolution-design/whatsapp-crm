@@ -96,11 +96,11 @@ class PRDFlowService {
         const vars = contact.flowVariables || {};
         const name = vars.name || contact.name || 'Friend';
         return str
-          .replace(/{{name}}|\[\[name\]\]/g, name)
-          .replace(/{{qualification}}|\[\[qualification\]\]/g, vars.qualification || 'your qualification')
-          .replace(/{{program}}|\[\[program\]\]/g, vars.program || 'the program')
-          .replace(/{{careerGoal}}|\[\[careerGoal\]\]/g, vars.careerGoal || 'your goal')
-          .replace(/{{time}}|\[\[time\]\]/g, vars.time || 'your preferred time');
+          .replace(/\{{1,2}name\}{1,2}|\[{1,2}name\]{1,2}/gi, name)
+          .replace(/\{{1,2}qualification\}{1,2}|\[{1,2}qualification\]{1,2}/gi, vars.qualification || 'your qualification')
+          .replace(/\{{1,2}program\}{1,2}|\[{1,2}program\]{1,2}/gi, vars.program || 'the program')
+          .replace(/\{{1,2}careerGoal\}{1,2}|\[{1,2}careerGoal\]{1,2}/gi, vars.careerGoal || 'your goal')
+          .replace(/\{{1,2}time\}{1,2}|\[{1,2}time\]{1,2}/gi, vars.time || 'your preferred time');
       };
 
       const saveAndEmit = async (type, payload, waResult) => {
