@@ -151,6 +151,15 @@ class PRDFlowService {
               consumeInput = false;
               continue; // Execute next node immediately
            } else {
+              // END OF FLOW INTERCEPT - If the last node was a question (like "May I help you with anything else?")
+              if (msgType === 'QUESTION') {
+                  const isPositive = val.toLowerCase().match(/yes|yeah|sure|yep|please|ok|y/);
+                  const finalReply = isPositive 
+                      ? "Transferring to counsellor. Please wait, our counsellor will contact you on call asap."
+                      : "Thank you.";
+                  const res = await waService.sendTextMessage(contact.phone, finalReply);
+                  await saveAndEmit('text', finalReply, res);
+              }
               break; 
            }
         }
