@@ -12,7 +12,7 @@ const Settings = require('../models/core/Settings');
 
 /**
  * Traverses a visually-built ReactFlow JSON graph synchronously.
- * Matches Rule 15: Exec Engine
+ * Matches Rule 16: Exec Engine
  */
 const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, replyValue = null) => {
   try {
@@ -72,7 +72,7 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
     while (currentNode && steps < 20) {
        steps++;
        
-       // Rules 14/15: Save session before stopping
+       // Rule 15/16: Save session before stopping
        await Contact.findOneAndUpdate({ phone: contact.phone }, { 
            currentFlowStep: currentNode.id, 
            lastFlowId: flowId,
@@ -119,8 +119,8 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
                console.error(`[Flow Engine] Node Error:`, e.message);
            }
            
-           // 🔥 STOP condition as per PRD
-           if (['QUESTION', 'INTERACTIVE_MESSAGE', 'LIST_MESSAGE', 'INTERACTIVE', 'CTA_URL'].includes(msgType)) break;
+           // 🔥 Rule 7: STOP condition for wait nodes
+           if (['QUESTION', 'LIST_MESSAGE', 'INTERACTIVE_MESSAGE', 'LIST_MESSAGE', 'INTERACTIVE', 'CTA_URL'].includes(msgType)) break;
        }  
        else if (currentNode.type === 'actionNode') {
            const tag = interpolate(currentNode.data?.tag || '');
@@ -142,7 +142,7 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
 };
 
 /**
- * Matches PRD Flow Lifecycle Rule 4
+ * Matches PRD Node Logic Rules 4, 11, 15
  */
 const processIncomingMessage = async (tenantId, contact, messageText, io, isNewContact = false, replyValue = null) => {
   try {
@@ -164,28 +164,38 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          phoneNumberId: client.whatsappConfig.phoneNumberId
      });
 
-     // Timeout Check (Rule 11)
-     const diff = (new Date() - new Date(activeContact.lastMessageAt || 0)) / (1000 * 60);
-     if (diff > 30 && activeContact.currentFlowStep) {
+     // ⏱️ Rule 11: Timeout (30 min)
+     const lastActivity = activeContact.lastMessageAt || activeContact.updatedAt || new Date(0);
+     const diffMinutes = (new Date() - new Date(lastActivity)) / (1000 * 60);
+     if (diffMinutes > 30 && activeContact.currentFlowStep) {
+         console.log(`[Flow Engine] ⏱️ Timeout reset for ${activeContact.phone}`);
          await Contact.findOneAndUpdate({ phone: activeContact.phone }, { $unset: { currentFlowStep: "", lastFlowId: "" } });
          activeContact.currentFlowStep = null;
      }
 
-     // 🧩 Rule 6: CONTINUE FLOW
-     if (activeContact.currentFlowStep) {
-         const prdStates = ['greeting', 'ask_name', 'qualification', 'program', 'call_time', 'thank_you', 'START_PRD_FLOW'];
+     // 🧩 Rule 10: Reset manual reset
+     if (messageText.toLowerCase().trim() === 'reset') {
+         await Contact.findOneAndUpdate({ phone: activeContact.phone }, { $unset: { currentFlowStep: "", lastFlowId: "" } });
+         activeContact.currentFlowStep = null;
+     }
+
+     // 🧩 Rule 4: SESSION CHECK
+     if (activeContact.currentFlowStep && activeContact.lastFlowId) {
+         console.log(`[Flow Engine] 🔄 Session exists. Continuing...`);
+         const prdStates = ['greeting', 'ask_name', 'qualification', 'program', 'careerGoal', 'call_time', 'thank_you', 'START_PRD_FLOW'];
+         
          if (prdStates.includes(activeContact.currentFlowStep)) {
-             await PRDFlowService.processStep(tenantId, activeContact, replyValue || messageText, waService, io);
+             await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io, false, replyValue);
              return;
          }
 
-         if (activeContact.lastFlowId) {
-            executeFlow(tenantId, activeContact.lastFlowId, activeContact, io, activeContact.currentFlowStep, replyValue || messageText);
-            return;
-         }
+         // Standard Flows
+         executeFlow(tenantId, activeContact.lastFlowId, activeContact, io, activeContact.currentFlowStep, replyValue || messageText);
+         return;
      }
 
-     // 🧩 Rule 5: START FLOW
+     // 🏁 START NEW FLOW
+     console.log(`[Flow Engine] 🏁 Starting New Session...`);
      const keywordFlow = await Flow.findOne({ 
          status: 'ACTIVE', tenantId, triggerType: 'KEYWORD', 
          triggerKeywords: { $in: [messageText.toLowerCase().trim()] } 
@@ -195,7 +205,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          return;
      }
 
-     // Default Template Fallback
+     // Default Template Fallback (Rule 15)
      await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
      await PRDFlowService.updateLeadScore(Contact, Message, activeContact._id, io, tenantId);
 
