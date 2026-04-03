@@ -45,9 +45,6 @@ class PRDFlowService {
     
     this.clearTimer(contact._id.toString());
 
-    const currentState = contact.currentFlowStep || 'START_PRD_FLOW';
-    console.log(`[PRD Flow] Processing Step: ${currentState} for ${contact.phone}`);
-
     let prompts = {
       qualificationOptions: ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'],
       programMap: {
@@ -83,7 +80,7 @@ class PRDFlowService {
         content: payload,
         status: 'SENT'
       });
-      if (io) io.to(tenantId).emit('current_chat_message', { ...savedMsg._doc, contact });
+      if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact });
     };
 
     const flowSteps = (prompts.prdFlowSteps && prompts.prdFlowSteps.length > 0) 
@@ -125,11 +122,8 @@ class PRDFlowService {
           }
           if (possibleNextStep) {
             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
-            contact.currentFlowStep = possibleNextStep.id;
-            stepToProcess = possibleNextStep;
-            canConsumeMessage = false;
-            continue;
           }
+          stepToProcess = null; // Wait for user to reply (Name request usually follow)
           break;
         }
 
@@ -252,11 +246,8 @@ class PRDFlowService {
           }
           if (possibleNextStep) {
             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
-            contact.currentFlowStep = possibleNextStep.id;
-            stepToProcess = possibleNextStep;
-            canConsumeMessage = false;
-            continue;
           }
+          stepToProcess = null;
           break;
         }
 
