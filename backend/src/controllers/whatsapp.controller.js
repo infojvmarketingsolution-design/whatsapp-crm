@@ -10,6 +10,7 @@ const { processIncomingMessage } = require('../services/flowEngine.service');
 const TemplateSchema = require('../models/tenant/Template');
 const { mapMetaError } = require('../utils/metaErrorMapper');
 const WhatsAppService = require('../services/whatsapp.service');
+const { lockUser, unlockUser } = require('../services/redis.service');
 
 const verifyWebhook = (req, res) => {
   console.log('--- WEBHOOK VERIFICATION ATTEMPT ---');
@@ -172,37 +173,47 @@ const handleIncomingMessage = async (req, res) => {
           }
       }
 
-      // 🔒 1. Prevent Duplicate Webhook Hits (WhatsApp Retries)
-      const isDuplicate = await Contact.findOne({ phone: from, lastProcessedMessageId: msgId });
-      if (isDuplicate) {
-        console.log(`[Webhook] 🛑 Deduplication: Skipping already processed message ${msgId}`);
+      // 🔒 1. Redis Concurrency Lock (Rule 3)
+      const lockAcquired = await lockUser(from, 5);
+      if (!lockAcquired) {
+        console.log(`[Webhook] 🔒 Lock Active: Skipping parallel hit for ${from}`);
         return res.status(200).send('EVENT_RECEIVED');
       }
 
-      let contact = await Contact.findOne({ phone: from });
-      let isNewContact = false;
-
-      if (!contact) {
-         const contactName = value.contacts?.[0]?.profile?.name || 'Unknown';
-         contact = await Contact.create({ 
-           phone: from, 
-           name: contactName, 
-           lastMessageAt: new Date(), 
-           status: 'NEW LEAD',
-           isFlowActive: false,
-           flowVariables: {}
-         });
-         isNewContact = true;
-      }
-
-      // 🔥 SAVE MESSAGE ID (ANTI DUPLICATE) & UPDATE TIMESTAMP
-      await Contact.updateOne(
-        { phone: from },
-        { 
-          lastProcessedMessageId: msgId,
-          lastMessageAt: new Date()
+      try {
+        let contact = await Contact.findOne({ phone: from });
+        
+        // 🔒 2. Deduplication (Rule 2)
+        if (contact && contact.lastProcessedMessageId === msgId) {
+          console.log(`[Webhook] 🛑 Deduplication: Message ${msgId} already processed.`);
+          await unlockUser(from);
+          return res.status(200).send('EVENT_RECEIVED');
         }
-      );
+
+        let isNewContact = false;
+
+        if (!contact) {
+           const contactName = value.contacts?.[0]?.profile?.name || 'Unknown';
+           contact = await Contact.create({ 
+             phone: from, 
+             name: contactName, 
+             lastMessageAt: new Date(), 
+             status: 'NEW LEAD',
+             isFlowActive: false,
+             flowVariables: {},
+             lastProcessedMessageId: msgId
+           });
+           isNewContact = true;
+        } else {
+          // 🔥 SAVE MESSAGE ID (ANTI DUPLICATE) & UPDATE TIMESTAMP
+          await Contact.updateOne(
+            { phone: from },
+            { 
+              lastProcessedMessageId: msgId,
+              lastMessageAt: new Date()
+            }
+          );
+        }
 
       const waService = new WhatsAppService({
           accessToken: client.whatsappConfig.accessToken,
@@ -244,12 +255,21 @@ const handleIncomingMessage = async (req, res) => {
       processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io, isNewContact, replyValue)
         .catch(err => {
           console.error(`[Background Flow Engine Error] Tenant: ${client.tenantId}`, err);
+        })
+        .finally(async () => {
+          // 🔓 3. Release Lock (Optional if using TTL, but cleaner)
+          await unlockUser(from);
         });
 
-      return; // ✅ FIX: Added return here to prevent multiple responses for one payload
+      return; 
+    } catch (innerErr) {
+       console.error(`[Webhook Inner Error]`, innerErr);
+       await unlockUser(from);
+       return res.status(200).send('EVENT_RECEIVED');
     }
+  }
 
-    // 3. Handle Status Updates
+  // 3. Handle Status Updates
     if (value.statuses && value.statuses[0]) {
       const statusEvent = value.statuses[0];
       const metaError = statusEvent.errors?.[0]; // Get the first error if present

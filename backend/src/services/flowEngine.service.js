@@ -11,7 +11,7 @@ const ClientSchema = require('../models/core/Client');
 const Settings = require('../models/core/Settings');
 
 /**
- * 🚀 WHATSAPP FLOW ENGINE – FULL PRD (CONTINUOUS MODE)
+ * 🚀 WHATSAPP FLOW ENGINE – RESOLUTION PRD (FINAL FIXED & STABLE)
  */
 
 const isWaitingNode = (node) => {
@@ -19,6 +19,8 @@ const isWaitingNode = (node) => {
   const msgType = node.data.msgType;
   return ['QUESTION', 'LIST_MESSAGE', 'INTERACTIVE', 'INTERACTIVE_MESSAGE'].includes(msgType);
 };
+
+const normalize = v => v?.toString().toLowerCase().trim();
 
 /**
  * 🧩 Helper: Interpolate variables in text.
@@ -44,7 +46,7 @@ const getFullUrl = (url) => {
 };
 
 /**
- * 💥 FINAL EXECUTION ENGINE (SIMPLIFIED)
+ * ⚙️ 8. EXECUTION ENGINE (FINAL SAFE VERSION)
  * Matches Rule 15: EXECUTION ENGINE
  */
 const executeFlow = async (tenantId, flowId, contact, node, io, waService) => {
@@ -52,73 +54,75 @@ const executeFlow = async (tenantId, flowId, contact, node, io, waService) => {
     const tenantDb = getTenantConnection(tenantId);
     const Contact = tenantDb.model('Contact', ContactSchema);
     const Message = tenantDb.model('Message', MessageSchema);
-    const Flow = tenantDb.model('Flow', FlowSchema);
 
     while (node) {
-      console.log(`[Flow Engine] 📤 Executing node: ${node.id} (${node.data?.msgType})`);
+      console.log(`[Flow Engine] 📤 Node: ${node.id} (${node.data?.msgType})`);
 
       // 🔄 ALWAYS REFETCH CONTACT FOR ATOMIC STATE
       const freshContact = await Contact.findOne({ phone: contact.phone });
 
-      // 🚫 ANTI DUPLICATE CHECK (Guard against double execution in same tick)
-      if (freshContact.currentFlowStep === node.id && node.executed) {
-        return;
-      }
+      // 🚫 DUPLICATE GUARD (Rule 8)
+      if (freshContact.lastExecutedNode === node.id) {
+        console.log(`[Flow Engine] 🛑 Guard: Node ${node.id} already executed. Skipping send.`);
+      } else {
+        // Send Message logic
+        if (node.type === 'messageNode' || node.type === 'triggerNode') {
+          const { msgType = 'TEXT', text = '', mediaUrl = '', buttons = [], listOptions = [], buttonText = 'Select' } = node.data;
+          const interpolatedText = interpolate(text, freshContact);
 
-      // Send Message logic
-      if (node.type === 'messageNode' || node.type === 'triggerNode') {
-        const { msgType = 'TEXT', text = '', mediaUrl = '', buttons = [], listOptions = [], buttonText = 'Select' } = node.data;
-        const interpolatedText = interpolate(text, freshContact);
-
-        const saveAndEmit = async (type, content, waResult) => {
-          const savedMsg = await Message.create({
-            contactId: freshContact._id,
-            messageId: waResult?.messages?.[0]?.id || `out_${Date.now()}_flow`,
-            direction: 'OUTBOUND',
-            type,
-            content,
-            status: 'SENT'
-          });
-          if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact: freshContact });
-        };
-
-        try {
-          if (msgType === 'TEXT' && text) {
-            let res = await waService.sendTextMessage(freshContact.phone, interpolatedText);
-            await saveAndEmit('text', interpolatedText, res);
-          } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(msgType.toUpperCase())) {
-            const finalMediaUrl = getFullUrl(mediaUrl);
-            const isNumeric = mediaUrl && /^\d+$/.test(mediaUrl);
-            let res = await waService.sendMedia(freshContact.phone, msgType.toLowerCase(), isNumeric ? mediaUrl : null, interpolatedText, isNumeric ? null : finalMediaUrl);
-            await saveAndEmit(msgType.toLowerCase(), interpolatedText, res);
-          } else if (msgType === 'INTERACTIVE' || msgType === 'INTERACTIVE_MESSAGE') {
-            let res = await waService.sendSmartButtons(freshContact.phone, {
-              body: interpolatedText,
-              buttons: buttons.filter(b => b && b.trim() !== '').map(b => interpolate(b, freshContact))
+          const saveAndEmit = async (type, content, waResult) => {
+            const savedMsg = await Message.create({
+              contactId: freshContact._id,
+              messageId: waResult?.messages?.[0]?.id || `out_${Date.now()}_flow`,
+              direction: 'OUTBOUND',
+              type,
+              content,
+              status: 'SENT'
             });
-            await saveAndEmit('interactive', interpolatedText, res);
-          } else if (msgType === 'LIST_MESSAGE') {
-            let res = await waService.sendListMessage(freshContact.phone, {
-              body: interpolatedText,
-              buttonText: interpolate(buttonText, freshContact),
-              sections: [{ title: 'Options', rows: listOptions.map((opt, i) => ({ id: `list_${i}`, title: interpolate(opt, freshContact).substring(0, 24) })) }]
-            });
-            await saveAndEmit('interactive', interpolatedText, res);
+            if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact: freshContact });
+          };
+
+          try {
+            if (msgType === 'TEXT' && text) {
+              let res = await waService.sendTextMessage(freshContact.phone, interpolatedText);
+              await saveAndEmit('text', interpolatedText, res);
+            } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(msgType.toUpperCase())) {
+              const finalMediaUrl = getFullUrl(mediaUrl);
+              const isNumeric = mediaUrl && /^\d+$/.test(mediaUrl);
+              let res = await waService.sendMedia(freshContact.phone, msgType.toLowerCase(), isNumeric ? mediaUrl : null, interpolatedText, isNumeric ? null : finalMediaUrl);
+              await saveAndEmit(msgType.toLowerCase(), interpolatedText, res);
+            } else if (msgType === 'INTERACTIVE' || msgType === 'INTERACTIVE_MESSAGE') {
+              let res = await waService.sendSmartButtons(freshContact.phone, {
+                body: interpolatedText,
+                buttons: buttons.filter(b => b && b.trim() !== '').map(b => interpolate(b, freshContact))
+              });
+              await saveAndEmit('interactive', interpolatedText, res);
+            } else if (msgType === 'LIST_MESSAGE') {
+              let res = await waService.sendListMessage(freshContact.phone, {
+                body: interpolatedText,
+                buttonText: interpolate(buttonText, freshContact),
+                sections: [{ title: 'Options', rows: listOptions.map((opt, i) => ({ id: `list_${i}`, title: interpolate(opt, freshContact).substring(0, 24) })) }]
+              });
+              await saveAndEmit('interactive', interpolatedText, res);
+            }
+          } catch (e) {
+            console.error(`[Flow Engine] Node Error:`, e.message);
           }
-        } catch (e) {
-          console.error(`[Flow Engine] Node Error:`, e.message);
+        } else if (node.type === 'actionNode') {
+          const tag = interpolate(node.data?.tag || '', freshContact);
+          if (tag) {
+            await Contact.findOneAndUpdate({ phone: freshContact.phone }, { $addToSet: { tags: tag } });
+          }
         }
-      } else if (node.type === 'actionNode') {
-        const tag = interpolate(node.data?.tag || '', freshContact);
-        if (tag) {
-          await Contact.findOneAndUpdate({ phone: freshContact.phone }, { $addToSet: { tags: tag } });
-        }
+
+        // ✅ SAVE EXECUTION (Rule 8)
+        await Contact.updateOne(
+          { phone: freshContact.phone },
+          { lastExecutedNode: node.id }
+        );
       }
 
-      // Mark as executed in this loop context
-      node.executed = true;
-
-      // ⛔ STOP if waiting node (QUESTION/LIST/BUTTONS)
+      // ⛔ STOP if waiting node (Rule 11)
       if (isWaitingNode(node)) {
         console.log(`[Flow Engine] ⏸️ Waiting Node: ${node.id}.`);
         await Contact.updateOne(
@@ -128,11 +132,12 @@ const executeFlow = async (tenantId, flowId, contact, node, io, waService) => {
         return;
       }
 
-      // ➡️ NEXT NODE
-      const flow = await Flow.findById(flowId);
+      // ➡️ NEXT NODE (From Snapshot - Rule 10)
+      const flow = freshContact.flowSnapshot;
       const edge = flow.edges.find(e => e.source === node.id);
 
       if (!edge) {
+        console.log(`[Flow Engine] 🏁 End of flow.`);
         return clearSession(tenantId, freshContact.phone);
       }
 
@@ -149,8 +154,8 @@ const executeFlow = async (tenantId, flowId, contact, node, io, waService) => {
 };
 
 /**
- * ▶️ 5. START FLOW
- * Matches Rule 5: START FLOW logic
+ * ▶️ 6. START FLOW
+ * Matches Rule 6: START FLOW logic
  */
 const startFlow = async (tenantId, flowId, contact, io, waService) => {
   try {
@@ -162,17 +167,25 @@ const startFlow = async (tenantId, flowId, contact, io, waService) => {
     const flow = await Flow.findById(flowId);
     if (!flow || flow.status !== 'ACTIVE') return;
 
-    const startNode = flow.nodes.find(n => n.type === 'triggerNode' || n.id === 'start-1') || flow.nodes[0];
+    const startNode = flow.nodes.find(n => n.type === 'triggerNode' || n.id === 'start-1' || n.id === 'start') || flow.nodes[0];
 
+    // 🔥 SAVE SESSION + SNAPSHOT (Rule 6)
     await Contact.updateOne(
       { phone: contact.phone },
       {
         currentFlowId: flow._id,
         currentFlowStep: startNode.id,
         isFlowActive: true,
-        flowVersion: flow.version || 1
+        flowSnapshot: {
+          nodes: flow.nodes,
+          edges: flow.edges
+        },
+        lastExecutedNode: null // Reset for new session
       }
     );
+
+    // 📊 METRICS (Rule 13)
+    await Flow.updateOne({ _id: flowId }, { $inc: { 'metrics.triggeredCount': 1 } });
 
     return executeFlow(tenantId, flow._id, contact, startNode, io, waService);
   } catch (error) {
@@ -181,8 +194,7 @@ const startFlow = async (tenantId, flowId, contact, io, waService) => {
 };
 
 /**
- * 🔁 6. CONTINUE FLOW (CRITICAL)
- * Matches Rule 6: CONTINUE FLOW logic
+ * 🔁 7. CONTINUE FLOW (FINAL FIXED)
  */
 const continueFlow = async (tenantId, phone, messageText, replyValue, io, waService) => {
   try {
@@ -190,16 +202,15 @@ const continueFlow = async (tenantId, phone, messageText, replyValue, io, waServ
     const Flow = tenantDb.model('Flow', FlowSchema);
     const Contact = tenantDb.model('Contact', ContactSchema);
 
-    // 🔥 ALWAYS REFETCH CONTACT
+    // 🧩 STEP 1: ALWAYS REFETCH
     const contact = await Contact.findOne({ phone });
-    if (!contact || !contact.currentFlowId) return;
+    if (!contact || !contact.currentFlowId || !contact.flowSnapshot) return;
 
-    const flow = await Flow.findById(contact.currentFlowId);
-    if (!flow) return;
-
+    // 🧩 STEP 2: LOAD SNAPSHOT (Rule 7 Step 2)
+    const flow = contact.flowSnapshot;
     const lastNode = flow.nodes.find(n => n.id === contact.currentFlowStep);
 
-    // 🧩 SAVE VARIABLE
+    // 🧩 STEP 3: SAVE VARIABLE
     if (lastNode?.data?.variableName) {
       await Contact.updateOne(
         { phone },
@@ -211,57 +222,64 @@ const continueFlow = async (tenantId, phone, messageText, replyValue, io, waServ
       );
     }
 
-    const input = replyValue || messageText.trim();
+    // 🧩 STEP 4: NORMALIZE INPUT
+    const input = normalize(replyValue || messageText);
 
-    // 🔥 STRICT EDGE MATCH
+    // 🧩 STEP 5: EDGE MATCH (STRICT - Rule 7 Step 5)
+    // 🚫 Rule 10: REMOVE fallback guessing
     const edge = flow.edges.find(e =>
       e.source === lastNode.id &&
-      (e.sourceHandle === input || e.sourceHandle === `handle_${input}`)
+      normalize(e.sourceHandle) === input
     );
 
     if (!edge) {
-      // Fallback for linear flow with single edge
-      const singleEdge = flow.edges.find(e => e.source === lastNode.id && (!e.sourceHandle || e.sourceHandle === ''));
-      if (singleEdge) {
-        const nextNode = flow.nodes.find(n => n.id === singleEdge.target);
-        await Contact.updateOne({ phone }, { currentFlowStep: nextNode.id });
-        return executeFlow(tenantId, flow._id, contact, nextNode, io, waService);
-      }
-
-      return waService.sendTextMessage(phone, "Invalid option. Please try again.");
+      console.log(`[Flow Engine] ❌ No edge matched for input: "${input}" at node: ${lastNode.id}`);
+      return waService.sendTextMessage(phone, "Invalid option. Please try again or select a valid option from the menu.");
     }
 
     const nextNode = flow.nodes.find(n => n.id === edge.target);
 
+    // 🧩 STEP 6: MOVE NEXT
     await Contact.updateOne(
       { phone },
       { currentFlowStep: nextNode.id }
     );
 
-    return executeFlow(tenantId, flow._id, contact, nextNode, io, waService);
+    // 🧩 STEP 7: EXECUTE
+    return executeFlow(tenantId, contact.currentFlowId, contact, nextNode, io, waService);
   } catch (error) {
     console.error(`[Flow Engine] continueFlow Error:`, error);
   }
 };
 
 /**
- * 🟡 STEP 1: USER SENDS MESSAGE
- * Matches Rule 4: FLOW LIFECYCLE
+ * 🟡 11. SESSION MANAGEMENT
  */
 const clearSession = async (tenantId, phone) => {
   const tenantDb = getTenantConnection(tenantId);
   const Contact = tenantDb.model('Contact', ContactSchema);
+  const contact = await Contact.findOne({ phone });
+  
+  if (contact && contact.currentFlowId) {
+    const Flow = tenantDb.model('Flow', FlowSchema);
+    // 📊 METRICS Completion
+    await Flow.updateOne({ _id: contact.currentFlowId }, { $inc: { 'metrics.completionCount': 1 } });
+  }
+
   await Contact.updateOne(
     { phone },
     {
       currentFlowStep: null,
       currentFlowId: null,
-      isFlowActive: false
+      isFlowActive: false,
+      flowVariables: {},
+      lastExecutedNode: null,
+      flowSnapshot: { nodes: [], edges: [] }
     }
   );
 };
 
-const processIncomingMessage = async (tenantId, contact, messageText, io, isNewContact = false, replyValue = null, oldLastMessageAt = null) => {
+const processIncomingMessage = async (tenantId, contact, messageText, io, isNewContact = false, replyValue = null) => {
   try {
     const tenantDb = getTenantConnection(tenantId);
     const Contact = tenantDb.model('Contact', ContactSchema);
@@ -280,10 +298,13 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
       phoneNumberId: client.whatsappConfig.phoneNumberId
     });
 
-    // ⏱️ TIMEOUT RESET
+    // ⏱️ 12. TIMEOUT RULE
     if (activeContact.lastMessageAt && Date.now() - activeContact.lastMessageAt > 30 * 60 * 1000) {
+      console.log(`[Flow Engine] ⏱️ Session timeout for ${activeContact.phone}. Clearing.`);
       await clearSession(tenantId, activeContact.phone);
-      return processIncomingMessage(tenantId, contact, messageText, io, isNewContact, replyValue, null); // Re-run as fresh session
+      // 🔥 RE-FETCH AFTER CLEAR
+      const resetContact = await Contact.findOne({ phone: contact.phone });
+      return processIncomingMessage(tenantId, resetContact.toObject(), messageText, io, isNewContact, replyValue);
     }
 
     // ✅ Manual reset
@@ -292,7 +313,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
       return waService.sendTextMessage(activeContact.phone, "Session reset. Type 'hello' to start again.");
     }
 
-    // 🔀 ROUTING
+    // 🔀 ROUTING (Rule 5)
     if (activeContact.isFlowActive && activeContact.currentFlowStep) {
       return continueFlow(tenantId, activeContact.phone, messageText, replyValue, io, waService);
     }
@@ -308,7 +329,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
       return startFlow(tenantId, keywordFlow._id, activeContact, io, waService);
     }
 
-    // Fallback to Default Flow
+    // Fallback to Default Flow (Trigger Type NEW_MESSAGE or match greeting)
     if (messageText.toLowerCase().match(/hi|hello|hey|start|menu/)) {
        const defaultFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
        if (defaultFlow) {

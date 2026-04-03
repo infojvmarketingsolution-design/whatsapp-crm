@@ -26,6 +26,11 @@ const ContactSchema = new mongoose.Schema({
   isFlowActive: { type: Boolean, default: false },
   flowVersion: { type: Number, default: 1 },
   lastProcessedMessageId: { type: String },
+  lastExecutedNode: { type: String }, // Node ID for session tracking (prevents duplicate sends)
+  flowSnapshot: {
+    nodes: { type: Array, default: [] },
+    edges: { type: Array, default: [] }
+  },
   email: { type: String },
   address: { type: String },
   pincode: { type: String },
