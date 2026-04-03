@@ -647,8 +647,60 @@ export default function Contacts() {
 
               <div className="flex-1 flex overflow-hidden bg-white">
                  <div className="w-[380px] bg-slate-50/50 border-r border-gray-100 overflow-y-auto custom-scrollbar p-6 space-y-8">
-                    {/* SECTION 1: BASIC INFORMATION */}
+                    {/* SECTION 1: AI CHATBOT DATA (Moved to top based on user request) */}
                     <section className="space-y-4">
+                       <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
+                          <CheckCircle2 size={14} className="mr-2 text-gray-400" /> AI Chatbot Captures
+                       </h3>
+                       <div className="bg-white p-5 rounded-xl border border-teal-100 shadow-md space-y-4 relative overflow-hidden">
+                           <div className="absolute top-0 right-0 p-2 opacity-5">
+                              <Target size={100} />
+                           </div>
+                           <div className="relative">
+                              <div className="flex justify-between items-center mb-2">
+                                 <label className="text-[10px] font-bold text-teal-600 uppercase tracking-wider block mb-1">AI Extracted Overview</label>
+                              </div>
+                              <textarea value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="Overview..." className="w-full bg-teal-50/30 border border-teal-100 rounded-lg px-3 py-2 text-sm font-semibold text-teal-900 outline-none focus:ring-2 focus:ring-teal-200 transition-all shadow-inner" rows={2}/>
+                           </div>
+                           <div className="grid grid-cols-2 gap-3 relative">
+                               <div>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Target Program</label>
+                                  <div className="relative">
+                                     <Target size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                                     <input value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} placeholder="Program Selection" className="w-full bg-gray-50 border border-gray-100 text-sm font-bold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none focus:border-teal-300 transition-all" />
+                                  </div>
+                               </div>
+                               <div>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Pref. Call Time</label>
+                                  <div className="relative">
+                                     <Clock size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                                     <input value={editedContact.preferredCallTime || ''} onChange={e=>handleFieldChange('preferredCallTime', e.target.value)} placeholder="Call Time" className="w-full bg-gray-50 border border-gray-100 text-sm font-bold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none focus:border-teal-300 transition-all" />
+                                  </div>
+                               </div>
+                           </div>
+                           <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-50 mt-2 relative">
+                               <div>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1 mt-2">Heat Level</label>
+                                  <div className="relative">
+                                     <Flame size={14} className={`absolute left-3 top-2.5 ${editedContact.heatLevel === 'Hot' ? 'text-red-500' : 'text-gray-400'}`} />
+                                     <select value={editedContact.heatLevel} onChange={e=>handleFieldChange('heatLevel', e.target.value)} className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none cursor-pointer">
+                                        {['Cold', 'Warm', 'Hot'].map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
+                                     </select>
+                                  </div>
+                               </div>
+                               <div>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1 mt-2">Budget</label>
+                                  <div className="relative">
+                                     <Wallet size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                                     <input value={editedContact.budget || ''} onChange={e=>handleFieldChange('budget', e.target.value)} placeholder="Budget" className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none" />
+                                  </div>
+                               </div>
+                           </div>
+                       </div>
+                    </section>
+                    
+                    {/* SECTION 2: BASIC INFORMATION */}
+                    <section className="space-y-4 pt-2">
                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
                           <Users size={14} className="mr-2 text-gray-400" /> Basic Information
                        </h3>
@@ -697,55 +749,6 @@ export default function Contacts() {
                                     <option key={s} value={s}>{s.replace('_', ' ')}</option>
                                  ))}
                               </select>
-                           </div>
-                       </div>
-                    </section>
-
-                    {/* SECTION 2: QUALIFICATION */}
-                    <section className="space-y-4">
-                       <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
-                          <CheckCircle2 size={14} className="mr-2 text-gray-400" /> Qualification
-                       </h3>
-                       <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
-                           <div>
-                              <div className="flex justify-between items-center mb-2">
-                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">AI Extracted Overview</label>
-                              </div>
-                              <textarea value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="Enter qualification details..." className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-sm font-medium text-gray-800 outline-none" rows={3}/>
-                           </div>
-                           <div className="grid grid-cols-2 gap-3">
-                               <div>
-                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Target Program</label>
-                                  <div className="relative">
-                                     <Target size={14} className="absolute left-3 top-2.5 text-gray-400" />
-                                     <input value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} placeholder="Program Selection" className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-teal-700 rounded-lg pl-9 pr-3 py-2 outline-none" />
-                                  </div>
-                               </div>
-                               <div>
-                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Pref. Call Time</label>
-                                  <div className="relative">
-                                     <Clock size={14} className="absolute left-3 top-2.5 text-gray-400" />
-                                     <input value={editedContact.preferredCallTime || ''} onChange={e=>handleFieldChange('preferredCallTime', e.target.value)} placeholder="Call Time" className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-teal-700 rounded-lg pl-9 pr-3 py-2 outline-none" />
-                                  </div>
-                               </div>
-                           </div>
-                           <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-50 mt-2">
-                               <div>
-                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1 mt-2">Heat Level</label>
-                                  <div className="relative">
-                                     <Flame size={14} className={`absolute left-3 top-2.5 ${editedContact.heatLevel === 'Hot' ? 'text-red-500' : 'text-gray-400'}`} />
-                                     <select value={editedContact.heatLevel} onChange={e=>handleFieldChange('heatLevel', e.target.value)} className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none cursor-pointer">
-                                        {['Cold', 'Warm', 'Hot'].map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
-                                     </select>
-                                  </div>
-                               </div>
-                               <div>
-                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1 mt-2">Budget</label>
-                                  <div className="relative">
-                                     <Wallet size={14} className="absolute left-3 top-2.5 text-gray-400" />
-                                     <input value={editedContact.budget || ''} onChange={e=>handleFieldChange('budget', e.target.value)} placeholder="Budget" className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none" />
-                                  </div>
-                               </div>
                            </div>
                        </div>
                     </section>
