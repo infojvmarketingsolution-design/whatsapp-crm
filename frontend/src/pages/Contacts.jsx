@@ -578,23 +578,23 @@ export default function Contacts() {
              className="w-[920px] h-full bg-white shadow-3xl flex flex-col animate-slide-up relative"
              onClick={(e) => e.stopPropagation()}
            >
-              {/* THEME SYNCHRONIZED HEADER */}
-              <div className="bg-[var(--theme-bg)] p-8 text-white relative shadow-2xl shrink-0 flex items-center justify-between z-10 border-b border-white/10">
-                  <div className="flex items-center space-x-6 flex-1">
+              {/* CLEAN HEADER */}
+              <div className="bg-white p-8 border-b border-gray-100 flex items-center justify-between shrink-0">
+                  <div className="flex items-center space-x-5 flex-1">
                       <div className="relative group">
-                         <div className="w-16 h-16 rounded-2xl bg-white/20 border border-white/20 flex items-center justify-center font-black text-2xl text-white transform group-hover:scale-105 transition-transform">
+                         <div className="w-16 h-16 rounded-2xl bg-teal-50 border border-teal-100 flex items-center justify-center font-bold text-2xl text-[var(--theme-text)]">
                             {editedContact.firstName ? editedContact.firstName.charAt(0) : (selectedContact.name?.charAt(0) || 'U')}
                          </div>
-                         <div className="absolute -bottom-1 -right-1 w-7 h-7 bg-white border-4 border-[var(--theme-bg)] rounded-full flex items-center justify-center text-[10px] font-black text-[var(--theme-text)] shadow-xl">{editedContact.score || 0}%</div>
+                         <div className="absolute -bottom-1 -right-1 px-2 py-0.5 bg-white border border-gray-200 rounded-lg flex items-center justify-center text-[10px] font-bold text-gray-600 shadow-sm">{editedContact.score || 0}%</div>
                       </div>
                       <div className="flex-1">
-                          <h2 className="text-2xl font-black tracking-tight mb-1">
+                          <h2 className="text-2xl font-bold tracking-tight text-gray-900 mb-1">
                              {editedContact.firstName && editedContact.lastName ? `${editedContact.firstName} ${editedContact.lastName}` : (editedContact.name || 'Profile Identity')}
                           </h2>
-                          <div className="flex items-center space-x-4 opacity-70">
-                             <span className="flex items-center text-[10px] font-black uppercase tracking-[0.2em]"><Phone size={10} className="mr-2" /> {editedContact.phone}</span>
-                             <span className="w-1.5 h-1.5 bg-white/40 rounded-full"></span>
-                             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white underline underline-offset-4 decoration-white/30">{editedContact.status || 'Active Record'}</span>
+                          <div className="flex items-center space-x-4 text-gray-500">
+                             <span className="flex items-center text-xs font-medium"><Phone size={14} className="mr-2" /> {editedContact.phone}</span>
+                             <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                             <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--theme-text)]">{editedContact.status || 'Active Record'}</span>
                           </div>
                       </div>
                   </div>
@@ -604,156 +604,157 @@ export default function Contacts() {
                       <button 
                         onClick={() => updateContactDetail(selectedContact._id, editedContact)}
                         disabled={!showSaveFab || isUpdatingContact}
-                        className={`flex items-center space-x-3 px-8 py-3.5 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all shadow-xl border border-white/20 ${
+                        className={`flex items-center space-x-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all shadow-sm ${
                           showSaveFab 
-                          ? 'bg-white text-[var(--theme-text)] hover:shadow-glow hover:-translate-y-0.5 active:scale-95' 
-                          : 'bg-white/10 text-white/40 cursor-not-allowed'
+                          ? 'bg-[var(--theme-bg)] text-white hover:shadow-lg hover:-translate-y-0.5' 
+                          : 'bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200'
                         }`}
                       >
                          {isUpdatingContact ? <Clock size={16} className="animate-spin" /> : <Save size={16} />}
                          <span>Finalize Record</span>
                       </button>
-                      <button onClick={() => setShowProfile(false)} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl text-white transition-all"><X size={20} /></button>
+                      <button onClick={() => setShowProfile(false)} className="p-2.5 text-gray-400 hover:bg-gray-100 rounded-xl transition-all border border-transparent hover:border-gray-200"><X size={20} /></button>
                   </div>
               </div>
 
-              {/* THEME SYNCHRONIZED PIPELINE + CLICK SAFETY */}
-              <div className="bg-[var(--theme-bg)] relative z-[100] px-8 pb-8 pt-2 flex items-center justify-between shrink-0 shadow-inner overflow-x-auto no-scrollbar pointer-events-auto">
+              {/* PIPELINE UI */}
+              <div className="bg-slate-50 relative z-[100] px-8 py-5 flex items-center justify-between shrink-0 border-b border-gray-200 overflow-x-auto no-scrollbar pointer-events-auto">
                   <div className="flex items-center flex-1 min-w-[700px] pointer-events-auto">
                       {PIPELINE_STAGES.map((stage, idx) => (
                          <React.Fragment key={stage}>
                             <button 
                               onClick={() => {
-                                 console.log("Pipeline Stage Clicked:", stage);
                                  handleFieldChange('pipelineStage', stage);
                               }}
-                              className={`flex flex-col items-center group relative z-[110] px-2 py-1 cursor-pointer pointer-events-auto ${idx < PIPELINE_STAGES.length - 1 ? 'flex-1' : ''}`}
+                              className={`flex flex-col items-center group relative z-[110] cursor-pointer pointer-events-auto ${idx < PIPELINE_STAGES.length - 1 ? 'flex-1' : ''}`}
                             >
-                               <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-black transition-all border-4 shadow-xl ${
+                               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all border-2 border-white ${
                                   editedContact.pipelineStage === stage 
-                                  ? 'bg-white border-white/30 text-[var(--theme-text)] scale-110' 
+                                  ? 'bg-[var(--theme-bg)] text-white ring-4 ring-teal-50 shadow-sm scale-110' 
                                   : PIPELINE_STAGES.indexOf(editedContact.pipelineStage) >= idx 
-                                    ? 'bg-white/30 border-white/20 text-white' 
-                                    : 'bg-white/5 border-white/5 text-white/30 hover:border-white/40'
+                                    ? 'bg-teal-100 text-teal-600' 
+                                    : 'bg-gray-200 text-gray-400 hover:bg-gray-300'
                                }`}>
-                                  {PIPELINE_STAGES.indexOf(editedContact.pipelineStage) > idx ? <CheckCircle2 size={18} /> : idx + 1}
+                                  {PIPELINE_STAGES.indexOf(editedContact.pipelineStage) > idx ? <CheckCircle2 size={16} /> : idx + 1}
                                </div>
-                               <span className={`mt-3 text-[10px] font-black uppercase tracking-widest transition-all ${editedContact.pipelineStage === stage ? 'opacity-100 text-white' : 'opacity-40 group-hover:opacity-100 text-white'}`}>{stage}</span>
+                               <span className={`mt-2 text-[10px] font-bold uppercase tracking-wider transition-all ${editedContact.pipelineStage === stage ? 'text-[var(--theme-text)]' : 'text-gray-400 group-hover:text-gray-600'}`}>{stage}</span>
                             </button>
-                            {idx < PIPELINE_STAGES.length - 1 && <div className={`flex-1 h-0.5 mb-8 transition-colors ${PIPELINE_STAGES.indexOf(editedContact.pipelineStage) > idx ? 'bg-white/40' : 'bg-white/10'}`}></div>}
+                            {idx < PIPELINE_STAGES.length - 1 && <div className={`flex-1 h-1 mb-6 rounded-full transition-colors ${PIPELINE_STAGES.indexOf(editedContact.pipelineStage) > idx ? 'bg-teal-100' : 'bg-gray-200'}`}></div>}
                          </React.Fragment>
                       ))}
                   </div>
               </div>
 
-              <div className="flex-1 flex overflow-hidden bg-[#fafafa]">
-                 {/* REORGANIZED LEFT PANEL (GROUPED 1, 2, 3, 4) */}
-                 <div className="w-[360px] bg-white border-r border-[#f1f1f1] overflow-y-auto custom-scrollbar p-7 space-y-9 shadow-inner">
+              <div className="flex-1 flex overflow-hidden bg-white">
+                 <div className="w-[380px] bg-slate-50/50 border-r border-gray-100 overflow-y-auto custom-scrollbar p-6 space-y-8">
                     {/* SECTION 1: BASIC INFORMATION */}
                     <section className="space-y-4">
-                       <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center">
-                          <Users size={12} className="mr-2" /> 1. Basic Information
+                       <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
+                          <Users size={14} className="mr-2 text-gray-400" /> Basic Information
                        </h3>
-                       <div className="grid grid-cols-2 gap-3">
-                          <div className="p-3 bg-[#f9fafb] rounded-xl border border-transparent focus-within:border-[var(--theme-border)] focus-within:bg-white transition-all">
-                             <label className="text-[8px] font-black text-slate-400 uppercase block mb-1.5">First Name</label>
-                             <input value={editedContact.firstName || ''} onChange={e=>handleFieldChange('firstName', e.target.value)} className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent" />
-                          </div>
-                          <div className="p-3 bg-[#f9fafb] rounded-xl border border-transparent focus-within:border-[var(--theme-border)] focus-within:bg-white transition-all">
-                             <label className="text-[8px] font-black text-slate-400 uppercase block mb-1.5">Last Name</label>
-                             <input value={editedContact.lastName || ''} onChange={e=>handleFieldChange('lastName', e.target.value)} className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent" />
-                          </div>
-                       </div>
-                       <div className="p-3 bg-[#f9fafb] rounded-xl border border-transparent focus-within:border-[var(--theme-border)] focus-within:bg-white transition-all">
-                          <label className="text-[8px] font-black text-slate-400 uppercase block mb-1.5 underline underline-offset-4 decoration-[var(--theme-bg)]/20">Mobile Number (Primary)</label>
-                          <div className="flex items-center space-x-2 text-xs font-bold text-slate-500"><Phone size={12} /> <span>{editedContact.phone}</span></div>
-                       </div>
-                       <div className="p-3 bg-[#f9fafb] rounded-xl border border-transparent focus-within:border-[var(--theme-border)] focus-within:bg-white transition-all">
-                          <label className="text-[8px] font-black text-slate-400 uppercase block mb-1.5">Mobile Number (Secondary)</label>
-                          <div className="flex items-center space-x-2">
-                             <Smartphone size={13} className="text-slate-300" />
-                             <input value={editedContact.secondaryPhone || ''} onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} placeholder="Add alt number..." className="w-full text-xs font-bold text-slate-700 outline-none bg-transparent" />
-                          </div>
-                       </div>
-                       
-                       <div className="bg-[#f9fafb] rounded-xl border border-transparent focus-within:border-[var(--theme-border)] focus-within:bg-white transition-all p-3 space-y-3">
-                           <label className="text-[8px] font-black text-slate-400 uppercase block tracking-widest">Office / Resi. Address</label>
-                           <textarea value={editedContact.address || ''} onChange={e=>handleFieldChange('address', e.target.value)} placeholder="Full street address..." className="w-full bg-transparent border-none text-[11px] font-semibold text-slate-700 outline-none resize-none" rows={2}/>
-                           <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
-                               <div className="flex items-center space-x-2 bg-white px-2 py-1.5 rounded-lg border border-slate-50">
-                                   <Landmark size={10} className="text-slate-300" />
-                                   <input value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} placeholder="State" className="w-full text-[10px] font-bold outline-none" />
-                               </div>
-                               <div className="flex items-center space-x-2 bg-white px-2 py-1.5 rounded-lg border border-slate-50">
-                                   <Hash size={10} className="text-slate-300" />
-                                   <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full text-[10px] font-bold outline-none" />
-                               </div>
+                       <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                           <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">First Name</label>
+                                 <input value={editedContact.firstName || ''} onChange={e=>handleFieldChange('firstName', e.target.value)} className="w-full text-sm font-semibold text-gray-800 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-100 transition-all" />
+                              </div>
+                              <div>
+                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Last Name</label>
+                                 <input value={editedContact.lastName || ''} onChange={e=>handleFieldChange('lastName', e.target.value)} className="w-full text-sm font-semibold text-gray-800 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-100 transition-all" />
+                              </div>
                            </div>
-                       </div>
+                           
+                           <div>
+                              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Primary Phone</label>
+                              <div className="w-full text-sm font-semibold text-gray-600 bg-gray-100 border border-gray-100 rounded-lg px-3 py-2 flex items-center"><Phone size={14} className="mr-2 opacity-50" /> {editedContact.phone}</div>
+                           </div>
+                           
+                           <div>
+                              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Secondary Phone</label>
+                              <div className="relative">
+                                 <Smartphone size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                                 <input value={editedContact.secondaryPhone || ''} onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} placeholder="Add alt number..." className="w-full text-sm font-semibold text-gray-800 bg-gray-50 border border-gray-100 rounded-lg pl-9 pr-3 py-2 outline-none focus:ring-2 focus:ring-teal-100 transition-all" />
+                              </div>
+                           </div>
 
-                       <div className="p-4 bg-[var(--theme-bg)]/5 rounded-2xl border border-[var(--theme-border)]/10">
-                          <h3 className="text-[9px] font-black text-[var(--theme-text)] uppercase tracking-[0.2em] mb-3">Target Lead Status</h3>
-                          <select 
-                            value={editedContact.status} 
-                            onChange={(e) => handleFieldChange('status', e.target.value)}
-                            className="w-full bg-white border border-slate-100 text-xs font-black py-2.5 px-4 rounded-xl outline-none shadow-sm cursor-pointer"
-                          >
-                             {['NEW LEAD', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => (
-                                <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                             ))}
-                          </select>
+                           <div>
+                              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Address & Location</label>
+                              <textarea value={editedContact.address || ''} onChange={e=>handleFieldChange('address', e.target.value)} placeholder="Full street address..." className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-sm font-semibold text-gray-800 outline-none resize-none mb-2" rows={2}/>
+                              <div className="grid grid-cols-2 gap-3">
+                                  <input value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} placeholder="State" className="w-full text-sm font-semibold bg-gray-50 border border-gray-100 px-3 py-2 outline-none rounded-lg focus:ring-2 focus:ring-teal-100" />
+                                  <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full text-sm font-semibold bg-gray-50 border border-gray-100 px-3 py-2 outline-none rounded-lg focus:ring-2 focus:ring-teal-100" />
+                              </div>
+                           </div>
+
+                           <div className="pt-2 border-t border-gray-50 mt-2">
+                              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2 mt-2">Record Status</label>
+                              <select 
+                                value={editedContact.status} 
+                                onChange={(e) => handleFieldChange('status', e.target.value)}
+                                className="w-full bg-teal-50 border border-teal-100 text-teal-700 text-xs font-bold py-2.5 px-3 rounded-lg outline-none cursor-pointer"
+                              >
+                                 {['NEW LEAD', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => (
+                                    <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                                 ))}
+                              </select>
+                           </div>
                        </div>
                     </section>
 
                     {/* SECTION 2: QUALIFICATION */}
-                    <section className="space-y-4 pt-4 border-t border-slate-50">
-                       <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center">
-                          <CheckCircle2 size={12} className="mr-2" /> 2. Qualification
+                    <section className="space-y-4">
+                       <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
+                          <CheckCircle2 size={14} className="mr-2 text-gray-400" /> Qualification
                        </h3>
-                       <div className="bg-slate-50 p-4 rounded-2xl space-y-4">
-                           <div className="flex items-center justify-between">
-                               <span className="text-[8px] font-black text-slate-400 uppercase">Profiling Score</span>
-                               <span className="text-xs font-black text-blue-600">{editedContact.score || 0}% Complete</span>
+                       <div className="bg-white p-5 rounded-xl border border-gray-100 shadow-sm space-y-4">
+                           <div>
+                              <div className="flex justify-between items-center mb-2">
+                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">AI Extracted Overview</label>
+                              </div>
+                              <textarea value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="Enter qualification details..." className="w-full bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 text-sm font-medium text-gray-800 outline-none" rows={3}/>
                            </div>
-                           <div className="w-full h-1.5 bg-white rounded-full overflow-hidden border border-slate-100">
-                               <div className="h-full bg-blue-500 shadow-glow" style={{ width: `${editedContact.score || 0}%` }}></div>
-                           </div>
-                           <textarea value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="Enter qualification details..." className="w-full bg-white border border-slate-100 rounded-xl p-3 text-[11px] font-semibold text-slate-600 outline-none" rows={3}/>
                            <div className="grid grid-cols-2 gap-3">
-                               <div className="p-2.5 bg-white rounded-xl border border-slate-100 italic flex items-center space-x-2">
-                                  <Flame size={12} className={editedContact.heatLevel === 'Hot' ? 'text-red-500' : 'text-slate-300'} />
-                                  <select value={editedContact.heatLevel} onChange={e=>handleFieldChange('heatLevel', e.target.value)} className="bg-transparent outline-none text-[10px] font-black text-slate-700 w-full">
-                                     {['Cold', 'Warm', 'Hot'].map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
-                                  </select>
+                               <div>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Heat Level</label>
+                                  <div className="relative">
+                                     <Flame size={14} className={`absolute left-3 top-2.5 ${editedContact.heatLevel === 'Hot' ? 'text-red-500' : 'text-gray-400'}`} />
+                                     <select value={editedContact.heatLevel} onChange={e=>handleFieldChange('heatLevel', e.target.value)} className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none cursor-pointer">
+                                        {['Cold', 'Warm', 'Hot'].map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
+                                     </select>
+                                  </div>
                                </div>
-                               <div className="p-2.5 bg-white rounded-xl border border-slate-100 flex items-center space-x-2">
-                                  <Wallet size={12} className="text-slate-300" />
-                                  <input value={editedContact.budget || ''} onChange={e=>handleFieldChange('budget', e.target.value)} placeholder="Budget" className="w-full text-[10px] font-black bg-transparent outline-none" />
+                               <div>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Budget</label>
+                                  <div className="relative">
+                                     <Wallet size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                                     <input value={editedContact.budget || ''} onChange={e=>handleFieldChange('budget', e.target.value)} placeholder="Budget" className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none" />
+                                  </div>
                                </div>
                            </div>
                        </div>
                     </section>
 
-                    {/* SECTION 4: LEAD INTELLIGENCE (Grouped here for density) */}
-                    <section className="space-y-4 pt-4 border-t border-slate-50">
-                       <h3 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em] flex items-center">
-                          <Target size={12} className="mr-2" /> 3. Lead Intelligence
+                    {/* SECTION 3: LEAD INTELLIGENCE */}
+                    <section className="space-y-4">
+                       <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
+                          <Target size={14} className="mr-2 text-gray-400" /> Lead Intelligence
                        </h3>
-                       <div className="grid grid-cols-1 gap-3">
-                          <div className="p-4 bg-slate-900 rounded-2xl shadow-xl">
-                             <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] block mb-2">Est. Deal Value</label>
-                             <div className="flex items-center space-x-3">
-                                <span className="text-xl font-black text-white opacity-40">₹</span>
-                                <input type="number" value={editedContact.estimatedValue || 0} onChange={e=>handleFieldChange('estimatedValue', e.target.value)} className="bg-transparent text-2xl font-black text-white outline-none w-full placeholder-white/10" />
+                       <div className="space-y-3">
+                          <div className="p-5 bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl shadow-md border border-slate-700">
+                             <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2">Est. Deal Value</label>
+                             <div className="flex items-center space-x-2">
+                                <span className="text-lg font-bold text-slate-500">₹</span>
+                                <input type="number" value={editedContact.estimatedValue || 0} onChange={e=>handleFieldChange('estimatedValue', e.target.value)} className="bg-transparent text-2xl font-black text-white outline-none w-full placeholder-slate-700" />
                              </div>
                           </div>
-                          <div className="p-3 bg-white border border-slate-100 rounded-xl flex items-center space-x-3">
-                             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><Globe size={14} /></div>
-                             <div>
-                                <label className="text-[8px] font-black text-slate-400 uppercase block">Origination Source</label>
-                                <select value={editedContact.leadSource || 'Manual Entry'} onChange={e=>handleFieldChange('leadSource', e.target.value)} className="text-[11px] font-black text-slate-700 outline-none cursor-pointer">
-                                   {['Manual Entry', 'Meta Ads', 'Google Ads', 'Referral', 'Email Campaign', 'WhatsApp Blast'].map(s => <option key={s} value={s}>{s}</option>)}
-                                </select>
+                          
+                          <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-sm">
+                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Origination Source</label>
+                             <div className="relative">
+                                 <Globe size={14} className="absolute left-3 top-2.5 text-blue-500" />
+                                 <select value={editedContact.leadSource || 'Manual Entry'} onChange={e=>handleFieldChange('leadSource', e.target.value)} className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none cursor-pointer">
+                                    {['Manual Entry', 'Meta Ads', 'Google Ads', 'Referral', 'Email Campaign', 'WhatsApp Blast'].map(s => <option key={s} value={s}>{s}</option>)}
+                                 </select>
                              </div>
                           </div>
                        </div>
@@ -828,27 +829,27 @@ export default function Contacts() {
                           </div>
                        )}
 
-                       {/* SECTION 3: LEAD RELATED DETAILS (TIMESTAMPS) */}
-                       <div className="mt-16 pt-10 border-t border-slate-100 grid grid-cols-2 gap-5 pb-10">
-                           <div className="p-6 bg-white rounded-[2rem] shadow-sm border border-slate-50 flex items-center space-x-5 group hover:border-[var(--theme-border)]/30 transition-colors">
-                               <div className="w-12 h-12 rounded-2xl bg-[#f8fafc] text-green-600 flex items-center justify-center"><Calendar size={22} className="opacity-40" /></div>
+                        {/* SECTION 3: LEAD RELATED DETAILS (TIMESTAMPS) */}
+                       <div className="pt-6 border-t border-gray-100 grid grid-cols-2 gap-5 pb-8">
+                           <div className="p-5 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                               <div className="w-10 h-10 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center"><Calendar size={18} /></div>
                                <div>
-                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">Creation Date & Time</p>
-                                  <p className="text-sm font-bold text-slate-700">{formatDateTime(selectedContact.createdAt)}</p>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 mt-1">Created At</p>
+                                  <p className="text-xs font-bold text-gray-700">{formatDateTime(selectedContact.createdAt)}</p>
                                </div>
                            </div>
-                           <div className="p-6 bg-white rounded-[2rem] shadow-sm border border-slate-50 flex items-center space-x-5 group hover:border-[var(--theme-border)]/30 transition-colors">
-                               <div className="w-12 h-12 rounded-2xl bg-[#f8fafc] text-blue-600 flex items-center justify-center"><History size={22} className="opacity-40" /></div>
+                           <div className="p-5 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                               <div className="w-10 h-10 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center"><History size={18} /></div>
                                <div>
-                                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5 flex items-center">Modification Records</p>
-                                  <p className="text-sm font-bold text-slate-700">{formatDateTime(selectedContact.updatedAt)}</p>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 mt-1">Last Modified</p>
+                                  <p className="text-xs font-bold text-gray-700">{formatDateTime(selectedContact.updatedAt)}</p>
                                </div>
                            </div>
                        </div>
                     </div>
-                    <div className="px-8 py-5 bg-white border-t border-slate-50 flex items-center justify-between text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] shrink-0">
-                       <div className="flex items-center"><ShieldCheck size={12} className="mr-3 text-green-600" /> Core Encryption Enabled</div>
-                       <div className="flex items-center opacity-60">Session Ver: 1.2.7.0</div>
+                    <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest shrink-0">
+                       <div className="flex items-center"><ShieldCheck size={14} className="mr-2 text-teal-600" /> Secure Encryption Active</div>
+                       <div className="flex items-center text-gray-300">WapiPulse CRM v1.2</div>
                     </div>
                  </div>
               </div>
