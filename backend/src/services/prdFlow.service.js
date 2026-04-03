@@ -109,10 +109,10 @@ class PRDFlowService {
 
       switch (stepToProcess.type) {
         case 'GREETING': {
+          console.log(`[PRD Flow] Executing GREETING for ${contact.phone}`);
           const msg = replaceVars(stepToProcess.message);
           const img = this.makeAbsolute(stepToProcess.image);
           
-          // Send Greeting (Image + Text)
           if (img) {
             try {
               const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(img) ? img : null, msg, /^\d+$/.test(img) ? null : img);
@@ -126,25 +126,26 @@ class PRDFlowService {
             await saveAndEmit('text', msg, res);
           }
 
-          // Transition to NAME_CAPTURE state but don't "continue" the loop yet 
-          // to avoid duplicate firing if the engine is already processing.
           if (possibleNextStep) {
+            // Update state to Name Capture
             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
             contact.currentFlowStep = possibleNextStep.id;
             
-            // Move to the next step but send the prompt explicitly to control order
+            // Send the next prompt (Name Request)
             const namePrompt = replaceVars(possibleNextStep.message);
             const pRes = await waService.sendTextMessage(contact.phone, namePrompt);
             await saveAndEmit('text', namePrompt, pRes);
             
             this.startActivityTimer(tenantId, contact, waService, io);
-            stepToProcess = null; // Important: Stop the loop here to prevent double-processing
           }
+          // EXIT THE LOOP. Do not 'continue' to prevent race conditions or double-firing.
+          stepToProcess = null; 
           break;
         }
 
         case 'NAME_CAPTURE': {
-          // If we are resumed here with a message, consume it
+          console.log(`[PRD Flow] Executing NAME_CAPTURE for ${contact.phone} | isAutoFollowup: ${isAutoFollowup} | canConsume: ${canConsumeMessage}`);
+          
           if (!isAutoFollowup && canConsumeMessage) {
             const name = await AIService.extractData(messageText.trim(), 'NAME');
             const finalName = name || messageText.trim();
@@ -160,10 +161,10 @@ class PRDFlowService {
               contact.currentFlowStep = possibleNextStep.id;
               stepToProcess = possibleNextStep;
               canConsumeMessage = false;
-              continue; // Move to QUALIFICATION
+              continue; // Move to QUALIFICATION in the same turn
             }
           } else {
-            // Re-prompt if called without a message (e.g. timeout)
+            // Re-prompt for name
             const msg = replaceVars(stepToProcess.message);
             const res = await waService.sendTextMessage(contact.phone, msg);
             await saveAndEmit('text', msg, res);
