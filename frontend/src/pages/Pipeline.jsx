@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoreVertical, Search, Filter, Phone, MessageSquare, Plus } from 'lucide-react';
+import { MoreVertical, Search, Filter, Phone, MessageSquare, Plus, Flame, Snowflake, Zap, TrendingUp, DollarSign, Calendar, Clock, Edit3, X, Check } from 'lucide-react';
 
 const STATUSES = [
-  { id: 'NEW LEAD', label: 'New Lead', color: 'bg-blue-100 text-blue-800 border-blue-200' },
-  { id: 'CONTACTED', label: 'Contacted', color: 'bg-purple-100 text-purple-800 border-purple-200' },
-  { id: 'INTERESTED', label: 'Interested', color: 'bg-yellow-100 text-yellow-800 border-yellow-200' },
-  { id: 'FOLLOW_UP', label: 'Follow Up', color: 'bg-orange-100 text-orange-800 border-orange-200' },
-  { id: 'CLOSED_WON', label: 'Closed Won', color: 'bg-green-100 text-green-800 border-green-200' },
-  { id: 'CLOSED_LOST', label: 'Closed Lost', color: 'bg-red-100 text-red-800 border-red-200' },
+  { id: 'NEW LEAD', label: 'New Lead', color: 'bg-blue-100 text-blue-800 border-blue-200', icon: Zap },
+  { id: 'CONTACTED', label: 'Contacted', color: 'bg-purple-100 text-purple-800 border-purple-200', icon: MessageSquare },
+  { id: 'INTERESTED', label: 'Interested', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: TrendingUp },
+  { id: 'FOLLOW_UP', label: 'Follow Up', color: 'bg-orange-100 text-orange-800 border-orange-200', icon: Calendar },
+  { id: 'CLOSED_WON', label: 'Closed Won', color: 'bg-green-100 text-green-800 border-green-200', icon: Check },
+  { id: 'CLOSED_LOST', label: 'Closed Lost', color: 'bg-red-100 text-red-800 border-red-200', icon: X },
 ];
 
 export default function Pipeline() {
@@ -16,17 +16,14 @@ export default function Pipeline() {
   const [contacts, setContacts] = useState([]);
   const [agents, setAgents] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newLeadName, setNewLeadName] = useState('');
-  const [newLeadPhone, setNewLeadPhone] = useState('');
+  const [newLead, setNewLead] = useState({ name: '', phone: '', value: 0, urgency: '1-3 Months' });
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [qualificationFilter, setQualificationFilter] = useState('ALL');
+  const [editingValueId, setEditingValueId] = useState(null);
+  const [tempValue, setTempValue] = useState('');
 
   const QUALIFICATIONS = [
-    '10th Pass',
-    '12th Pass',
-    'Diploma Completed',
-    'Graduation Completed',
-    'Master Completed'
+    '10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'
   ];
 
   useEffect(() => {
@@ -63,17 +60,20 @@ export default function Pipeline() {
     }
   };
 
-  const handleAssignAgent = async (contactId, agentId) => {
+  const handleUpdateLeadValue = async (contactId) => {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
       await fetch(`/api/chat/contacts/${contactId}/action`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'assign_agent', payload: { agentId } })
+        body: JSON.stringify({ 
+           action: 'update_property', 
+           payload: { estimatedValue: parseFloat(tempValue) || 0 } 
+        })
       });
-      fetchContacts();
-      setActiveDropdown(null);
+      setContacts(prev => prev.map(c => c._id === contactId ? { ...c, estimatedValue: parseFloat(tempValue) || 0 } : c));
+      setEditingValueId(null);
     } catch (err) {
       console.error(err);
     }
@@ -84,7 +84,6 @@ export default function Pipeline() {
     const contactId = e.dataTransfer.getData('contactId');
     if (!contactId) return;
 
-    // Optimistic Update
     setContacts(prev => prev.map(c => c._id === contactId ? { ...c, status: newStatus } : c));
 
     try {
@@ -109,12 +108,17 @@ export default function Pipeline() {
       const res = await fetch('/api/chat/contacts', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newLeadName, phone: newLeadPhone, source: 'Pipeline Manual' })
+        body: JSON.stringify({ 
+           name: newLead.name, 
+           phone: newLead.phone, 
+           estimatedValue: newLead.value,
+           purchaseTimeline: newLead.urgency,
+           source: 'Pipeline Pro' 
+        })
       });
       if (res.ok) {
         setShowAddModal(false);
-        setNewLeadName('');
-        setNewLeadPhone('');
+        setNewLead({ name: '', phone: '', value: 0, urgency: '1-3 Months' });
         fetchContacts();
       }
     } catch (err) {
@@ -144,32 +148,51 @@ export default function Pipeline() {
     }
   };
 
+  const getHeatIcon = (contact) => {
+    const hoursSinceMessage = (new Date() - new Date(contact.lastMessageAt || contact.createdAt)) / (1000 * 60 * 60);
+    if (contact.purchaseTimeline === 'Immediate') return <Flame className="text-orange-500 animate-pulse" size={14} />;
+    if (hoursSinceMessage < 12) return <Flame className="text-yellow-500" size={14} />;
+    if (hoursSinceMessage > 48) return <Snowflake className="text-blue-300" size={14} />;
+    return <Zap className="text-gray-400" size={14} />;
+  };
+
+  const getRelativeTime = (date) => {
+    if (!date) return 'No activity';
+    const seconds = Math.floor((new Date() - new Date(date)) / 1000);
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return `${Math.floor(seconds/60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds/3600)}h ago`;
+    return `${Math.floor(seconds/86400)}d ago`;
+  };
+
   return (
     <div className="flex-1 bg-white rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex flex-col relative z-10 w-[calc(100%-12px)] ml-3 my-3">
       <div className="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-[#fdfdfd]">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-800">Pipeline</h1>
-          <p className="text-sm text-gray-500 font-medium mt-1">Drag and drop leads to advance stages.</p>
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-teal-50 rounded-2xl flex items-center justify-center border border-teal-100 shadow-premium">
+             <TrendingUp className="text-teal-600" size={24} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Sales Pipeline</h1>
+            <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-0.5">Scale your growth with intelligent lead tracking</p>
+          </div>
         </div>
+
         <div className="flex space-x-3">
-          <div className="relative">
+          <div className="relative group">
             <Filter className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <select 
               value={qualificationFilter}
               onChange={(e) => setQualificationFilter(e.target.value)}
-              className="bg-gray-50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm font-bold focus:ring-2 focus:ring-brand-light/50 outline-none appearance-none cursor-pointer text-gray-700"
+              className="bg-slate-50 border border-slate-200 rounded-xl py-2 pl-10 pr-6 text-[11px] font-black uppercase outline-none appearance-none cursor-pointer text-slate-600 hover:border-teal-500 transition-all shadow-sm"
             >
               <option value="ALL">All Qualifications</option>
               {QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}
             </select>
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-2.5 text-gray-400" size={16} />
-            <input type="text" placeholder="Search..." className="bg-gray-50 border border-gray-200 rounded-xl py-2 pl-10 pr-4 text-sm font-medium focus:ring-2 focus:ring-brand-light/50 outline-none" />
-          </div>
-          <button onClick={() => setShowAddModal(true)} className="flex items-center space-x-2 bg-[var(--theme-bg)] hover:bg-teal-900 text-white px-4 py-2 rounded-xl font-bold text-sm transition shadow-sm">
-            <Plus size={16} />
-            <span>Add Lead</span>
+          <button onClick={() => setShowAddModal(true)} className="flex items-center space-x-2 bg-slate-900 hover:bg-black text-white px-5 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-widest transition-all shadow-premium hover:shadow-glow hover:-translate-y-0.5 transform active:scale-95">
+            <Plus size={16} className="text-teal-400" />
+            <span>Create Deal</span>
           </button>
         </div>
       </div>
@@ -178,93 +201,124 @@ export default function Pipeline() {
         <div className="flex space-x-6 h-full min-w-max pb-4">
           {STATUSES.map(stage => {
             const columnContacts = contacts.filter(c => (c.status || 'NEW LEAD') === stage.id);
+            const totalValue = columnContacts.reduce((sum, c) => sum + (c.estimatedValue || 0), 0);
+            
             return (
               <div 
                 key={stage.id} 
-                className="w-72 flex flex-col bg-gray-50/50 rounded-2xl border border-gray-100"
+                className="w-80 flex flex-col bg-gray-50/50 rounded-3xl border border-gray-100/50"
                 onDragOver={e => e.preventDefault()}
                 onDrop={e => handleDrop(e, stage.id)}
               >
-                <div className={`px-4 py-3 rounded-t-2xl border-b border-gray-100 flex justify-between items-center bg-white ${stage.color} border-l-4`}>
-                   <h3 className="font-bold text-xs uppercase tracking-wider">{stage.label}</h3>
-                   <span className="bg-white/50 text-current px-2 py-0.5 rounded-full text-[10px] font-bold shadow-sm">{columnContacts.length}</span>
+                <div className={`px-4 py-4 rounded-t-3xl border-b border-gray-200/50 flex justify-between items-center bg-white ${stage.color} border-l-4 shadow-sm`}>
+                   <div className="flex items-center space-x-2">
+                     <stage.icon size={14} className="opacity-70" />
+                     <h3 className="font-black text-[10px] uppercase tracking-[0.1em]">{stage.label}</h3>
+                   </div>
+                   <div className="flex flex-col items-end">
+                      <span className="text-[10px] font-black text-slate-800">₹{totalValue.toLocaleString()}</span>
+                      <span className="text-[9px] font-bold opacity-60 uppercase">{columnContacts.length} Deals</span>
+                   </div>
                 </div>
 
-                <div className="flex-1 p-3 overflow-y-auto custom-scrollbar space-y-3">
+                <div className="flex-1 p-3 overflow-y-auto custom-scrollbar space-y-4">
                   {columnContacts.map(c => (
                     <div 
                       key={c._id}
                       draggable
                       onDragStart={e => e.dataTransfer.setData('contactId', c._id)}
-                      className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group relative"
+                      className="bg-white p-5 rounded-2xl border border-gray-100 shadow-soft cursor-grab active:cursor-grabbing hover:shadow-premium transition-all group relative border-l-2 hover:border-l-slate-800"
                     >
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-bold text-sm text-gray-800 truncate pr-4">{c.name || c.phone}</h4>
+                      {/* Heat Sensor */}
+                      <div className="absolute -left-2 top-4 bg-white p-1 rounded-full shadow-sm border border-gray-100 flex items-center justify-center">
+                         {getHeatIcon(c)}
+                      </div>
+
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1 min-w-0 pr-6">
+                           <h4 className="font-black text-[13px] text-slate-800 truncate leading-none mb-1 capitalize group-hover:text-teal-600 transition-colors cursor-pointer" onClick={() => navigate('/inbox')}>
+                              {c.name || 'Anonymous User'}
+                           </h4>
+                           <p className="text-[10px] font-medium text-slate-400 tracking-tight flex items-center">
+                              <Phone size={10} className="mr-1 opacity-50"/> {c.phone}
+                           </p>
+                        </div>
+                        
                         <div className="relative">
-                          <button onClick={() => setActiveDropdown(activeDropdown === c._id ? null : c._id)} className="text-gray-300 hover:text-gray-800 absolute -right-1 -top-1 p-2">
-                            <MoreVertical size={14}/>
+                          <button onClick={() => setActiveDropdown(activeDropdown === c._id ? null : c._id)} className="text-slate-300 hover:text-slate-800 p-1 rounded-lg transition-colors">
+                            <MoreVertical size={16}/>
                           </button>
                           {activeDropdown === c._id && (
-                             <div className="absolute right-0 top-6 mt-1 w-48 bg-white border border-gray-100 shadow-xl rounded-lg py-1 z-50">
-                               <button onClick={() => navigate('/inbox')} className="w-full text-left px-4 py-2 text-xs font-bold text-gray-700 hover:bg-gray-50 border-b border-gray-50">Open Chat</button>
-                               <div className="px-4 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest bg-gray-50/50">Assign Counsellor</div>
-                               <div className="max-h-32 overflow-y-auto">
-                                 {agents.map(agent => (
-                                    <button 
-                                      key={agent._id} 
-                                      onClick={() => handleAssignAgent(c._id, agent._id)}
-                                      className={`w-full text-left px-4 py-2 text-xs font-semibold hover:bg-teal-50 border-l-2 transition-all ${c.assignedAgent?._id === agent._id ? 'border-teal-500 bg-teal-50 text-teal-700' : 'border-transparent text-gray-600'}`}
-                                    >
-                                      {agent.name}
-                                    </button>
-                                 ))}
-                               </div>
-                               <button 
-                                 onClick={() => {
-                                   if (window.confirm("Archive this lead? It will be hidden from your pipeline and inbox (Fronthead delete).")) {
-                                     handleAction(c._id, 'archive_lead');
-                                   }
-                                 }}
-                                 className="w-full text-left px-4 py-2 text-xs font-bold text-orange-600 hover:bg-orange-50 border-t border-gray-50"
-                               >
-                                 Delete lead only fronthead
+                             <div className="absolute right-0 top-8 w-56 bg-white border border-gray-100 shadow-2xl rounded-2xl py-2 z-50 animate-scale-in">
+                               <button onClick={() => navigate('/inbox')} className="w-full text-left px-5 py-3 text-[11px] font-black uppercase tracking-wider text-slate-700 hover:bg-slate-50 flex items-center">
+                                  <MessageSquare size={14} className="mr-3 text-teal-500" /> Open Chat
                                </button>
-                               <button 
-                                 onClick={() => {
-                                   if (window.confirm("PERMANENTLY delete this lead and all history from the database? This cannot be undone.")) {
-                                      handleAction(c._id, 'hard_delete_lead');
-                                   }
-                                 }}
-                                 className="w-full text-left px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-50 border-t border-gray-50"
-                               >
-                                 Delete this lead from database also
+                               <div className="px-5 py-2 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50/50">Deal Actions</div>
+                               <button onClick={() => { setEditingValueId(c._id); setTempValue(c.estimatedValue || 0); setActiveDropdown(null); }} className="w-full text-left px-5 py-3 text-[11px] font-black uppercase tracking-wider text-slate-700 hover:bg-slate-50 flex items-center">
+                                  <DollarSign size={14} className="mr-3 text-blue-500" /> Update Value
+                               </button>
+                               <button onClick={() => { handleAction(c._id, 'archive_lead'); }} className="w-full text-left px-5 py-3 text-[11px] font-black uppercase tracking-wider text-orange-600 hover:bg-orange-50 flex items-center border-t border-slate-50">
+                                  <Snowflake size={14} className="mr-3" /> Archive Lead
+                               </button>
+                               <button onClick={() => { handleAction(c._id, 'hard_delete_lead'); }} className="w-full text-left px-5 py-3 text-[11px] font-black uppercase tracking-wider text-red-600 hover:bg-red-50 flex items-center border-t border-slate-50">
+                                  <X size={14} className="mr-3" /> Permanent Delete
                                </button>
                              </div>
                           )}
                         </div>
                       </div>
-                      <div className="text-xs text-gray-500 font-medium flex items-center mb-2">
-                         <Phone size={12} className="mr-1.5 opacity-70"/> {c.phone}
+
+                      {/* Dynamic Deal Value */}
+                      <div className="mb-4 bg-slate-50/80 rounded-xl p-3 border border-slate-100 flex items-center justify-between group/val">
+                         <div className="flex items-center text-slate-500">
+                            <DollarSign size={14} className="mr-1.5 opacity-50" />
+                            {editingValueId === c._id ? (
+                               <div className="flex items-center space-x-2">
+                                  <input 
+                                     type="number" 
+                                     autoFocus
+                                     value={tempValue}
+                                     onChange={(e) => setTempValue(e.target.value)}
+                                     onBlur={() => handleUpdateLeadValue(c._id)}
+                                     className="w-20 bg-white border-2 border-teal-500 rounded px-1.5 py-0.5 text-xs font-black text-slate-900 outline-none"
+                                  />
+                               </div>
+                            ) : (
+                               <span className="text-xs font-black text-slate-900">₹{(c.estimatedValue || 0).toLocaleString()}</span>
+                            )}
+                         </div>
+                         <button onClick={() => { setEditingValueId(c._id); setTempValue(c.estimatedValue || 0); }} className="p-1 hover:bg-white rounded transition-colors opacity-0 group-hover/val:opacity-100">
+                            <Edit3 size={10} className="text-slate-400" />
+                         </button>
                       </div>
 
-                      {(c.qualification || c.selectedProgram) && (
-                        <div className="flex flex-wrap gap-1 mb-3">
-                          {c.qualification && <span className="text-[9px] font-bold bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 uppercase">{c.qualification}</span>}
-                          {c.selectedProgram && <span className="text-[9px] font-bold bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 uppercase">{c.selectedProgram.substring(0, 20)}...</span>}
-                        </div>
-                      )}
+                      {/* Intelligence Badges */}
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                         {(c.purchaseTimeline || c.budget) && (
+                            <div className="flex items-center space-x-1 px-2 py-1 bg-teal-50 text-teal-700 rounded-lg border border-teal-100 text-[9px] font-black uppercase">
+                               <Clock size={10} />
+                               <span>{c.purchaseTimeline || 'Urgent'}</span>
+                            </div>
+                         )}
+                         {c.qualification && (
+                            <div className="flex items-center space-x-1 px-2 py-1 bg-blue-50 text-blue-700 rounded-lg border border-blue-100 text-[9px] font-black uppercase tracking-tighter">
+                               <span>{c.qualification?.substring(0, 15)}</span>
+                            </div>
+                         )}
+                      </div>
 
-                      {c.assignedAgent && (
-                        <div className="flex items-center space-x-1.5 mb-3 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
-                          <div className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-[8px] font-bold uppercase">{c.assignedAgent.name?.substring(0,2)}</div>
-                          <span className="text-[10px] font-bold text-gray-600 truncate">{c.assignedAgent.name}</span>
-                        </div>
-                      )}
                       <div className="flex items-center justify-between pt-3 border-t border-gray-50">
-                        <span className="text-[10px] uppercase font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded">{c.source || 'Lead'}</span>
-                        <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                           <button onClick={() => navigate('/inbox')} className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:text-[var(--theme-text)] hover:bg-teal-50"><MessageSquare size={12}/></button>
-                           <button onClick={() => navigate('/inbox')} className="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-gray-500 hover:text-[var(--theme-text)] hover:bg-teal-50"><Phone size={12}/></button>
+                        <div className="flex items-center text-slate-400">
+                           <Clock size={10} className="mr-1 opacity-50" />
+                           <span className="text-[9px] font-black uppercase tracking-tight">{getRelativeTime(c.lastMessageAt || c.updatedAt)}</span>
+                        </div>
+                        <div className="flex space-x-2">
+                           <button onClick={() => navigate('/inbox')} className="w-7 h-7 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 hover:text-teal-600 hover:bg-teal-50 transition-all border border-transparent hover:border-teal-200">
+                              <MessageSquare size={12}/>
+                           </button>
+                           <button onClick={() => navigate('/inbox')} className="w-7 h-7 rounded-xl bg-slate-50 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all border border-transparent hover:border-blue-200">
+                              <Phone size={12}/>
+                           </button>
                         </div>
                       </div>
                     </div>
@@ -276,26 +330,54 @@ export default function Pipeline() {
         </div>
       </div>
 
-      {/* Add Lead Modal */}
+      {/* Add Lead Modal - UPGRADED */}
       {showAddModal && (
-        <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-fade-in">
-           <div className="bg-white p-7 rounded-3xl w-96 shadow-2xl animate-fade-in-up border border-gray-100">
-              <h2 className="text-xl font-bold text-gray-800 mb-6">Add New Lead</h2>
-              <form onSubmit={handleAddLead}>
-                 <div className="space-y-4 mb-8">
-                    <div>
-                      <label className="text-[11px] font-bold text-gray-500 mb-1.5 block uppercase tracking-wide">Full Name</label>
-                      <input type="text" value={newLeadName} onChange={e=>setNewLeadName(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-[var(--theme-border)] focus:ring-2 ring-brand-light/20 text-sm font-medium text-gray-800 transition-all" placeholder="John Doe" />
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] animate-fade-in p-4" onClick={() => setShowAddModal(false)}>
+           <div className="bg-white p-10 rounded-[40px] w-full max-w-lg shadow-2xl relative overflow-hidden animate-scale-in" onClick={e => e.stopPropagation()}>
+              <div className="absolute right-8 top-8">
+                 <button onClick={() => setShowAddModal(false)} className="p-2 bg-slate-50 text-slate-400 hover:text-slate-900 rounded-full transition-all hover:rotate-90">
+                    <X size={24} />
+                 </button>
+              </div>
+
+              <div className="mb-10">
+                 <div className="w-16 h-16 bg-teal-50 rounded-3xl flex items-center justify-center mb-6 shadow-premium border border-teal-100">
+                    <TrendingUp className="text-teal-600" size={32} />
+                 </div>
+                 <h2 className="text-3xl font-black text-slate-800 tracking-tighter">Initialize New Deal</h2>
+                 <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2">Surface high-intent leads to your pipeline</p>
+              </div>
+
+              <form onSubmit={handleAddLead} className="space-y-6">
+                 <div className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                       <label className="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Client Name</label>
+                       <input type="text" value={newLead.name} onChange={e=>setNewLead({...newLead, name: e.target.value})} required className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-5 py-4 outline-none focus:border-teal-500 focus:bg-white text-sm font-black text-slate-800 transition-all" placeholder="Enter full name..." />
                     </div>
-                    <div>
-                      <label className="text-[11px] font-bold text-gray-500 mb-1.5 block uppercase tracking-wide">Phone Number</label>
-                      <input type="tel" value={newLeadPhone} onChange={e=>setNewLeadPhone(e.target.value)} required className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-[var(--theme-border)] focus:ring-2 ring-brand-light/20 text-sm font-medium text-gray-800 transition-all" placeholder="+91 9876543210" />
+                    <div className="col-span-2 md:col-span-1">
+                       <label className="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">WhatsApp Number</label>
+                       <input type="tel" value={newLead.phone} onChange={e=>setNewLead({...newLead, phone: e.target.value})} required className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-5 py-4 outline-none focus:border-teal-500 focus:bg-white text-sm font-black text-slate-800 transition-all" placeholder="+91..." />
+                    </div>
+                    <div className="col-span-2 md:col-span-1">
+                       <label className="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Deal Value (₹)</label>
+                       <div className="relative">
+                          <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+                          <input type="number" value={newLead.value} onChange={e=>setNewLead({...newLead, value: e.target.value})} className="w-full bg-slate-50 border-2 border-transparent rounded-2xl pl-10 pr-5 py-4 outline-none focus:border-teal-500 focus:bg-white text-sm font-black text-slate-800 transition-all" placeholder="0" />
+                       </div>
+                    </div>
+                    <div className="col-span-2">
+                       <label className="text-[10px] font-black text-slate-400 mb-2 block uppercase tracking-widest">Purchase Urgency</label>
+                       <select value={newLead.urgency} onChange={e=>setNewLead({...newLead, urgency: e.target.value})} className="w-full bg-slate-50 border-2 border-transparent rounded-2xl px-5 py-4 outline-none focus:border-teal-500 focus:bg-white text-sm font-black text-slate-800 transition-all appearance-none cursor-pointer">
+                          <option value="Immediate">🔥 Immediate (Highly Urgent)</option>
+                          <option value="1-3 Months">⚡ 1-3 Months (Interested)</option>
+                          <option value="Just Exploring">🧊 Just Exploring (Cold)</option>
+                       </select>
                     </div>
                  </div>
-                 <div className="flex justify-end space-x-3">
-                    <button type="button" onClick={()=>setShowAddModal(false)} className="px-5 py-2.5 font-bold text-sm text-gray-500 hover:text-gray-800 hover:bg-gray-100 rounded-xl transition-colors">Cancel</button>
-                    <button type="submit" className="px-5 py-2.5 font-bold text-sm text-white bg-[var(--theme-bg)] hover:bg-teal-900 rounded-xl transition-transform hover:scale-105 active:scale-95 shadow-lg">Create Lead</button>
-                 </div>
+                 
+                 <button type="submit" className="w-full py-5 bg-slate-900 text-white rounded-[20px] text-xs font-black uppercase tracking-[0.3em] hover:bg-black transition-all shadow-premium hover:shadow-glow hover:-translate-y-1 transform active:scale-95">
+                    Launch Deal to Pipeline
+                 </button>
               </form>
            </div>
         </div>
