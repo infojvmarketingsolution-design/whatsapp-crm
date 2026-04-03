@@ -69,12 +69,7 @@ class PRDFlowService {
          } else if (step.type === 'PROGRAM_SELECTION') {
             nodeData.msgType = 'LIST_MESSAGE';
             nodeData.variableName = 'program';
-            const currentQual = contact.flowVariables?.qualification;
-            let programOpts = [];
-            if (currentQual && prompts.programMap && prompts.programMap[currentQual]) {
-               Object.values(prompts.programMap[currentQual]).forEach(arr => programOpts.push(...arr));
-            }
-            nodeData.listOptions = programOpts.length > 0 ? programOpts.slice(0, 10) : ['General Inquiry'];
+            nodeData.isProgramSelection = true; // Flag for dynamic resolution
          } else if (step.type === 'SUCCESS_PROOF') {
             nodeData.msgType = step.image ? 'IMAGE' : 'TEXT';
             nodeData.mediaUrl = step.image;
@@ -169,8 +164,20 @@ class PRDFlowService {
            const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, interpolatedText, /^\d+$/.test(media) ? null : media);
            await saveAndEmit('image', interpolatedText, res);
         } else if (msgType === 'LIST_MESSAGE') {
-           const opts = nodeData.listOptions || prompts.qualificationOptions || ['Option 1'];
-           await waService.sendListMessage(contact.phone, { body: interpolatedText, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: o.substring(0, 24) })) }] });
+           let opts = nodeData.listOptions || prompts.qualificationOptions || ['Option 1'];
+           
+           if (nodeData.isProgramSelection) {
+              const currentQual = contact.flowVariables?.qualification;
+              let programOpts = [];
+              if (currentQual && prompts.programMap && prompts.programMap[currentQual]) {
+                 Object.values(prompts.programMap[currentQual]).forEach(arr => {
+                    if (Array.isArray(arr)) programOpts.push(...arr);
+                 });
+              }
+              opts = programOpts.length > 0 ? programOpts.slice(0, 10) : ['General Inquiry'];
+           }
+           
+           await waService.sendListMessage(contact.phone, { body: interpolatedText, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
            await saveAndEmit('interactive', interpolatedText, null);
         } else if (msgType === 'INTERACTIVE') {
            const btns = nodeData.buttons || ['Morning', 'Afternoon', 'Evening'];
