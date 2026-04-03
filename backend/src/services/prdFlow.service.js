@@ -47,7 +47,49 @@ class PRDFlowService {
       let prompts = { qualificationOptions: ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'], prdFlowSteps: this.DEFAULT_PRD_FLOW_STEPS };
       if (settings?.automation?.aiPrompts) prompts = { ...prompts, ...settings.automation.aiPrompts.toObject() };
 
-      const flowSteps = prompts.prdFlowSteps || this.DEFAULT_PRD_FLOW_STEPS;
+      const flowStepsRaw = settings?.automation?.aiPrompts?.prdFlowSteps && settings.automation.aiPrompts.prdFlowSteps.length > 0 
+        ? settings.automation.aiPrompts.prdFlowSteps 
+        : this.DEFAULT_PRD_FLOW_STEPS;
+
+      // Map UI schema to PRD execution schema
+      const flowSteps = flowStepsRaw.map(step => {
+         if (step.data) return step; // Already in execution format (DEFAULT_PRD_FLOW_STEPS)
+
+         let nodeData = { text: step.message };
+         if (step.type === 'GREETING') {
+            nodeData.msgType = step.image ? 'IMAGE' : 'TEXT';
+            nodeData.mediaUrl = step.image;
+         } else if (step.type === 'NAME_CAPTURE') {
+            nodeData.msgType = 'QUESTION';
+            nodeData.variableName = 'name';
+         } else if (step.type === 'QUALIFICATION') {
+            nodeData.msgType = 'LIST_MESSAGE';
+            nodeData.variableName = 'qualification';
+            nodeData.listOptions = prompts.qualificationOptions || [];
+         } else if (step.type === 'PROGRAM_SELECTION') {
+            nodeData.msgType = 'LIST_MESSAGE';
+            nodeData.variableName = 'program';
+            const currentQual = contact.flowVariables?.qualification;
+            let programOpts = [];
+            if (currentQual && prompts.programMap && prompts.programMap[currentQual]) {
+               Object.values(prompts.programMap[currentQual]).forEach(arr => programOpts.push(...arr));
+            }
+            nodeData.listOptions = programOpts.length > 0 ? programOpts.slice(0, 10) : ['General Inquiry'];
+         } else if (step.type === 'SUCCESS_PROOF') {
+            nodeData.msgType = step.image ? 'IMAGE' : 'TEXT';
+            nodeData.mediaUrl = step.image;
+         } else if (step.type === 'CALL_TIME') {
+            nodeData.msgType = 'INTERACTIVE';
+            nodeData.variableName = 'time';
+            nodeData.buttons = step.options || ['Morning', 'Afternoon', 'Evening'];
+         } else if (step.type === 'CUSTOM_MESSAGE') {
+            nodeData.msgType = 'TEXT';
+         } else if (step.type === 'CUSTOM_QUESTION') {
+            nodeData.msgType = 'QUESTION';
+            nodeData.variableName = `custom_${step.id}`;
+         }
+         return { id: step.id, type: 'messageNode', data: nodeData };
+      });
       
       const replaceVars = (str) => {
         if (!str) return '';
@@ -127,7 +169,7 @@ class PRDFlowService {
            const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, interpolatedText, /^\d+$/.test(media) ? null : media);
            await saveAndEmit('image', interpolatedText, res);
         } else if (msgType === 'LIST_MESSAGE') {
-           const opts = nodeData.listOptions || prompts.qualificationOptions || [];
+           const opts = nodeData.listOptions || prompts.qualificationOptions || ['Option 1'];
            await waService.sendListMessage(contact.phone, { body: interpolatedText, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: o.substring(0, 24) })) }] });
            await saveAndEmit('interactive', interpolatedText, null);
         } else if (msgType === 'INTERACTIVE') {

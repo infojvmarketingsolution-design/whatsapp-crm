@@ -356,6 +356,19 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
       return waService.sendTextMessage(activeContact.phone, "Session reset. Type 'hello' to start again.");
     }
 
+    const settings = await Settings.findOne({ tenantId });
+
+    // 🎓 AI STRATEGY MODE (EDUCATION TEMPLATE)
+    if (settings?.automation?.botMode === 'PRD' && settings?.automation?.botEnabled) {
+       console.log(`[Flow Engine] 🏛️ Strategy Mode: PRD (Education Template). Routing message...`);
+       if (activeContact.currentFlowStep || messageText.toLowerCase().match(/hi|hello|hey|start|menu/)) {
+           return PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io, false, replyValue);
+       } else {
+           console.log(`[Flow Engine] ⚠️ PRD Mode active, but message is not a greeting and flow has not started.`);
+           // Fall through to AI Fallback below if not matched
+       }
+    }
+
     // 🔀 ROUTING (Rule 5)
     if (activeContact.isFlowActive && activeContact.currentFlowStep) {
       console.log(`[Flow Engine] ⏩ Continuing active flow: ${activeContact.currentFlowId}`);
@@ -387,7 +400,6 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
 
     // 🤖 AI CONVERSATIONAL FALLBACK (Smart Resolution)
     console.log(`[Flow Engine] 🤖 Checking AI Settings for fallback...`);
-    const settings = await Settings.findOne({ tenantId });
     if (settings?.automation?.botEnabled) {
        console.log(`[Flow Engine] 🧠 AI Bot Enabled. Generating response for: "${messageText}"`);
        const aiReply = await AIService.askAI(messageText, "Education CRM. We offer Software Engineering, VFX, and AI courses.");
