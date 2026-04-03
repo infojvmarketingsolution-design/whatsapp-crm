@@ -6,16 +6,15 @@ const AIService = require('./ai.service');
 const Settings = require('../models/core/Settings');
 const mongoose = require('mongoose');
 
-
 class PRDFlowService {
   constructor() {
     this.DEFAULT_PRD_FLOW_STEPS = [
-      { id: 'step_1', type: 'GREETING', title: 'Greeting Message', message: 'Hello 👋 Welcome to JV Marketing Support!', image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=60' },
-      { id: 'step_2', type: 'NAME_CAPTURE', title: 'Name Request', message: 'Great! May I know your name?' },
-      { id: 'step_3', type: 'QUALIFICATION', title: 'Qualification Choice', message: '{{name}}, please select your last qualification 👇' },
-      { id: 'step_4', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Great, {{name}}! Please select your preferred program:' },
-      { id: 'step_5', type: 'SUCCESS_PROOF', title: 'Success & Proof', message: '🎉 Success Stories, {{name}}!\n\nOur students are working in top companies 🚀', image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=60' },
-      { id: 'step_6', type: 'CALL_TIME', title: 'Consultation Call', message: '{{name}}, what is your preferred time for a call? 📞', options: ['Morning', 'Afternoon', 'Evening'] }
+      { id: 'prd_1', type: 'GREETING', title: 'Start', message: 'Hello 👋 Welcome to JV Group!', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+      { id: 'prd_2', type: 'NAME_CAPTURE', title: 'Name Request', message: 'Great! May I know your name?' },
+      { id: 'prd_3', type: 'QUALIFICATION', title: 'Qualification Choice', message: 'please select your last qualification 👇' },
+      { id: 'prd_4', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Great, {{name}}! Please select your preferred program:' },
+      { id: 'prd_5', type: 'SUCCESS_PROOF', title: 'Success & Proof', message: '🎉 Success Stories, {{name}}!\n\nOur students are working in top companies 🚀', image: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=60' },
+      { id: 'prd_6', type: 'CALL_TIME', title: 'Consultation Call', message: '{{name}}, what is your preferred time for a call? 📞', options: ['Morning', 'Afternoon', 'Evening'] }
     ];
     this.activeTimers = new Map();
   }
@@ -30,14 +29,10 @@ class PRDFlowService {
   makeAbsolute(url) {
     if (!url || typeof url !== 'string' || url.trim() === '') return '';
     const trimmedUrl = url.trim();
-    
     if (/^\d+$/.test(trimmedUrl)) return trimmedUrl;
-    
     if (trimmedUrl.startsWith('http')) return trimmedUrl;
-    
     let baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').trim();
     baseUrl = baseUrl.replace(/\/$/, ''); 
-    
     const normalizedPath = trimmedUrl.startsWith('/') ? trimmedUrl : `/${trimmedUrl}`;
     return `${baseUrl}${normalizedPath}`;
   }
@@ -51,18 +46,17 @@ class PRDFlowService {
     this.clearTimer(contact._id.toString());
 
     const currentState = contact.currentFlowStep || 'START_PRD_FLOW';
-    console.log(`[PRD Flow] Processing Step: ${currentState} for ${contact.phone} | AutoFollowup: ${isAutoFollowup}`);
+    console.log(`[PRD Flow] Processing Step: ${currentState} for ${contact.phone}`);
 
     let prompts = {
-      greetingMessage: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀',
-      greetingImage: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&auto=format&fit=crop&q=60',
-      namePrompt: 'Great! May I know your name?',
-      programListPrompt: '{{name}}, which career path or program are you interested in?',
-      successProofMessage: '🎉 Success Stories, {{name}}!\n\nOur students are already working in top companies 🚀\nYou could be next!',
-      successProofImage: '',
-      callTimePrompt: '{{name}}, what is your preferred time for our counsellor to call you? 📞',
-      agentTransferPrompt: 'Transferring you to a human agent... 👨–💻',
-      fallbackMessage: "I'm sorry, I didn't quite get that. Could you please rephrase?"
+      qualificationOptions: ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'],
+      programMap: {
+        '10th Pass': { 'Diploma Programs': ['Diploma in Engineering', 'IT Diploma', 'Animation Diploma'] },
+        '12th Pass': { 'Trending Programs': ['B.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation'], 'Traditional Programs': ['BBA', 'B.Com', 'BCA', 'B.Sc'] },
+        'Diploma Completed': { 'Bachelor Programs': ['Electrical Engineering', 'Civil Engineering', 'Mechanical Engineering'] },
+        'Graduation Completed': { 'Master Programs': ['MBA', 'MCA', 'M.Sc IT'] },
+        'Master Completed': { 'Advanced Certs': ['Post Grad Diploma', 'Research Program'] }
+      }
     };
 
     try {
@@ -70,12 +64,7 @@ class PRDFlowService {
       if (settings?.automation?.aiPrompts) {
         prompts = { ...prompts, ...settings.automation.aiPrompts.toObject() };
       }
-    } catch (err) {
-      console.warn('[PRD Flow] Could not fetch settings, using defaults:', err.message);
-    }
-
-    prompts.greetingImage = this.makeAbsolute(prompts.greetingImage);
-    prompts.successProofImage = this.makeAbsolute(prompts.successProofImage);
+    } catch (err) {}
 
     const replaceVars = (str) => {
       if (!str) return '';
@@ -94,302 +83,219 @@ class PRDFlowService {
         content: payload,
         status: 'SENT'
       });
-      if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact });
+      if (io) io.to(tenantId).emit('current_chat_message', { ...savedMsg._doc, contact });
     };
 
-    const flowSteps = prompts.prdFlowSteps && prompts.prdFlowSteps.length > 0 
+    const flowSteps = (prompts.prdFlowSteps && prompts.prdFlowSteps.length > 0) 
       ? prompts.prdFlowSteps 
       : this.DEFAULT_PRD_FLOW_STEPS;
 
-    let currentStep = null;
+    let iterations = 0;
+    let stepToProcess = null;
 
     if (!contact.currentFlowStep || contact.currentFlowStep === 'START_PRD_FLOW') {
-      currentStep = flowSteps[0];
+      stepToProcess = flowSteps[0];
     } else {
-      const currentIndex = flowSteps.findIndex(s => s.id === contact.currentFlowStep);
-      currentStep = currentIndex !== -1 ? flowSteps[currentIndex] : flowSteps[0];
+      const idx = flowSteps.findIndex(s => s.id === contact.currentFlowStep);
+      stepToProcess = idx !== -1 ? flowSteps[idx] : flowSteps[0];
     }
 
-    if (!currentStep) {
-       console.log(`[PRD Flow] No more steps or invalid step. Ending flow.`);
-       await Contact.findByIdAndUpdate(contact._id, { $unset: { currentFlowStep: "" } });
-       return;
-    }
-
-    let stepToProcess = currentStep;
-    let iterations = 0;
     let canConsumeMessage = true;
-
-    if (!isAutoFollowup) {
-      await Contact.findByIdAndUpdate(contact._id, { 'flowVariables.consecutiveTimeouts': 0 });
-    }
 
     while (stepToProcess && iterations < 5) {
       iterations++;
-      const currentIndex = flowSteps.findIndex(s => s.id === stepToProcess.id);
-      const possibleNextStep = flowSteps[currentIndex + 1];
+      const currentIdx = flowSteps.findIndex(s => s.id === stepToProcess.id);
+      const possibleNextStep = flowSteps[currentIdx + 1];
 
       switch (stepToProcess.type) {
         case 'GREETING': {
-          const greeting = replaceVars(stepToProcess.message);
-          const greetingImg = this.makeAbsolute(stepToProcess.image);
-          
-          if (greetingImg) {
+          const msg = replaceVars(stepToProcess.message);
+          const img = this.makeAbsolute(stepToProcess.image);
+          if (img) {
             try {
-              const imgRes = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(greetingImg) ? greetingImg : null, greeting, /^\d+$/.test(greetingImg) ? null : greetingImg);
-              await saveAndEmit('image', `[Media] ${greetingImg}\n${greeting}`, imgRes);
-            } catch (mediaErr) {
-              const gRes = await waService.sendTextMessage(contact.phone, greeting);
-              await saveAndEmit('text', greeting, gRes);
+              const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(img) ? img : null, msg, /^\d+$/.test(img) ? null : img);
+              await saveAndEmit('image', msg, res);
+            } catch (e) {
+              const res = await waService.sendTextMessage(contact.phone, msg);
+              await saveAndEmit('text', msg, res);
             }
           } else {
-              const gRes = await waService.sendTextMessage(contact.phone, greeting);
-              await saveAndEmit('text', greeting, gRes);
+            const res = await waService.sendTextMessage(contact.phone, msg);
+            await saveAndEmit('text', msg, res);
           }
-
           if (possibleNextStep) {
-             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
-             contact.currentFlowStep = possibleNextStep.id;
-             stepToProcess = possibleNextStep;
-             canConsumeMessage = false;
-             continue;
+            await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
+            contact.currentFlowStep = possibleNextStep.id;
+            stepToProcess = possibleNextStep;
+            canConsumeMessage = false;
+            continue;
           }
           break;
         }
 
         case 'NAME_CAPTURE': {
           if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup && canConsumeMessage) {
-             const name = await AIService.extractData(messageText.trim(), 'NAME');
-             contact.name = name;
-             const nextId = possibleNextStep?.id || '';
-             
-             await Contact.findByIdAndUpdate(contact._id, { 
-                name, 
-                currentFlowStep: nextId,
-                [`flowVariables.name`]: name
-             });
-             
-             if (possibleNextStep) {
-                contact.currentFlowStep = nextId;
-                stepToProcess = possibleNextStep;
-                canConsumeMessage = false;
-                continue; 
-             }
-             break;
-          } else {
-             const msg = replaceVars(stepToProcess.message);
-             const res = await waService.sendTextMessage(contact.phone, msg);
-             await saveAndEmit('text', msg, res);
-             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
-             contact.currentFlowStep = stepToProcess.id;
-             this.startActivityTimer(tenantId, contact, waService, io);
-             stepToProcess = null; 
-             break;
-          }
-        }
-
-        case 'QUALIFICATION': {
-          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup && canConsumeMessage) {
-             let qual = messageText.trim();
-             const opts = prompts.qualificationOptions || [];
-             
-             const matched = opts.find(opt => opt.toLowerCase() === qual.toLowerCase());
-             if (matched) {
-                qual = matched;
-             } else {
-                stepToProcess = null; 
-                break;
-             }
-
-             contact.qualification = qual;
-             const nextId = possibleNextStep?.id || '';
-             
-             await Contact.findByIdAndUpdate(contact._id, { 
-                qualification: qual,
-                [`flowVariables.qualification`]: qual,
-                currentFlowStep: nextId
-             });
-             
-             if (possibleNextStep) {
-                contact.currentFlowStep = nextId;
-                stepToProcess = possibleNextStep;
-                canConsumeMessage = false;
-                continue;
-             }
-             break;
-          } else {
-             const reply = replaceVars(stepToProcess.message);
-             const opts = prompts.qualificationOptions || [];
-
-             await waService.sendListMessage(contact.phone, {
-               header: stepToProcess.title || 'Qualification',
-               body: reply,
-               buttonText: 'Select Option',
-               sections: [{
-                 title: 'Options',
-                 rows: opts.map((opt, i) => ({ id: `qual_${i}`, title: opt }))
-               }]
-             });
-             await saveAndEmit('interactive', reply, null);
-             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
-             contact.currentFlowStep = stepToProcess.id;
-             this.startActivityTimer(tenantId, contact, waService, io);
-             stepToProcess = null;
-             break;
-          }
-        }
-
-        case 'PROGRAM_SELECTION': {
-          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup && canConsumeMessage) {
-             const prog = messageText.trim();
-             contact.selectedProgram = prog;
-             const nextId = possibleNextStep?.id || '';
-             
-             await Contact.findByIdAndUpdate(contact._id, { 
-                selectedProgram: prog,
-                [`flowVariables.selectedProgram`]: prog,
-                currentFlowStep: nextId
-             });
-             
-             if (possibleNextStep) {
-                contact.currentFlowStep = nextId;
-                stepToProcess = possibleNextStep;
-                canConsumeMessage = false;
-                continue;
-             }
-             break;
-          } else {
-             const qual = contact.qualification;
-             const pMap = prompts.programMap || {};
-             const qualMap = pMap[qual] || {};
-
-             const sections = Object.keys(qualMap).map(secTitle => ({
-               title: secTitle,
-               rows: qualMap[secTitle].map((progName, i) => ({ id: `prog_${i}`, title: progName }))
-             }));
-
-             const reply = replaceVars(stepToProcess.message);
-             await waService.sendListMessage(contact.phone, {
-               header: stepToProcess.title || 'Program Selection',
-               body: reply,
-               buttonText: 'View Programs',
-               sections
-             });
-             await saveAndEmit('interactive', reply, null);
-             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
-             contact.currentFlowStep = stepToProcess.id;
-             this.startActivityTimer(tenantId, contact, waService, io);
-             stepToProcess = null;
-             break;
-          }
-        }
-
-        case 'SUCCESS_PROOF': {
-          const success = replaceVars(stepToProcess.message);
-          const successImg = this.makeAbsolute(stepToProcess.image);
-          
-          if (successImg) {
-            try {
-              const isId = /^\d+$/.test(successImg);
-              const sRes = await waService.sendMedia(contact.phone, 'image', isId ? successImg : null, success, isId ? null : successImg);
-              await saveAndEmit('image', successImg, sRes);
-            } catch (mediaErr) {
-              const sRes = await waService.sendTextMessage(contact.phone, success);
-              await saveAndEmit('text', success, sRes);
-            }
-          } else {
-            const sRes = await waService.sendTextMessage(contact.phone, success);
-            await saveAndEmit('text', success, sRes);
-          }
-
-          if (possibleNextStep) {
-             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
-             contact.currentFlowStep = possibleNextStep.id;
-             stepToProcess = possibleNextStep;
-             canConsumeMessage = false;
-             continue;
-          }
-          stepToProcess = null;
-          break;
-        }
-
-        case 'CALL_TIME': {
-          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup && canConsumeMessage) {
-             const time = messageText.trim();
-             const fullContact = await Contact.findById(contact._id);
-             const vars = fullContact.flowVariables || {};
-             
-             await Lead.create({
-                tenantId,
-                name: contact.name, 
-                phone: contact.phone,
-                qualification: vars.qualification || contact.qualification, 
-                selectedProgram: vars.selectedProgram || contact.selectedProgram,
-                preferredCallTime: time, 
-                leadSource: 'proactive_ai_bot', 
-                status: 'QUALIFIED'
-             });
-
-             const summary = `Thank you ${contact.name || ''} 🙌\n\nDetails Submitted:\n🎓 Qual: ${vars.qualification || contact.qualification}\n📘 Program: ${vars.selectedProgram || contact.selectedProgram}\n⏰ Time: ${time}\n\nOur counsellor will call you! 📞`;
-             await waService.sendTextMessage(contact.phone, summary);
-
-             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: '' });
-             contact.currentFlowStep = '';
-             stepToProcess = null;
-             break;
-          } else {
-             const timeMsg = replaceVars(stepToProcess.message);
-             const options = stepToProcess.options || ['Morning', 'Afternoon', 'Evening'];
-             const res = await waService.sendInteractiveButtonMessage(contact.phone, {
-               body: timeMsg,
-               buttons: options.slice(0, 3)
-             });
-             await saveAndEmit('interactive', timeMsg, res);
-             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
-             contact.currentFlowStep = stepToProcess.id;
-             this.startActivityTimer(tenantId, contact, waService, io);
-             stepToProcess = null;
-             break;
-          }
-        }
-
-        case 'CUSTOM_MESSAGE': {
-           const msg = replaceVars(stepToProcess.message);
-           const res = await waService.sendTextMessage(contact.phone, msg);
-           await saveAndEmit('text', msg, res);
-           if (possibleNextStep) {
+            const name = await AIService.extractData(messageText.trim(), 'NAME');
+            const finalName = name || messageText.trim();
+            await Contact.findByIdAndUpdate(contact._id, { name: finalName, 'flowVariables.name': finalName });
+            contact.name = finalName;
+            if (possibleNextStep) {
               await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
               contact.currentFlowStep = possibleNextStep.id;
               stepToProcess = possibleNextStep;
               canConsumeMessage = false;
               continue;
-           }
-           stepToProcess = null;
-           break;
+            }
+          } else {
+            const msg = replaceVars(stepToProcess.message);
+            const res = await waService.sendTextMessage(contact.phone, msg);
+            await saveAndEmit('text', msg, res);
+            await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
+            this.startActivityTimer(tenantId, contact, waService, io);
+            stepToProcess = null;
+          }
+          break;
         }
 
-        case 'CUSTOM_QUESTION': {
-           if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup && canConsumeMessage) {
-              const nextId = possibleNextStep?.id || '';
-              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: nextId });
-              
-              if (possibleNextStep) { 
-                 contact.currentFlowStep = nextId;
-                 stepToProcess = possibleNextStep; 
-                 canConsumeMessage = false;
-                 continue; 
+        case 'QUALIFICATION': {
+          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup && canConsumeMessage) {
+            const extracted = await AIService.extractData(messageText.trim(), 'QUALIFICATION');
+            const opts = prompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
+            const matched = opts.find(o => o.toLowerCase().includes(extracted.toLowerCase()) || extracted.toLowerCase().includes(o.toLowerCase()));
+            
+            if (matched) {
+              await Contact.findByIdAndUpdate(contact._id, { qualification: matched, 'flowVariables.qualification': matched });
+              contact.qualification = matched;
+              if (possibleNextStep) {
+                await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
+                contact.currentFlowStep = possibleNextStep.id;
+                stepToProcess = possibleNextStep;
+                canConsumeMessage = false;
+                continue;
               }
-              break;
-           } else {
-              const msg = replaceVars(stepToProcess.message);
+            } else {
+              const reprompt = `I didn't quite catch that. Please select your last qualification from the list 👇`;
+              await waService.sendListMessage(contact.phone, {
+                header: 'Qualification',
+                body: reprompt,
+                buttonText: 'Select Option',
+                sections: [{ title: 'Options', rows: opts.map((opt, i) => ({ id: `qual_${i}`, title: opt })) }]
+              });
+              await saveAndEmit('interactive', reprompt, null);
+              stepToProcess = null;
+            }
+          } else {
+            const msg = replaceVars(stepToProcess.message);
+            const opts = prompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
+            await waService.sendListMessage(contact.phone, {
+              header: 'Qualification',
+              body: msg,
+              buttonText: 'Options',
+              sections: [{ title: 'Qualifications', rows: opts.map((opt, i) => ({ id: `qual_${i}`, title: opt })) }]
+            });
+            await saveAndEmit('interactive', msg, null);
+            await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
+            this.startActivityTimer(tenantId, contact, waService, io);
+            stepToProcess = null;
+          }
+          break;
+        }
+
+        case 'PROGRAM_SELECTION': {
+          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup && canConsumeMessage) {
+            const prog = messageText.trim();
+            await Contact.findByIdAndUpdate(contact._id, { selectedProgram: prog, 'flowVariables.selectedProgram': prog });
+            contact.selectedProgram = prog;
+            if (possibleNextStep) {
+              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
+              contact.currentFlowStep = possibleNextStep.id;
+              stepToProcess = possibleNextStep;
+              canConsumeMessage = false;
+              continue;
+            }
+          } else {
+            const qual = contact.qualification || '';
+            const pMap = prompts.programMap || {};
+            const qualMap = pMap[qual] || {};
+            const sections = Object.keys(qualMap).map(title => ({
+              title,
+              rows: qualMap[title].map((p, i) => ({ id: `p_${i}`, title: p }))
+            }));
+            const msg = replaceVars(stepToProcess.message);
+            if (sections.length > 0) {
+              await waService.sendListMessage(contact.phone, { header: 'Programs', body: msg, buttonText: 'View Programs', sections });
+            } else {
+              await waService.sendTextMessage(contact.phone, msg);
+            }
+            await saveAndEmit('interactive', msg, null);
+            await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
+            this.startActivityTimer(tenantId, contact, waService, io);
+            stepToProcess = null;
+          }
+          break;
+        }
+
+        case 'SUCCESS_PROOF': {
+          const msg = replaceVars(stepToProcess.message);
+          const img = this.makeAbsolute(stepToProcess.image);
+          if (img) {
+            try {
+              const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(img) ? img : null, msg, /^\d+$/.test(img) ? null : img);
+              await saveAndEmit('image', msg, res);
+            } catch (e) {
               const res = await waService.sendTextMessage(contact.phone, msg);
               await saveAndEmit('text', msg, res);
-              await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
-              contact.currentFlowStep = stepToProcess.id;
-              this.startActivityTimer(tenantId, contact, waService, io);
-              stepToProcess = null;
-              break;
-           }
+            }
+          } else {
+            const res = await waService.sendTextMessage(contact.phone, msg);
+            await saveAndEmit('text', msg, res);
+          }
+          if (possibleNextStep) {
+            await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
+            contact.currentFlowStep = possibleNextStep.id;
+            stepToProcess = possibleNextStep;
+            canConsumeMessage = false;
+            continue;
+          }
+          break;
+        }
+
+        case 'CALL_TIME': {
+          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup && canConsumeMessage) {
+            const time = messageText.trim();
+            const vars = contact.flowVariables || {};
+            const name = contact.name || 'Friend';
+            
+            await Lead.create({
+              tenantId, name, phone: contact.phone,
+              qualification: vars.qualification || contact.qualification,
+              selectedProgram: vars.selectedProgram || contact.selectedProgram,
+              preferredCallTime: time, leadSource: 'proactive_ai_bot', status: 'QUALIFIED'
+            });
+
+            const summary = `Thank you ${name} 🙌\n\nHere are your details:\n🎓 Qualification: ${vars.qualification || contact.qualification}\n📘 Selected Program: ${vars.selectedProgram || contact.selectedProgram}\n⏰ Preferred Time: ${time}\n\nOur counsellor will call you at your selected time 📞`;
+            await waService.sendTextMessage(contact.phone, summary);
+            await saveAndEmit('text', summary, null);
+
+            const closing = `Thank you for your time, ${name} 😊`;
+            await waService.sendTextMessage(contact.phone, closing);
+            await saveAndEmit('text', closing, null);
+
+            await Contact.findByIdAndUpdate(contact._id, { $unset: { currentFlowStep: '' } });
+            stepToProcess = null;
+          } else {
+            const msg = replaceVars(stepToProcess.message);
+            const opts = stepToProcess.options || ['Morning', 'Afternoon', 'Evening'];
+            const res = await waService.sendInteractiveButtonMessage(contact.phone, {
+              body: msg,
+              buttons: opts.slice(0, 3)
+            });
+            await saveAndEmit('interactive', msg, res);
+            await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: stepToProcess.id });
+            this.startActivityTimer(tenantId, contact, waService, io);
+            stepToProcess = null;
+          }
+          break;
         }
 
         default:
@@ -402,48 +308,22 @@ class PRDFlowService {
   startActivityTimer(tenantId, contact, waService, io) {
     const contactId = contact._id.toString();
     this.clearTimer(contactId);
-
     const timer = setTimeout(async () => {
       try {
         const tenantDb = getTenantConnection(tenantId);
         const Contact = tenantDb.model('Contact', ContactSchema);
-        const freshContact = await Contact.findById(contactId);
-        
-        if (!freshContact || freshContact.currentFlowStep === '') return;
-
-        const consecutiveTimeouts = (freshContact.flowVariables?.consecutiveTimeouts || 0) + 1;
-        
-        if (consecutiveTimeouts >= 2) {
-           console.log(`[PRD Flow] User ghosted twice. Stopping flow for ${freshContact.phone}`);
-           await Contact.findByIdAndUpdate(contactId, { 'flowVariables.consecutiveTimeouts': 0 });
-           return;
+        const fresh = await Contact.findById(contactId);
+        if (!fresh || !fresh.currentFlowStep) return;
+        const timeouts = (fresh.flowVariables?.consecutiveTimeouts || 0) + 1;
+        if (timeouts >= 2) {
+          await Contact.findByIdAndUpdate(contactId, { 'flowVariables.consecutiveTimeouts': 0 });
+          return;
         }
-
-        console.log(`[PRD Flow] 15s Timeout fired for ${freshContact.phone}. Auto-following up...`);
-        await Contact.findByIdAndUpdate(contactId, { 'flowVariables.consecutiveTimeouts': consecutiveTimeouts });
-        
-        await this.processStep(tenantId, freshContact, "TIMEOUT", waService, io, true);
-      } catch (e) {
-        console.error('[PRD Flow] Timeout execution failed:', e.message);
-      }
+        await Contact.findByIdAndUpdate(contactId, { 'flowVariables.consecutiveTimeouts': timeouts });
+        await this.processStep(tenantId, fresh, "TIMEOUT", waService, io, true);
+      } catch (e) {}
     }, 15000);
-
     this.activeTimers.set(contactId, timer);
-  }
-
-  async updateLeadScore(Contact, Message, contactId, io, tenantId) {
-    try {
-      const contact = await Contact.findById(contactId);
-      const messages = await Message.find({ contactId }).sort({ timestamp: -1 }).limit(10);
-      const { score, heatLevel } = await AIService.calculateLeadScore(contact, messages);
-      await Contact.findByIdAndUpdate(contactId, { score, heatLevel });
-      
-      if (io && tenantId) {
-        io.to(tenantId).emit('lead_score_updated', { contactId, score, heatLevel });
-      }
-    } catch (e) {
-      console.warn('[PRD Flow] Score update failed:', e.message);
-    }
   }
 }
 
