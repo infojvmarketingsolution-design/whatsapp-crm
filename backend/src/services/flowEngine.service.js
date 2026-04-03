@@ -271,7 +271,8 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
      }
 
      // 0. PRD Flow Session Resume
-     if (activeContact.currentFlowStep && activeContact.currentFlowStep.startsWith('prd_')) {
+     const prdStates = ['prd_1', 'prd_2', 'prd_3', 'prd_4', 'prd_5', 'prd_6', 'START_PRD_FLOW', 'AWAITING_NAME', 'AWAITING_QUALIFICATION', 'AWAITING_PROGRAM', 'AWAITING_CALL_TIME', 'AWAITING_ADDITIONAL_HELP'];
+     if (activeContact.currentFlowStep && prdStates.includes(activeContact.currentFlowStep)) {
          console.log(`[Flow Engine] Resuming PRD AI Flow for ${activeContact.phone}: ${activeContact.currentFlowStep}`);
          await PRDFlowService.processStep(tenantId, activeContact, replyValue || messageText, waService, io);
          return;

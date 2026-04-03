@@ -45,6 +45,9 @@ class PRDFlowService {
     
     this.clearTimer(contact._id.toString());
 
+    const currentState = contact.currentFlowStep || 'START_PRD_FLOW';
+    console.log(`[PRD Flow] Processing Step: ${currentState} for ${contact.phone}`);
+
     let prompts = {
       qualificationOptions: ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'],
       programMap: {
@@ -80,7 +83,7 @@ class PRDFlowService {
         content: payload,
         status: 'SENT'
       });
-      if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact });
+      if (io) io.to(tenantId).emit('current_chat_message', { ...savedMsg._doc, contact });
     };
 
     const flowSteps = (prompts.prdFlowSteps && prompts.prdFlowSteps.length > 0) 
@@ -108,6 +111,8 @@ class PRDFlowService {
         case 'GREETING': {
           const msg = replaceVars(stepToProcess.message);
           const img = this.makeAbsolute(stepToProcess.image);
+          
+          // Send Greeting (Image + Text)
           if (img) {
             try {
               const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(img) ? img : null, msg, /^\d+$/.test(img) ? null : img);
@@ -120,27 +125,45 @@ class PRDFlowService {
             const res = await waService.sendTextMessage(contact.phone, msg);
             await saveAndEmit('text', msg, res);
           }
+
+          // Transition to NAME_CAPTURE state but don't "continue" the loop yet 
+          // to avoid duplicate firing if the engine is already processing.
           if (possibleNextStep) {
             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
+            contact.currentFlowStep = possibleNextStep.id;
+            
+            // Move to the next step but send the prompt explicitly to control order
+            const namePrompt = replaceVars(possibleNextStep.message);
+            const pRes = await waService.sendTextMessage(contact.phone, namePrompt);
+            await saveAndEmit('text', namePrompt, pRes);
+            
+            this.startActivityTimer(tenantId, contact, waService, io);
+            stepToProcess = null; // Important: Stop the loop here to prevent double-processing
           }
-          stepToProcess = null; // Wait for user to reply (Name request usually follow)
           break;
         }
 
         case 'NAME_CAPTURE': {
-          if (contact.currentFlowStep === stepToProcess.id && !isAutoFollowup && canConsumeMessage) {
+          // If we are resumed here with a message, consume it
+          if (!isAutoFollowup && canConsumeMessage) {
             const name = await AIService.extractData(messageText.trim(), 'NAME');
             const finalName = name || messageText.trim();
-            await Contact.findByIdAndUpdate(contact._id, { name: finalName, 'flowVariables.name': finalName });
+            
+            await Contact.findByIdAndUpdate(contact._id, { 
+              name: finalName, 
+              'flowVariables.name': finalName 
+            });
             contact.name = finalName;
+
             if (possibleNextStep) {
               await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
               contact.currentFlowStep = possibleNextStep.id;
               stepToProcess = possibleNextStep;
               canConsumeMessage = false;
-              continue;
+              continue; // Move to QUALIFICATION
             }
           } else {
+            // Re-prompt if called without a message (e.g. timeout)
             const msg = replaceVars(stepToProcess.message);
             const res = await waService.sendTextMessage(contact.phone, msg);
             await saveAndEmit('text', msg, res);
@@ -246,8 +269,11 @@ class PRDFlowService {
           }
           if (possibleNextStep) {
             await Contact.findByIdAndUpdate(contact._id, { currentFlowStep: possibleNextStep.id });
+            contact.currentFlowStep = possibleNextStep.id;
+            stepToProcess = possibleNextStep;
+            canConsumeMessage = false;
+            continue;
           }
-          stepToProcess = null;
           break;
         }
 
