@@ -656,7 +656,7 @@ export default function Contacts() {
                            <div className="grid grid-cols-2 gap-4">
                               <div>
                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">First Name</label>
-                                 <input value={editedContact.firstName || ''} onChange={e=>handleFieldChange('firstName', e.target.value)} className="w-full text-sm font-semibold text-gray-800 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-100 transition-all" />
+                                 <input value={editedContact.firstName || editedContact.name || ''} onChange={e=>handleFieldChange('firstName', e.target.value)} className="w-full text-sm font-semibold text-gray-800 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-teal-100 transition-all" />
                               </div>
                               <div>
                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Last Name</label>
@@ -715,7 +715,23 @@ export default function Contacts() {
                            </div>
                            <div className="grid grid-cols-2 gap-3">
                                <div>
-                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Heat Level</label>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Target Program</label>
+                                  <div className="relative">
+                                     <Target size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                                     <input value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} placeholder="Program Selection" className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-teal-700 rounded-lg pl-9 pr-3 py-2 outline-none" />
+                                  </div>
+                               </div>
+                               <div>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Pref. Call Time</label>
+                                  <div className="relative">
+                                     <Clock size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                                     <input value={editedContact.preferredCallTime || ''} onChange={e=>handleFieldChange('preferredCallTime', e.target.value)} placeholder="Call Time" className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-teal-700 rounded-lg pl-9 pr-3 py-2 outline-none" />
+                                  </div>
+                               </div>
+                           </div>
+                           <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-50 mt-2">
+                               <div>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1 mt-2">Heat Level</label>
                                   <div className="relative">
                                      <Flame size={14} className={`absolute left-3 top-2.5 ${editedContact.heatLevel === 'Hot' ? 'text-red-500' : 'text-gray-400'}`} />
                                      <select value={editedContact.heatLevel} onChange={e=>handleFieldChange('heatLevel', e.target.value)} className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none cursor-pointer">
@@ -724,7 +740,7 @@ export default function Contacts() {
                                   </div>
                                </div>
                                <div>
-                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1">Budget</label>
+                                  <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-1 mt-2">Budget</label>
                                   <div className="relative">
                                      <Wallet size={14} className="absolute left-3 top-2.5 text-gray-400" />
                                      <input value={editedContact.budget || ''} onChange={e=>handleFieldChange('budget', e.target.value)} placeholder="Budget" className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none" />
