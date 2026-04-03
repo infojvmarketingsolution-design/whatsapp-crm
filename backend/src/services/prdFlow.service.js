@@ -125,9 +125,21 @@ class PRDFlowService {
            if (varName === 'name') {
               const extName = await AIService.extractData(val, 'NAME');
               val = (extName && extName.length < 50) ? extName : val;
-              await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.name': val, name: val });
+              
+              const nameParts = val.trim().split(' ');
+              const firstName = nameParts[0] || '';
+              const lastName = nameParts.slice(1).join(' ') || '';
+              
+              await Contact.findOneAndUpdate({ phone: contact.phone }, { 
+                  'flowVariables.name': val, 
+                  name: val,
+                  firstName: firstName,
+                  lastName: lastName
+              });
               contact.flowVariables = { ...(contact.flowVariables || {}), name: val };
               contact.name = val;
+              contact.firstName = firstName;
+              contact.lastName = lastName;
            } else if (varName === 'qualification') {
               const opts = prompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
               const matched = opts.find(o => o.toLowerCase().includes(val.toLowerCase()) || val.toLowerCase().includes(o.toLowerCase()) || o === val);
