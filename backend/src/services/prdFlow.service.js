@@ -125,18 +125,26 @@ class PRDFlowService {
            if (varName === 'name') {
               const extName = await AIService.extractData(val, 'NAME');
               val = (extName && extName.length < 50) ? extName : val;
-              await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.name': val });
+              await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.name': val, name: val });
               contact.flowVariables = { ...(contact.flowVariables || {}), name: val };
+              contact.name = val;
            } else if (varName === 'qualification') {
               const opts = prompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
               const matched = opts.find(o => o.toLowerCase().includes(val.toLowerCase()) || val.toLowerCase().includes(o.toLowerCase()) || o === val);
               if (matched) {
-                 await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.qualification': matched });
+                 await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.qualification': matched, qualification: matched });
                  contact.flowVariables = { ...(contact.flowVariables || {}), qualification: matched };
+                 contact.qualification = matched;
               }
            } else {
-              await Contact.findOneAndUpdate({ phone: contact.phone }, { [`flowVariables.${varName}`]: val });
+              const dbUpdates = { [`flowVariables.${varName}`]: val };
+              if (varName === 'program') dbUpdates.selectedProgram = val;
+              if (varName === 'time') dbUpdates.preferredCallTime = val;
+              
+              await Contact.findOneAndUpdate({ phone: contact.phone }, dbUpdates);
               contact.flowVariables = { ...(contact.flowVariables || {}), [varName]: val };
+              if (varName === 'program') contact.selectedProgram = val;
+              if (varName === 'time') contact.preferredCallTime = val;
               
               if (varName === 'time') {
                  // Final Completion Lead
