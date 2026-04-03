@@ -46,6 +46,10 @@ class AIService {
           return intent;
         }
       } catch (err) {
+        if (err.message.includes('429')) {
+          console.error('[AI Service] 🔴 OpenAI Quota Exceeded. Falling back to rule-based intent.');
+          return 'UNCLEAR';
+        }
         console.error('[AI Service] OpenAI Intent Error:', err.message);
       }
     }
@@ -78,7 +82,11 @@ class AIService {
 
       return response.choices[0].message.content.trim();
     } catch (err) {
-      console.error('[AI Service] Extraction Error:', err.message);
+      if (err.message.includes('429')) {
+        console.error('[AI Service] 🔴 Extraction Quota Exceeded. Returning raw message.');
+      } else {
+        console.error('[AI Service] Extraction Error:', err.message);
+      }
       return message;
     }
   }
@@ -103,6 +111,9 @@ class AIService {
 
       return response.choices[0].message.content;
     } catch (err) {
+       if (err.message.includes('429')) {
+          return "I'm currently receiving a lot of messages, let me connect you to a human counselor who can help you immediately! 👨‍💻";
+       }
       return "I'm having trouble thinking right now. Let me get a human to help you!";
     }
   }

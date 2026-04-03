@@ -11,7 +11,7 @@ const ClientSchema = require('../models/core/Client');
 const Settings = require('../models/core/Settings');
 
 /**
- * 🚀 WHATSAPP FLOW ENGINE – RESOLUTION PRD (FINAL FIXED & STABLE)
+ * 🚀 WHATSAPP FLOW ENGINE – RESOLUTION PRD (FINAL FIXED & STABLE + AI SMART + VERBOSE LOGS)
  */
 
 const isWaitingNode = (node) => {
@@ -165,7 +165,10 @@ const startFlow = async (tenantId, flowId, contact, io, waService) => {
     const Contact = tenantDb.model('Contact', ContactSchema);
 
     const flow = await Flow.findById(flowId);
-    if (!flow || flow.status !== 'ACTIVE') return;
+    if (!flow || flow.status !== 'ACTIVE') {
+       console.log(`[Flow Engine] ⚠️ Flow ${flowId} not found or NOT ACTIVE.`);
+       return;
+    }
 
     const startNode = flow.nodes.find(n => n.type === 'triggerNode' || n.id === 'start-1' || n.id === 'start') || flow.nodes[0];
 
@@ -194,7 +197,7 @@ const startFlow = async (tenantId, flowId, contact, io, waService) => {
 };
 
 /**
- * 🔁 7. CONTINUE FLOW (FINAL FIXED)
+ * 🔁 7. CONTINUE FLOW (FINAL FIXED + SMART AI)
  */
 const continueFlow = async (tenantId, phone, messageText, replyValue, io, waService) => {
   try {
@@ -204,19 +207,41 @@ const continueFlow = async (tenantId, phone, messageText, replyValue, io, waServ
 
     // 🧩 STEP 1: ALWAYS REFETCH
     const contact = await Contact.findOne({ phone });
-    if (!contact || !contact.currentFlowId || !contact.flowSnapshot) return;
+    if (!contact || !contact.currentFlowId || !contact.flowSnapshot) {
+       console.log(`[Flow Engine] ❌ Missing Snapshot for ${phone}. Resetting.`);
+       await clearSession(tenantId, phone);
+       return waService.sendTextMessage(phone, "Session expired or reset. Please type 'hello' to restart.");
+    }
 
     // 🧩 STEP 2: LOAD SNAPSHOT (Rule 7 Step 2)
     const flow = contact.flowSnapshot;
     const lastNode = flow.nodes.find(n => n.id === contact.currentFlowStep);
 
-    // 🧩 STEP 3: SAVE VARIABLE
+    // 🧩 STEP 3: SAVE VARIABLE (SMART AI EXTRACTION)
     if (lastNode?.data?.variableName) {
+      let extractedValue = messageText;
+      
+      // ✨ AI EXTRACTOR (Smart Resolve)
+      try {
+        const vName = normalize(lastNode.data.variableName);
+        if (vName === 'name' || vName === 'visitor_name' || vName === 'firstname') {
+           console.log(`[Flow Engine] ✨ Extracting NAME from: "${messageText}"`);
+           extractedValue = await AIService.extractData(messageText, 'NAME');
+           console.log(`[Flow Engine] ✅ Extracted: "${extractedValue}"`);
+        } else if (vName === 'qualification') {
+           console.log(`[Flow Engine] ✨ Extracting QUALIFICATION from: "${messageText}"`);
+           extractedValue = await AIService.extractData(messageText, 'QUALIFICATION');
+           console.log(`[Flow Engine] ✅ Extracted: "${extractedValue}"`);
+        }
+      } catch (aiErr) {
+        console.error('[Flow Engine] AI Extraction Failed (Falling back to raw):', aiErr.message);
+      }
+
       await Contact.updateOne(
         { phone },
         {
           $set: {
-            [`flowVariables.${lastNode.data.variableName}`]: messageText
+            [`flowVariables.${lastNode.data.variableName}`]: extractedValue
           }
         }
       );
@@ -226,15 +251,25 @@ const continueFlow = async (tenantId, phone, messageText, replyValue, io, waServ
     const input = normalize(replyValue || messageText);
 
     // 🧩 STEP 5: EDGE MATCH (STRICT - Rule 7 Step 5)
-    // 🚫 Rule 10: REMOVE fallback guessing
+    console.log(`[Flow Engine] 🎯 Matching input "${input}" at node ${lastNode.id}`);
     const edge = flow.edges.find(e =>
       e.source === lastNode.id &&
       normalize(e.sourceHandle) === input
     );
 
     if (!edge) {
-      console.log(`[Flow Engine] ❌ No edge matched for input: "${input}" at node: ${lastNode.id}`);
-      return waService.sendTextMessage(phone, "Invalid option. Please try again or select a valid option from the menu.");
+      // ⚡ Fallback edge check
+      const fallbackEdge = flow.edges.find(e => e.source === lastNode.id && (!e.sourceHandle || e.sourceHandle === ''));
+      
+      if (fallbackEdge) {
+        console.log(`[Flow Engine] ⚡ Using fallback edge at node ${lastNode.id}`);
+        const nextNode = flow.nodes.find(n => n.id === fallbackEdge.target);
+        await Contact.updateOne({ phone }, { currentFlowStep: nextNode.id });
+        return executeFlow(tenantId, contact.currentFlowId, contact, nextNode, io, waService);
+      }
+
+      console.log(`[Flow Engine] ❌ No edge matched for input: "${input}".`);
+      return waService.sendTextMessage(phone, "Invalid option. Please choose from the options provided.");
     }
 
     const nextNode = flow.nodes.find(n => n.id === edge.target);
@@ -285,13 +320,21 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
     const Contact = tenantDb.model('Contact', ContactSchema);
     const Flow = tenantDb.model('Flow', FlowSchema);
 
+    console.log(`[Flow Engine] 📩 Processing: "${messageText}" for ${contact.phone}`);
+
     // 🟡 LOAD CONTACT (ALWAYS FRESH)
     const activeContact = await Contact.findOne({ phone: contact.phone });
-    if (!activeContact) return;
+    if (!activeContact) {
+       console.log(`[Flow Engine] ❌ Contact ${contact.phone} not found in DB!`);
+       return;
+    }
 
     // Initialize WhatsApp Service
     const client = await Client.findOne({ tenantId });
-    if (!client || !client.whatsappConfig) return;
+    if (!client || !client.whatsappConfig) {
+       console.log(`[Flow Engine] ❌ Client config missing for tenant: ${tenantId}`);
+       return;
+    }
     
     const waService = new WhatsAppService({
       accessToken: client.whatsappConfig.accessToken,
@@ -302,19 +345,20 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
     if (activeContact.lastMessageAt && Date.now() - activeContact.lastMessageAt > 30 * 60 * 1000) {
       console.log(`[Flow Engine] ⏱️ Session timeout for ${activeContact.phone}. Clearing.`);
       await clearSession(tenantId, activeContact.phone);
-      // 🔥 RE-FETCH AFTER CLEAR
       const resetContact = await Contact.findOne({ phone: contact.phone });
       return processIncomingMessage(tenantId, resetContact.toObject(), messageText, io, isNewContact, replyValue);
     }
 
     // ✅ Manual reset
     if (messageText.toLowerCase().trim() === 'reset') {
+      console.log(`[Flow Engine] 🔄 Manual reset for ${activeContact.phone}`);
       await clearSession(tenantId, activeContact.phone);
       return waService.sendTextMessage(activeContact.phone, "Session reset. Type 'hello' to start again.");
     }
 
     // 🔀 ROUTING (Rule 5)
     if (activeContact.isFlowActive && activeContact.currentFlowStep) {
+      console.log(`[Flow Engine] ⏩ Continuing active flow: ${activeContact.currentFlowId}`);
       return continueFlow(tenantId, activeContact.phone, messageText, replyValue, io, waService);
     }
 
@@ -326,15 +370,43 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
     });
 
     if (keywordFlow) {
+      console.log(`[Flow Engine] 🎯 Keyword Trigger Matched: ${keywordFlow.name}`);
       return startFlow(tenantId, keywordFlow._id, activeContact, io, waService);
     }
 
     // Fallback to Default Flow (Trigger Type NEW_MESSAGE or match greeting)
     if (messageText.toLowerCase().match(/hi|hello|hey|start|menu/)) {
+       console.log(`[Flow Engine] 👋 Greeting Match. Checking for Default Flow...`);
        const defaultFlow = await Flow.findOne({ status: 'ACTIVE', triggerType: 'NEW_MESSAGE' });
        if (defaultFlow) {
          return startFlow(tenantId, defaultFlow._id, activeContact, io, waService);
+       } else {
+         console.log(`[Flow Engine] ⚠️ No Active 'NEW_MESSAGE' triggers found.`);
        }
+    }
+
+    // 🤖 AI CONVERSATIONAL FALLBACK (Smart Resolution)
+    console.log(`[Flow Engine] 🤖 Checking AI Settings for fallback...`);
+    const settings = await Settings.findOne({ tenantId });
+    if (settings?.automation?.botEnabled) {
+       console.log(`[Flow Engine] 🧠 AI Bot Enabled. Generating response for: "${messageText}"`);
+       const aiReply = await AIService.askAI(messageText, "Education CRM. We offer Software Engineering, VFX, and AI courses.");
+       
+       // Record in DB
+       const Message = tenantDb.model('Message', MessageSchema);
+       const savedMsg = await Message.create({
+          contactId: activeContact._id,
+          messageId: `ai_${Date.now()}`,
+          direction: 'OUTBOUND',
+          type: 'text',
+          content: aiReply,
+          status: 'SENT'
+       });
+       if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact: activeContact });
+
+       return waService.sendTextMessage(activeContact.phone, aiReply);
+    } else {
+       console.log(`[Flow Engine] 🔇 AI Bot Disabled. Ending silently.`);
     }
 
   } catch (err) {
