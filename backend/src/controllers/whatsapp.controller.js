@@ -176,6 +176,8 @@ const handleIncomingMessage = async (req, res) => {
 
       let contact = await Contact.findOne({ phone: from });
       let isNewContact = false;
+      const oldLastMessageAt = contact ? contact.lastMessageAt : null;
+
       if (!contact) {
          const contactName = value.contacts?.[0]?.profile?.name || 'Unknown';
          contact = await Contact.create({ phone: from, name: contactName, lastMessageAt: new Date(), status: 'NEW LEAD' });
@@ -222,7 +224,7 @@ const handleIncomingMessage = async (req, res) => {
       res.status(200).send('EVENT_RECEIVED');
 
       // Trigger Automation Engine with replyValue for branching (Background Process)
-      processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io, isNewContact, replyValue)
+      processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io, isNewContact, replyValue, oldLastMessageAt)
         .catch(err => {
           console.error(`[Background PRD Flow Error] Tenant: ${client.tenantId}`, err);
         });
