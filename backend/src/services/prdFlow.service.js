@@ -26,10 +26,15 @@ class PRDFlowService {
     return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
   }
 
+  /**
+   * Main Entry Point
+   */
   async processStep(tenantId, contact, messageText, waService, io, isAutoFollowup = false) {
     const lockKey = `${tenantId}_${contact.phone}`;
     if (this.activeProcesses.has(lockKey) && !isAutoFollowup) return;
     this.activeProcesses.add(lockKey);
+
+    console.log(`[PRD Flow] 🌀 Pulse for ${contact.phone} | LastStep: ${contact.currentFlowStep || 'START'}`);
 
     try {
       const tenantDb = getTenantConnection(tenantId);
@@ -60,25 +65,28 @@ class PRDFlowService {
       };
 
       const saveAndEmit = async (type, payload, waResult) => {
-        const msg = await Message.create({ contactId: contact._id, messageId: waResult?.messages?.[0]?.id || `out_${Date.now()}`, direction: 'OUTBOUND', type, content: payload, status: 'SENT' });
+        const msgId = waResult?.messages?.[0]?.id || `out_${Date.now()}`;
+        const msg = await Message.create({ contactId: contact._id, messageId: msgId, direction: 'OUTBOUND', type, content: payload, status: 'SENT' });
         if (io) io.to(tenantId).emit('current_chat_message', { ...msg._doc, contact });
       };
 
+      // Determine starting node
       let stepToProcess = flowSteps.find(s => s.id === (contact.currentFlowStep || 'START_PRD_FLOW')) || flowSteps[0];
       let iterations = 0;
       let consumeInput = !!contact.currentFlowStep;
       
-      // 🔥 Rule 15: Execution Loop (Hardened)
-      while (stepToProcess && iterations < 10) {
+      // 🔥 Rule 15: Execution Loop (End-to-End Hardened)
+      while (stepToProcess && iterations < 8) {
         iterations++;
         const nodeData = stepToProcess.data || {};
         const msgType = nodeData.msgType || 'TEXT';
 
-        // 🧩 Rule 7/11: Continue Logic (Process User Input First)
+        // 🧩 STEP A: Process User Input (Rule 7)
         if (consumeInput && !isAutoFollowup && nodeData.variableName) {
            const varName = nodeData.variableName;
            let val = messageText.trim();
-           
+           console.log(`[PRD Flow] 🧩 Processing Input for ${varName}: "${val}"`);
+
            if (varName === 'name') {
               const extName = await AIService.extractData(val, 'NAME');
               val = (extName && extName.length < 50) ? extName : val;
@@ -86,7 +94,7 @@ class PRDFlowService {
               contact.flowVariables = { ...(contact.flowVariables || {}), name: val };
            } else if (varName === 'qualification') {
               const opts = prompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
-              const matched = opts.find(o => o.toLowerCase().includes(val.toLowerCase()) || val.toLowerCase().includes(o.toLowerCase()));
+              const matched = opts.find(o => o === val || o.toLowerCase().includes(val.toLowerCase()) || val.toLowerCase().includes(o.toLowerCase()));
               if (matched) {
                  await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.qualification': matched });
                  contact.flowVariables = { ...(contact.flowVariables || {}), qualification: matched };
@@ -97,63 +105,68 @@ class PRDFlowService {
            } else if (varName === 'time') {
               await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.time': val });
               contact.flowVariables = { ...(contact.flowVariables || {}), time: val };
-              // Lead Creation
-              await Lead.create({ tenantId, name: contact.flowVariables.name, phone: contact.phone, qualification: contact.flowVariables.qualification, selectedProgram: val, preferredCallTime: val, status: 'QUALIFIED' });
+              // CREATE LEAD (Rule 10 Success)
+              await Lead.create({ tenantId, name: contact.flowVariables.name, phone: contact.phone, qualification: contact.flowVariables.qualification, selectedProgram: contact.flowVariables.program, preferredCallTime: val, status: 'QUALIFIED' });
            }
 
-           // Move to Next Node AFTER saving input
+           // Find NEXT node in the sequence
            const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);
            if (idx !== -1 && flowSteps[idx + 1]) {
               stepToProcess = flowSteps[idx + 1];
               consumeInput = false;
-              continue; // Execute the next pulse message immediately
+              continue; // Start loop for next node
            } else {
-              break; // End of flow
+              break; 
            }
         }
 
-        // 🧩 Rule 15: Send Node Message
-        console.log(`[PRD Flow] 📤 Sending: ${stepToProcess.id} (${msgType})`);
+        // 🧩 STEP B: Send Node Message
+        console.log(`[PRD Flow] 📤 Executing: ${stepToProcess.id} (${msgType})`);
         const interpolatedText = replaceVars(nodeData.text || '');
         const media = this.makeAbsolute(nodeData.mediaUrl || '');
 
-        if (msgType === 'IMAGE' && media) {
-           const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, interpolatedText, /^\d+$/.test(media) ? null : media);
-           await saveAndEmit('image', interpolatedText, res);
-        } else if (msgType === 'LIST_MESSAGE') {
-           const opts = nodeData.listOptions || prompts.qualificationOptions || [];
-           await waService.sendListMessage(contact.phone, { body: interpolatedText, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: o.substring(0, 24) })) }] });
-           await saveAndEmit('interactive', interpolatedText, null);
-        } else if (msgType === 'INTERACTIVE') {
-           const btns = nodeData.buttons || ['Morning', 'Afternoon', 'Evening'];
-           await waService.sendInteractiveButtonMessage(contact.phone, { body: interpolatedText, buttons: btns.slice(0,3) });
-           await saveAndEmit('interactive', interpolatedText, null);
-        } else {
-           const res = await waService.sendTextMessage(contact.phone, interpolatedText);
-           await saveAndEmit('text', interpolatedText, res);
+        try {
+          if (msgType === 'IMAGE' && media) {
+             const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, interpolatedText, /^\d+$/.test(media) ? null : media);
+             await saveAndEmit('image', interpolatedText, res);
+          } else if (msgType === 'LIST_MESSAGE') {
+             const opts = nodeData.listOptions || prompts.qualificationOptions || [];
+             await waService.sendListMessage(contact.phone, { body: interpolatedText, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: o.substring(0, 24) })) }] });
+             await saveAndEmit('interactive', interpolatedText, null);
+          } else if (msgType === 'INTERACTIVE') {
+             const btns = nodeData.buttons || ['Morning', 'Afternoon', 'Evening'];
+             await waService.sendInteractiveButtonMessage(contact.phone, { body: interpolatedText, buttons: btns.slice(0,3) });
+             await saveAndEmit('interactive', interpolatedText, null);
+          } else {
+             const res = await waService.sendTextMessage(contact.phone, interpolatedText);
+             await saveAndEmit('text', interpolatedText, res);
+          }
+        } catch (e) {
+          console.error(`[PRD Flow] Send Error:`, e.message);
         }
 
-        // 🛑 Rule 10/11: Save and STOP at waiting nodes
+        // 🧩 STEP C: Update State and STOP if needed
         await Contact.findOneAndUpdate({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
 
+        // 🛑 Rule 9: WAITING NODE RULE (STOP FLOW)
         if (['QUESTION', 'LIST_MESSAGE', 'INTERACTIVE'].includes(msgType)) {
            console.log(`[PRD Flow] 🛑 STOPPING at waiting node: ${stepToProcess.id}`);
            break;
         }
 
-        // Linear Move (e.g. Image -> Question)
+        // Move to next node linearly (e.g. Image -> Question)
         const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);
         if (idx !== -1 && flowSteps[idx + 1]) {
            stepToProcess = flowSteps[idx + 1];
            consumeInput = false;
         } else {
-           console.log(`[PRD Flow] 🏁 END of flow. Cleaning session.`);
+           console.log(`[PRD Flow] 🏁 End of flow reached.`);
            await Contact.findOneAndUpdate({ phone: contact.phone }, { $unset: { currentFlowStep: '' } });
            break;
         }
       }
     } catch (err) {
-      console.error(`[PRD Flow] FATAL:`, err);
+      console.error(`[PRD Flow] FATAL ERROR:`, err);
     } finally {
       this.activeProcesses.delete(lockKey);
     }
