@@ -135,8 +135,12 @@ class PRDFlowService {
            await waService.sendInteractiveButtonMessage(contact.phone, { body: interpolatedText, buttons: btns.slice(0,3) });
            await saveAndEmit('interactive', interpolatedText, null);
         } else {
-           const res = await waService.sendTextMessage(contact.phone, interpolatedText);
-           await saveAndEmit('text', interpolatedText, res);
+           if (interpolatedText && interpolatedText.trim() !== '') {
+               const res = await waService.sendTextMessage(contact.phone, interpolatedText);
+               await saveAndEmit('text', interpolatedText, res);
+           } else {
+               console.warn(`[PRD Flow] ⚠️ Skipping empty text message for node: ${stepToProcess.id}`);
+           }
         }
 
         // 🛑 Rule 9: WAITING CONDITION (BREAK)
@@ -165,7 +169,7 @@ class PRDFlowService {
     }
   }
 
-  static async updateLeadScore(Contact, Message, contactId, io, tenantId) {
+  async updateLeadScore(Contact, Message, contactId, io, tenantId) {
     try {
       const contact = await Contact.findById(contactId);
       if (!contact) return;
