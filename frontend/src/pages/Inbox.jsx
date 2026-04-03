@@ -503,38 +503,54 @@ export default function Inbox() {
                    <div className={`${
                      m.isInternal 
                        ? 'bg-amber-50 border-amber-200 text-amber-900 rounded-sm italic shadow-sm' 
-                       : (m.direction === 'OUTBOUND' ? 'bg-[var(--theme-bg)] text-white rounded-tr-sm' : 'bg-white text-gray-800 rounded-tl-sm')
-                   } p-4 rounded-2xl shadow-md border border-gray-100`}>
-                     {/* Image Message */}
-                     {m.type === 'image' && (
-                       <div className="mb-2">
-                         {m.content?.startsWith('/') ? (
-                           <div 
-                             className="overflow-hidden bg-gray-50 rounded-xl border border-gray-100/50" 
-                             style={{ maxWidth: '280px', maxHeight: '180px' }}
-                           >
-                             <img 
-                               src={'/api' + m.content} 
-                               style={{ width: '100%', height: '180px', objectFit: 'cover', display: 'block' }}
-                               className="cursor-pointer hover:scale-110 transition-transform duration-300" 
-                               onClick={() => window.open('/api' + m.content)} 
-                               alt="Attachment preview" 
-                             />
-                           </div>
-                         ) : (
-                           <div className={`flex items-center space-x-2 p-2 rounded-lg text-xs ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}><ImageIcon size={14}/> <span>Image Attached</span></div>
-                         )}
+                       : (m.direction === 'OUTBOUND' ? 'bg-[var(--theme-bg)] text-white rounded-2xl rounded-tr-sm shadow-md' : 'bg-white text-gray-800 rounded-2xl rounded-tl-sm shadow-sm border border-gray-100')
+                   } p-3.5 relative overflow-hidden min-w-[60px]`}>
+                     
+                     {/* Image/Media Message Handling */}
+                     {(m.type === 'image' || (typeof m.content === 'string' && m.content.includes('[Media]'))) && (
+                       <div className="mb-2 -mx-1 -mt-1">
+                         {(() => {
+                            let imgUrl = '';
+                            let caption = '';
+                            
+                            if (m.content?.includes('[Media]')) {
+                               const parts = m.content.split('\n');
+                               imgUrl = parts[0].replace('[Media] ', '').trim();
+                               caption = parts.slice(1).join('\n');
+                            } else if (m.content?.startsWith('/')) {
+                               imgUrl = '/api' + m.content;
+                            } else {
+                               imgUrl = m.content;
+                            }
+
+                            return (
+                              <div className="rounded-xl overflow-hidden bg-black/5 border border-white/10 max-w-full">
+                                <img 
+                                  src={imgUrl} 
+                                  className="w-full h-auto max-h-[300px] object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                  onClick={() => window.open(imgUrl)}
+                                  onError={(e) => { e.target.style.display='none'; }}
+                                  alt="Media content" 
+                                />
+                                {caption && (
+                                  <p className="px-3 py-2 text-xs leading-relaxed opacity-95 whitespace-pre-wrap border-t border-white/5 bg-black/10">
+                                    {caption}
+                                  </p>
+                                )}
+                              </div>
+                            );
+                         })()}
                        </div>
                      )}
 
-                     {/* Video/Doc Placeholders */}
-                     {m.type === 'video' && <div className={`mb-2 flex items-center space-x-2 p-2 rounded-lg text-xs ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}><ImageIcon size={14}/> <span>Video Attached</span></div>}
-                     {m.type === 'document' && <div className={`mb-2 flex items-center space-x-2 p-2 rounded-lg text-xs ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}><FileText size={14}/> <span>Document Attached</span></div>}
+                     {/* Video/Doc Placeholders (Refined) */}
+                     {m.type === 'video' && <div className={`mb-2 flex items-center space-x-2 p-2.5 rounded-xl text-xs ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}><ImageIcon size={14}/> <span>Video Attachment</span></div>}
+                     {m.type === 'document' && <div className={`mb-2 flex items-center space-x-2 p-2.5 rounded-xl text-xs ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}><FileText size={14}/> <span>Document Attachment</span></div>}
                      
-                     {/* Message Text Content */}
-                     {(!m.content || typeof m.content !== 'string' || !m.content.startsWith('/') || m.type === 'text') && (
+                     {/* Message Text Content (Excluding the [Media] string if already rendered as image) */}
+                     {(!m.content?.includes('[Media]') || m.type === 'text') && (
                         <p 
-                          className={`leading-relaxed font-medium ${isEmojiOnly(m.content) ? 'text-6xl py-2 mb-2 drop-shadow-md' : 'text-[14px]'}`}
+                          className={`leading-relaxed ${isEmojiOnly(m.content) ? 'text-5xl py-2 mb-1' : 'text-[13.5px] font-medium whitespace-pre-wrap break-words'}`}
                           style={isEmojiOnly(m.content) ? { fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif' } : {}}
                         >
                           {(m.content && typeof m.content === 'object') ? JSON.stringify(m.content) : (m.content || '[Empty Message]')}
