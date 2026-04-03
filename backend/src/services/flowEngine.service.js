@@ -54,7 +54,6 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
     const getFullUrl = (url) => {
         if (!url) return null;
         if (url.startsWith('http')) return encodeURI(url);
-        // Use environment variable for base URL if provided, fallback to wapipulse.com
         const baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').replace(/\/$/, '');
         const normalizedUrl = url.startsWith('/') ? url : `/${url}`;
         return encodeURI(`${baseUrl}${normalizedUrl}`);
@@ -104,7 +103,6 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
        steps++;
        console.log(`[Flow Engine] Node ${steps}: ${currentNode.id} [${currentNode.type}]`);
 
-       // Persist state by phone instead of ID to be safe
        await Contact.findOneAndUpdate({ phone: contact.phone }, { 
            currentFlowStep: currentNode.id, 
            lastFlowId: flowId,
@@ -148,7 +146,6 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
                         let res = await waService.sendMedia(contact.phone, mType, mediaId, interpolatedText);
                         await saveAndEmit(mType, `[Media ID] ${mediaId}\nCaption: ${interpolatedText}`, res);
                     } else {
-                        // If mediaId is not a numeric ID, treat it as a potential filename/URL
                         const finalMediaUrl = getFullUrl(mediaUrl || mediaId);
                         if (finalMediaUrl) {
                             let res = await waService.sendMedia(contact.phone, mType, null, interpolatedText, finalMediaUrl);
@@ -231,11 +228,12 @@ const executeFlow = async (tenantId, flowId, contact, io, startNodeId = null, re
 
 const processIncomingMessage = async (tenantId, contact, messageText, io, isNewContact = false, replyValue = null) => {
   try {
-     console.log(`[Flow Engine] Processing Message from ${contact.phone}: "${messageText}" | ReplyValue: "${replyValue}" | isNewContact: ${isNewContact} | Session: ${contact.currentFlowStep || 'NONE'}`);
+     console.log(`[Flow Engine] Processing Message from ${contact.phone}: "${messageText}" | ReplyValue: "${replyValue}" | Session: ${contact.currentFlowStep || 'NONE'}`);
      
      const tenantDb = getTenantConnection(tenantId);
      const Flow = tenantDb.model('Flow', FlowSchema);
      const Contact = tenantDb.model('Contact', ContactSchema);
+     const Message = tenantDb.model('Message', MessageSchema);
 
      // Refresh contact from DB
      const dbContact = await Contact.findOne({ phone: contact.phone });
@@ -257,12 +255,14 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
 
      const botMode = settings?.automation?.botMode || 'PRD';
 
-     // 🌟 NEW: Forced Restart Logic for Greeting Keywords
-     const greetingKeywords = ['hi', 'hello', 'start', 'get started', 'hey', 'ola', 'menu', 'reset'];
-     const isGreeting = greetingKeywords.includes(messageText.toLowerCase().trim());
-     
-     if (isGreeting && !replyValue) {
-         console.log(`[Flow Engine] 👋 Greeting detected from ${activeContact.phone}. Resetting session for fresh start.`);
+     // ⏱️ Rule 12: Session Timeout Check (30 Minutes)
+     const now = new Date();
+     const lastActivity = activeContact.lastMessageAt || activeContact.updatedAt || new Date(0);
+     const diffMinutes = (now - new Date(lastActivity)) / (1000 * 60);
+     const isTimedOut = diffMinutes > 30;
+
+     if (isTimedOut && activeContact.currentFlowStep) {
+         console.log(`[Flow Engine] ⏱️ Session timed out for ${activeContact.phone} (${Math.round(diffMinutes)}m). Resetting.`);
          await Contact.findOneAndUpdate({ phone: activeContact.phone }, { 
              $unset: { currentFlowStep: "", lastFlowId: "" } 
          });
@@ -270,96 +270,75 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
          activeContact.lastFlowId = null;
      }
 
-     // 0. PRD Flow Session Resume
-     const prdStates = ['prd_1', 'prd_2', 'prd_3', 'prd_4', 'prd_5', 'prd_6', 'START_PRD_FLOW', 'AWAITING_NAME', 'AWAITING_QUALIFICATION', 'AWAITING_PROGRAM', 'AWAITING_CALL_TIME', 'AWAITING_ADDITIONAL_HELP'];
-     if (activeContact.currentFlowStep && prdStates.includes(activeContact.currentFlowStep)) {
-         console.log(`[Flow Engine] Resuming PRD AI Flow for ${activeContact.phone}: ${activeContact.currentFlowStep}`);
-         await PRDFlowService.processStep(tenantId, activeContact, replyValue || messageText, waService, io);
-         return;
+     // 🔄 Rule 11: Reset logic (Explicit only)
+     const triggerReset = messageText.toLowerCase().trim() === 'reset';
+     if (triggerReset) {
+         console.log(`[Flow Engine] 🔄 Explicit RESET requested by ${activeContact.phone}`);
+         await Contact.findOneAndUpdate({ phone: activeContact.phone }, { 
+             $unset: { currentFlowStep: "", lastFlowId: "" } 
+         });
+         activeContact.currentFlowStep = null;
+         activeContact.lastFlowId = null;
      }
 
-     // 1. Standard Flow Session Resume
-     if (activeContact.currentFlowStep && activeContact.lastFlowId) {
-         console.log(`[Flow Engine] Resuming Session for ${activeContact.phone}: ${activeContact.currentFlowStep}`);
-         const activeFlow = await Flow.findById(activeContact.lastFlowId);
-
-         if (!activeFlow || activeFlow.status !== 'ACTIVE') {
-             console.log(`[Flow Engine] ⚠️ Flow ${activeContact.lastFlowId} not found or inactive. Clearing stuck session for ${activeContact.phone}.`);
-             // Clear the stuck session so the contact can trigger new flows
-             await Contact.findOneAndUpdate({ phone: activeContact.phone }, { 
-                 $unset: { currentFlowStep: "", lastFlowId: "" } 
-             });
-             // Update activeContact object to reflect cleared session for subsequent checks
-             activeContact.currentFlowStep = null;
-             activeContact.lastFlowId = null;
-             // DO NOT RETURN! Continue to normal trigger analysis.
-         } else {
-             const lastNode = activeFlow.nodes.find(n => n.id === activeContact.currentFlowStep);
-             if (lastNode && (lastNode.data.msgType === 'QUESTION' || lastNode.data.variableName)) {
-                 const varName = lastNode.data.variableName || 'last_input';
-                 console.log(`[Flow Engine] Saving input "${messageText}" to variable "${varName}"`);
-                 await Contact.findOneAndUpdate({ phone: activeContact.phone }, { 
-                     $set: { [`flowVariables.${varName}`]: messageText }
-                 });
-                 activeContact.flowVariables = activeContact.flowVariables || {};
-                 activeContact.flowVariables[varName] = messageText;
-             }
-             // Only execute and return if we HAVE a valid active flow to resume
-             executeFlow(tenantId, activeContact.lastFlowId, activeContact, io, activeContact.currentFlowStep, replyValue || messageText);
+     // 🧠 Rule 4: Resume Flow Logic (Highest Priority)
+     const prdStates = ['prd_1', 'prd_2', 'prd_3', 'prd_4', 'prd_5', 'prd_6', 'START_PRD_FLOW', 'AWAITING_NAME', 'AWAITING_QUALIFICATION', 'AWAITING_PROGRAM', 'AWAITING_CALL_TIME'];
+     
+     if (activeContact.currentFlowStep) {
+         // A. Resume PRD AI Flow
+         if (prdStates.includes(activeContact.currentFlowStep)) {
+             console.log(`[Flow Engine] ▶️ Resuming PRD AI Flow: ${activeContact.currentFlowStep}`);
+             await PRDFlowService.processStep(tenantId, activeContact, replyValue || messageText, waService, io);
              return;
+         }
+
+         // B. Resume Standard Flow
+         if (activeContact.lastFlowId) {
+            console.log(`[Flow Engine] ▶️ Resuming Standard Flow: ${activeContact.lastFlowId}`);
+            const activeFlow = await Flow.findById(activeContact.lastFlowId);
+
+            if (!activeFlow || activeFlow.status !== 'ACTIVE') {
+               await Contact.findOneAndUpdate({ phone: activeContact.phone }, { $unset: { currentFlowStep: "", lastFlowId: "" } });
+               activeContact.currentFlowStep = null;
+            } else {
+               const lastNode = activeFlow.nodes.find(n => n.id === activeContact.currentFlowStep);
+               if (lastNode && (lastNode.data.msgType === 'QUESTION' || lastNode.data.variableName)) {
+                   const varName = lastNode.data.variableName || 'last_input';
+                   await Contact.findOneAndUpdate({ phone: activeContact.phone }, { $set: { [`flowVariables.${varName}`]: messageText } });
+                   activeContact.flowVariables = activeContact.flowVariables || {};
+                   activeContact.flowVariables[varName] = messageText;
+               }
+               executeFlow(tenantId, activeContact.lastFlowId, activeContact, io, activeContact.currentFlowStep, replyValue || messageText);
+               return;
+            }
          }
      }
 
-      // 4. TRIGGER AI GREETING (PRD OR CUSTOM)
-      if (!activeContact.currentFlowStep) {
-          console.log(`[Flow Engine] 🤖 Starting AI Greeting Journey for ${activeContact.phone} (No active session detected)`);
-          
-          if (botMode === 'CUSTOM' && settings?.automation?.customGreetingFlowId) {
-             console.log(`[Flow Engine] 🎨 Launching CUSTOM Flow: ${settings.automation.customGreetingFlowId}`);
-             executeFlow(tenantId, settings.automation.customGreetingFlowId, activeContact, io);
-             return;
-          }
-
-          console.log(`[Flow Engine] Triggering rigid PRD fallback Template Workflow`);
-          await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
-          return;
-      }
-
-      // 5. IF SESSION IS ACTIVE (or manually triggered), Process based on AI Intent
-      const intent = await AIService.detectIntent(messageText);
-      if (intent === 'AGENT_TRANSFER') {
-          console.log(`[Flow Engine] 👨‍💼 Agent Transfer requested by ${activeContact.phone}`);
-          const transferPrompt = "Transferring you to a human agent... 👨‍💻";
-          await waService.sendTextMessage(activeContact.phone, transferPrompt);
-          
-          await Contact.findByIdAndUpdate(dbContact._id, { 
-              status: 'FOLLOW_UP',
-              $set: { lastInteraction: new Date() }
-          });
-          return;
-      } else if (intent === 'QUESTION') {
-         const answer = await AIService.askAI(messageText, "You are JV Marketing Education Support assistant.");
-         await waService.sendTextMessage(activeContact.phone, answer);
+     // 🚩 Rule 5: Start New Flow Logic (If no session)
+     console.log(`[Flow Engine] 🟢 Starting NEW Session for ${activeContact.phone}`);
+     
+     // 1. Keyword Flows Priority
+     const keywordFlow = await Flow.findOne({ 
+         status: 'ACTIVE', 
+         tenantId,
+         triggerType: 'KEYWORD', 
+         triggerKeywords: { $in: [messageText.toLowerCase().trim()] } 
+     });
+     if (keywordFlow) {
+         await executeFlow(tenantId, keywordFlow._id, activeContact, io);
          return;
      }
 
-     // 5. Catch-all Fallback
-     console.log(`[Flow Engine] No match found. Checking for Catch-all...`);
-     const catchAllFlow = await Flow.findOne({ 
-         status: 'ACTIVE', 
-         triggerType: 'KEYWORD', 
-         $or: [{ triggerKeywords: [] }, { triggerKeywords: [""] }] 
-     });
-
-     if (catchAllFlow) {
-         console.log(`[Flow Engine] 🎣 Triggering Catch-all Flow: "${catchAllFlow.name}"`);
-         executeFlow(tenantId, catchAllFlow._id, activeContact, io);
-     } else {
-         console.log(`[Flow Engine] No catch-all flow found. Silent.`);
+     // 2. AI Greeting Fallback
+     if (botMode === 'CUSTOM' && settings?.automation?.customGreetingFlowId) {
+         executeFlow(tenantId, settings.automation.customGreetingFlowId, activeContact, io);
+         return;
      }
 
-     // FINAL: Trigger universal score update for every message
-     // This catches buying signals even in manual/casual conversation
+     // Default: Trigger Template PRD Flow
+     await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io);
+     
+     // FINAL: Trigger universal score update if not in a flow
      await PRDFlowService.updateLeadScore(Contact, Message, activeContact._id, io, tenantId);
 
   } catch (err) {
