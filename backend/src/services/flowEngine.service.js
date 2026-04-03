@@ -173,7 +173,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
 
      // 🧩 Rule 6: CONTINUE FLOW
      if (activeContact.currentFlowStep) {
-         const prdStates = ['prd_1', 'prd_2', 'prd_3', 'prd_4', 'prd_5', 'prd_6', 'START_PRD_FLOW'];
+         const prdStates = ['greeting', 'ask_name', 'qualification', 'program', 'call_time', 'thank_you', 'START_PRD_FLOW'];
          if (prdStates.includes(activeContact.currentFlowStep)) {
              await PRDFlowService.processStep(tenantId, activeContact, replyValue || messageText, waService, io);
              return;
