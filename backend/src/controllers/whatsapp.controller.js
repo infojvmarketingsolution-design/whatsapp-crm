@@ -136,21 +136,12 @@ const handleIncomingMessage = async (req, res) => {
     }
     
     // 2. Handle Messages
+    if (value.messages && value.messages[0]) {
       const message = value.messages[0];
       const from = message.from;
       const msgId = message.id;
       const io = req.app.get('io');
-
-      // 1. 🔒 [PRD FIX] Prevent duplicate webhook hits (WhatsApp Retries)
-      const existing = await Contact.findOne({ 
-        phone: from, 
-        lastProcessedMessageId: msgId 
-      });
-      if (existing) {
-        console.log(`[Webhook] Duplicate message ID detected: ${msgId}. Skipping.`);
-        return res.status(200).send('EVENT_RECEIVED');
-      }
-
+      
       let msgBody = "";
       if (message.text) {
           msgBody = message.text.body || (typeof message.text === 'string' ? message.text : JSON.stringify(message.text));
@@ -181,11 +172,15 @@ const handleIncomingMessage = async (req, res) => {
           }
       }
 
-      console.log(`📩 [Tenant: ${client.tenantId}] Incoming: ${msgBody} | ReplyValue: ${replyValue}`);
+      // 🔒 1. Prevent Duplicate Webhook Hits (WhatsApp Retries)
+      const isDuplicate = await Contact.findOne({ phone: from, lastProcessedMessageId: msgId });
+      if (isDuplicate) {
+        console.log(`[Webhook] 🛑 Deduplication: Skipping already processed message ${msgId}`);
+        return res.status(200).send('EVENT_RECEIVED');
+      }
 
       let contact = await Contact.findOne({ phone: from });
       let isNewContact = false;
-      const oldLastMessageAt = contact ? contact.lastMessageAt : null;
 
       if (!contact) {
          const contactName = value.contacts?.[0]?.profile?.name || 'Unknown';
@@ -200,23 +195,7 @@ const handleIncomingMessage = async (req, res) => {
          isNewContact = true;
       }
 
-      // 2. ⏱️ [PRD FIX] Timeout reset (30 minutes)
-      const TIMEOUT_WINDOW = 30 * 60 * 1000;
-      if (contact.lastMessageAt && (Date.now() - new Date(contact.lastMessageAt).getTime() > TIMEOUT_WINDOW)) {
-        console.log(`[Webhook] ⏱️ Session timeout for ${from}. Clearing state.`);
-        // Manual clear session in controller for atomicity
-        await Contact.updateOne(
-          { phone: from },
-          { 
-            currentFlowStep: null,
-            currentFlowId: null,
-            isFlowActive: false
-          }
-        );
-        contact = await Contact.findOne({ phone: from });
-      }
-
-      // 3. 🔥 [PRD FIX] Save Message ID immediately to prevent race conditions
+      // 🔥 SAVE MESSAGE ID (ANTI DUPLICATE) & UPDATE TIMESTAMP
       await Contact.updateOne(
         { phone: from },
         { 
@@ -224,9 +203,6 @@ const handleIncomingMessage = async (req, res) => {
           lastMessageAt: new Date()
         }
       );
-      // Wait for update to be certain (or re-fetch if needed for downstream)
-      contact.lastProcessedMessageId = msgId;
-      contact.lastMessageAt = new Date();
 
       const waService = new WhatsAppService({
           accessToken: client.whatsappConfig.accessToken,
@@ -264,10 +240,10 @@ const handleIncomingMessage = async (req, res) => {
       // ⚡ Immediate Response to Meta (Avoid Webhook Timeouts/Retries)
       res.status(200).send('EVENT_RECEIVED');
 
-      // Trigger Automation Engine with replyValue for branching (Background Process)
-      processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io, isNewContact, replyValue, oldLastMessageAt)
+      // Trigger Automation Engine (Background Process)
+      processIncomingMessage(client.tenantId, contact.toObject(), msgBody, io, isNewContact, replyValue)
         .catch(err => {
-          console.error(`[Background PRD Flow Error] Tenant: ${client.tenantId}`, err);
+          console.error(`[Background Flow Engine Error] Tenant: ${client.tenantId}`, err);
         });
 
       return; // ✅ FIX: Added return here to prevent multiple responses for one payload

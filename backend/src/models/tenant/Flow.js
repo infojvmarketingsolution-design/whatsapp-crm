@@ -57,7 +57,8 @@ const FlowSchema = new mongoose.Schema({
   metrics: {
     triggeredCount: { type: Number, default: 0 },
     completionCount: { type: Number, default: 0 },
-  }
+  },
+  version: { type: Number, default: 1 }
 }, {
   timestamps: true,
 });
