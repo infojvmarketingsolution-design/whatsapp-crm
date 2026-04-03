@@ -197,7 +197,7 @@ export default function Pipeline() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-x-auto p-6 bg-[#fcfcfd]">
+      <div className="flex-1 overflow-x-auto p-6 bg-[#fcfcfd] scrollbar-hide">
         <div className="flex space-x-6 h-full min-w-max pb-4">
           {STATUSES.map(stage => {
             const columnContacts = contacts.filter(c => (c.status || 'NEW LEAD') === stage.id);
@@ -221,7 +221,7 @@ export default function Pipeline() {
                    </div>
                 </div>
 
-                <div className="flex-1 p-3 overflow-y-auto custom-scrollbar space-y-4">
+                <div className="flex-1 p-3 overflow-y-auto scrollbar-hide space-y-4">
                   {columnContacts.map(c => (
                     <div 
                       key={c._id}
