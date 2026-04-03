@@ -5,19 +5,22 @@ const ContactSchema = require('../models/tenant/Contact');
 const Client = require('../models/core/Client');
 const WhatsAppService = require('./whatsapp.service');
 const MessageSchema = require('../models/tenant/Message');
+const AIService = require('./ai.service');
+const PRDFlowService = require('./prdFlow.service');
+const ClientSchema = require('../models/core/Client');
+const Settings = require('../models/core/Settings');
 
 /**
- * ⚡ WHATSAPP FLOW ENGINE – FULL PRD (CONTINUOUS MODE)
+ * 🚀 WHATSAPP FLOW ENGINE – FULL PRD (CONTINUOUS MODE)
  */
 
 /**
- * 🧩 7. NODE TYPES (FINAL STANDARD)
- * Determines if a node should stop the flow and wait for user input.
+ * 🧩 Helper: Determine if a node should stop the flow and wait for user input.
+ * Matches Rule 7: NODE TYPES
  */
 const isWaitingNode = (node) => {
   if (!node || !node.data) return false;
   const msgType = node.data.msgType;
-  // QUESTION, LIST_MESSAGE, INTERACTIVE are waiting nodes
   return ['QUESTION', 'LIST_MESSAGE', 'INTERACTIVE', 'INTERACTIVE_MESSAGE'].includes(msgType);
 };
 
@@ -28,8 +31,7 @@ const interpolate = (text, contact) => {
   if (!text) return '';
   return text.replace(/\{\{(.*?)\}\}/g, (match, key) => {
     const v = key.trim();
-    // Default fallback to name or phone if specified
-    if (v === 'name') return contact.flowVariables?.name || contact.name || 'Friend';
+    if (v === 'name' || v === 'visitor_name') return contact.flowVariables?.name || contact.name || 'Friend';
     if (v === 'phone') return contact.phone || '';
     return contact.flowVariables?.[v] || match;
   });
@@ -46,128 +48,152 @@ const getFullUrl = (url) => {
 };
 
 /**
- * 💥 15. FINAL EXECUTION ENGINE (SIMPLIFIED)
- * Matches Rule 5 & 15: EXECUTION ENGINE
+ * 💥 FINAL EXECUTION ENGINE (SIMPLIFIED)
+ * Matches Rule 15: EXECUTION ENGINE
  */
 const executeFlow = async (tenantId, flowId, contact, node, io, waService) => {
   try {
     const tenantDb = getTenantConnection(tenantId);
     const Contact = tenantDb.model('Contact', ContactSchema);
     const Message = tenantDb.model('Message', MessageSchema);
+    const Flow = tenantDb.model('Flow', FlowSchema);
 
-    // 🔄 Rule 5 & 15: while(node) loop
+    // Context-level execution guard (memory-based for current request)
+    const executedNodes = new Set();
+
     while (node) {
-      console.log(`[Flow Engine] 📤 Sending Node: ${node.id} (${node.data?.msgType || 'TEXT'})`);
+      console.log(`[Flow Engine] 📤 Executing node: ${node.id} (${node.data?.msgType})`);
 
-      // 🚫 9. ANTI-DUPLICATION RULE
-      // Before sending: if (contact.currentFlowStep === node.id) return;
-      // We check fresh DB state to avoid race conditions
+      // 🚫 Rule 9: ANTI-DUPLICATION (Memory Guard)
+      if (executedNodes.has(node.id)) {
+        console.log(`[Flow Engine] 🛑 Loop detected or node already executed in this pass: ${node.id}`);
+        break;
+      }
+      executedNodes.add(node.id);
+
+      // Re-fetch contact to ensure atomic state transitions (PRD Requirement)
       const freshContact = await Contact.findOne({ phone: contact.phone });
-      if (freshContact.currentFlowStep === node.id && isWaitingNode(node)) {
-        console.log(`[Flow Engine] 🛑 Anti-duplication: Already at ${node.id}. Skipping.`);
+
+      // Send Message logic
+      if (node.type === 'messageNode' || node.type === 'triggerNode') {
+        const { msgType = 'TEXT', text = '', mediaUrl = '', buttons = [], listOptions = [], buttonText = 'Select' } = node.data;
+        const interpolatedText = interpolate(text, freshContact);
+
+        const saveAndEmit = async (type, content, waResult) => {
+          const savedMsg = await Message.create({
+            contactId: freshContact._id,
+            messageId: waResult?.messages?.[0]?.id || `out_${Date.now()}_flow`,
+            direction: 'OUTBOUND',
+            type,
+            content,
+            status: 'SENT'
+          });
+          if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact: freshContact });
+        };
+
+        try {
+          if (msgType === 'TEXT' && text) {
+            let res = await waService.sendTextMessage(freshContact.phone, interpolatedText);
+            await saveAndEmit('text', interpolatedText, res);
+          } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(msgType.toUpperCase())) {
+            const finalMediaUrl = getFullUrl(mediaUrl);
+            const isNumeric = mediaUrl && /^\d+$/.test(mediaUrl);
+            let res = await waService.sendMedia(freshContact.phone, msgType.toLowerCase(), isNumeric ? mediaUrl : null, interpolatedText, isNumeric ? null : finalMediaUrl);
+            await saveAndEmit(msgType.toLowerCase(), interpolatedText, res);
+          } else if (msgType === 'INTERACTIVE' || msgType === 'INTERACTIVE_MESSAGE') {
+            let res = await waService.sendSmartButtons(freshContact.phone, {
+              body: interpolatedText,
+              buttons: buttons.filter(b => b && b.trim() !== '').map(b => interpolate(b, freshContact))
+            });
+            await saveAndEmit('interactive', interpolatedText, res);
+          } else if (msgType === 'LIST_MESSAGE') {
+            let res = await waService.sendListMessage(freshContact.phone, {
+              body: interpolatedText,
+              buttonText: interpolate(buttonText, freshContact),
+              sections: [{ title: 'Options', rows: listOptions.map((opt, i) => ({ id: `list_${i}`, title: interpolate(opt, freshContact).substring(0, 24) })) }]
+            });
+            await saveAndEmit('interactive', interpolatedText, res);
+          }
+        } catch (e) {
+          console.error(`[Flow Engine] Node Error:`, e.message);
+        }
+      } else if (node.type === 'actionNode') {
+        const tag = interpolate(node.data?.tag || '', freshContact);
+        if (tag) {
+          await Contact.findOneAndUpdate({ phone: freshContact.phone }, { $addToSet: { tags: tag } });
+        }
+      }
+
+      // 🧩 Rule 5: STOP if waiting node (PRD requirement)
+      if (isWaitingNode(node)) {
+        console.log(`[Flow Engine] ⏸️ Waiting Node: ${node.id}. Stopping sequential execution.`);
+        await Contact.updateOne(
+          { phone: freshContact.phone }, 
+          { currentFlowStep: node.id, currentFlowId: flowId }
+        );
         return; 
       }
 
-      // Execute Node (Send Message)
-      const { msgType = 'TEXT', text = '', mediaUrl = '', buttons = [], listOptions = [], buttonText = 'Select' } = node.data;
-      const interpolatedText = interpolate(text, freshContact);
-
-      const saveAndEmit = async (type, content, waResult) => {
-        const savedMsg = await Message.create({
-          contactId: freshContact._id,
-          messageId: waResult?.messages?.[0]?.id || `out_${Date.now()}_flow`,
-          direction: 'OUTBOUND',
-          type,
-          content,
-          status: 'SENT'
-        });
-        if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact: freshContact });
-      };
-
-      try {
-        if (msgType === 'TEXT' || (!msgType && text)) {
-          let res = await waService.sendTextMessage(freshContact.phone, interpolatedText);
-          await saveAndEmit('text', interpolatedText, res);
-        } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(msgType.toUpperCase())) {
-          const finalMediaUrl = getFullUrl(mediaUrl);
-          const isNumeric = mediaUrl && /^\d+$/.test(mediaUrl);
-          let res = await waService.sendMedia(freshContact.phone, msgType.toLowerCase(), isNumeric ? mediaUrl : null, interpolatedText, isNumeric ? null : finalMediaUrl);
-          await saveAndEmit(msgType.toLowerCase(), interpolatedText, res);
-        } else if (msgType === 'INTERACTIVE' || msgType === 'INTERACTIVE_MESSAGE') {
-          // Standard Buttons
-          const btnLabels = (buttons || []).filter(b => b && b.trim() !== '').map(b => interpolate(b, freshContact));
-          let res = await waService.sendSmartButtons(freshContact.phone, {
-            body: interpolatedText,
-            buttons: btnLabels.slice(0, 3) 
-          });
-          await saveAndEmit('interactive', interpolatedText, res);
-        } else if (msgType === 'LIST_MESSAGE') {
-          // Standard List
-          const opts = (listOptions || []).filter(o => o && o.trim() !== '');
-          let res = await waService.sendListMessage(freshContact.phone, {
-            body: interpolatedText,
-            buttonText: interpolate(buttonText || 'Select', freshContact),
-            sections: [{ title: 'Options', rows: opts.map((opt, i) => ({ id: `list_${i}`, title: interpolate(opt, freshContact).substring(0, 24) })) }]
-          });
-          await saveAndEmit('interactive', interpolatedText, res);
-        }
-      } catch (e) {
-        console.error(`[Flow Engine] Node ${node.id} Send Error:`, e.message);
-      }
-
-      // 🛑 5. STOP at QUESTION / LIST / BUTTON
-      if (isWaitingNode(node)) {
-        console.log(`[Flow Engine] ⏸️ STOP at Waiting Node: ${node.id}. Saving Session.`);
-        await Contact.findOneAndUpdate(
-          { phone: freshContact.phone }, 
-          { currentFlowStep: node.id, lastFlowId: flowId }
-        );
-        break;
-      }
-
-      // ⏭️ Move to Next Node (Linear)
-      const tenantFlowData = await tenantDb.model('Flow', FlowSchema).findById(flowId);
-      const edges = tenantFlowData.edges.filter(e => e.source === node.id);
+      // ➡️ NEXT NODE (Linear sequential flow)
+      const flowObject = await Flow.findById(flowId);
+      const nextEdge = flowObject.edges.find(e => e.source === node.id);
       
-      // For non-waiting nodes, we usually expect only one edge (linear)
-      if (edges.length > 0) {
-        const edge = edges[0];
-        node = tenantFlowData.nodes.find(n => n.id === edge.target);
+      if (nextEdge) {
+        node = flowObject.nodes.find(n => n.id === nextEdge.target);
+        // Sync state to DB before moving to next in while loop
+        await Contact.updateOne(
+          { phone: freshContact.phone },
+          { currentFlowStep: node.id }
+        );
       } else {
-        console.log(`[Flow Engine] 🏁 END of Flow: ${node.id}. Clearing Session.`);
-        await Contact.findOneAndUpdate({ phone: freshContact.phone }, { $unset: { currentFlowStep: "", lastFlowId: "" } });
+        console.log(`[Flow Engine] 🏁 End of flow reached at node: ${node.id}`);
+        await clearSession(tenantId, freshContact.phone);
         node = null;
       }
     }
-  } catch (err) {
-    console.error(`[Flow Engine] executeFlow Fatal:`, err);
+  } catch (error) {
+    console.error(`[Flow Engine] executeFlow Fatal:`, error);
   }
 };
 
 /**
  * ▶️ 5. START FLOW
+ * Matches Rule 5: START FLOW logic
  */
 const startFlow = async (tenantId, flowId, contact, io, waService) => {
   try {
+    console.log(`[Flow Engine] 🟢 Starting Flow: ${flowId} for ${contact.phone}`);
     const tenantDb = getTenantConnection(tenantId);
     const Flow = tenantDb.model('Flow', FlowSchema);
+    const Contact = tenantDb.model('Contact', ContactSchema);
+    
     const flowData = await Flow.findById(flowId);
-    
-    if (!flowData || flowData.status !== 'ACTIVE') return;
+    if (!flowData || (flowData.status !== 'ACTIVE' && flowData.status !== 'PUBLISHED')) return;
 
-    // 1. Find start node (Trigger or First Node)
-    let node = flowData.nodes.find(n => n.type === 'triggerNode' || n.id === 'start-1') || flowData.nodes[0];
+    // 1. Find start node
+    let startNode = flowData.nodes.find(n => n.type === 'triggerNode' || n.type === 'start' || n.id === 'start-1') || flowData.nodes[0];
     
-    // 2. Execute
-    await executeFlow(tenantId, flowId, contact, node, io, waService);
-  } catch (err) {
-    console.error(`[Flow Engine] startFlow Error:`, err);
+    // 2. Initialize Flow Session (PRD REQUIREMENT)
+    await Contact.updateOne(
+      { phone: contact.phone },
+      {
+        currentFlowId: flowData._id,
+        currentFlowStep: startNode.id,
+        isFlowActive: true,
+        flowVersion: flowData.version || 1
+      }
+    );
+
+    // 3. Execute
+    await executeFlow(tenantId, flowData._id, contact, startNode, io, waService);
+  } catch (error) {
+    console.error(`[Flow Engine] startFlow Error:`, error);
   }
 };
 
 /**
  * 🔁 6. CONTINUE FLOW (CRITICAL)
- * Step-by-step resumption logic
+ * Matches Rule 6: CONTINUE FLOW logic
  */
 const continueFlow = async (tenantId, contact, messageText, replyValue, io, waService) => {
   try {
@@ -175,68 +201,65 @@ const continueFlow = async (tenantId, contact, messageText, replyValue, io, waSe
     const Flow = tenantDb.model('Flow', FlowSchema);
     const Contact = tenantDb.model('Contact', ContactSchema);
 
-    // 🧩 1. Get last node
-    const flowData = await Flow.findById(contact.lastFlowId);
+    // 🔥 ALWAYS REFETCH (PRD REQ)
+    const activeContact = await Contact.findOne({ phone: contact.phone });
+    if (!activeContact || !activeContact.currentFlowId) return;
+
+    console.log(`[Flow Engine] 🔁 Continuing Flow for ${activeContact.phone} | LastNode: ${activeContact.currentFlowStep}`);
+
+    // 🧩 1. Get flow data
+    const flowData = await Flow.findById(activeContact.currentFlowId);
     if (!flowData) return;
 
-    const lastNode = flowData.nodes.find(n => n.id === contact.currentFlowStep);
+    const lastNode = flowData.nodes.find(n => n.id === activeContact.currentFlowStep);
     if (!lastNode) return;
 
-    console.log(`[Flow Engine] 🔁 Resuming from: ${lastNode.id}. Input: "${replyValue || messageText}"`);
-
-    // 🧩 2. Save user input
-    // Only if the node has a variableName defined
+    // 🧩 2. SAVE VARIABLE (PRD REQ)
     const variableName = lastNode.data?.variableName;
     if (variableName) {
-      await Contact.findOneAndUpdate(
-        { phone: contact.phone },
+      console.log(`[Flow Engine] 💾 Saving variable: ${variableName} = ${messageText}`);
+      await Contact.updateOne(
+        { phone: activeContact.phone },
         { $set: { [`flowVariables.${variableName}`]: messageText } }
       );
-      // Update local object for use in interpolation
-      contact.flowVariables = { ...(contact.flowVariables || {}), [variableName]: messageText };
     }
 
-    // 🧩 3. Determine input type
-    const input = replyValue ? replyValue : messageText.trim();
+    // 🧩 3. STRICT EDGE MATCH (PRD REQ)
+    // sourceHandle matches button ID/List ID OR Title
+    const input = replyValue || messageText.trim();
 
-    // 🧩 4. Find next node
-    const edges = flowData.edges.filter(e => e.source === lastNode.id);
-
-    // Matching logic (Rule 8): sourceHandle === input OR handle_${input}
-    let edge = edges.find(e => 
-      e.sourceHandle === input || 
-      e.sourceHandle === `handle_${input}` ||
-      (e.sourceHandle === messageText.trim() && !replyValue)
+    const edge = flowData.edges.find(e => 
+      e.source === lastNode.id && 
+      (e.sourceHandle === input || e.sourceHandle === `handle_${input}`)
     );
 
-    // Fallback: If only one edge exists and it's a generic transition
-    if (!edge && edges.length === 1 && (!edges[0].sourceHandle || edges[0].sourceHandle === 'default')) {
-      edge = edges[0];
-    }
-
     if (!edge) {
-      console.warn(`[Flow Engine] ⚠️ No matching branching for input: "${input}" at node ${lastNode.id}`);
-      return;
+      console.warn(`[Flow Engine] ⚠️ No strict edge match for: "${input}"`);
+      // Optional: Send invalid option message
+      return waService.sendTextMessage(activeContact.phone, "Invalid option. Please try again.");
     }
 
-    // 🧩 5. Move to next node
+    // 🧩 4. Move to next node
     const nextNode = flowData.nodes.find(n => n.id === edge.target);
 
-    // 🧩 6. Execute next nodes
     if (nextNode) {
-      await executeFlow(tenantId, flowData._id, contact, nextNode, io, waService);
+      await Contact.updateOne(
+        { phone: activeContact.phone },
+        { currentFlowStep: nextNode.id }
+      );
+      await executeFlow(tenantId, flowData._id, activeContact, nextNode, io, waService);
     } else {
-      console.log(`[Flow Engine] 🏁 No target found for edge ${edge.id}. Clearing session.`);
-      await Contact.findOneAndUpdate({ phone: contact.phone }, { $unset: { currentFlowStep: "", lastFlowId: "" } });
+      console.log(`[Flow Engine] 🏁 No target for edge ${edge.id}`);
+      await clearSession(tenantId, activeContact.phone);
     }
-  } catch (err) {
-    console.error(`[Flow Engine] continueFlow Error:`, err);
+  } catch (error) {
+    console.error(`[Flow Engine] continueFlow Error:`, error);
   }
 };
 
 /**
  * 🟡 STEP 1: USER SENDS MESSAGE
- * Entry point for all incoming messages
+ * Matches Rule 4: FLOW LIFECYCLE
  */
 const processIncomingMessage = async (tenantId, contact, messageText, io, isNewContact = false, replyValue = null, oldLastMessageAt = null) => {
   try {
@@ -248,7 +271,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
     const activeContact = await Contact.findOne({ phone: contact.phone });
     if (!activeContact) return;
 
-    // Setup WA Service
+    // Initialize WhatsApp Service
     const client = await Client.findOne({ tenantId });
     if (!client || !client.whatsappConfig) return;
     
@@ -257,33 +280,33 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
       phoneNumberId: client.whatsappConfig.phoneNumberId
     });
 
+    // Use passed old timestamp for timeout check
     const lastActivity = oldLastMessageAt || activeContact.lastMessageAt;
 
     // ⏱️ 11. TIMEOUT (30 min)
-    if (lastActivity && activeContact.currentFlowStep) {
-      const diffMins = (Date.now() - new Date(lastActivity).getTime()) / (1000 * 60);
-      if (diffMins > 30) {
-        console.log(`[Flow Engine] ⏱️ Timeout (${Math.round(diffMins)}m). Clearing session for ${activeContact.phone}`);
+    if (lastActivity) {
+      const diff = (Date.now() - new Date(lastActivity).getTime()) / (1000 * 60);
+      if (diff > 30 && activeContact.currentFlowStep) {
+        console.log(`[Flow Engine] ⏱️ Session timeout for ${activeContact.phone} (${Math.round(diff)} mins)`);
         await Contact.findOneAndUpdate({ phone: activeContact.phone }, { $unset: { currentFlowStep: "", lastFlowId: "" } });
         activeContact.currentFlowStep = null;
         activeContact.lastFlowId = null;
       }
     }
 
-    // ✅ 10. SESSION RULES - Manual Reset
+    // ✅ Optional reset
     if (messageText.toLowerCase().trim() === 'reset') {
+      console.log(`[Flow Engine] 🔄 Manual reset for ${activeContact.phone}`);
       await Contact.findOneAndUpdate({ phone: activeContact.phone }, { $unset: { currentFlowStep: "", lastFlowId: "" } });
-      return waService.sendTextMessage(activeContact.phone, "Session reset. Type 'hello' to start flow.");
+      return waService.sendTextMessage(activeContact.phone, "Session reset. Type 'hello' to start again.");
     }
 
-    // 🔵 3. SESSION CHECK
-    // Session exists -> continueFlow()
-    if (activeContact.currentFlowStep && activeContact.lastFlowId) {
+    // 🔵 STEP 3: SESSION CHECK (PRD REQ: isFlowActive)
+    if (activeContact.isFlowActive && activeContact.currentFlowStep && activeContact.currentFlowId) {
       return await continueFlow(tenantId, activeContact, messageText, replyValue, io, waService);
     }
 
-    // No session -> startFlow()
-    // Find flow by keyword trigger
+    // ▶️ Find Start Flow (by keyword)
     const keywordFlow = await Flow.findOne({
       status: 'ACTIVE',
       tenantId,
@@ -295,21 +318,48 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
       return await startFlow(tenantId, keywordFlow._id, activeContact, io, waService);
     }
 
-    // Generic "Hello" catch-all if no keyword matches
+    // Fallback to PRD Default if enabled and no other flow matches
+    // (Legacy support or catch-all)
     if (messageText.toLowerCase().match(/hi|hello|hey|start|menu/)) {
-       const defaultFlow = await Flow.findOne({ status: 'ACTIVE', tenantId, triggerType: 'NEW_MESSAGE' }) 
-                        || await Flow.findOne({ status: 'ACTIVE', tenantId });
-       
+       // Check for a default flow or start the PRD hardcoded one
+       const defaultFlow = await Flow.findOne({ status: 'ACTIVE', tenantId, triggerType: 'NEW_MESSAGE' });
        if (defaultFlow) {
          return await startFlow(tenantId, defaultFlow._id, activeContact, io, waService);
+       } else {
+          // Use PRDFlowService as a last resort if no generic flow is configured
+          const PRDFlowService = require('./prdFlow.service');
+          await PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io, false, replyValue);
+          
+          const Message = tenantDb.model('Message', MessageSchema);
+          return await PRDFlowService.updateLeadScore(Contact, Message, activeContact._id, io, tenantId);
        }
     }
 
   } catch (err) {
-    console.error('[Flow Engine] Fatal Entry Error:', err);
+    console.error('[Flow Engine] Fatal Error:', err);
   }
 };
 
-module.exports = { startFlow, continueFlow, executeFlow, processIncomingMessage };
+/**
+ * 🔄 7. SESSION MANAGEMENT (PRD FIX)
+ */
+async function clearSession(tenantId, phone) {
+  try {
+    const tenantDb = getTenantConnection(tenantId);
+    const Contact = tenantDb.model('Contact', ContactSchema);
+    await Contact.updateOne(
+      { phone },
+      {
+        currentFlowStep: null,
+        currentFlowId: null,
+        isFlowActive: false
+      }
+    );
+    console.log(`[Flow Engine] 🧹 Session cleared for ${phone}`);
+  } catch (err) {
+    console.error('[Flow Engine] clearSession Error:', err);
+  }
+}
 
+module.exports = { startFlow, continueFlow, executeFlow, processIncomingMessage, clearSession };
 

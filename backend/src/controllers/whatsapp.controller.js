@@ -136,12 +136,21 @@ const handleIncomingMessage = async (req, res) => {
     }
     
     // 2. Handle Messages
-    if (value.messages && value.messages[0]) {
       const message = value.messages[0];
       const from = message.from;
       const msgId = message.id;
       const io = req.app.get('io');
-      
+
+      // 1. 🔒 [PRD FIX] Prevent duplicate webhook hits (WhatsApp Retries)
+      const existing = await Contact.findOne({ 
+        phone: from, 
+        lastProcessedMessageId: msgId 
+      });
+      if (existing) {
+        console.log(`[Webhook] Duplicate message ID detected: ${msgId}. Skipping.`);
+        return res.status(200).send('EVENT_RECEIVED');
+      }
+
       let msgBody = "";
       if (message.text) {
           msgBody = message.text.body || (typeof message.text === 'string' ? message.text : JSON.stringify(message.text));
@@ -180,12 +189,44 @@ const handleIncomingMessage = async (req, res) => {
 
       if (!contact) {
          const contactName = value.contacts?.[0]?.profile?.name || 'Unknown';
-         contact = await Contact.create({ phone: from, name: contactName, lastMessageAt: new Date(), status: 'NEW LEAD' });
+         contact = await Contact.create({ 
+           phone: from, 
+           name: contactName, 
+           lastMessageAt: new Date(), 
+           status: 'NEW LEAD',
+           isFlowActive: false,
+           flowVariables: {}
+         });
          isNewContact = true;
-      } else {
-         contact.lastMessageAt = new Date();
-         await contact.save();
       }
+
+      // 2. ⏱️ [PRD FIX] Timeout reset (30 minutes)
+      const TIMEOUT_WINDOW = 30 * 60 * 1000;
+      if (contact.lastMessageAt && (Date.now() - new Date(contact.lastMessageAt).getTime() > TIMEOUT_WINDOW)) {
+        console.log(`[Webhook] ⏱️ Session timeout for ${from}. Clearing state.`);
+        // Manual clear session in controller for atomicity
+        await Contact.updateOne(
+          { phone: from },
+          { 
+            currentFlowStep: null,
+            currentFlowId: null,
+            isFlowActive: false
+          }
+        );
+        contact = await Contact.findOne({ phone: from });
+      }
+
+      // 3. 🔥 [PRD FIX] Save Message ID immediately to prevent race conditions
+      await Contact.updateOne(
+        { phone: from },
+        { 
+          lastProcessedMessageId: msgId,
+          lastMessageAt: new Date()
+        }
+      );
+      // Wait for update to be certain (or re-fetch if needed for downstream)
+      contact.lastProcessedMessageId = msgId;
+      contact.lastMessageAt = new Date();
 
       const waService = new WhatsAppService({
           accessToken: client.whatsappConfig.accessToken,

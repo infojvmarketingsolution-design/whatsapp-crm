@@ -20,9 +20,12 @@ const ContactSchema = new mongoose.Schema({
   }],
   lastActivity: { type: Date },
   lastMessageAt: { type: Date },
+  currentFlowId: { type: String }, // Renamed from lastFlowId to match PRD
   currentFlowStep: { type: String }, // Node ID for session tracking
-  lastFlowId: { type: mongoose.Schema.Types.ObjectId, ref: 'Flow' },
   flowVariables: { type: mongoose.Schema.Types.Mixed, default: {} },
+  isFlowActive: { type: Boolean, default: false }, // 🔥 NEW
+  flowVersion: { type: Number }, // 🔥 NEW
+  lastProcessedMessageId: { type: String }, // 🔥 NEW (prevents duplicates)
   email: { type: String },
   address: { type: String },
   pincode: { type: String },
