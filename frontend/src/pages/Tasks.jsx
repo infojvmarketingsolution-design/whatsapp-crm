@@ -32,6 +32,14 @@ export default function Tasks() {
   const [editedContact, setEditedContact] = useState(null);
   const [showSaveFab, setShowSaveFab] = useState(false);
 
+  // Task Completion Modal States
+  const [completingTask, setCompletingTask] = useState(null);
+  const [completionNotes, setCompletionNotes] = useState('');
+  const [isAddingFollowUp, setIsAddingFollowUp] = useState(false);
+  const [nextFollowUpTitle, setNextFollowUpTitle] = useState('');
+  const [nextFollowUpDate, setNextFollowUpDate] = useState('');
+  const [isSubmittingCompletion, setIsSubmittingCompletion] = useState(false);
+
   const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing'];
 
   useEffect(() => {
@@ -249,6 +257,54 @@ export default function Tasks() {
        }
      } catch (err) {
        console.error(err);
+     }
+  };
+
+  const submitTaskCompletion = async () => {
+     if (!completingTask) return;
+     setIsSubmittingCompletion(true);
+     try {
+       const token = localStorage.getItem('token');
+       const tenantId = localStorage.getItem('tenantId');
+       
+       // 1. Complete Current Task
+       await fetch(`/api/chat/contacts/${completingTask.contactId}/action`, {
+         method: 'PUT',
+         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+         body: JSON.stringify({ action: 'complete_task', payload: { taskId: completingTask._id } })
+       });
+
+       // 2. Add Completion Notes
+       if (completionNotes.trim()) {
+         await fetch(`/api/chat/action`, {
+           method: 'POST',
+           headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+           body: JSON.stringify({ contactId: completingTask.contactId, action: 'add_note', payload: { note: `Task Completed (${completingTask.title}): ${completionNotes}` } })
+         });
+       }
+
+       // 3. Add Next Follow Up
+       if (isAddingFollowUp && nextFollowUpDate) {
+         await fetch(`/api/chat/contacts/${completingTask.contactId}/action`, {
+           method: 'PUT',
+           headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+           body: JSON.stringify({ action: 'add_followup', payload: { title: nextFollowUpTitle || 'Next Follow-up', dateTime: nextFollowUpDate, description: 'Created from task completion' } })
+         });
+       }
+
+       toast.success("Task completed successfully");
+       setCompletingTask(null);
+       setCompletionNotes('');
+       setIsAddingFollowUp(false);
+       setNextFollowUpTitle('');
+       setNextFollowUpDate('');
+       
+       fetchTasks();
+     } catch (err) {
+       console.error(err);
+       toast.error("Failed to complete task");
+     } finally {
+       setIsSubmittingCompletion(false);
      }
   };
 
@@ -519,7 +575,7 @@ export default function Tasks() {
                         {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
                            <>
                               <button 
-                                onClick={() => updateTaskStatus(t.contactId, t._id, 'complete_task')}
+                                onClick={() => { setCompletingTask(t); setActiveDropdown(null); }}
                                 className="h-9 px-4 bg-teal-600 text-white text-xs font-black rounded-xl hover:bg-teal-700 transition-all flex items-center shadow-md shadow-teal-600/10 active:scale-95"
                               >
                                 <Check size={14} className="mr-2" /> Done
@@ -559,7 +615,7 @@ export default function Tasks() {
                                  {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
                                     <div className="pb-2">
                                        <button 
-                                          onClick={() => { updateTaskStatus(t.contactId, t._id, 'complete_task'); }}
+                                          onClick={() => { setCompletingTask(t); setActiveDropdown(null); }}
                                           className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
                                        >
                                           <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center mr-3">
@@ -944,6 +1000,89 @@ export default function Tasks() {
                     </div>
                  </div>
               </div>
+           </div>
+        </div>
+      )}
+
+      {completingTask && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
+           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-pop-in">
+             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                   <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
+                     <CheckCircle2 size={24} />
+                   </div>
+                   <div>
+                     <h2 className="text-xl font-black text-slate-800">Complete Task</h2>
+                     <p className="text-xs font-bold text-slate-400">Add outcome details & schedule next step</p>
+                   </div>
+                </div>
+                <button onClick={() => setCompletingTask(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+                   <X size={20} />
+                </button>
+             </div>
+             
+             <div className="p-6 space-y-6">
+                <div>
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Completion Notes / Outcome</label>
+                   <textarea 
+                     value={completionNotes} 
+                     onChange={e => setCompletionNotes(e.target.value)}
+                     placeholder="What happened during this task? Any important details?"
+                     className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 rounded-xl px-4 py-3 text-sm font-bold outline-none h-24 custom-scrollbar transition-all" 
+                   />
+                </div>
+
+                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
+                   <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAddingFollowUp ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-400'}`}>
+                           <CalendarDays size={16} />
+                         </div>
+                         <div>
+                            <p className="text-sm font-black text-slate-700">Next Follow-up</p>
+                            <p className="text-[10px] font-bold text-slate-400">Schedule the next interaction</p>
+                         </div>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked={isAddingFollowUp} onChange={e => setIsAddingFollowUp(e.target.checked)} className="sr-only peer" />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
+                      </label>
+                   </div>
+
+                   {isAddingFollowUp && (
+                     <div className="space-y-4 pt-4 border-t border-slate-200/60 animate-fade-in">
+                        <div>
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Follow-up Title</label>
+                           <input 
+                             type="text" 
+                             value={nextFollowUpTitle} 
+                             onChange={e => setNextFollowUpTitle(e.target.value)}
+                             placeholder="e.g. Call to discuss proposal"
+                             className="w-full bg-white border border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 text-xs font-bold outline-none transition-all" 
+                           />
+                        </div>
+                        <div>
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Date & Time</label>
+                           <input 
+                             type="datetime-local" 
+                             value={nextFollowUpDate} 
+                             onChange={e => setNextFollowUpDate(e.target.value)}
+                             className="w-full bg-white border border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 text-xs font-bold outline-none transition-all text-slate-600" 
+                           />
+                        </div>
+                     </div>
+                   )}
+                </div>
+             </div>
+
+             <div className="p-6 border-t border-slate-100 flex justify-end space-x-3 bg-slate-50/50">
+                <button onClick={() => setCompletingTask(null)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all">Cancel</button>
+                <button onClick={submitTaskCompletion} disabled={isSubmittingCompletion || (isAddingFollowUp && !nextFollowUpDate)} className="px-6 py-2.5 rounded-xl text-sm font-black text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 flex items-center shadow-lg shadow-teal-600/20 transition-all active:scale-95">
+                   {isSubmittingCompletion ? <Clock size={18} className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
+                   Save & Complete
+                </button>
+             </div>
            </div>
         </div>
       )}
