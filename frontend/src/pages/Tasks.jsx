@@ -38,6 +38,7 @@ export default function Tasks() {
   const [isAddingFollowUp, setIsAddingFollowUp] = useState(false);
   const [nextFollowUpTitle, setNextFollowUpTitle] = useState('');
   const [nextFollowUpDate, setNextFollowUpDate] = useState('');
+  const [nextFollowUpDescription, setNextFollowUpDescription] = useState('');
   const [isSubmittingCompletion, setIsSubmittingCompletion] = useState(false);
 
   const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing'];
@@ -288,7 +289,7 @@ export default function Tasks() {
          await fetch(`/api/chat/contacts/${completingTask.contactId}/action`, {
            method: 'PUT',
            headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-           body: JSON.stringify({ action: 'add_followup', payload: { title: nextFollowUpTitle || 'Next Follow-up', dateTime: nextFollowUpDate, description: 'Created from task completion' } })
+           body: JSON.stringify({ action: 'add_followup', payload: { title: nextFollowUpTitle || 'Next Follow-up', dateTime: nextFollowUpDate, description: nextFollowUpDescription || 'Created from task completion' } })
          });
        }
 
@@ -298,6 +299,7 @@ export default function Tasks() {
        setIsAddingFollowUp(false);
        setNextFollowUpTitle('');
        setNextFollowUpDate('');
+       setNextFollowUpDescription('');
        
        fetchTasks();
      } catch (err) {
@@ -1069,6 +1071,15 @@ export default function Tasks() {
                              value={nextFollowUpDate} 
                              onChange={e => setNextFollowUpDate(e.target.value)}
                              className="w-full bg-white border border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 text-xs font-bold outline-none transition-all text-slate-600" 
+                           />
+                        </div>
+                        <div>
+                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Description (Optional)</label>
+                           <textarea 
+                             value={nextFollowUpDescription} 
+                             onChange={e => setNextFollowUpDescription(e.target.value)}
+                             placeholder="Details for the next step..."
+                             className="w-full bg-white border border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 text-xs font-bold outline-none transition-all resize-none h-16 custom-scrollbar" 
                            />
                         </div>
                      </div>
