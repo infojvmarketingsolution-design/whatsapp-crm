@@ -96,13 +96,15 @@ const ClientManagement = () => {
     }
   };
 
-  const handleUpdateClient = async (e, directId, directStatus) => {
+  const handleUpdateClient = async (e, directId, directStatus, directData) => {
     if (e) e.preventDefault();
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
       const clientId = directId || selectedClient._id;
-      const updateData = directStatus ? { ...selectedClient, status: directStatus } : selectedClient;
+      // Use directData if provided (to avoid stale state), otherwise fallback to state
+      const baseData = directData || selectedClient;
+      const updateData = directStatus ? { ...baseData, status: directStatus } : baseData;
       
       const res = await fetch(`/api/clients/${clientId}`, {
         method: 'PUT',
@@ -252,17 +254,18 @@ const ClientManagement = () => {
                         <div className={`w-2 h-2 rounded-full ${client.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`}></div>
                         <span className="text-xs font-semibold text-slate-700">{client.status}</span>
                       </div>
-                      {client.status === 'SUSPENDED' && (
-                        <button 
-                          onClick={() => {
-                            setSelectedClient(client);
-                            handleUpdateClient({ preventDefault: () => {}, target: { status: 'ACTIVE' } }, client._id, 'ACTIVE');
-                          }}
-                          className="ml-2 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase rounded hover:bg-emerald-200 transition-colors border border-emerald-200"
-                        >
-                          Reactivate
-                        </button>
-                      )}
+                      <button 
+                         onClick={() => {
+                            handleUpdateClient(null, client._id, 'ACTIVE', client);
+                         }}
+                         className={`ml-2 px-2 py-0.5 text-[10px] font-black uppercase rounded transition-all border ${
+                           client.status === 'ACTIVE' 
+                             ? 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100' 
+                             : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-sm'
+                         }`}
+                      >
+                         {client.status === 'ACTIVE' ? 'Refersh' : 'Reactivate'}
+                      </button>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
