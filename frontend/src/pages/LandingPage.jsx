@@ -85,7 +85,7 @@ const LandingPage = () => {
                   transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                   src="/3d_mascot.png" 
                   alt="WapiPulse 3D Mascot" 
-                  className="relative z-20 w-full max-w-lg object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.15)]"
+                  className="relative z-20 w-full max-w-lg object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.15)] mix-blend-multiply"
                />
             </motion.div>
           </div>
