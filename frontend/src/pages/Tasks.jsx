@@ -48,6 +48,7 @@ export default function Tasks() {
   const [editTaskType, setEditTaskType] = useState('');
   const [isUpdatingTask, setIsUpdatingTask] = useState(false);
   const [showCriticalOverduePopup, setShowCriticalOverduePopup] = useState(false);
+  const [criticalSuspendAt, setCriticalSuspendAt] = useState(null);
 
   const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing'];
 
@@ -1170,6 +1171,7 @@ export default function Tasks() {
             <button 
               onClick={() => {
                 setShowCriticalOverduePopup(false);
+                sessionStorage.setItem('dismissedOverduePopup', 'true');
                 setView('OVERDUE');
               }}
               className="w-full py-3.5 rounded-xl text-sm font-black bg-rose-600 text-white hover:bg-rose-700 shadow-xl shadow-rose-600/20"
