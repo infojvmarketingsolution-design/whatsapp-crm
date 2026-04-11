@@ -98,6 +98,15 @@ const updateClient = async (req, res) => {
           }
         }
 
+        // 3. Sync User Email if provided
+        if (req.body.email) {
+          await User.updateOne(
+            { tenantId: client.tenantId },
+            { $set: { email: req.body.email } }
+          );
+          console.log(`[Reactivation] Email synced for user: ${req.body.email}`);
+        }
+
         // EXTRA HARDENING: If Reactivating to ACTIVE, clear overdue tasks in tenant DB
         if (req.body.status === 'ACTIVE') {
           try {
