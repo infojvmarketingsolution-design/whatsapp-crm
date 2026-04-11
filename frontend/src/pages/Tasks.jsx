@@ -642,13 +642,19 @@ export default function Tasks() {
                                  {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
                                     <div className="pb-2">
                                        <button 
-                                          onClick={() => { setCompletingTask(t); setActiveDropdown(null); }}
+                                          onClick={() => {
+                                             setEditingTask(t);
+                                             setEditTaskTitle(t.title);
+                                             setEditTaskDate(new Date(t.dueDate).toISOString().slice(0, 16));
+                                             setEditTaskType(t.type);
+                                             setActiveDropdown(null);
+                                          }}
                                           className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
                                        >
-                                          <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center mr-3">
-                                             <Check size={16} />
+                                          <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
+                                             <Edit3 size={16} />
                                           </div>
-                                          Mark as Done
+                                          Edit Task
                                        </button>
                                        <button 
                                           onClick={() => { updateTaskStatus(t.contactId, t._id, 'in_progress_task'); }}
