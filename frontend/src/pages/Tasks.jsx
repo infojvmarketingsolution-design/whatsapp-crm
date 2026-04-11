@@ -1129,6 +1129,56 @@ export default function Tasks() {
         </div>
       )}
 
+
+      {/* Edit Task Modal */}
+      {editingTask && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setEditingTask(null)}>
+          <div className="bg-white rounded-3xl w-[400px] p-6 shadow-2xl animate-pop-in" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center"><Edit3 size={20} className="mr-2 text-indigo-600"/> Edit Task</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Task Title</label>
+                <input type="text" value={editTaskTitle} onChange={e=>setEditTaskTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-indigo-500 outline-none" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Due Date & Time</label>
+                <input type="datetime-local" value={editTaskDate} onChange={e=>setEditTaskDate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-indigo-500 outline-none" />
+              </div>
+              <div className="pt-4 flex justify-end space-x-3">
+                <button onClick={() => setEditingTask(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50">Cancel</button>
+                <button onClick={saveEditedTask} disabled={isUpdatingTask} className="px-5 py-2.5 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 disabled:opacity-50">
+                  {isUpdatingTask ? 'Saving...' : 'Save Changes'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Critical Overdue Popup */}
+      {showCriticalOverduePopup && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-rose-900/80 backdrop-blur-md animate-fade-in">
+          <div className="bg-white rounded-3xl w-[450px] p-8 shadow-2xl border-4 border-rose-500 animate-pop-in text-center shadow-rose-500/20">
+            <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle size={40} />
+            </div>
+            <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-2">URGENT: Overdue Tasks</h3>
+            <p className="text-sm font-bold text-slate-500 mb-6">
+              You have tasks that are more than 48 hours overdue. <br/><br/>
+              <span className="text-rose-600">If these are not completed within the next 1 hour, your account will be suspended automatically.</span>
+            </p>
+            <button 
+              onClick={() => {
+                setShowCriticalOverduePopup(false);
+                setView('OVERDUE');
+              }}
+              className="w-full py-3.5 rounded-xl text-sm font-black bg-rose-600 text-white hover:bg-rose-700 shadow-xl shadow-rose-600/20"
+            >
+              Take Action Now
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
