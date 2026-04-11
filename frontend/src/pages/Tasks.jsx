@@ -21,6 +21,9 @@ export default function Tasks() {
   const [activeDropdown, setActiveDropdown] = useState(null);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
+  const userRole = localStorage.getItem('role') || 'AGENT';
+  const [agents, setAgents] = useState([]);
+
   
   // Profile Navigation & Detail States
   const [selectedContact, setSelectedContact] = useState(null);
@@ -56,6 +59,7 @@ export default function Tasks() {
 
   useEffect(() => {
     fetchTasks();
+    fetchAgents();
   }, []);
 
   useEffect(() => {
@@ -68,7 +72,23 @@ export default function Tasks() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const fetchAgents = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch('/api/chat/agents', {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        setAgents(await res.json());
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const fetchTasks = async () => {
+
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
@@ -144,6 +164,7 @@ export default function Tasks() {
       if (res.ok) {
         toast.success("Profile Updated Successfully");
         fetchTasks();
+    fetchAgents();
       }
     } catch (err) {
       console.error(err);
@@ -167,6 +188,7 @@ export default function Tasks() {
       if (res.ok) {
         setNoteInput('');
         fetchTasks();
+    fetchAgents();
       }
     } catch (err) {
       console.error(err);
@@ -223,6 +245,7 @@ export default function Tasks() {
          toast.success("Task updated");
          setEditingTask(null);
          fetchTasks();
+    fetchAgents();
        } else {
          toast.error("Failed to update task");
        }
@@ -243,6 +266,7 @@ export default function Tasks() {
         body: JSON.stringify({ action: 'complete_task', payload: { taskId } })
       });
       if (res.ok) fetchTasks();
+    fetchAgents();
     } catch (err) {
       console.error(err);
     }
@@ -261,6 +285,7 @@ export default function Tasks() {
         body: JSON.stringify({ action: 'reschedule_task', payload: { taskId, newDueDate: today } })
       });
       if (res.ok) fetchTasks();
+    fetchAgents();
     } catch (err) {
       console.error(err);
     }
@@ -278,6 +303,7 @@ export default function Tasks() {
        });
        if (res.ok) {
           fetchTasks();
+    fetchAgents();
           setActiveDropdown(null);
        }
      } catch (err) {
@@ -296,6 +322,7 @@ export default function Tasks() {
        });
        if (res.ok) {
           fetchTasks();
+    fetchAgents();
           setActiveDropdown(null);
        }
      } catch (err) {
@@ -344,6 +371,7 @@ export default function Tasks() {
        setNextFollowUpDescription('');
        
        fetchTasks();
+    fetchAgents();
      } catch (err) {
        console.error(err);
        toast.error("Failed to complete task");
@@ -948,6 +976,21 @@ export default function Tasks() {
                                 <input value={editedContact.leadSource || ''} onChange={e=>handleFieldChange('leadSource', e.target.value)} className="text-sm font-bold text-slate-700 w-full outline-none" placeholder="Web, Referral, Ads..." />
                              </div>
                           </div>
+                          <div className="p-3 bg-white border border-slate-100 rounded-xl flex items-center space-x-3">
+                              <ShieldCheck size={16} className={userRole === 'TELECALLER' ? 'text-slate-300' : 'text-blue-600'} />
+                              <div className="flex-1">
+                                 <label className="text-[8px] font-black text-slate-400 uppercase block">Assigned Advisor</label>
+                                 <select 
+                                   disabled={userRole === 'TELECALLER'}
+                                   value={editedContact.assignedAgent || ''} 
+                                   onChange={e=>handleFieldChange('assignedAgent', e.target.value)} 
+                                   className={`text-sm font-bold text-slate-700 w-full bg-transparent outline-none ${userRole === 'TELECALLER' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                                 >
+                                    <option value="">Unassigned</option>
+                                    {agents.map(a => <option key={a._id} value={a._id}>{a.name} ({a.role})</option>)}
+                                 </select>
+                              </div>
+                           </div>
                        </div>
                     </div>
 

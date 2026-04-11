@@ -132,10 +132,18 @@ function Dashboard() {
   return (
     <div className="p-8 bg-crm-bg min-h-full animate-fade-in-up">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-sm font-bold text-gray-600 tracking-wider uppercase">Dashboard</h1>
-        <div className="flex items-center space-x-2 text-gray-700 font-medium">
-          <UserCircle className="text-blue-700" size={24} />
-          <span className="capitalize">{userName}</span>
+        <div>
+           <h1 className="text-sm font-bold text-gray-600 tracking-wider uppercase">Dashboard</h1>
+           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">SaaS Workspace Overview</p>
+        </div>
+        <div className="flex items-center space-x-3 text-right">
+          <div>
+             <p className="text-sm font-black text-slate-800 capitalize leading-none mb-1">{userName}</p>
+             <p className="text-[10px] font-bold text-slate-400 leading-none">{activeUser.email || 'agent@workspace.crm'}</p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
+             <UserCircle size={24} />
+          </div>
         </div>
       </div>
 

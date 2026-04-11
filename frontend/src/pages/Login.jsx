@@ -42,6 +42,7 @@ export default function Login() {
 
       localStorage.setItem('token', data.token);
       localStorage.setItem('tenantId', data.tenantId || ''); 
+      localStorage.setItem('role', data.role || 'AGENT');
       localStorage.setItem('user', JSON.stringify(data));
       
       setTimeout(() => {

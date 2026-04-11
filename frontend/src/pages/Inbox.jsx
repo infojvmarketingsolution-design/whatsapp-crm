@@ -42,6 +42,9 @@ export default function Inbox() {
   const messagesEndRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+  const userRole = localStorage.getItem('role') || 'AGENT';
+  const [agents, setAgents] = useState([]);
+
 
   const EMOJIS = ['😀', '😂', '😍', '🙌', '🔥', '✅', '❌', '🚀', '🙏', '👍', '❤️', '⚠️', '⭐', '🎁', '📅', '💬', '🏠', '💼', '📊', '🤝'];
 
@@ -320,7 +323,24 @@ export default function Inbox() {
         console.error("Backend API unavailable.", err);
       }
     };
+
+    const fetchAgents = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const tenantId = localStorage.getItem('tenantId');
+        const res = await fetch('/api/chat/agents', {
+          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+        });
+        if (res.ok) {
+          setAgents(await res.json());
+        }
+      } catch (err) {
+        console.error("Failed to fetch agents", err);
+      }
+    };
+
     fetchContacts();
+    fetchAgents();
   }, []);
 
 
@@ -922,6 +942,29 @@ export default function Inbox() {
                     <span className="text-teal-800/70 font-bold tracking-wide">Source</span>
                     <span className="text-teal-900 font-bold">{activeChat?.source || 'CTWA Lead'}</span>
                   </div>
+
+                  {/* ASSIGN AGENT SECTION */}
+                  <div className="pt-2 border-t border-teal-200/50">
+                    <div className="flex justify-between items-center text-xs mb-1.5 focus:scale-105 transition-transform">
+                       <span className="text-teal-800/70 font-bold tracking-wide uppercase">Assigned To</span>
+                       <ShieldCheck size={12} className={userRole === 'TELECALLER' ? 'text-gray-400' : 'text-teal-600'} />
+                    </div>
+                    <select 
+                       disabled={userRole === 'TELECALLER'}
+                       value={activeChat?.assignedAgent || ''}
+                       onChange={(e) => handleAction('update_contact', { assignedAgent: e.target.value })}
+                       className={`w-full bg-white px-2 py-1.5 rounded border border-teal-100 text-[10px] font-bold tracking-wide uppercase outline-none focus:ring-2 focus:ring-teal-100 transition shadow-sm ${userRole === 'TELECALLER' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-teal-50'}`}
+                    >
+                       <option value="">Unassigned</option>
+                       {agents.map(a => (
+                          <option key={a._id} value={a._id}>{a.name} ({a.role})</option>
+                       ))}
+                    </select>
+                    {userRole === 'TELECALLER' && (
+                       <p className="text-[8px] text-gray-400 mt-1 italic leading-tight">Telecallers cannot reassign leads.</p>
+                    )}
+                  </div>
+
                   <div className="flex justify-between items-center text-xs pt-1">
                     <span className="text-teal-800/70 font-bold tracking-wide">Opted In</span>
                     <div className="w-8 h-4 bg-[var(--theme-bg)] rounded-full relative shadow-inner cursor-pointer">

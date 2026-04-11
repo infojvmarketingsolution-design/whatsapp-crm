@@ -20,27 +20,33 @@ import {
 export default function Sidebar({ whatsappConfig }) {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = React.useState(false);
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = user.role || localStorage.getItem('role') || 'AGENT';
+
 
   const handleLogout = () => {
     localStorage.clear();
     navigate('/login');
   };
 
-  const menuItems = [
-    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
-    { name: 'Tasks', icon: CheckSquare, path: '/tasks' },
-    { name: 'Pipeline', icon: KanbanSquare, path: '/pipeline' },
-    { name: 'Chat', icon: MessageSquare, path: '/inbox' },
-    { name: 'Contacts', icon: Users, path: '/contacts' },
-    { name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
-    { name: 'AI Chatbot', icon: Bot, path: '/ai-chatbot' },
-    { name: 'Flows', icon: Bot, path: '/flows' },
-    { name: 'Templates', icon: FileText, path: '/templates' },
-    { name: 'Agents', icon: UserPlus, path: '/agents' },
-    { name: 'Web Widget', icon: Globe, path: '/widget' },
-    { name: 'API', icon: Code, path: '/api' },
-    { name: 'Settings', icon: Settings, path: '/settings' },
+  const allMenuItems = [
+    { name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { name: 'Tasks', icon: CheckSquare, path: '/tasks', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { name: 'Pipeline', icon: KanbanSquare, path: '/pipeline', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER'] },
+    { name: 'Chat', icon: MessageSquare, path: '/inbox', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { name: 'Contacts', icon: Users, path: '/contacts', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { name: 'Campaigns', icon: Megaphone, path: '/campaigns', roles: ['ADMIN', 'SUPER_ADMIN'] },
+    { name: 'AI Chatbot', icon: Bot, path: '/ai-chatbot', roles: ['ADMIN', 'SUPER_ADMIN'] },
+    { name: 'Flows', icon: Bot, path: '/flows', roles: ['ADMIN', 'SUPER_ADMIN'] },
+    { name: 'Templates', icon: FileText, path: '/templates', roles: ['ADMIN', 'SUPER_ADMIN'] },
+    { name: 'Agents', icon: UserPlus, path: '/agents', roles: ['ADMIN', 'SUPER_ADMIN'] },
+    { name: 'Web Widget', icon: Globe, path: '/widget', roles: ['ADMIN', 'SUPER_ADMIN'] },
+    { name: 'API', icon: Code, path: '/api', roles: ['ADMIN', 'SUPER_ADMIN'] },
+    { name: 'Settings', icon: Settings, path: '/settings', roles: ['ADMIN', 'SUPER_ADMIN'] },
   ];
+
+  const menuItems = allMenuItems.filter(item => item.roles.includes(userRole));
+
 
   return (
     <div className={`${collapsed ? 'w-20' : 'w-64'} shrink-0 bg-[var(--theme-bg)] text-white min-h-screen flex flex-col shadow-lg z-20 transition-all duration-300`}>

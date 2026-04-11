@@ -23,6 +23,8 @@ export default function Contacts() {
   const [recentMessages, setRecentMessages] = useState([]);
   const [isRefreshingMessages, setIsRefreshingMessages] = useState(false);
   const [isUpdatingContact, setIsUpdatingContact] = useState(false);
+  const userRole = localStorage.getItem('role') || 'AGENT';
+
 
   // Design states
   const [activeTab, setActiveTab] = useState('timeline');
@@ -421,21 +423,25 @@ export default function Contacts() {
                </div>
             </div>
             
-            <input type="file" ref={fileInputRef} onChange={handleImportCSV} accept=".csv" className="hidden" />
-            <button 
-               onClick={() => fileInputRef.current.click()}
-               className="p-2.5 bg-white border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 rounded-xl transition shadow-sm"
-               title="Import CSV"
-            >
-               <TrendingUp size={18} />
-            </button>
-            <button 
-               onClick={handleExportCSV}
-               className="p-2.5 bg-white border border-gray-200 text-gray-400 hover:text-green-600 hover:border-green-200 rounded-xl transition shadow-sm"
-               title="Export Selected/Filtered"
-            >
-               <Download size={18} />
-            </button>
+            {userRole !== 'TELECALLER' && (
+               <>
+                 <input type="file" ref={fileInputRef} onChange={handleImportCSV} accept=".csv" className="hidden" />
+                 <button 
+                    onClick={() => fileInputRef.current.click()}
+                    className="p-2.5 bg-white border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 rounded-xl transition shadow-sm"
+                    title="Import CSV"
+                 >
+                    <TrendingUp size={18} />
+                 </button>
+                 <button 
+                    onClick={handleExportCSV}
+                    className="p-2.5 bg-white border border-gray-200 text-gray-400 hover:text-green-600 hover:border-green-200 rounded-xl transition shadow-sm"
+                    title="Export Selected/Filtered"
+                 >
+                    <Download size={18} />
+                 </button>
+               </>
+             )}
 
             <button 
               onClick={() => setShowAddModal(true)} 
@@ -766,8 +772,7 @@ export default function Contacts() {
                                 <input type="number" value={editedContact.estimatedValue || 0} onChange={e=>handleFieldChange('estimatedValue', e.target.value)} className="bg-transparent text-2xl font-black text-white outline-none w-full placeholder-slate-700" />
                              </div>
                           </div>
-                          
-                          <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-sm">
+                                                    <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-sm">
                              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Origination Source</label>
                              <div className="relative">
                                  <Globe size={14} className="absolute left-3 top-2.5 text-blue-500" />
@@ -775,6 +780,26 @@ export default function Contacts() {
                                     {['Manual Entry', 'Meta Ads', 'Google Ads', 'Referral', 'Email Campaign', 'WhatsApp Blast'].map(s => <option key={s} value={s}>{s}</option>)}
                                  </select>
                              </div>
+                          </div>
+
+                          <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-sm">
+                             <div className="flex justify-between items-center mb-2">
+                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Assigned To</label>
+                                <ShieldCheck size={14} className={userRole === 'TELECALLER' ? 'text-gray-300' : 'text-blue-600'} />
+                             </div>
+                             <div className="relative">
+                                 <Users size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                                 <select 
+                                   disabled={userRole === 'TELECALLER'}
+                                   value={editedContact.assignedAgent || ''} 
+                                   onChange={e=>handleFieldChange('assignedAgent', e.target.value)} 
+                                   className={`w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none ${userRole === 'TELECALLER' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-blue-300'}`}
+                                 >
+                                    <option value="">Unassigned</option>
+                                    {agents.map(a => <option key={a._id} value={a._id}>{a.name} ({a.role})</option>)}
+                                 </select>
+                             </div>
+                             {userRole === 'TELECALLER' && <p className="text-[9px] text-gray-400 mt-1 italic">Permissions restricted for Telecallers.</p>}
                           </div>
                        </div>
                     </section>
