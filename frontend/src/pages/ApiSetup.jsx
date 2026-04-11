@@ -14,6 +14,26 @@ export default function ApiSetup() {
 
   useEffect(() => {
     fetchConfig();
+
+    // Dynamically load the Facebook SDK scoped to this execution
+    if (!window.FB) {
+      window.fbAsyncInit = function() {
+        window.FB.init({
+          appId      : '1435701250882704', 
+          cookie     : true,
+          xfbml      : true,
+          version    : 'v21.0'
+        });
+      };
+
+      (function(d, s, id){
+         var js, fjs = d.getElementsByTagName(s)[0];
+         if (d.getElementById(id)) {return;}
+         js = d.createElement(s); js.id = id;
+         js.src = "https://connect.facebook.net/en_US/sdk.js";
+         fjs.parentNode.insertBefore(js, fjs);
+       }(document, 'script', 'facebook-jssdk'));
+    }
   }, []);
 
   const fetchConfig = async () => {
@@ -48,6 +68,59 @@ export default function ApiSetup() {
 
   const handleCopy = (text) => {
     navigator.clipboard.writeText(text);
+  };
+
+  const handleFacebookConnect = () => {
+    if (!window.FB) {
+      alert("Facebook System is still initializing. Please wait a moment and try again.");
+      return;
+    }
+
+    window.FB.login(async (response) => {
+      console.log("Meta Embedded Signup Response:", response);
+      if (response.authResponse) {
+        const code = response.authResponse.code;
+        console.log("OAuth Code received. Initiating Server Exchange...");
+        
+        try {
+          const jwtToken = localStorage.getItem('token');
+          const tenantId = localStorage.getItem('tenantId');
+          
+          setSaving(true);
+          const res = await fetch('/api/whatsapp/oauth', {
+            method: 'POST',
+            headers: { 
+              'Authorization': `Bearer ${jwtToken}`, 
+              'x-tenant-id': tenantId, 
+              'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify({ code })
+          });
+
+          const data = await res.json();
+          if (res.ok) {
+            alert("Success! Meta Access Token successfully exchanged and saved.");
+            // Update the local state to show the token
+            if (data.accessToken) setToken(data.accessToken);
+            fetchConfig(); // refresh to get updated stats
+          } else {
+            alert("OAuth Exchange Failed: " + data.message);
+          }
+        } catch (err) {
+           alert("Network Error during Token Exchange: " + err.message);
+        } finally {
+           setSaving(false);
+        }
+
+      } else {
+        console.warn('User cancelled login or did not fully authorize the Meta Embedded Signup.');
+      }
+    }, {
+      config_id: '1270957501788115',
+      response_type: 'code',
+      override_default_response_type: true,
+      extras: {"sessionInfoVersion":"3","version":"v4"}
+    });
   };
 
   const handleTestConnection = async () => {
@@ -125,10 +198,18 @@ export default function ApiSetup() {
         {/* API Keys Panel */}
         <div className="xl:col-span-2 space-y-6">
            <div className="bg-crm-card border border-crm-border rounded-2xl shadow-soft p-8">
-              <h2 className="text-lg font-bold text-gray-800 mb-6 flex items-center">
-                 <Database className="mr-2 text-brand-light" size={20} />
-                 WhatsApp Business API Credentials
-              </h2>
+              <div className="flex justify-between items-center mb-6">
+                 <h2 className="text-lg font-bold text-gray-800 flex items-center">
+                    <Database className="mr-2 text-brand-light" size={20} />
+                    WhatsApp Business API Credentials
+                 </h2>
+                 <button 
+                   onClick={handleFacebookConnect}
+                   className="flex items-center space-x-2 bg-[#1877F2]/10 text-[#1877F2] px-4 py-2 rounded-lg font-bold hover:bg-[#1877F2]/20 transition border border-[#1877F2]/20 text-sm shadow-sm"
+                 >
+                   <span>Connect Meta Portfolio</span>
+                 </button>
+              </div>
               
               <div className="space-y-6">
                  {/* Access Token */}

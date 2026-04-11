@@ -484,10 +484,51 @@ const testApiConnection = async (req, res) => {
   }
 };
 
+const exchangeFacebookToken = async (req, res) => {
+  try {
+    const { code } = req.body;
+    if (!code) return res.status(400).json({ message: 'OAuth code is required' });
+
+    const appId = process.env.FACEBOOK_APP_ID;
+    const appSecret = process.env.FACEBOOK_APP_SECRET;
+
+    if (!appId || !appSecret) {
+       return res.status(500).json({ message: 'Facebook App Key or Secret not configured on Server (.env)' });
+    }
+
+    // 1. Exchange Code for Access Token
+    const tokenRes = await fetch(`https://graph.facebook.com/v21.0/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&code=${code}`);
+    const tokenData = await tokenRes.json();
+
+    if (!tokenRes.ok) {
+       return res.status(400).json({ message: 'Meta Graph Error: ' + (tokenData.error?.message || 'Token Exchange Failed'), details: tokenData });
+    }
+
+    const accessToken = tokenData.access_token;
+
+    // Optional: We can inspect the token using debug_token, but let's just return it for now so the frontend can save it to the DB config.
+    // The user will still need the Phone Number ID and WABA ID to complete setup.
+    // Usually, Facebook returns shared Business info on another API call, but returning the long lived access token is step 1.
+    
+    // We update the client DB directly for convenience!
+    const client = await Client.findOneAndUpdate(
+      { tenantId: req.tenantId },
+      { $set: { 'whatsappConfig.accessToken': accessToken } },
+      { new: true }
+    );
+
+    res.json({ message: 'OAuth exchange successful. Access token saved.', accessToken: accessToken, config: client?.whatsappConfig });
+
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   verifyWebhook,
   handleIncomingMessage,
   getApiConfig,
   saveApiConfig,
-  testApiConnection
+  testApiConnection,
+  exchangeFacebookToken
 };
