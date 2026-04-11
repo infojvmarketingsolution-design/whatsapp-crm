@@ -72,15 +72,21 @@ const updateClient = async (req, res) => {
     if (client) {
       // If client status was updated (e.g. to ACTIVE), also update the associated admin and agents status
       if (req.body.status) {
+        // 1. Sync User account statuses (MATCH BY TENANT OR EMAIL)
         await User.updateMany(
-          { tenantId: client.tenantId },
-          { $set: { status: req.body.status } }
+          { 
+            $or: [
+              { tenantId: client.tenantId },
+              { email: client.email }
+            ]
+          },
+          { $set: { status: 'ACTIVE' } }
         );
 
         // EXTRA HARDENING: If Reactivating to ACTIVE, clear overdue tasks in tenant DB
-        // to lift frontend suspension overlays immediately.
         if (req.body.status === 'ACTIVE') {
           try {
+            console.log(`[Reactivation] Forced sync started for tenant: ${client.tenantId}`);
             const tenantDb = getTenantConnection(client.tenantId);
             const Contact = tenantDb.model('Contact', ContactSchema);
             

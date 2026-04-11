@@ -263,13 +263,9 @@ const ClientManagement = () => {
                          onClick={() => {
                             handleUpdateClient(null, client._id, 'ACTIVE', client);
                          }}
-                         className={`ml-2 px-2 py-0.5 text-[10px] font-black uppercase rounded transition-all border ${
-                           client.status === 'ACTIVE' 
-                             ? 'bg-slate-50 text-slate-400 border-slate-200 hover:bg-slate-100' 
-                             : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-sm'
-                         }`}
+                         className="ml-2 px-3 py-1 bg-emerald-600 text-white text-[10px] font-black uppercase rounded hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 active:scale-95 border border-emerald-500"
                       >
-                         {client.status === 'ACTIVE' ? 'Refresh' : 'Reactivate'}
+                         Reactivate
                       </button>
                     </div>
                   </td>
