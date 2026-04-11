@@ -545,27 +545,34 @@ const summarizeLead = async (req, res) => {
 
 const getLeadAnalysis = async (req, res) => {
   try {
+    if (!req.tenantDb) {
+      console.warn(`[GET /analysis] No tenant DB connection found.`);
+      return res.json({ statusStats: [], sourceStats: [] });
+    }
+
     const Contact = req.tenantDb.model('Contact', ContactSchema);
     
-    const statusStats = await Contact.aggregate([
+    // Aggregate by Status with fallback to empty array
+    const statusStats = (await Contact.aggregate([
       { $match: { isArchived: { $ne: true } } },
       { $group: { _id: "$status", count: { $sum: 1 } } },
       { $sort: { count: -1 } }
-    ]);
+    ])) || [];
 
-    const sourceStats = await Contact.aggregate([
+    // Aggregate by Source with fallback to empty array
+    const sourceStats = (await Contact.aggregate([
       { $match: { isArchived: { $ne: true } } },
       { $group: { _id: "$leadSource", count: { $sum: 1 } } },
       { $sort: { count: -1 } }
-    ]);
+    ])) || [];
 
     res.json({
-      statusStats: statusStats.map(s => ({ label: s._id, value: s.count })),
-      sourceStats: sourceStats.map(s => ({ label: s._id, value: s.count }))
+      statusStats: statusStats.map(s => ({ label: s._id || 'Unknown', value: s.count })),
+      sourceStats: sourceStats.map(s => ({ label: s._id || 'Direct', value: s.count }))
     });
   } catch (error) {
-    console.error(`[GET /analysis] Analysis Failed:`, error);
-    res.status(500).json({ message: error.message });
+    console.error(`[GET /analysis] Analysis Failed:`, error.message);
+    res.json({ statusStats: [], sourceStats: [], error: error.message });
   }
 };
 
