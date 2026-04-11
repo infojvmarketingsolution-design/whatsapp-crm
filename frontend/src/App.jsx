@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { Toaster, toast } from 'react-hot-toast';
 import io from 'socket.io-client';
 import Sidebar from './components/Sidebar';
+import GlobalSuspensionTimer from './components/GlobalSuspensionTimer';
 import Inbox from './pages/Inbox';
 import Contacts from './pages/Contacts';
 import Login from './pages/Login';
@@ -409,6 +410,7 @@ function AppLayout() {
   return (
     <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden`}>
       <Toaster position="top-right" reverseOrder={false} />
+      {!isAuthPage && <GlobalSuspensionTimer />}
       {!isAuthPage && (userRole === 'SUPER_ADMIN' ? <AdminSidebar onLogout={handleLogout} /> : <Sidebar whatsappConfig={whatsappConfig} />)}
       <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-hidden">
         <div className="flex-1 overflow-y-auto custom-scrollbar">

@@ -12,25 +12,6 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
 
-const CountdownTimer = ({ targetDate }) => {
-    const [timeLeft, setTimeLeft] = React.useState(Math.max(0, targetDate - Date.now()));
-    
-    React.useEffect(() => {
-        const timer = setInterval(() => {
-           setTimeLeft(Math.max(0, targetDate - Date.now()));
-        }, 1000);
-        return () => clearInterval(timer);
-    }, [targetDate]);
-
-    const h = Math.floor(timeLeft / 1000 / 60 / 60);
-    const m = Math.floor((timeLeft / 1000 / 60) % 60);
-    const s = Math.floor((timeLeft / 1000) % 60);
-    
-    if (h > 0) {
-      return <span>{h.toString().padStart(2, '0')}:{m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}</span>;
-    }
-    return <span>{m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}</span>;
-};
 
 export default function Tasks() {
   const [tasks, setTasks] = useState([]);
@@ -1200,19 +1181,6 @@ export default function Tasks() {
               Take Action Now
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Floating Suspend Timer */}
-      {criticalSuspendAt && !showCriticalOverduePopup && (
-        <div className="fixed bottom-8 right-8 z-[100] bg-rose-600 border border-rose-400 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center shadow-rose-500/30 animate-pop-in">
-           <AlertCircle className="animate-pulse mr-4" size={28} />
-           <div>
-             <div className="text-[11px] font-black uppercase tracking-widest opacity-80">Account Suspension In</div>
-             <div className="text-2xl font-black font-mono tracking-widest">
-                <CountdownTimer targetDate={criticalSuspendAt} />
-             </div>
-           </div>
         </div>
       )}
     </div>
