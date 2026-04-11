@@ -77,49 +77,55 @@ export default function ApiSetup() {
     }
 
     try {
-      window.FB.login(async (response) => {
+      window.FB.login(function(response) {
         console.log("Meta Embedded Signup Response:", response);
-        if (response.authResponse) {
-          const code = response.authResponse.code;
-          if (!code) {
-             alert("Embedded Signup closed early or failed to provide a valid OAuth code. Please try again.");
-             return;
-          }
-          console.log("OAuth Code received. Initiating Server Exchange...");
-          
-          try {
-            const jwtToken = localStorage.getItem('token');
-            const tenantId = localStorage.getItem('tenantId');
-            
-            setSaving(true);
-            const res = await fetch('/api/whatsapp/oauth', {
-              method: 'POST',
-              headers: { 
-                'Authorization': `Bearer ${jwtToken}`, 
-                'x-tenant-id': tenantId, 
-                'Content-Type': 'application/json' 
-              },
-              body: JSON.stringify({ code })
-            });
-
-            const data = await res.json();
-            if (res.ok) {
-              alert("Success! Meta Access Token successfully exchanged and saved.");
-              if (data.accessToken) setToken(data.accessToken);
-              fetchConfig();
-            } else {
-              alert("OAuth Exchange Failed: " + data.message);
+        
+        const processResponse = async () => {
+          if (response.authResponse) {
+            const code = response.authResponse.code;
+            if (!code) {
+               alert("Embedded Signup closed early or failed to provide a valid OAuth code. Please try again.");
+               return;
             }
-          } catch (err) {
-             alert("Network Error during Token Exchange: " + err.message);
-          } finally {
-             setSaving(false);
-          }
+            console.log("OAuth Code received. Initiating Server Exchange...");
+            
+            try {
+              const jwtToken = localStorage.getItem('token');
+              const tenantId = localStorage.getItem('tenantId');
+              
+              setSaving(true);
+              const res = await fetch('/api/whatsapp/oauth', {
+                method: 'POST',
+                headers: { 
+                  'Authorization': `Bearer ${jwtToken}`, 
+                  'x-tenant-id': tenantId, 
+                  'Content-Type': 'application/json' 
+                },
+                body: JSON.stringify({ code })
+              });
 
-        } else {
-          alert('Meta Embedded Signup sequence was blocked, cancelled, or failed validation. (Check pop-up blockers!)');
-          console.warn('User cancelled login or did not fully authorize the Meta Embedded Signup.', response);
-        }
+              const data = await res.json();
+              if (res.ok) {
+                alert("Success! Meta Access Token successfully exchanged and saved.");
+                if (data.accessToken) setToken(data.accessToken);
+                fetchConfig();
+              } else {
+                alert("OAuth Exchange Failed: " + data.message);
+              }
+            } catch (err) {
+               alert("Network Error during Token Exchange: " + err.message);
+            } finally {
+               setSaving(false);
+            }
+
+          } else {
+            alert('Meta Embedded Signup sequence was blocked, cancelled, or failed validation. (Check pop-up blockers!)');
+            console.warn('User cancelled login or did not fully authorize the Meta Embedded Signup.', response);
+          }
+        };
+
+        processResponse();
+
       }, {
         config_id: '1270957501788115',
         response_type: 'code',
