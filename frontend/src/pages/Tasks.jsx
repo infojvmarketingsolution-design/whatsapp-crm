@@ -1202,6 +1202,19 @@ export default function Tasks() {
           </div>
         </div>
       )}
+
+      {/* Floating Suspend Timer */}
+      {criticalSuspendAt && !showCriticalOverduePopup && (
+        <div className="fixed bottom-8 right-8 z-[100] bg-rose-600 border border-rose-400 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center shadow-rose-500/30 animate-pop-in">
+           <AlertCircle className="animate-pulse mr-4" size={28} />
+           <div>
+             <div className="text-[11px] font-black uppercase tracking-widest opacity-80">Account Suspension In</div>
+             <div className="text-2xl font-black font-mono tracking-widest">
+                <CountdownTimer targetDate={criticalSuspendAt} />
+             </div>
+           </div>
+        </div>
+      )}
     </div>
   );
 }
