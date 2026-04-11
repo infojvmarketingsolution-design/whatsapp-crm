@@ -16,9 +16,9 @@ const CountdownTimer = ({ targetDate }) => {
     const s = Math.floor((timeLeft / 1000) % 60);
     
     if (h > 0) {
-      return <span>{h.toString().padStart(2, '0')}:{m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}</span>;
+      return <span>{h}h {m}m {s}s</span>;
     }
-    return <span>{m.toString().padStart(2, '0')}:{s.toString().padStart(2, '0')}</span>;
+    return <span>{m}(Minutes) : {s.toString().padStart(2, '0')} (Second)</span>;
 };
 
 export default function GlobalSuspensionTimer() {
