@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import Inbox from './pages/Inbox';
 import Contacts from './pages/Contacts';
 import Login from './pages/Login';
+import LandingPage from './pages/LandingPage';
 import ApiSetup from './pages/ApiSetup';
 import Campaigns from './pages/Campaigns';
 import CreateCampaign from './pages/Campaigns/CreateCampaign';
@@ -288,7 +289,7 @@ class ErrorBoundary extends React.Component {
 function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const isAuthPage = location.pathname === '/login';
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/';
   const [themeColor, setThemeColor] = React.useState('#10b981'); // Default Teal
   const [isMaintenance, setIsMaintenance] = React.useState(false);
   const [whatsappConfig, setWhatsappConfig] = React.useState(null);
@@ -412,7 +413,7 @@ function AppLayout() {
       <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-hidden">
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <Routes>
-            <Route path="/" element={<Navigate to="/login" replace />} />
+            <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/pipeline" element={<Pipeline />} />
