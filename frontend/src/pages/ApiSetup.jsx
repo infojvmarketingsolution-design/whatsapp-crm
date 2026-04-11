@@ -72,55 +72,63 @@ export default function ApiSetup() {
 
   const handleFacebookConnect = () => {
     if (!window.FB) {
-      alert("Facebook System is still initializing. Please wait a moment and try again.");
+      alert("Facebook System is still initializing or was blocked by an ad-blocker. Please turn off ad-blockers, refresh the page, and try again.");
       return;
     }
 
-    window.FB.login(async (response) => {
-      console.log("Meta Embedded Signup Response:", response);
-      if (response.authResponse) {
-        const code = response.authResponse.code;
-        console.log("OAuth Code received. Initiating Server Exchange...");
-        
-        try {
-          const jwtToken = localStorage.getItem('token');
-          const tenantId = localStorage.getItem('tenantId');
-          
-          setSaving(true);
-          const res = await fetch('/api/whatsapp/oauth', {
-            method: 'POST',
-            headers: { 
-              'Authorization': `Bearer ${jwtToken}`, 
-              'x-tenant-id': tenantId, 
-              'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify({ code })
-          });
-
-          const data = await res.json();
-          if (res.ok) {
-            alert("Success! Meta Access Token successfully exchanged and saved.");
-            // Update the local state to show the token
-            if (data.accessToken) setToken(data.accessToken);
-            fetchConfig(); // refresh to get updated stats
-          } else {
-            alert("OAuth Exchange Failed: " + data.message);
+    try {
+      window.FB.login(async (response) => {
+        console.log("Meta Embedded Signup Response:", response);
+        if (response.authResponse) {
+          const code = response.authResponse.code;
+          if (!code) {
+             alert("Embedded Signup closed early or failed to provide a valid OAuth code. Please try again.");
+             return;
           }
-        } catch (err) {
-           alert("Network Error during Token Exchange: " + err.message);
-        } finally {
-           setSaving(false);
-        }
+          console.log("OAuth Code received. Initiating Server Exchange...");
+          
+          try {
+            const jwtToken = localStorage.getItem('token');
+            const tenantId = localStorage.getItem('tenantId');
+            
+            setSaving(true);
+            const res = await fetch('/api/whatsapp/oauth', {
+              method: 'POST',
+              headers: { 
+                'Authorization': `Bearer ${jwtToken}`, 
+                'x-tenant-id': tenantId, 
+                'Content-Type': 'application/json' 
+              },
+              body: JSON.stringify({ code })
+            });
 
-      } else {
-        console.warn('User cancelled login or did not fully authorize the Meta Embedded Signup.');
-      }
-    }, {
-      config_id: '1270957501788115',
-      response_type: 'code',
-      override_default_response_type: true,
-      extras: {"sessionInfoVersion":"3","version":"v4"}
-    });
+            const data = await res.json();
+            if (res.ok) {
+              alert("Success! Meta Access Token successfully exchanged and saved.");
+              if (data.accessToken) setToken(data.accessToken);
+              fetchConfig();
+            } else {
+              alert("OAuth Exchange Failed: " + data.message);
+            }
+          } catch (err) {
+             alert("Network Error during Token Exchange: " + err.message);
+          } finally {
+             setSaving(false);
+          }
+
+        } else {
+          alert('Meta Embedded Signup sequence was blocked, cancelled, or failed validation. (Check pop-up blockers!)');
+          console.warn('User cancelled login or did not fully authorize the Meta Embedded Signup.', response);
+        }
+      }, {
+        config_id: '1270957501788115',
+        response_type: 'code',
+        override_default_response_type: true,
+        extras: {"sessionInfoVersion":"3","version":"v4"}
+      });
+    } catch (e) {
+      alert("Failed to open Facebook Window: " + e.message);
+    }
   };
 
   const handleTestConnection = async () => {
