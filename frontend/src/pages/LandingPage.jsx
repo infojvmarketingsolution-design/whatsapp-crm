@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, ShieldCheck, CheckCircle2, Phone, Mail, MapPin, 
-  Send, Bot, BarChart3, Users, PlayCircle, Star, Triangle, Circle, Square
+  Send, Bot, BarChart3, Users, PlayCircle, Star, Triangle, Circle, Square, MessageCircle
 } from 'lucide-react';
 
 const LandingPage = () => {
@@ -38,6 +38,12 @@ const LandingPage = () => {
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Quick Contact - Navbar */}
+              <div className="hidden lg:flex items-center space-x-3 mr-4">
+                 <a href="https://wa.me/919909700606" target="_blank" rel="noopener noreferrer" className="flex items-center space-x-1.5 text-[#25D366] hover:text-[#1DA851] font-bold text-sm bg-green-50 px-3 py-1.5 rounded-full transition-colors">
+                    <MessageCircle size={16} /> <span>+91 99097 00606</span>
+                 </a>
+              </div>
               <button onClick={handleLoginClick} className="hidden md:inline-flex items-center font-bold text-gray-700 hover:text-[#075E54] transition-colors">Login</button>
               <button onClick={handleLoginClick} className="bg-[#25D366] hover:bg-[#1DA851] text-white font-bold py-3 px-6 rounded-lg shadow-[0_4px_14px_0_rgba(37,211,102,0.39)] hover:shadow-[0_6px_20px_rgba(37,211,102,0.23)] hover:-translate-y-0.5 transition-all flex items-center gap-2 text-[15px]">
                 New User? Apply <ArrowRight size={18} />
@@ -393,6 +399,26 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+
+      {/* 8. Floating Action Buttons (WhatsApp & Call) */}
+      <div className="fixed bottom-6 right-6 z-[100] flex flex-col gap-4">
+         <a href="tel:+919909700606" className="w-14 h-14 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-xl hover:scale-110 transition-transform group relative z-10" aria-label="Call WapiPulse">
+            <Phone size={24} />
+            <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block shadow-lg pointer-events-none">
+               Call +91 99097 00606
+               <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-slate-900 transform rotate-45"></div>
+            </span>
+         </a>
+         
+         <a href="https://wa.me/919909700606" target="_blank" rel="noopener noreferrer" className="w-14 h-14 bg-[#25D366] rounded-full flex items-center justify-center text-white shadow-[0_8px_30px_rgb(37,211,102,0.4)] hover:scale-110 transition-transform group relative z-10" aria-label="WhatsApp WapiPulse">
+            <MessageCircle size={28} />
+            <span className="absolute right-16 top-1/2 -translate-y-1/2 bg-slate-900 text-white text-xs font-bold px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap hidden md:block shadow-lg pointer-events-none">
+               Chat with us on WhatsApp
+               <div className="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-2 bg-slate-900 transform rotate-45"></div>
+            </span>
+         </a>
+      </div>
+
     </div>
   );
 };
