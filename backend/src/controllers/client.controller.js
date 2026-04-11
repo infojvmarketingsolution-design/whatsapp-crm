@@ -83,6 +83,21 @@ const updateClient = async (req, res) => {
           { $set: { status: 'ACTIVE' } }
         );
 
+        // 2. Handle Password Reset if provided
+        if (req.body.password) {
+          const user = await User.findOne({ 
+            $or: [
+              { tenantId: client.tenantId },
+              { email: client.email }
+            ]
+          });
+          if (user) {
+            user.password = req.body.password;
+            await user.save();
+            console.log(`[Reactivation] Password reset for user: ${user.email}`);
+          }
+        }
+
         // EXTRA HARDENING: If Reactivating to ACTIVE, clear overdue tasks in tenant DB
         if (req.body.status === 'ACTIVE') {
           try {
