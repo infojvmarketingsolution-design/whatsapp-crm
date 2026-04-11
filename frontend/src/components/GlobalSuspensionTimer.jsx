@@ -31,9 +31,16 @@ export default function GlobalSuspensionTimer() {
         const tenantId = localStorage.getItem('tenantId');
         if(!token || !tenantId) return;
 
-        const res = await fetch('/api/chat/tasks', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } });
+        const res = await fetch('/api/chat/contacts', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } });
         if(res.ok) {
-           const tasks = await res.json();
+           const contacts = await res.json();
+           const tasks = [];
+           contacts.forEach(c => {
+             if (c.tasks && c.tasks.length > 0) {
+               c.tasks.forEach(t => tasks.push(t));
+             }
+           });
+
            const now = new Date();
            const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
            const criticalTasks = tasks.filter(t => t.status === 'PENDING' && new Date(t.dueDate) < fortyEightHoursAgo);
