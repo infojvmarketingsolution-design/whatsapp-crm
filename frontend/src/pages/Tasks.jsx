@@ -3,7 +3,7 @@ import {
   CheckCircle2, PhoneCall, Calendar, Clock, AlertCircle, 
   Search, Filter, ChevronRight, User, Check, CalendarDays,
   MoreVertical, MoreHorizontal, ArrowUpRight, ExternalLink,
-  X, Mail, MapPin, Phone, Users, Activity, Target, Tag, Save,
+  X, Mail, MapPin, Phone, Users, Activity, Target, Tag, Save, Edit3,
   Briefcase, Building2, Download, Flame, Sun, Snowflake, Send, 
   ShieldCheck, History, TrendingUp, Globe, Smartphone, Bell, 
   Landmark, Hash, Wallet
@@ -40,6 +40,14 @@ export default function Tasks() {
   const [nextFollowUpDate, setNextFollowUpDate] = useState('');
   const [nextFollowUpDescription, setNextFollowUpDescription] = useState('');
   const [isSubmittingCompletion, setIsSubmittingCompletion] = useState(false);
+
+  // Edit Task State
+  const [editingTask, setEditingTask] = useState(null);
+  const [editTaskTitle, setEditTaskTitle] = useState('');
+  const [editTaskDate, setEditTaskDate] = useState('');
+  const [editTaskType, setEditTaskType] = useState('');
+  const [isUpdatingTask, setIsUpdatingTask] = useState(false);
+  const [showCriticalOverduePopup, setShowCriticalOverduePopup] = useState(false);
 
   const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing'];
 
@@ -191,6 +199,37 @@ export default function Tasks() {
      }
   };
 
+  
+  const saveEditedTask = async () => {
+     if (!editingTask) return;
+     setIsUpdatingTask(true);
+     try {
+       const token = localStorage.getItem('token');
+       const tenantId = localStorage.getItem('tenantId');
+       
+       // Temporarily creating a simplified action or we might need an actual endpoint.
+       // The instructions just said "Edit Task". I'll manually reschedule and re-title.
+       // Wait, we don't have an explicit 'edit_task' action in the backend. 
+       // If Edit Task requires changing title, I am adding a new 'edit_task' action to backend later.
+       const res = await fetch(`/api/chat/contacts/${editingTask.contactId}/action`, {
+         method: 'PUT',
+         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+         body: JSON.stringify({ action: 'edit_task', payload: { taskId: editingTask._id, title: editTaskTitle, dueDate: editTaskDate, type: editTaskType } })
+       });
+       if (res.ok) {
+         toast.success("Task updated");
+         setEditingTask(null);
+         fetchTasks();
+       } else {
+         toast.error("Failed to update task");
+       }
+     } catch (err) {
+       console.error(err);
+     } finally {
+       setIsUpdatingTask(false);
+     }
+  };
+
   const completeTask = async (contactId, taskId) => {
     try {
       const token = localStorage.getItem('token');
@@ -330,20 +369,23 @@ export default function Tasks() {
   const totalCount = tasks.length;
   const efficiency = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  // 15-minute alert for 24-hour overdue tasks
+  // 48-hour alert for overdue tasks
   useEffect(() => {
     const checkCriticalOverdue = () => {
       const now = new Date();
-      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-      const criticalTasks = tasks.filter(t => t.status === 'PENDING' && new Date(t.dueDate) < twentyFourHoursAgo);
+      const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
+      const criticalTasks = tasks.filter(t => t.status === 'PENDING' && new Date(t.dueDate) < fortyEightHoursAgo);
       
       if (criticalTasks.length > 0) {
-        alert(`CRITICAL ALERT: You have ${criticalTasks.length} tasks that have been pending for more than 24 hours! Please check your Work Console.`);
+        setShowCriticalOverduePopup(true);
+      } else {
+        setShowCriticalOverduePopup(false);
       }
     };
 
-    // Check every 15 minutes
-    const intervalId = setInterval(checkCriticalOverdue, 15 * 60 * 1000);
+    // Check every 1 minute
+    checkCriticalOverdue();
+    const intervalId = setInterval(checkCriticalOverdue, 60 * 1000);
     return () => clearInterval(intervalId);
   }, [tasks]);
 
@@ -582,25 +624,8 @@ export default function Tasks() {
                               >
                                 <Check size={14} className="mr-2" /> Done
                               </button>
-                              <button 
-                                onClick={() => rescheduleToToday(t.contactId, t._id)}
-                                className="h-9 w-9 bg-slate-50 text-slate-400 rounded-xl hover:bg-white hover:text-blue-600 hover:border-blue-100 border border-transparent transition-all flex items-center justify-center active:scale-95"
-                                title="Set to Today"
-                              >
-                                <Clock size={16} />
-                              </button>
                            </>
                         )}
-                        <button 
-                          onClick={() => {
-                            localStorage.setItem('activeChatId', t.contactId);
-                            navigate('/inbox', { state: { selectedContact: t.phone } });
-                          }}
-                          className="h-9 px-4 bg-slate-50 text-slate-600 text-xs font-black rounded-xl hover:bg-white hover:text-slate-800 hover:border-slate-200 border border-transparent transition-all flex items-center active:scale-95"
-                        >
-                          Chat <ArrowUpRight size={14} className="ml-2 opacity-60" />
-                        </button>
-                        
                         <div className="relative" ref={activeDropdown === t._id ? dropdownRef : null}>
                            <button 
                               onClick={(e) => {
@@ -632,7 +657,7 @@ export default function Tasks() {
                                           <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
                                              <ArrowUpRight size={16} />
                                           </div>
-                                          Mark as Changing
+                                          Reschedule
                                        </button>
                                        <button 
                                           onClick={() => { updateTaskStatus(t.contactId, t._id, 'cancel_task'); }}
@@ -650,7 +675,7 @@ export default function Tasks() {
                                           <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
                                              <Clock size={16} />
                                           </div>
-                                          Reschedule for Today
+                                          Set to Today
                                        </button>
                                     </div>
                                  )}

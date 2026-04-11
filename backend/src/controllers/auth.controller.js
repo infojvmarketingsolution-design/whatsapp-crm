@@ -11,8 +11,11 @@ const generateToken = (id) => {
 const authUser = async (req, res) => {
   const { email, password } = req.body;
   try {
-
     const user = await User.findOne({ email });
+
+    if (user && user.status === 'SUSPENDED') {
+      return res.status(403).json({ message: 'Account suspended. Please contact your Administrator.' });
+    }
 
     if (user && (await user.matchPassword(password))) {
       res.json({

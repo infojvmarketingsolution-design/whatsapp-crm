@@ -231,6 +231,20 @@ const performContactAction = async (req, res) => {
              timestamp: new Date() 
            });
        }
+    } else if (action === 'edit_task') {
+       if (!contact.tasks) contact.tasks = [];
+       const taskIndex = contact.tasks.findIndex(t => t._id.toString() === payload.taskId);
+       if (taskIndex > -1) {
+           const oldTitle = contact.tasks[taskIndex].title;
+           contact.tasks[taskIndex].title = payload.title || contact.tasks[taskIndex].title;
+           contact.tasks[taskIndex].dueDate = new Date(payload.dueDate || contact.tasks[taskIndex].dueDate);
+           if (payload.type) contact.tasks[taskIndex].type = payload.type;
+           contact.timeline.push({ 
+             eventType: 'TASK_EDITED', 
+             description: `Task edited from "${oldTitle}" to "${contact.tasks[taskIndex].title}"`, 
+             timestamp: new Date() 
+           });
+       }
     } else {
        return res.status(400).json({ error: 'Invalid action type' });
     }

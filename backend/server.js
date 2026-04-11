@@ -37,6 +37,8 @@ const maintenanceMiddleware = require('./src/middleware/maintenance');
 
 // Initialize Queue Workers
 require('./src/workers/campaign.worker');
+const { startTaskSuspensionWorker } = require('./src/workers/task.worker');
+startTaskSuspensionWorker();
 
 app.use(maintenanceMiddleware);
 
