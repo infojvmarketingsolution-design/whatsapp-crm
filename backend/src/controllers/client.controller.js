@@ -13,7 +13,7 @@ const getClients = async (req, res) => {
 };
 
 const createClient = async (req, res) => {
-  const { name, email, phone, companyName, plan, adminName, password } = req.body;
+  const { name, email, phone, mobileNumber, alternativeNumber, companyName, plan, adminName, password } = req.body;
   try {
     const clientExists = await Client.findOne({ email });
     if (clientExists) {
@@ -28,6 +28,8 @@ const createClient = async (req, res) => {
       name: name || companyName,
       email,
       phone: phone || '',
+      mobileNumber: mobileNumber || phone || '',
+      alternativeNumber: alternativeNumber || '',
       companyName,
       tenantId,
       apiKey,
