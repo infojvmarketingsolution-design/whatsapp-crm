@@ -32,6 +32,13 @@ export default function GlobalSuspensionTimer() {
         if(!token || !tenantId) return;
 
         const res = await fetch('/api/chat/contacts', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } });
+        
+        // Handle explicit backend suspension (User.status === 'SUSPENDED')
+        if (res.status === 403) {
+            setCriticalSuspendAt(Date.now()); // Trigger lockout immediately
+            return;
+        }
+
         if(res.ok) {
            const contacts = await res.json();
            const tasks = [];
@@ -52,10 +59,12 @@ export default function GlobalSuspensionTimer() {
               const suspendTime = new Date(oldestTask.dueDate).getTime() + 49 * 60 * 60 * 1000;
               setCriticalSuspendAt(suspendTime);
            } else {
-              setCriticalSuspendAt(null);
+              setCriticalSuspendAt(null); // Access restored!
            }
         }
-      } catch(e) {}
+      } catch(e) {
+         console.error("Suspension check failed:", e);
+      }
     };
 
     checkCriticalOverdue();

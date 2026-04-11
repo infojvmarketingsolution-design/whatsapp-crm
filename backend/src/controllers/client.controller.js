@@ -2,6 +2,8 @@ const Client = require('../models/core/Client');
 const crypto = require('crypto');
 
 const User = require('../models/core/User');
+const { getTenantConnection } = require('../config/db');
+const ContactSchema = require('../models/tenant/Contact');
 
 const getClients = async (req, res) => {
   try {
@@ -74,6 +76,40 @@ const updateClient = async (req, res) => {
           { tenantId: client.tenantId },
           { $set: { status: req.body.status } }
         );
+
+        // EXTRA HARDENING: If Reactivating to ACTIVE, clear overdue tasks in tenant DB
+        // to lift frontend suspension overlays immediately.
+        if (req.body.status === 'ACTIVE') {
+          try {
+            const tenantDb = getTenantConnection(client.tenantId);
+            const Contact = tenantDb.model('Contact', ContactSchema);
+            
+            const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
+            
+            // Find contacts that HAVE overdue tasks
+            const contactsWithOverdue = await Contact.find({
+              'tasks.status': 'PENDING',
+              'tasks.dueDate': { $lt: fortyEightHoursAgo }
+            });
+
+            for (const contact of contactsWithOverdue) {
+              let modified = false;
+              contact.tasks.forEach(task => {
+                if (task.status === 'PENDING' && new Date(task.dueDate) < fortyEightHoursAgo) {
+                  task.status = 'COMPLETED';
+                  task.outcome = 'Auto-completed during reactivation';
+                  modified = true;
+                }
+              });
+              if (modified) {
+                await contact.save();
+              }
+            }
+            console.log(`[Reactivation] Cleared violations for tenant: ${client.tenantId}`);
+          } catch (taskErr) {
+            console.error(`[Reactivation] Failed to clear tasks for ${client.tenantId}:`, taskErr);
+          }
+        }
       }
       res.json(client);
     } else {

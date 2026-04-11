@@ -115,11 +115,16 @@ const ClientManagement = () => {
         body: JSON.stringify(updateData)
       });
       if (res.ok) {
+        toast.success(directStatus === 'ACTIVE' ? "Account Reactivated" : "Client Updated");
         setShowEditModal(false);
         fetchClients();
+      } else {
+        const errData = await res.json();
+        toast.error(errData.message || "Failed to update client");
       }
     } catch (error) {
       console.error('Failed to update client', error);
+      toast.error("Network error during update");
     } finally {
       setSubmitting(false);
     }
@@ -264,7 +269,7 @@ const ClientManagement = () => {
                              : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-sm'
                          }`}
                       >
-                         {client.status === 'ACTIVE' ? 'Refersh' : 'Reactivate'}
+                         {client.status === 'ACTIVE' ? 'Refresh' : 'Reactivate'}
                       </button>
                     </div>
                   </td>
