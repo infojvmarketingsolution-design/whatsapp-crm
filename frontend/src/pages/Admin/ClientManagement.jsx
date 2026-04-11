@@ -259,16 +259,18 @@ const ClientManagement = () => {
                         <div className={`w-2 h-2 rounded-full ${client.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`}></div>
                         <span className="text-xs font-semibold text-slate-700">{client.status}</span>
                       </div>
-                      {client.status === 'SUSPENDED' && (
-                        <button 
-                           onClick={() => {
-                              handleUpdateClient(null, client._id, 'ACTIVE', client);
-                           }}
-                           className="ml-2 px-3 py-1 bg-emerald-600 text-white text-[10px] font-black uppercase rounded hover:bg-emerald-700 transition-all shadow-md shadow-emerald-600/20 active:scale-95 border border-emerald-500"
-                        >
-                           Reactivate
-                        </button>
-                      )}
+                      <button 
+                         onClick={() => {
+                            handleUpdateClient(null, client._id, 'ACTIVE', client);
+                         }}
+                         className={`ml-2 px-3 py-1 text-[10px] font-black uppercase rounded transition-all shadow-md active:scale-95 border ${
+                           client.status === 'ACTIVE' 
+                             ? 'bg-slate-100 text-slate-500 border-slate-300 hover:bg-slate-200' 
+                             : 'bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20'
+                         }`}
+                      >
+                         {client.status === 'ACTIVE' ? 'Sync Access' : 'Reactivate'}
+                      </button>
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">

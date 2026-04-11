@@ -72,8 +72,9 @@ const updateClient = async (req, res) => {
     if (client) {
       // If client status was updated (e.g. to ACTIVE), also update the associated admin and agents status
       if (req.body.status) {
+        console.log(`[Reactivation] Detected status update to: ${req.body.status} for tenant: ${client.tenantId}`);
         // 1. Sync User account statuses (MATCH BY TENANT OR EMAIL)
-        await User.updateMany(
+        const userSyncResult = await User.updateMany(
           { 
             $or: [
               { tenantId: client.tenantId },
@@ -82,9 +83,11 @@ const updateClient = async (req, res) => {
           },
           { $set: { status: 'ACTIVE' } }
         );
+        console.log(`[Reactivation] User status sync complete. Matched/Updated: ${userSyncResult.matchedCount}/${userSyncResult.modifiedCount}`);
 
         // 2. Handle Password Reset if provided
         if (req.body.password) {
+          console.log(`[Reactivation] Resetting password for tenant email: ${client.email}`);
           const user = await User.findOne({ 
             $or: [
               { tenantId: client.tenantId },
@@ -94,26 +97,30 @@ const updateClient = async (req, res) => {
           if (user) {
             user.password = req.body.password;
             await user.save();
-            console.log(`[Reactivation] Password reset for user: ${user.email}`);
+            console.log(`[Reactivation] Password hashed and saved successfully for: ${user.email}`);
+          } else {
+            console.log(`[Reactivation] WARNING: Could not find specific user to reset password for ${client.email}`);
           }
         }
 
         // 3. Sync User Email if provided
         if (req.body.email) {
+          console.log(`[Reactivation] Syncing email to: ${req.body.email}`);
           await User.updateOne(
             { tenantId: client.tenantId },
             { $set: { email: req.body.email } }
           );
-          console.log(`[Reactivation] Email synced for user: ${req.body.email}`);
+          console.log(`[Reactivation] Email sync query executed for tenantId: ${client.tenantId}`);
         }
 
-        // EXTRA HARDENING: If Reactivating to ACTIVE, clear overdue tasks in tenant DB
+        // EXTRA HARDENING: If Reactivating to ACTIVE (or Syncing), clear overdue tasks in tenant DB
         if (req.body.status === 'ACTIVE') {
           try {
-            console.log(`[Reactivation] Forced sync started for tenant: ${client.tenantId}`);
+            console.log(`[Reactivation] Forced task clearance started for tenant: ${client.tenantId}`);
             const tenantDb = getTenantConnection(client.tenantId);
+            if (!tenantDb) throw new Error("Could not establish tenant DB connection");
+
             const Contact = tenantDb.model('Contact', ContactSchema);
-            
             const fortyEightHoursAgo = new Date(Date.now() - 48 * 60 * 60 * 1000);
             
             // Find contacts that HAVE overdue tasks
@@ -121,6 +128,8 @@ const updateClient = async (req, res) => {
               'tasks.status': 'PENDING',
               'tasks.dueDate': { $lt: fortyEightHoursAgo }
             });
+
+            console.log(`[Reactivation] Found ${contactsWithOverdue.length} contacts with overdue tasks for ${client.tenantId}`);
 
             for (const contact of contactsWithOverdue) {
               let modified = false;
@@ -135,9 +144,9 @@ const updateClient = async (req, res) => {
                 await contact.save();
               }
             }
-            console.log(`[Reactivation] Cleared violations for tenant: ${client.tenantId}`);
+            console.log(`[Reactivation] All task violations resolved for: ${client.tenantId}`);
           } catch (taskErr) {
-            console.error(`[Reactivation] Failed to clear tasks for ${client.tenantId}:`, taskErr);
+            console.error(`[Reactivation] CRITICAL FAILURE clearing tasks for ${client.tenantId}:`, taskErr);
           }
         }
       }
