@@ -78,8 +78,7 @@ const LandingPage = () => {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="relative lg:ml-auto z-10 flex justify-center">
-               <div className="absolute inset-0 bg-[#25D366]/5 rounded-3xl transform rotate-3 scale-105"></div>
-               <div className="absolute inset-0 bg-[#075E54]/5 rounded-3xl transform -rotate-3 scale-105"></div>
+               {/* Removed decorative squares as requested */}
                <motion.img 
                   animate={{ y: [-15, 15, -15] }}
                   transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
