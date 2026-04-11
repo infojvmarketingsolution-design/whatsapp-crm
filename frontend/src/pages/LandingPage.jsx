@@ -102,35 +102,11 @@ const LandingPage = () => {
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-6">Trusted by fast-growing enterprises worldwide</p>
           <div className="flex flex-wrap justify-center gap-8 md:gap-20 items-center opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
-             
-             {/* J.V Group */}
-             <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded bg-blue-900 border-2 border-yellow-500 flex items-center justify-center">
-                   <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                </div>
-                <h3 className="text-xl font-black font-serif text-blue-900 tracking-wider">J.V <span className="font-sans text-yellow-600">Group</span></h3>
-             </div>
-             
-             {/* Swarnim */}
-             <div className="flex items-center space-x-2">
-                <Triangle className="fill-orange-500 text-orange-500" size={30} />
-                <h3 className="text-xl font-black uppercase text-orange-600 tracking-tight">Swarnim</h3>
-             </div>
-
-             {/* Encore */}
-             <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 rounded-full bg-purple-600 flex relative">
-                   <div className="w-4 h-4 rounded-full bg-white absolute right-0 top-2"></div>
-                </div>
-                <h3 className="text-xl font-black italic text-purple-700">Encore</h3>
-             </div>
-             
-             {/* Ekatotech */}
-             <div className="flex items-center space-x-2">
-                <Square className="text-teal-600 fill-teal-600 transform rotate-45" size={28} />
-                <h3 className="text-xl font-black uppercase tracking-widest text-teal-700">Ekatotech</h3>
-             </div>
-             
+             <img src="/trusted_logo_1.png" alt="Encore" className="h-10 md:h-14 object-contain" />
+             <img src="/trusted_logo_2.png" alt="Jena" className="h-10 md:h-14 object-contain" />
+             <img src="/trusted_logo_3.png" alt="Swarnim" className="h-10 md:h-14 object-contain" />
+             <img src="/trusted_logo_4.png" alt="JV Marketing" className="h-10 md:h-14 object-contain" />
+             <img src="/trusted_logo_5.jpg" alt="JV Group" className="h-10 md:h-14 object-contain mix-blend-multiply" />
           </div>
         </div>
       </section>
