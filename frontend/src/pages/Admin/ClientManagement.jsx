@@ -96,18 +96,21 @@ const ClientManagement = () => {
     }
   };
 
-  const handleUpdateClient = async (e) => {
-    e.preventDefault();
+  const handleUpdateClient = async (e, directId, directStatus) => {
+    if (e) e.preventDefault();
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`/api/clients/${selectedClient._id}`, {
+      const clientId = directId || selectedClient._id;
+      const updateData = directStatus ? { ...selectedClient, status: directStatus } : selectedClient;
+      
+      const res = await fetch(`/api/clients/${clientId}`, {
         method: 'PUT',
         headers: { 
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${token}` 
         },
-        body: JSON.stringify(selectedClient)
+        body: JSON.stringify(updateData)
       });
       if (res.ok) {
         setShowEditModal(false);
@@ -244,9 +247,22 @@ const ClientManagement = () => {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center space-x-1.5">
-                      <div className={`w-2 h-2 rounded-full ${client.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`}></div>
-                      <span className="text-xs font-semibold text-slate-700">{client.status}</span>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-1.5">
+                        <div className={`w-2 h-2 rounded-full ${client.status === 'ACTIVE' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-red-500'}`}></div>
+                        <span className="text-xs font-semibold text-slate-700">{client.status}</span>
+                      </div>
+                      {client.status === 'SUSPENDED' && (
+                        <button 
+                          onClick={() => {
+                            setSelectedClient(client);
+                            handleUpdateClient({ preventDefault: () => {}, target: { status: 'ACTIVE' } }, client._id, 'ACTIVE');
+                          }}
+                          className="ml-2 px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-black uppercase rounded hover:bg-emerald-200 transition-colors border border-emerald-200"
+                        >
+                          Reactivate
+                        </button>
+                      )}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">

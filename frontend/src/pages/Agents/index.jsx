@@ -179,7 +179,11 @@ export default function AgentsDashboard() {
                            </button>
                            <button 
                               onClick={() => handleToggleStatus(agent._id, agent.status)}
-                              className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-colors ${agent.status === 'ACTIVE' ? 'border-yellow-200 text-yellow-600 hover:bg-yellow-50' : 'border-green-200 text-green-600 hover:bg-green-50'}`}
+                              className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
+                                agent.status === 'ACTIVE' 
+                                  ? 'border-yellow-200 text-yellow-600 hover:bg-yellow-50' 
+                                  : 'border-green-600 bg-green-600 text-white hover:bg-green-700 shadow-md shadow-green-200 ring-2 ring-green-100 ring-offset-1'
+                              }`}
                            >
                               {agent.status === 'ACTIVE' ? 'Suspend Seat' : 'Restore Login'}
                            </button>

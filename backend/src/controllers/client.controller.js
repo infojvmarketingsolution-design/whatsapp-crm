@@ -68,6 +68,13 @@ const updateClient = async (req, res) => {
   try {
     const client = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (client) {
+      // If client status was updated (e.g. to ACTIVE), also update the associated admin and agents status
+      if (req.body.status) {
+        await User.updateMany(
+          { tenantId: client.tenantId },
+          { $set: { status: req.body.status } }
+        );
+      }
       res.json(client);
     } else {
       res.status(404).json({ message: 'Client not found' });
