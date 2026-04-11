@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getContacts, getMessages, sendMessage, performContactAction, performBulkContactAction, createContact, getDashboardStats, getContactStats, getAgents, updateFcmToken, summarizeLead } = require('../controllers/chat.controller');
+const { getContacts, getMessages, sendMessage, performContactAction, performBulkContactAction, createContact, getDashboardStats, getContactStats, getAgents, updateFcmToken, summarizeLead, getLeadAnalysis } = require('../controllers/chat.controller');
 const tenantMiddleware = require('../middleware/tenant');
 const { protect } = require('../middleware/auth');
 const multer = require('multer');
@@ -15,6 +15,7 @@ router.post('/action', performContactAction); // Fix for current frontend
 router.put('/contacts/:contactId/action', performContactAction);
 router.get('/stats', getDashboardStats);
 router.get('/stats/contacts', getContactStats);
+router.get('/analysis', getLeadAnalysis);
 router.get('/messages/:contactId', getMessages);
 router.post('/send', upload.single('media'), sendMessage);
 router.get('/agents', getAgents);

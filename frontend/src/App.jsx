@@ -29,7 +29,7 @@ import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import Maintenance from './pages/Maintenance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import AdBudgetRefill from './components/AdBudgetRefill';
-import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, AlertCircle, History, Clock, X, Plus } from 'lucide-react';
+import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, AlertCircle, History, Clock, X, Plus, CheckCircle } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add" }) {
   return (
@@ -60,9 +60,42 @@ function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction
   );
 }
 
+function LeadAnalysisCard({ title, data, type = 'status' }) {
+  const max = Math.max(...(data || []).map(d => d.value), 1);
+  return (
+    <div className="bg-crm-card p-6 rounded-2xl shadow-soft border border-crm-border flex flex-col h-full">
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xs font-black text-slate-400 tracking-widest uppercase">{title}</h3>
+        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
+           <History size={16} />
+        </div>
+      </div>
+      <div className="space-y-4">
+        {(data || []).length === 0 ? (
+          <div className="text-center py-8 text-slate-300 font-medium italic text-sm">No lead data available</div>
+        ) : data.map((item, i) => (
+          <div key={i} className="group cursor-default">
+            <div className="flex justify-between text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+              <span>{item.label}</span>
+              <span className="text-indigo-600">{item.value}</span>
+            </div>
+            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+               <div 
+                 className={`h-full transition-all duration-1000 ${type === 'status' ? 'bg-gradient-to-r from-blue-500 to-indigo-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'}`}
+                 style={{ width: `${(item.value / max) * 100}%` }}
+               />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = React.useState({ campaigns: 0, recentCampaign: '', templates: 0, contacts: 0, chats: 0 });
+  const [analysisData, setAnalysisData] = React.useState({ statusStats: [], sourceStats: [] });
   const [loading, setLoading] = React.useState(true);
   const [wabaConfig, setWabaConfig] = React.useState(null);
   const [showRefillModal, setShowRefillModal] = React.useState(false);
@@ -78,12 +111,17 @@ function Dashboard() {
         const tenantId = localStorage.getItem('tenantId');
         
         // Fetch data in parallel
-        const [contactRes, wabaRes, campRes, tempRes] = await Promise.all([
+        const [contactRes, wabaRes, campRes, tempRes, analysisRes] = await Promise.all([
           fetch('/api/chat/contacts', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
           fetch('/api/whatsapp/config', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
           fetch('/api/campaigns', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
-          fetch('/api/templates', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } })
+          fetch('/api/templates', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
+          fetch('/api/chat/analysis', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } })
         ]);
+
+        if (analysisRes.ok) {
+           setAnalysisData(await analysisRes.json());
+        }
 
         if (wabaRes.ok) {
            const wConfig = await wabaRes.json();
@@ -118,9 +156,12 @@ function Dashboard() {
     }
   };
 
+  const userRole = activeUser.role || localStorage.getItem('role') || 'AGENT';
+  const isAdminOrSuperAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+  
   React.useEffect(() => {
     refreshData();
-    const interval = setInterval(refreshData, 5000); // 5-second polling for a "live" feel
+    const interval = setInterval(refreshData, 15000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -150,22 +191,28 @@ function Dashboard() {
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Welcome back, <span className="capitalize">{userName}</span> 👋</h2>
 
       <div className="flex flex-wrap items-center gap-4 mb-8">
-        <button onClick={() => navigate('/campaigns')} className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-soft">
-           <Send size={14} className="text-brand-light" />
-           <span>Send campaign</span>
-        </button>
+        {isAdminOrSuperAdmin && (
+          <button onClick={() => navigate('/campaigns')} className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-soft">
+             <Send size={14} className="text-brand-light" />
+             <span>Send campaign</span>
+          </button>
+        )}
         <button onClick={() => navigate('/contacts')} className="flex items-center space-x-2 px-4 py-2 border border-blue-200 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors shadow-soft">
            <PlusCircle size={14} />
            <span>Create contact</span>
         </button>
-        <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-4 py-2 border border-blue-200 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors shadow-soft">
-           <MessageCircle size={14} />
-           <span>Create quick reply</span>
-        </button>
-        <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-4 py-2 border border-[var(--theme-border)]/30 rounded-md text-sm font-medium text-[var(--theme-text)] bg-brand-light/10 hover:bg-brand-light/20 transition-colors shadow-soft">
-           <FileText size={14} />
-           <span>Create template</span>
-        </button>
+        {isAdminOrSuperAdmin && (
+          <>
+            <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-4 py-2 border border-blue-200 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors shadow-soft">
+               <MessageCircle size={14} />
+               <span>Create quick reply</span>
+            </button>
+            <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-4 py-2 border border-[var(--theme-border)]/30 rounded-md text-sm font-medium text-[var(--theme-text)] bg-brand-light/10 hover:bg-brand-light/20 transition-colors shadow-soft">
+               <FileText size={14} />
+               <span>Create template</span>
+            </button>
+          </>
+        )}
         <div className="flex-1 flex justify-end">
            <button onClick={refreshData} disabled={loading} className="px-6 py-2 bg-blue-500 text-white rounded-md text-sm font-bold hover:bg-blue-600 transition-colors shadow-premium hover:shadow-glow hover:-translate-y-0.5 transform disabled:opacity-50 disabled:cursor-not-allowed">
              {loading ? 'Refreshing...' : 'Refresh Data'}
@@ -173,60 +220,81 @@ function Dashboard() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <div className="bg-crm-card p-5 rounded-lg shadow-soft border-l-4 border-[var(--theme-border)] flex flex-col justify-center lg:col-span-2">
-           <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-3">WhatsApp Business API Status</h3>
-           <div>
-             <span className="px-3 py-1 bg-brand-light text-white text-xs font-bold rounded-md shadow-glow">CONNECTED</span>
-           </div>
+      {isAdminOrSuperAdmin && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+          <div className="bg-crm-card p-5 rounded-lg shadow-soft border-l-4 border-[var(--theme-border)] flex flex-col justify-center lg:col-span-2">
+             <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-3">WhatsApp Business API Status</h3>
+             <div>
+               <span className="px-3 py-1 bg-brand-light text-white text-xs font-bold rounded-md shadow-glow">CONNECTED</span>
+             </div>
+          </div>
+          <div className="bg-crm-card p-5 rounded-lg shadow-soft flex flex-col justify-center border border-crm-border">
+             <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-3">Quality Rating</h3>
+             <div>
+               <span className="px-3 py-1 bg-brand-light text-white text-xs font-medium rounded-md">High</span>
+             </div>
+          </div>
+          <div className="bg-crm-card p-5 rounded-lg shadow-soft flex flex-col justify-center relative overflow-hidden border border-crm-border">
+             <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-1">WABA Phone Number</h3>
+             <span className="text-md font-bold text-gray-800">{wabaConfig?.phoneNumber || 'Not Connected'}</span>
+             <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wide">WhatsApp Display Name</p>
+             <p className="text-sm font-bold text-[var(--theme-text)]">{wabaConfig?.wabaName || 'Not Connected'}</p>
+             <div className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-brand-light/10 text-[var(--theme-text)] rounded-full">
+                <UserCircle size={20} />
+             </div>
+          </div>
         </div>
-        <div className="bg-crm-card p-5 rounded-lg shadow-soft flex flex-col justify-center border border-crm-border">
-           <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-3">Quality Rating</h3>
-           <div>
-             <span className="px-3 py-1 bg-brand-light text-white text-xs font-medium rounded-md">High</span>
-           </div>
-        </div>
-        <div className="bg-crm-card p-5 rounded-lg shadow-soft flex flex-col justify-center relative overflow-hidden border border-crm-border">
-           <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-1">WABA Phone Number</h3>
-           <span className="text-md font-bold text-gray-800">{wabaConfig?.phoneNumber || 'Not Connected'}</span>
-           <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wide">WhatsApp Display Name</p>
-           <p className="text-sm font-bold text-[var(--theme-text)]">{wabaConfig?.wabaName || 'Not Connected'}</p>
-           <div className="absolute right-4 top-1/2 -translate-y-1/2 p-3 bg-brand-light/10 text-[var(--theme-text)] rounded-full">
-              <UserCircle size={20} />
-           </div>
-        </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-        <DashboardCard title="Campaigns" value={loading && stats.campaigns === 0 ? "..." : stats.campaigns} subtext={stats.campaigns > 0 ? stats.recentCampaign : "No active campaigns"} icon={Megaphone} />
-        <DashboardCard title="Templates" value={loading && stats.templates === 0 ? "..." : stats.templates} subtext={`${stats.templates} Synchronized`} icon={FileText} />
+        {isAdminOrSuperAdmin && (
+          <>
+            <DashboardCard title="Campaigns" value={loading && stats.campaigns === 0 ? "..." : stats.campaigns} subtext={stats.campaigns > 0 ? stats.recentCampaign : "No active campaigns"} icon={Megaphone} />
+            <DashboardCard title="Templates" value={loading && stats.templates === 0 ? "..." : stats.templates} subtext={`${stats.templates} Synchronized`} icon={FileText} />
+          </>
+        )}
         <DashboardCard title="Contacts" value={loading && stats.contacts === 0 ? "..." : stats.contacts} subtext={`${stats.contacts} Total contacts`} icon={Users} />
         <DashboardCard title="Open Chats" value={loading && stats.chats === 0 ? "..." : stats.chats} subtext={`${stats.chats} Active conversations`} icon={MessageCircle} />
+        {!isAdminOrSuperAdmin && (
+           <>
+              <DashboardCard title="Qualified" value={loading ? "..." : stats.qualifiedLeads} subtext="AI Qualified" icon={CheckCircle} />
+              <DashboardCard title="Priority" value={loading ? "..." : (stats.hotLeads + stats.warmLeads)} subtext="Hot & Warm Leads" icon={History} />
+           </>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <DashboardCard title="Reply Bots" value={loading && !wabaConfig ? "..." : "0"} subtext="0 Messages sent" icon={Bot} />
-        <DashboardCard 
-           title="Ad Budget Credit" 
-           value={loading && !wabaConfig ? "..." : "₹0.00"} 
-           subtext="Available Balance" 
-           icon={Wallet} 
-           onAction={() => setShowRefillModal(true)}
-           actionLabel="Add"
-        />
-        <DashboardCard 
-          title="WABA Daily Limit" 
-          value={loading && !wabaConfig ? "..." : (limitNum === Infinity ? 'Unlimited' : limitNum.toLocaleString())}
-          subtext={wabaConfig?.limitTier || 'Not Configured'} 
-          icon={Database} 
-        />
-        <DashboardCard 
-          title="Daily Remaining" 
-          value={loading && !wabaConfig ? "..." : (remainingNum === Infinity ? 'Unlimited' : remainingNum.toLocaleString())}
-          subtext={`Sent Today: ${sentToday}`} 
-          icon={Database} 
-        />
-      </div>
+      {!isAdminOrSuperAdmin && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 mt-6">
+           <LeadAnalysisCard title="Lead Status Report" data={analysisData.statusStats} type="status" />
+           <LeadAnalysisCard title="Lead Source Report" data={analysisData.sourceStats} type="source" />
+        </div>
+      )}
+
+      {isAdminOrSuperAdmin && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <DashboardCard title="Reply Bots" value={loading && !wabaConfig ? "..." : "0"} subtext="0 Messages sent" icon={Bot} />
+          <DashboardCard 
+             title="Ad Budget Credit" 
+             value={loading && !wabaConfig ? "..." : "₹0.00"} 
+             subtext="Available Balance" 
+             icon={Wallet} 
+             onAction={() => setShowRefillModal(true)}
+             actionLabel="Add"
+          />
+          <DashboardCard 
+            title="WABA Daily Limit" 
+            value={loading && !wabaConfig ? "..." : (limitNum === Infinity ? 'Unlimited' : limitNum.toLocaleString())}
+            subtext={wabaConfig?.limitTier || 'Not Configured'} 
+            icon={Database} 
+          />
+          <DashboardCard 
+            title="Daily Remaining" 
+            value={loading && !wabaConfig ? "..." : (remainingNum === Infinity ? 'Unlimited' : remainingNum.toLocaleString())}
+            subtext={`Sent Today: ${sentToday}`} 
+            icon={Database} 
+          />
+        </div>
+      )}
 
       {/* Refill Modal Overlay */}
       {showRefillModal && (

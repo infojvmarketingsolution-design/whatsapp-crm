@@ -543,6 +543,32 @@ const summarizeLead = async (req, res) => {
   }
 };
 
+const getLeadAnalysis = async (req, res) => {
+  try {
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+    
+    const statusStats = await Contact.aggregate([
+      { $match: { isArchived: { $ne: true } } },
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    const sourceStats = await Contact.aggregate([
+      { $match: { isArchived: { $ne: true } } },
+      { $group: { _id: "$leadSource", count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.json({
+      statusStats: statusStats.map(s => ({ label: s._id, value: s.count })),
+      sourceStats: sourceStats.map(s => ({ label: s._id, value: s.count }))
+    });
+  } catch (error) {
+    console.error(`[GET /analysis] Analysis Failed:`, error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getContacts,
   getMessages,
@@ -554,5 +580,6 @@ module.exports = {
   getContactStats,
   getAgents,
   updateFcmToken,
-  summarizeLead
+  summarizeLead,
+  getLeadAnalysis
 };
