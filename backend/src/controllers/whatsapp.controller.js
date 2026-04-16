@@ -387,7 +387,7 @@ const getApiConfig = async (req, res) => {
 
         // Fetch WABA Specific Limits
         if (configData.wabaId) {
-            const wabaRes = await fetch(`https://graph.facebook.com/v17.0/${configData.wabaId}?fields=id,name,messaging_limit_tier`, {
+            const wabaRes = await fetch(`https://graph.facebook.com/v19.0/${configData.wabaId}?fields=id,name,messaging_limit_tier`, {
                 headers: { 'Authorization': `Bearer ${configData.accessToken}` }
             });
             if (wabaRes.ok) {
@@ -461,7 +461,7 @@ const testApiConnection = async (req, res) => {
     accessToken = client.whatsappConfig.accessToken;
     
     // Call Meta Graph API to test token validity
-    const response = await fetch(`https://graph.facebook.com/v17.0/${phoneNumberId}`, {
+    const response = await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`
@@ -497,7 +497,7 @@ const exchangeFacebookToken = async (req, res) => {
     }
 
     // 1. Exchange Code for Access Token
-    const tokenRes = await fetch(`https://graph.facebook.com/v21.0/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&code=${code}`);
+    const tokenRes = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&code=${code}`);
     const tokenData = await tokenRes.json();
 
     if (!tokenRes.ok) {

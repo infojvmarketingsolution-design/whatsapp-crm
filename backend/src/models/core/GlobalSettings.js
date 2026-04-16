@@ -16,7 +16,7 @@ const GlobalSettingsSchema = new mongoose.Schema({
     maxTenants: { type: Number, default: 100 }
   },
   systemConfigs: {
-    metaApiVersion: { type: String, default: 'v17.0' },
+    metaApiVersion: { type: String, default: 'v19.0' },
     webhookUrl: { type: String, default: '' }
   }
 }, { timestamps: true });
