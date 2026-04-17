@@ -111,12 +111,14 @@ class PRDFlowService {
       let stepToProcess = flowSteps.find(s => s.id === (contact.currentFlowStep || 'START_PRD_FLOW')) || flowSteps[0];
       let iterations = 0;
       let consumeInput = !!contact.currentFlowStep;
-      
       // 🔥 Rule 16: Execution Loop
+      const aggressiveNormalize = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
+
       while (stepToProcess && iterations < 10) {
         iterations++;
         const nodeData = stepToProcess.data || {};
         const msgType = nodeData.msgType || 'TEXT';
+        let isSubStep = false;
 
         // 🧩 Rule 6 Step 2: SAVE USER INPUT
         if (consumeInput && !isAutoFollowup && nodeData.variableName) {
@@ -124,8 +126,7 @@ class PRDFlowService {
            let val = messageText.trim();
            
            // 🧩 Rule 6 Step 3: NORMALIZE INPUT
-           const normalize = (str) => (str || '').toString().toLowerCase().trim();
-           const normalizedInput = normalize(replyValue || messageText);
+           const normalizedInput = aggressiveNormalize(replyValue || messageText);
 
            if (varName === 'name') {
               const extName = await AIService.extractData(val, 'NAME');
@@ -155,61 +156,67 @@ class PRDFlowService {
               }
            } else {
               const currentQual = contact.flowVariables?.qualification;
-              const qualMap = prompts.programMap?.[currentQual] || {};
+              // 🧩 ROBUST QUAL LOOKUP
+              const targetQualCode = aggressiveNormalize(currentQual);
+              const actualQualKey = Object.keys(prompts.programMap || {}).find(k => aggressiveNormalize(k) === targetQualCode);
+              const qualMap = actualQualKey ? prompts.programMap[actualQualKey] : {};
+              
               const categories = Object.keys(qualMap);
 
               // 🧩 Check if User clicked a CATEGORY (Stream)
-              const matchedCategory = categories.find(c => normalizedInput === normalize(c));
+              const matchedCategory = categories.find(c => aggressiveNormalize(c) === normalizedInput);
 
               if (varName === 'program' && matchedCategory) {
                  console.log(`[PRD Flow] 📂 Category Matched: ${matchedCategory}. Saving as selectedStream.`);
                  await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.selectedStream': matchedCategory });
                  contact.flowVariables = { ...(contact.flowVariables || {}), selectedStream: matchedCategory };
 
-                 // 🔄 Stay on this node, but send program list in next iteration
+                 // 🔄 STAY ON THIS NODE to send program list
+                 isSubStep = true;
                  consumeInput = false; 
-                 continue;
-              }
-
-              // 🧩 Standard Variable Saving
-              const dbUpdates = { [`flowVariables.${varName}`]: val };
-              if (varName === 'program') {
-                  dbUpdates.selectedProgram = val;
-                  dbUpdates['flowVariables.selectedStream'] = null; // Clear stream after program picked
-              }
-              if (varName === 'time') dbUpdates.preferredCallTime = val;
-              
-              await Contact.findOneAndUpdate({ phone: contact.phone }, dbUpdates);
-              contact.flowVariables = { ...(contact.flowVariables || {}), [varName]: val };
-              if (varName === 'program') {
-                  contact.selectedProgram = val;
-                  delete contact.flowVariables.selectedStream;
-              }
-              if (varName === 'time') contact.preferredCallTime = val;
-              
-              if (varName === 'time') {
-                 // Final Completion Lead
-                 await Lead.create({ tenantId, name: contact.flowVariables.name, phone: contact.phone, qualification: contact.flowVariables.qualification, selectedProgram: contact.flowVariables.program, status: 'QUALIFIED' });
+              } else {
+                 // 🧩 Standard Variable Saving
+                 const dbUpdates = { [`flowVariables.${varName}`]: val };
+                 if (varName === 'program') {
+                     dbUpdates.selectedProgram = val;
+                     dbUpdates['flowVariables.selectedStream'] = null; // Clear stream after program picked
+                 }
+                 if (varName === 'time') dbUpdates.preferredCallTime = val;
+                 
+                 await Contact.findOneAndUpdate({ phone: contact.phone }, dbUpdates);
+                 contact.flowVariables = { ...(contact.flowVariables || {}), [varName]: val };
+                 if (varName === 'program') {
+                     contact.selectedProgram = val;
+                     delete contact.flowVariables.selectedStream;
+                 }
+                 if (varName === 'time') contact.preferredCallTime = val;
+                 
+                 if (varName === 'time') {
+                    // Final Completion Lead
+                    await Lead.create({ tenantId, name: contact.flowVariables.name, phone: contact.phone, qualification: contact.flowVariables.qualification, selectedProgram: contact.flowVariables.program, status: 'QUALIFIED' });
+                 }
               }
            }
 
-           // 🧩 Rule 6 Step 4: FIND EDGE / MOVE NEXT
-           const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);
-           if (idx !== -1 && flowSteps[idx + 1]) {
-              stepToProcess = flowSteps[idx + 1];
-              consumeInput = false;
-              continue; // Execute next node immediately
-           } else {
-              // END OF FLOW INTERCEPT - If the last node was a question (like "May I help you with anything else?")
-              if (msgType === 'QUESTION') {
-                  const isPositive = val.toLowerCase().match(/yes|yeah|sure|yep|please|ok|y/);
-                  const finalReply = isPositive 
-                      ? "Transferring to counsellor. Please wait, our counsellor will contact you on call asap."
-                      : "Thank you.";
-                  const res = await waService.sendTextMessage(contact.phone, finalReply);
-                  await saveAndEmit('text', finalReply, res);
+           // 🧩 Rule 6 Step 4: FIND EDGE / MOVE NEXT (Only if not a sub-step category pick)
+           if (!isSubStep) {
+              const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);
+              if (idx !== -1 && flowSteps[idx + 1]) {
+                 stepToProcess = flowSteps[idx + 1];
+                 consumeInput = false;
+                 continue; // Execute next node immediately
+              } else {
+                 // END OF FLOW INTERCEPT - If the last node was a question (like "May I help you with anything else?")
+                 if (msgType === 'QUESTION') {
+                     const isPositive = val.toLowerCase().match(/yes|yeah|sure|yep|please|ok|y/);
+                     const finalReply = isPositive 
+                         ? "Transferring to counsellor. Please wait, our counsellor will contact you on call asap."
+                         : "Thank you.";
+                     const res = await waService.sendTextMessage(contact.phone, finalReply);
+                     await saveAndEmit('text', finalReply, res);
+                 }
+                 break; 
               }
-              break; 
            }
         }
 
@@ -228,7 +235,11 @@ class PRDFlowService {
             if (nodeData.isProgramSelection) {
                const currentQual = contact.flowVariables?.qualification;
                const selectedStream = contact.flowVariables?.selectedStream;
-               const qualMap = prompts.programMap?.[currentQual] || {};
+               
+               // 🧩 ROBUST QUAL LOOKUP FOR SENDER
+               const targetQualCode = aggressiveNormalize(currentQual);
+               const actualQualKey = Object.keys(prompts.programMap || {}).find(k => aggressiveNormalize(k) === targetQualCode);
+               const qualMap = actualQualKey ? prompts.programMap[actualQualKey] : {};
                
                if (!selectedStream) {
                   // Phase 1: Show Categories
@@ -236,8 +247,8 @@ class PRDFlowService {
                   customBody = "Please select your preferred stream/category:";
                } else {
                   // Phase 2: Show Programs for Stream
-                  let programOpts = [];
                   const val = qualMap[selectedStream];
+                  let programOpts = [];
                   if (val) {
                      if (Array.isArray(val)) {
                         programOpts = val;
