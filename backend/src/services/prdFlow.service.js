@@ -124,7 +124,8 @@ class PRDFlowService {
            let val = messageText.trim();
            
            // 🧩 Rule 6 Step 3: NORMALIZE INPUT
-           const normalizedInput = replyValue || messageText.trim();
+           const normalize = (str) => (str || '').toString().toLowerCase().trim();
+           const normalizedInput = normalize(replyValue || messageText);
 
            if (varName === 'name') {
               const extName = await AIService.extractData(val, 'NAME');
@@ -236,10 +237,15 @@ class PRDFlowService {
                } else {
                   // Phase 2: Show Programs for Stream
                   let programOpts = [];
-                  if (qualMap[selectedStream]) {
-                     Object.values(qualMap[selectedStream]).forEach(arr => {
-                        if (Array.isArray(arr)) programOpts.push(...arr);
-                     });
+                  const val = qualMap[selectedStream];
+                  if (val) {
+                     if (Array.isArray(val)) {
+                        programOpts = val;
+                     } else if (typeof val === 'object') {
+                        Object.values(val).forEach(arr => {
+                           if (Array.isArray(arr)) programOpts.push(...arr);
+                        });
+                     }
                   }
                   opts = programOpts.length > 0 ? programOpts.slice(0, 10) : ['General Inquiry'];
                   customBody = `Great! Now choose a program under ${selectedStream}:`;
