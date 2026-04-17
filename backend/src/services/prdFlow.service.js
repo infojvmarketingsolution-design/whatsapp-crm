@@ -20,6 +20,10 @@ class PRDFlowService {
     this.activeProcesses = new Set();
   }
 
+  sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
   makeAbsolute(url) {
     if (!url || typeof url !== 'string' || url.trim() === '') return '';
     if (url.startsWith('http') || /^\d+$/.test(url)) return url;
@@ -227,6 +231,13 @@ class PRDFlowService {
         if (['QUESTION', 'LIST_MESSAGE', 'INTERACTIVE'].includes(msgType)) {
            console.log(`[PRD Flow] 🛑 STOPPING execution for: ${stepToProcess.id}`);
            break;
+        }
+
+        // ⏱️ Rule 16b: preserve sequence order by waiting before next message
+        if (iterations < 10) {
+           const delayMs = msgType === 'IMAGE' ? 1500 : 1000;
+           console.log(`[PRD Flow] ⏱️ Preservation Delay: ${delayMs}ms...`);
+           await this.sleep(delayMs);
         }
 
         // Linear Sequence Move

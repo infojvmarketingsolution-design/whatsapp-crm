@@ -14,6 +14,8 @@ const Settings = require('../models/core/Settings');
  * 🚀 WHATSAPP FLOW ENGINE – RESOLUTION PRD (FINAL FIXED & STABLE + AI SMART + VERBOSE LOGS)
  */
 
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
 const isWaitingNode = (node) => {
   if (!node || !node.data) return false;
   const msgType = node.data.msgType;
@@ -140,6 +142,11 @@ const executeFlow = async (tenantId, flowId, contact, node, io, waService) => {
         console.log(`[Flow Engine] 🏁 End of flow.`);
         return clearSession(tenantId, freshContact.phone);
       }
+
+      // ⏱️ Sequence Preservation Delay (Rule 15b)
+      const delayMs = node.data?.msgType === 'IMAGE' ? 1500 : 1000;
+      console.log(`[Flow Engine] ⏱️ Preservation Delay: ${delayMs}ms...`);
+      await sleep(delayMs);
 
       node = flow.nodes.find(n => n.id === edge.target);
 
