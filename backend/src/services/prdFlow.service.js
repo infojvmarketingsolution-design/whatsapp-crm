@@ -153,13 +153,37 @@ class PRDFlowService {
                  contact.qualification = matched;
               }
            } else {
+              const currentQual = contact.flowVariables?.qualification;
+              const qualMap = prompts.programMap?.[currentQual] || {};
+              const categories = Object.keys(qualMap);
+
+              // 🧩 Check if User clicked a CATEGORY (Stream)
+              const matchedCategory = categories.find(c => normalizedInput === normalize(c));
+
+              if (varName === 'program' && matchedCategory) {
+                 console.log(`[PRD Flow] 📂 Category Matched: ${matchedCategory}. Saving as selectedStream.`);
+                 await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.selectedStream': matchedCategory });
+                 contact.flowVariables = { ...(contact.flowVariables || {}), selectedStream: matchedCategory };
+
+                 // 🔄 Stay on this node, but send program list in next iteration
+                 consumeInput = false; 
+                 continue;
+              }
+
+              // 🧩 Standard Variable Saving
               const dbUpdates = { [`flowVariables.${varName}`]: val };
-              if (varName === 'program') dbUpdates.selectedProgram = val;
+              if (varName === 'program') {
+                  dbUpdates.selectedProgram = val;
+                  dbUpdates['flowVariables.selectedStream'] = null; // Clear stream after program picked
+              }
               if (varName === 'time') dbUpdates.preferredCallTime = val;
               
               await Contact.findOneAndUpdate({ phone: contact.phone }, dbUpdates);
               contact.flowVariables = { ...(contact.flowVariables || {}), [varName]: val };
-              if (varName === 'program') contact.selectedProgram = val;
+              if (varName === 'program') {
+                  contact.selectedProgram = val;
+                  delete contact.flowVariables.selectedStream;
+              }
               if (varName === 'time') contact.preferredCallTime = val;
               
               if (varName === 'time') {
@@ -197,21 +221,33 @@ class PRDFlowService {
            const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, interpolatedText, /^\d+$/.test(media) ? null : media);
            await saveAndEmit('image', interpolatedText, res);
         } else if (msgType === 'LIST_MESSAGE') {
-           let opts = nodeData.listOptions || prompts.qualificationOptions || ['Option 1'];
-           
-           if (nodeData.isProgramSelection) {
-              const currentQual = contact.flowVariables?.qualification;
-              let programOpts = [];
-              if (currentQual && prompts.programMap && prompts.programMap[currentQual]) {
-                 Object.values(prompts.programMap[currentQual]).forEach(arr => {
-                    if (Array.isArray(arr)) programOpts.push(...arr);
-                 });
-              }
-              opts = programOpts.length > 0 ? programOpts.slice(0, 10) : ['General Inquiry'];
-           }
-           
-           await waService.sendListMessage(contact.phone, { body: interpolatedText, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
-           await saveAndEmit('interactive', interpolatedText, null);
+            let opts = nodeData.listOptions || prompts.qualificationOptions || ['Option 1'];
+            let customBody = interpolatedText;
+            
+            if (nodeData.isProgramSelection) {
+               const currentQual = contact.flowVariables?.qualification;
+               const selectedStream = contact.flowVariables?.selectedStream;
+               const qualMap = prompts.programMap?.[currentQual] || {};
+               
+               if (!selectedStream) {
+                  // Phase 1: Show Categories
+                  opts = Object.keys(qualMap);
+                  customBody = "Please select your preferred stream/category:";
+               } else {
+                  // Phase 2: Show Programs for Stream
+                  let programOpts = [];
+                  if (qualMap[selectedStream]) {
+                     Object.values(qualMap[selectedStream]).forEach(arr => {
+                        if (Array.isArray(arr)) programOpts.push(...arr);
+                     });
+                  }
+                  opts = programOpts.length > 0 ? programOpts.slice(0, 10) : ['General Inquiry'];
+                  customBody = `Great! Now choose a program under ${selectedStream}:`;
+               }
+            }
+            
+            await waService.sendListMessage(contact.phone, { body: customBody, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
+            await saveAndEmit('interactive', customBody, null);
         } else if (msgType === 'INTERACTIVE') {
            const btns = nodeData.buttons || ['Morning', 'Afternoon', 'Evening'];
            await waService.sendInteractiveButtonMessage(contact.phone, { body: interpolatedText, buttons: btns.slice(0,3) });
