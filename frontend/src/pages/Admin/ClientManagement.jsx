@@ -8,8 +8,9 @@ import {
   Settings,
   AlertCircle,
   CheckCircle2,
-  X
+  X 
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const ClientManagement = () => {
   const [clients, setClients] = useState([]);
@@ -154,6 +155,33 @@ const ClientManagement = () => {
     }
   };
 
+  const handleDeleteClient = async (client) => {
+    if (!window.confirm(`⚠️ CRITICAL WARNING: ARE YOU ABSOLUTELY SURE? \n\nThis will permanently delete "${client.companyName}" and EVERYTHING in their database (Contacts, Chats, Logs). \n\nThis action is IRREVERSIBLE.`)) {
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/clients/${client._id}`, {
+        method: 'DELETE',
+        headers: { 
+            'Authorization': `Bearer ${token}` 
+        }
+      });
+      
+      if (res.ok) {
+        toast.success("Client and all data deleted permanently");
+        fetchClients();
+      } else {
+        const errData = await res.json();
+        toast.error(errData.message || "Failed to delete client");
+      }
+    } catch (error) {
+      console.error('Failed to delete client', error);
+      toast.error("Network error during deletion");
+    }
+  };
+
   const openEditModal = (client) => {
     setSelectedClient(client);
     setShowEditModal(true);
@@ -291,6 +319,13 @@ const ClientManagement = () => {
                       </button>
                       <button className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors" title="Suspend Client">
                         <AlertCircle size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteClient(client)}
+                        className="p-2 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors" 
+                        title="DELETE EVERYTHING"
+                      >
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

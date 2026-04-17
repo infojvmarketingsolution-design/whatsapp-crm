@@ -166,12 +166,29 @@ const deleteClient = async (req, res) => {
       return res.status(404).json({ message: 'Client not found' });
     }
     
-    // In a real SaaS, you might want to archive the DB or delete it
-    // For now, just remove the client entry and admin user
-    await Client.findByIdAndDelete(req.params.id);
-    await User.deleteMany({ tenantId: client.tenantId });
+    const tenantId = client.tenantId;
+
+    // 1. Drop the tenant-specific database
+    try {
+      const tenantDb = getTenantConnection(tenantId);
+      if (tenantDb) {
+        await tenantDb.dropDatabase();
+        console.log(`[Deep Delete] Dropped database for tenant: ${tenantId}`);
+      }
+    } catch (dbErr) {
+      console.error(`[Deep Delete] Error dropping database for ${tenantId}:`, dbErr);
+      // Continue even if database drop fails, as we want to clean up core records
+    }
+
+    // 2. Delete associated users from core DB
+    await User.deleteMany({ tenantId: tenantId });
+    console.log(`[Deep Delete] Deleted users for tenant: ${tenantId}`);
     
-    res.json({ message: 'Client and associated users deleted' });
+    // 3. Delete the client entry from core DB
+    await Client.findByIdAndDelete(req.params.id);
+    console.log(`[Deep Delete] Deleted client record for: ${tenantId}`);
+    
+    res.json({ message: 'Client and all associated data permanently deleted' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
