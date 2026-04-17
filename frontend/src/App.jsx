@@ -29,6 +29,7 @@ import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import Maintenance from './pages/Maintenance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import AdBudgetRefill from './components/AdBudgetRefill';
+import OAuthCallback from './pages/OAuthCallback';
 import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, AlertCircle, History, Clock, X, Plus, CheckCircle } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add" }) {
@@ -509,6 +510,7 @@ function AppLayout() {
             <Route path="/settings" element={<Settings />} />
             <Route path="/ai-chatbot" element={<AIChatbot />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/oauth/callback" element={<OAuthCallback />} />
 
             {/* Super Admin Routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
