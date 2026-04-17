@@ -32,7 +32,9 @@ class WhatsAppService {
     };
     
     try {
+      console.log(`[WhatsApp Service] Sending Text to ${sanitizedTo}: "${text.substring(0, 50)}..."`);
       const response = await axios.post(this.baseUrl, payload, { headers: this.headers });
+      console.log(`[WhatsApp Service] ✅ Meta Response:`, JSON.stringify(response.data));
       return response.data;
     } catch (error) {
       console.error('WhatsApp API Error (Text):', error.response?.data || error.message);
