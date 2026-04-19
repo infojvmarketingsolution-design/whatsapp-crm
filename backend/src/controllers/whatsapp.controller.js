@@ -82,20 +82,34 @@ const handleIncomingMessage = async (req, res) => {
     }
 
     // 1. Core DB Lookup to find the correct Tenant
-    const client = await Client.findOne({ 'whatsappConfig.phoneNumberId': phoneNumberId, status: 'ACTIVE' });
+    let client = null;
+    let resolutionMethod = "";
+
+    // A. Priority 1: Check if tenantId is provided in the URL path (Specific Webhook)
+    if (req.params.tenantId) {
+      client = await Client.findOne({ tenantId: req.params.tenantId, status: 'ACTIVE' });
+      resolutionMethod = "URL Parameter";
+    }
+
+    // B. Priority 2: Fallback to Phone Number ID lookup (Generic Webhook)
+    if (!client) {
+      client = await Client.findOne({ 'whatsappConfig.phoneNumberId': phoneNumberId, status: 'ACTIVE' });
+      resolutionMethod = "Phone ID Lookup";
+    }
     
     if (!client) {
-      console.warn(`⚠️ No active client found for phoneNumberId: ${phoneNumberId}`);
+      console.warn(`⚠️ No active client found for phoneNumberId: ${phoneNumberId} (Tenant Param: ${req.params.tenantId || 'none'})`);
       // Log failure to debug file too
       try {
           const path = require('path');
           const logPath = path.join(__dirname, '../../webhook_debug.log');
-          fs.appendFileSync(logPath, `[${new Date().toISOString()}] ❌ CLIENT NOT FOUND for PhoneID: ${phoneNumberId}\n`);
+          const reason = req.params.tenantId ? `TenantId match failed for "${req.params.tenantId}"` : `PhoneID match failed for "${phoneNumberId}"`;
+          fs.appendFileSync(logPath, `[${new Date().toISOString()}] ❌ CLIENT NOT FOUND | ${reason}\n`);
       } catch(e) {}
       return res.status(200).send('EVENT_RECEIVED');
     }
 
-    console.log(`✅ [Tenant: ${client.tenantId}] Client matched for PhoneID: ${phoneNumberId}`);
+    console.log(`✅ [Tenant: ${client.tenantId}] Client matched via ${resolutionMethod} (PhoneID: ${phoneNumberId})`);
 
     const tenantDb = getTenantConnection(client.tenantId);
     const Contact = tenantDb.model('Contact', ContactSchema);
