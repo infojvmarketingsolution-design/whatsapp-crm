@@ -76,7 +76,7 @@ exports.updateSettings = async (req, res) => {
        return res.status(400).json({ error: 'Tenant ID required in request context' });
     }
 
-    const validCategories = ['workspace', 'whatsapp', 'crm', 'automation', 'notifications', 'customization'];
+    const validCategories = ['workspace', 'whatsapp', 'crm', 'automation', 'notifications', 'customization', 'roleAccess'];
     if (!validCategories.includes(category)) {
        return res.status(400).json({ error: 'Invalid settings category' });
     }

@@ -224,16 +224,21 @@ class PRDFlowService {
               const stream = contact.flowVariables?.selectedStream;
               const tqc = aggressiveNormalize(currentQual);
               
-              console.log(`[PRD Flow] 🧭 Resolving programs for: "${currentQual}" (tqc: ${tqc}) | LocalStream: ${stream}`);
+              console.log(`[PRD Flow DEBUG] 🔍 CONTACT: ${contact.phone} | QUAL: "${currentQual}" | TQC: "${tqc}" | STREAM: "${stream}"`);
 
               let qm = {};
               
-              // 🛡️ ABSOLUTE OVERRIDE FOR 12th Pass (Force Trending/Traditional)
-              if (tqc.includes('12th') || tqc.includes('12') || currentQual.includes('12')) {
-                 console.log(`[PRD Flow] 🔥 FORCE-FIX: Manual 12th Pass Programs Injected for ${contact.phone}`);
+              // 🛡️ ABSOLUTE OVERRIDE FOR 10th & 12th Pass (Ironclad Logic)
+              if (tqc.includes('12') || currentQual.toLowerCase().includes('12') || tqc.includes('hsc')) {
+                 console.log(`[PRD Flow DEBUG] 🔥 12th PASS OVERRIDE TRIGGERED for ${contact.phone}`);
                  qm = {
                     "Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation", "VFX & Game Design"],
                     "Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"]
+                 };
+              } else if (tqc.includes('10') || currentQual.includes('10') || tqc.includes('ssc')) {
+                 console.log(`[PRD Flow DEBUG] 🎓 10th PASS OVERRIDE TRIGGERED for ${contact.phone}`);
+                 qm = {
+                    "Diploma Programs": ["Diploma in Engineering", "IT Diploma", "Animation Diploma"]
                  };
               } else {
                  const keys = Object.keys(prompts.programMap || {});
@@ -241,6 +246,8 @@ class PRDFlowService {
                  if (!qk) qk = keys.find(k => aggressiveNormalize(k).startsWith(tqc) || tqc.startsWith(aggressiveNormalize(k)));
                  qm = qk ? prompts.programMap[qk] : {};
               }
+              
+              console.log(`[PRD Flow DEBUG] 📂 Resolved Categories: ${Object.keys(qm).join(', ')}`);
 
               if (!stream) {
                  const categories = Object.keys(qm);
@@ -313,6 +320,7 @@ class PRDFlowService {
         }
 
         // 🧩 STEP D: UPDATE STATE & MOVE NEXT
+        console.log(`[PRD SEQUENCE] ✅ Completed: ${stepToProcess.id}. Current Step: ${stepToProcess.id}`);
         await Contact.findOneAndUpdate({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
 
         const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);

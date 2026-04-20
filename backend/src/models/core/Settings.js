@@ -94,6 +94,11 @@ const AutomationSettingsSchema = new mongoose.Schema({
   aiPrompts: { type: AIPromptsSchema, default: () => ({}) }
 });
 
+const RoleAccessSchema = new mongoose.Schema({
+  allAccess: { type: Boolean, default: false },
+  permissions: { type: [String], default: [] }
+}, { _id: false });
+
 const SettingsSchema = new mongoose.Schema({
   tenantId: { type: String, required: true, unique: true },
   workspace: { type: WorkspaceSettingsSchema, default: () => ({}) },
@@ -108,6 +113,16 @@ const SettingsSchema = new mongoose.Schema({
   customization: {
     themeColor: { type: String, default: '#10b981' }, // Teal default
     customLogin: { type: Boolean, default: false }
+  },
+  roleAccess: {
+    type: Map,
+    of: RoleAccessSchema,
+    default: () => ({
+      'ADMIN': { allAccess: true },
+      'TELECALLER': { allAccess: false },
+      'MANAGER_COUNSELLOUR': { allAccess: false },
+      'AGENT': { allAccess: false }
+    })
   }
 }, { timestamps: true });
 

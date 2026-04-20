@@ -1,7 +1,7 @@
 // Removed unused node-cron dependency
 const Client = require('../models/core/Client');
 const User = require('../models/core/User');
-const { getTenantDB } = require('../config/db');
+const { getTenantConnection } = require('../config/db');
 const ContactSchema = require('../models/tenant/Contact');
 
 // We use setInterval instead of node-cron if node-cron is not installed. 
@@ -18,7 +18,7 @@ const startTaskSuspensionWorker = () => {
 
             for (const client of clients) {
                 try {
-                    const tenantDb = await getTenantDB(client.tenantId);
+                    const tenantDb = await getTenantConnection(client.tenantId);
                     const Contact = tenantDb.model('Contact', ContactSchema);
 
                     // Find contacts that have at least one PENDING task older than 49 hours
