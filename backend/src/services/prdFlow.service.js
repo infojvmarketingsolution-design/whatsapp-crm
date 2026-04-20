@@ -207,7 +207,7 @@ class PRDFlowService {
         }
 
         // 🧩 STEP C: EXECUTE CURRENT NODE (Send Message)
-        console.log(`[PRD Flow] 📤 Output: ${stepToProcess.id}`);
+        console.log(`[PRD Flow] 📤 Output: ${stepToProcess.id} (${msgType})`);
         const text = replaceVars(nodeData.text || '');
         const media = this.makeAbsolute(nodeData.mediaUrl || '');
 
@@ -245,12 +245,33 @@ class PRDFlowService {
 
            await waService.sendListMessage(contact.phone, { body, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
            await saveAndEmit('interactive', body, null);
+           
+           // 🔥 IRONCLAD STOP
+           await Contact.findOneAndUpdate({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
+           console.log(`[PRD Flow] 🛑 WAIT at LIST_MESSAGE: ${stepToProcess.id}`);
+           return;
         } 
         else if (msgType === 'INTERACTIVE') {
            const btns = nodeData.buttons || ['Morning', 'Afternoon', 'Evening'];
            await waService.sendInteractiveButtonMessage(contact.phone, { body: text, buttons: btns.slice(0, 3) });
            await saveAndEmit('interactive', text, null);
+           
+           // 🔥 IRONCLAD STOP
+           await Contact.findOneAndUpdate({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
+           console.log(`[PRD Flow] 🛑 WAIT at INTERACTIVE: ${stepToProcess.id}`);
+           return;
         } 
+        else if (msgType === 'QUESTION') {
+           if (text) {
+              const res = await waService.sendTextMessage(contact.phone, text);
+              await saveAndEmit('text', text, res);
+           }
+           
+           // 🔥 IRONCLAD STOP
+           await Contact.findOneAndUpdate({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
+           console.log(`[PRD Flow] 🛑 WAIT at QUESTION: ${stepToProcess.id}`);
+           return;
+        }
         else {
            if (text) {
               const res = await waService.sendTextMessage(contact.phone, text);
@@ -258,21 +279,16 @@ class PRDFlowService {
            }
         }
 
-        // 🧩 STEP D: UPDATE STATE & CHECK WAIT
+        // 🧩 STEP D: UPDATE STATE & MOVE NEXT
         await Contact.findOneAndUpdate({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
 
-        if (['QUESTION', 'LIST_MESSAGE', 'INTERACTIVE'].includes(msgType)) {
-           console.log(`[PRD Flow] 🛑 WAIT at ${stepToProcess.id}`);
-           return; // EXIT WEBHOOK TURN
-        }
-
-        // Move to next automatically if no wait
         const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);
         if (idx !== -1 && flowSteps[idx + 1]) {
            stepToProcess = flowSteps[idx + 1];
            consumeInput = false;
            await this.sleep(msgType === 'IMAGE' ? 1500 : 1000);
         } else {
+           console.log(`[PRD Flow] 🏁 END of flow session for ${contact.phone}`);
            await Contact.findOneAndUpdate({ phone: contact.phone }, { $unset: { currentFlowStep: '' } });
            break;
         }
