@@ -158,7 +158,7 @@ class PRDFlowService {
               const currentQual = contact.flowVariables?.qualification;
               // 🧩 ROBUST QUAL LOOKUP
               const targetQualCode = aggressiveNormalize(currentQual);
-              const actualQualKey = Object.keys(prompts.programMap || {}).find(k => aggressiveNormalize(k) === targetQualCode);
+              const actualQualKey = Object.keys(prompts.programMap || {}).find(k => { const normK = aggressiveNormalize(k); return normK === targetQualCode || normK.startsWith(targetQualCode) || targetQualCode.startsWith(normK); });
               const qualMap = actualQualKey ? prompts.programMap[actualQualKey] : {};
               
               const categories = Object.keys(qualMap);
@@ -238,7 +238,10 @@ class PRDFlowService {
                
                // 🧩 ROBUST QUAL LOOKUP FOR SENDER
                const targetQualCode = aggressiveNormalize(currentQual);
-               const actualQualKey = Object.keys(prompts.programMap || {}).find(k => aggressiveNormalize(k) === targetQualCode);
+               const actualQualKey = Object.keys(prompts.programMap || {}).find(k => {
+                  const normK = aggressiveNormalize(k);
+                  return normK === targetQualCode || normK.startsWith(targetQualCode) || targetQualCode.startsWith(normK);
+               });
                const qualMap = actualQualKey ? prompts.programMap[actualQualKey] : {};
                
                if (!selectedStream) {
