@@ -8,7 +8,7 @@ import {
   Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet
 } from 'lucide-react';
 
-export default function Contacts() {
+export default function Contacts({ roleAccess }) {
   const navigate = useNavigate();
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -23,7 +23,19 @@ export default function Contacts() {
   const [recentMessages, setRecentMessages] = useState([]);
   const [isRefreshingMessages, setIsRefreshingMessages] = useState(false);
   const [isUpdatingContact, setIsUpdatingContact] = useState(false);
-  const userRole = localStorage.getItem('role') || 'AGENT';
+
+  // Role Permissions Logic
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = (user.role || localStorage.getItem('role') || 'AGENT').toUpperCase();
+  const roleData = roleAccess?.[userRole];
+  const isSuper = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+
+  const rolePermissions = roleData?.permissions || [];
+  const canImport = isSuper || roleData?.allAccess || rolePermissions.includes('contacts_import');
+  const canExport = isSuper || roleData?.allAccess || rolePermissions.includes('contacts_export');
+  const canAdd = isSuper || roleData?.allAccess || rolePermissions.includes('contacts_add');
+  const canFilter = isSuper || roleData?.allAccess || rolePermissions.includes('contacts_filter');
+  const canSearch = isSuper || roleData?.allAccess || rolePermissions.includes('contacts_search');
 
 
   // Design states
@@ -423,7 +435,7 @@ export default function Contacts() {
                </div>
             </div>
             
-            {userRole !== 'TELECALLER' && (
+            {canImport && (
                <>
                  <input type="file" ref={fileInputRef} onChange={handleImportCSV} accept=".csv" className="hidden" />
                  <button 
@@ -433,21 +445,27 @@ export default function Contacts() {
                  >
                     <TrendingUp size={18} />
                  </button>
-                 <button 
-                    onClick={handleExportCSV}
-                    className="p-2.5 bg-white border border-gray-200 text-gray-400 hover:text-green-600 hover:border-green-200 rounded-xl transition shadow-sm"
-                    title="Export Selected/Filtered"
-                 >
-                    <Download size={18} />
-                 </button>
                </>
              )}
+             
+             {canExport && (
+               <button 
+                  onClick={handleExportCSV}
+                  className="p-2.5 bg-white border border-gray-200 text-gray-400 hover:text-green-600 hover:border-green-200 rounded-xl transition shadow-sm"
+                  title="Export Selected/Filtered"
+               >
+                  <Download size={18} />
+               </button>
+             )}
 
-            <button 
-              onClick={() => setShowAddModal(true)} 
-              className="px-5 py-2.5 bg-[var(--theme-bg)] text-white text-xs font-black rounded-xl hover:shadow-glow transition transform hover:-translate-y-0.5 active:scale-95 uppercase tracking-widest"
-            >
-               <span>Add Profile</span>
+            {canAdd && (
+               <button 
+                 onClick={() => setShowAddModal(true)} 
+                 className="px-5 py-2.5 bg-[var(--theme-bg)] text-white text-xs font-black rounded-xl hover:shadow-glow transition transform hover:-translate-y-0.5 active:scale-95 uppercase tracking-widest"
+               >
+                  <span>Add Profile</span>
+               </button>
+            )}
             </button>
          </div>
       </div>
@@ -456,59 +474,62 @@ export default function Contacts() {
           <div className="flex flex-col space-y-6 mb-8">
               <div className="flex justify-between items-center">
                   <h2 className="text-2xl font-black text-slate-800 tracking-tight">Contact Workspace</h2>
-                  <div className="flex items-center space-x-3">
-                     <div className="relative">
-                        <Search className="absolute left-4 top-3.5 text-gray-300" size={16} />
-                        <input 
-                          type="text" 
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                          placeholder="Search identity or mobile..." 
-                          className="bg-white border border-gray-100 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-700 placeholder-gray-300 focus:ring-4 focus:ring-[var(--theme-border)]/10 outline-none transition-all w-[360px] shadow-sm"
-                        />
+                  {canSearch && (
+                     <div className="flex items-center space-x-3">
+                        <div className="relative">
+                           <Search className="absolute left-4 top-3.5 text-gray-300" size={16} />
+                           <input 
+                             type="text" 
+                             value={searchTerm}
+                             onChange={(e) => setSearchTerm(e.target.value)}
+                             placeholder="Search identity or mobile..." 
+                             className="bg-white border border-gray-100 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-700 placeholder-gray-300 focus:ring-4 focus:ring-[var(--theme-border)]/10 outline-none transition-all w-[360px] shadow-sm"
+                           />
+                        </div>
                      </div>
-                  </div>
+                  )}
               </div>
 
-              {/* Enhanced Quick Filter Bar */}
-              <div className="flex items-center justify-between">
-                  <div className="bg-white p-2.5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-3 overflow-x-auto no-scrollbar max-w-[80%]">
-                      <div className="flex items-center px-4 border-r border-gray-100 space-x-2 mr-1">
-                          <Activity size={14} className="text-teal-500" />
-                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pulse Hunt:</span>
+              {canFilter && (
+                  <div className="flex items-center justify-between">
+                      <div className="bg-white p-2.5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-3 overflow-x-auto no-scrollbar max-w-[80%]">
+                          <div className="flex items-center px-4 border-r border-gray-100 space-x-2 mr-1">
+                              <Activity size={14} className="text-teal-500" />
+                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pulse Hunt:</span>
+                          </div>
+                          
+                          <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
+                             <option value="ALL">Status ALL</option>
+                             {['NEW LEAD', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+
+                          <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
+                             <option value="ALL">Stage ALL</option>
+                             {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                          </select>
+
+                          <select value={filters.agent} onChange={e=>setFilters({...filters, agent: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
+                             <option value="ALL">Agent ALL</option>
+                             {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                          </select>
+
+                          {activeFilterCount > 0 && (
+                             <div className="flex items-center space-x-2 pl-3">
+                                <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-ping"></span>
+                                <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest">{activeFilterCount} Active Filters</span>
+                             </div>
+                          )}
                       </div>
-                      
-                      <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
-                         <option value="ALL">Status ALL</option>
-                         {['NEW LEAD', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
 
-                      <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
-                         <option value="ALL">Stage ALL</option>
-                         {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-
-                      <select value={filters.agent} onChange={e=>setFilters({...filters, agent: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
-                         <option value="ALL">Agent ALL</option>
-                         {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
-                      </select>
-
-                      {activeFilterCount > 0 && (
-                         <div className="flex items-center space-x-2 pl-3">
-                            <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-ping"></span>
-                            <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest">{activeFilterCount} Active Filters</span>
-                         </div>
-                      )}
+                      <button 
+                        onClick={() => setShowFilters(true)}
+                        className="flex items-center space-x-3 px-6 py-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm text-slate-700 hover:border-teal-200 hover:text-teal-600 transition-all font-black group"
+                      >
+                         <Filter size={18} className={activeFilterCount > 0 ? "text-teal-600 animate-pulse" : "text-gray-400"} />
+                         <span className="text-xs uppercase tracking-widest">Advance Filters</span>
+                      </button>
                   </div>
-
-                  <button 
-                    onClick={() => setShowFilters(true)}
-                    className="flex items-center space-x-3 px-6 py-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm text-slate-700 hover:border-teal-200 hover:text-teal-600 transition-all font-black group"
-                  >
-                     <Filter size={18} className={activeFilterCount > 0 ? "text-teal-600 animate-pulse" : "text-gray-400"} />
-                     <span className="text-xs uppercase tracking-widest">Advance Filters</span>
-                  </button>
-              </div>
+               )}
           </div>
 
           <div className="bg-white rounded-2xl border border-gray-100 shadow-premium overflow-hidden">

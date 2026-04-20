@@ -553,7 +553,7 @@ function AppLayout() {
             <Route path="/flows/:id" element={<FlowBuilder />} />
             <Route path="/agents" element={<AgentsDashboard />} />
             <Route path="/widget" element={<WebWidget />} />
-            <Route path="/contacts" element={<Contacts />} />
+            <Route path="/contacts" element={<Contacts roleAccess={roleAccess} />} />
             <Route path="/templates" element={<Templates />} />
             <Route path="/api" element={<ApiSetup />} />
             <Route path="/settings" element={<Settings roleAccess={roleAccess} />} />

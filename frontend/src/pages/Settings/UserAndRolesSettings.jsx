@@ -28,7 +28,6 @@ export default function UserAndRolesSettings() {
     { id: 'tasks', name: 'Tasks', icon: CheckSquare },
     { id: 'pipeline', name: 'Pipeline', icon: KanbanSquare },
     { id: 'chat', name: 'Chat', icon: MessageSquare },
-    { id: 'contacts', name: 'Contacts', icon: Users },
     { id: 'campaigns', name: 'Campaigns', icon: Megaphone },
     { id: 'ai-chatbot', name: 'AI Chatbot', icon: Bot },
     { id: 'flows', name: 'Flows', icon: Bot },
@@ -54,6 +53,18 @@ export default function UserAndRolesSettings() {
         { id: 'chat_show_assigned_only', name: 'Show Assigned Leads Only', desc: 'Agent only sees leads explicitly assigned to them' },
         { id: 'chat_assign_lead', name: 'Assign Lead Permission', desc: 'Allow user to change the assigned agent' },
         { id: 'chat_assign_self_only', name: 'Restrict to Self-Assignment', desc: 'User can only assign leads to themselves' }
+      ]
+    },
+    { 
+      id: 'contacts', 
+      name: 'Contacts Workspace', 
+      icon: Users,
+      subPermissions: [
+        { id: 'contacts_import', name: 'Import Contacts (CSV)', desc: 'Allow user to upload and import contact lists' },
+        { id: 'contacts_export', name: 'Export Contacts (CSV)', desc: 'Allow user to download contact lists as CSV' },
+        { id: 'contacts_add', name: 'Add New Profile', desc: 'Allow user to manually create new contacts' },
+        { id: 'contacts_filter', name: 'Advance Filters Option', desc: 'Show/Hide advanced filtering capabilities' },
+        { id: 'contacts_search', name: 'Search Option', desc: 'Show/Hide the contact search bar' }
       ]
     },
     { 
