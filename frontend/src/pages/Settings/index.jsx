@@ -46,7 +46,7 @@ export default function Settings({ roleAccess }) {
   const [searchQuery, setSearchQuery] = useState('');
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userRole = user.role || 'AGENT';
+  const userRole = (user.role || 'AGENT').toUpperCase();
 
   const menuItems = [
     { id: 'workspace', name: 'Workspace', icon: Building2, desc: 'Company details, timezone, language' },
@@ -82,7 +82,7 @@ export default function Settings({ roleAccess }) {
   const renderContent = () => {
     switch (activeTab) {
       case 'workspace':
-        return <WorkspaceSettings />;
+        return <WorkspaceSettings roleAccess={roleAccess} />;
       case 'whatsapp':
         return (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-0 overflow-hidden h-full">
@@ -96,21 +96,21 @@ export default function Settings({ roleAccess }) {
           </div>
         );
       case 'crm':
-        return <CRMSettings />;
+        return <CRMSettings roleAccess={roleAccess} />;
       case 'users':
-        return <UserAndRolesSettings />;
+        return <UserAndRolesSettings roleAccess={roleAccess} />;
       case 'billing':
-        return <BillingSettings />;
+        return <BillingSettings roleAccess={roleAccess} />;
       case 'integrations':
-        return <IntegrationsSettings />;
+        return <IntegrationsSettings roleAccess={roleAccess} />;
       case 'automations':
-        return <AutomationSettings />;
+        return <AutomationSettings roleAccess={roleAccess} />;
       case 'security':
-        return <SecuritySettings />;
+        return <SecuritySettings roleAccess={roleAccess} />;
       case 'notifications':
-        return <NotificationSettings />;
+        return <NotificationSettings roleAccess={roleAccess} />;
       case 'customization':
-        return <CustomizationSettings />;
+        return <CustomizationSettings roleAccess={roleAccess} />;
       default:
         return <PlaceholderSettings title={activeCategory.name} icon={activeCategory.icon} description={activeCategory.desc} />;
     }

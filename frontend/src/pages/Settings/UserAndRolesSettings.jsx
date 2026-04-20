@@ -3,7 +3,7 @@ import {
   UserCog, UserPlus, MoreVertical, Shield, ShieldCheck, Check, Save, ShieldAlert,
   LayoutDashboard, MessageSquare, Megaphone, Users, FileText, Bot, UserPlus as AgentIcon, 
   Globe, Code, Settings, KanbanSquare, CheckSquare, Building2, MessageCircle, CreditCard, 
-  Link as LinkIcon, ShieldCheck as SecurityIcon, Bell, Palette
+  Link as LinkIcon, ShieldCheck as SecurityIcon, Bell, Palette, ChevronDown, ChevronRight
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
@@ -14,6 +14,7 @@ export default function UserAndRolesSettings() {
   const [roleSettings, setRoleSettings] = useState({});
   const [selectedRole, setSelectedRole] = useState('ADMIN');
   const [saving, setSaving] = useState(false);
+  const [expandedCats, setExpandedCats] = useState(['crm']); // Default expand CRM to show new sub-options
 
   const roles = [
     { id: 'ADMIN', name: 'Admin', icon: ShieldCheck },
@@ -39,9 +40,21 @@ export default function UserAndRolesSettings() {
   ];
 
   const SETTING_PERMISSIONS = [
-    { id: 'workspace', name: 'Workspace', icon: Building2 },
-    { id: 'whatsapp', name: 'WhatsApp API', icon: MessageCircle },
-    { id: 'crm', name: 'CRM Settings', icon: Users },
+    { 
+      id: 'workspace', name: 'Workspace', icon: Building2 
+    },
+    { 
+      id: 'whatsapp', name: 'WhatsApp API', icon: MessageCircle 
+    },
+    { 
+      id: 'crm', 
+      name: 'CRM Settings', 
+      icon: Users,
+      subPermissions: [
+        { id: 'crm_duplicate_detection', name: 'Duplicate Contact Detection' },
+        { id: 'crm_auto_assignment', name: 'Auto Lead Assignment' }
+      ]
+    },
     { id: 'users', name: 'User & Roles', icon: UserCog },
     { id: 'billing', name: 'Billing & Plan', icon: CreditCard },
     { id: 'integrations', name: 'Integrations', icon: LinkIcon },
@@ -79,8 +92,6 @@ export default function UserAndRolesSettings() {
         const settingsData = await settingsRes.json();
         if (settingsData.roleAccess) {
           setRoleSettings(settingsData.roleAccess);
-        } else {
-          // Fallback handled by Backend default
         }
       }
     } catch (err) {
@@ -123,10 +134,10 @@ export default function UserAndRolesSettings() {
     let newPermissions = roleSettings[roleId]?.permissions || [];
     
     if (isNowAllAccess) {
-      // Add all possible keys
       const allKeys = [
         ...MODULE_PERMISSIONS.map(p => p.id),
-        ...SETTING_PERMISSIONS.map(p => p.id)
+        ...SETTING_PERMISSIONS.map(p => p.id),
+        ...SETTING_PERMISSIONS.flatMap(p => p.subPermissions || []).map(s => s.id)
       ];
       newPermissions = Array.from(new Set([...newPermissions, ...allKeys]));
     }
@@ -142,17 +153,23 @@ export default function UserAndRolesSettings() {
   };
 
   const togglePermission = (roleId, permissionId) => {
-    if (roleSettings[roleId]?.allAccess) return; // Cant toggle if allAccess is ON
+    if (roleSettings[roleId]?.allAccess) return;
 
     setRoleSettings(prev => {
       const currentRoleData = prev[roleId] || { allAccess: false, permissions: [] };
       const currentPermissions = currentRoleData.permissions || [];
       const isPresent = currentPermissions.includes(permissionId);
       
-      const newPermissions = isPresent 
+      let newPermissions = isPresent 
         ? currentPermissions.filter(p => p !== permissionId)
         : [...currentPermissions, permissionId];
       
+      // Auto-check parent if sub-permission is checked
+      const parentCat = SETTING_PERMISSIONS.find(p => p.subPermissions?.some(s => s.id === permissionId));
+      if (parentCat && !newPermissions.includes(parentCat.id) && !isPresent) {
+         newPermissions.push(parentCat.id);
+      }
+
       return {
         ...prev,
         [roleId]: {
@@ -168,11 +185,14 @@ export default function UserAndRolesSettings() {
     return roleSettings[roleId]?.permissions?.includes(permissionId);
   };
 
+  const toggleCatExpand = (catId) => {
+    setExpandedCats(prev => prev.includes(catId) ? prev.filter(c => c !== catId) : [...prev, catId]);
+  };
+
   if (loading) return <div className="animate-pulse space-y-4"><div className="h-64 bg-gray-200 rounded-xl"></div></div>;
 
   return (
     <div className="space-y-6">
-      {/* Tabs */}
       <div className="flex space-x-1 bg-gray-100 p-1 rounded-xl w-fit">
         <button 
           onClick={() => setActiveTab('users')}
@@ -190,7 +210,6 @@ export default function UserAndRolesSettings() {
 
       {activeTab === 'users' ? (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 overflow-hidden">
-          {/* Existing Team Members Table... (remains the same) */}
           <div className="flex justify-between items-center mb-6">
              <h2 className="text-lg font-bold text-gray-900 flex items-center">
                <UserCog className="mr-2 text-teal-600" size={20} />
@@ -220,15 +239,15 @@ export default function UserAndRolesSettings() {
                     <td className="px-4 py-3 text-gray-500">{user.email}</td>
                     <td className="px-4 py-3">
                        <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${
-                          user.role === 'ADMIN' || user.role === 'Admin' ? 'bg-purple-100 text-purple-700' :
-                          user.role === 'MANAGER_COUNSELLOUR' || user.role === 'Manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
+                          user.role?.toUpperCase() === 'ADMIN' ? 'bg-purple-100 text-purple-700' :
+                          user.role?.toUpperCase() === 'MANAGER_COUNSELLOUR' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-700'
                        }`}>
                           {user.role}
                        </span>
                     </td>
                     <td className="px-4 py-3">
-                       <span className={`flex items-center text-xs font-bold ${user.status === 'ACTIVE' || user.status === 'Active' ? 'text-green-600' : 'text-gray-500'}`}>
-                          <span className={`w-2 h-2 rounded-full mr-2 ${user.status === 'ACTIVE' || user.status === 'Active' ? 'bg-green-500' : 'bg-gray-400'}`}></span> {user.status || 'Active'}
+                       <span className={`flex items-center text-xs font-bold ${user.status?.toUpperCase() === 'ACTIVE' ? 'text-green-600' : 'text-gray-500'}`}>
+                          <span className={`w-2 h-2 rounded-full mr-2 ${user.status?.toUpperCase() === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-400'}`}></span> {user.status || 'Active'}
                        </span>
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -244,7 +263,6 @@ export default function UserAndRolesSettings() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          {/* Role Access List */}
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 h-fit">
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 px-2">Role Access</h3>
             <div className="space-y-2">
@@ -268,7 +286,6 @@ export default function UserAndRolesSettings() {
             </div>
           </div>
 
-          {/* Permissions Area */}
           <div className="md:col-span-3 space-y-6">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
               <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-50">
@@ -290,7 +307,6 @@ export default function UserAndRolesSettings() {
               </div>
 
               <div className="space-y-8">
-                 {/* All Access Toggle */}
                  <div className={`p-5 rounded-2xl border-2 transition-all flex items-center justify-between ${
                    roleSettings[selectedRole]?.allAccess 
                    ? 'border-teal-500 bg-teal-50/30' 
@@ -314,16 +330,7 @@ export default function UserAndRolesSettings() {
                    </button>
                  </div>
 
-                 {selectedRole === 'ADMIN' && (
-                    <div className="flex items-center space-x-3 p-4 bg-purple-50 text-purple-700 rounded-xl border border-purple-100 text-sm font-medium">
-                       <ShieldAlert size={18} className="shrink-0" />
-                       <p>Administrators always have full access by default.</p>
-                    </div>
-                 )}
-
-                 {/* Granular Permissions */}
-                 <div className="space-y-8 opacity-100 transition-opacity">
-                    {/* Main Modules Group */}
+                 <div className="space-y-8">
                     <div>
                        <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center">
                           <LayoutDashboard size={16} className="mr-2" />
@@ -336,8 +343,8 @@ export default function UserAndRolesSettings() {
                               className={`flex items-center p-4 rounded-xl border transition-all cursor-pointer ${
                                 isPermissionEnabled(selectedRole, p.id)
                                 ? 'border-teal-200 bg-teal-50/50 text-teal-900 shadow-sm'
-                                : 'border-gray-100 bg-white text-gray-500 grayscale opacity-60 hover:grayscale-0 hover:opacity-100'
-                              } ${roleSettings[selectedRole]?.allAccess ? 'cursor-default' : 'hover:border-teal-300'}`}
+                                : 'border-gray-100 bg-white text-gray-500 grayscale opacity-60'
+                              }`}
                              >
                                 <input 
                                   type="checkbox"
@@ -356,36 +363,75 @@ export default function UserAndRolesSettings() {
                        </div>
                     </div>
 
-                    {/* Settings Group */}
                     <div>
                        <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center">
                           <Settings size={16} className="mr-2" />
                           Settings Configuration
                        </h3>
-                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                          {SETTING_PERMISSIONS.map(p => (
-                             <label 
-                              key={p.id}
-                              className={`flex items-center p-4 rounded-xl border transition-all cursor-pointer ${
-                                isPermissionEnabled(selectedRole, p.id)
-                                ? 'border-blue-200 bg-blue-50/50 text-blue-900 shadow-sm'
-                                : 'border-gray-100 bg-white text-gray-500 grayscale opacity-60 hover:grayscale-0 hover:opacity-100'
-                              } ${roleSettings[selectedRole]?.allAccess ? 'cursor-default' : 'hover:border-blue-300'}`}
-                             >
-                                <input 
-                                  type="checkbox"
-                                  className="hidden"
-                                  checked={isPermissionEnabled(selectedRole, p.id)}
-                                  onChange={() => togglePermission(selectedRole, p.id)}
-                                  disabled={roleSettings[selectedRole]?.allAccess}
-                                />
-                                <div className={`p-2 rounded-lg mr-3 ${isPermissionEnabled(selectedRole, p.id) ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
-                                   <p.icon size={18} />
-                                </div>
-                                <span className="text-sm font-bold">{p.name}</span>
-                                {isPermissionEnabled(selectedRole, p.id) && <Check size={16} className="ml-auto text-blue-600" />}
-                             </label>
-                          ))}
+                       <div className="space-y-4">
+                          {SETTING_PERMISSIONS.map(p => {
+                             const isExpanded = expandedCats.includes(p.id);
+                             return (
+                               <div key={p.id} className="space-y-2">
+                                  <div className="flex items-center group">
+                                     <label 
+                                      className={`flex-1 flex items-center p-4 rounded-xl border transition-all cursor-pointer ${
+                                        isPermissionEnabled(selectedRole, p.id)
+                                        ? 'border-blue-200 bg-blue-50/50 text-blue-900 shadow-sm'
+                                        : 'border-gray-100 bg-white text-gray-500 grayscale opacity-60'
+                                      }`}
+                                     >
+                                        <input 
+                                          type="checkbox"
+                                          className="hidden"
+                                          checked={isPermissionEnabled(selectedRole, p.id)}
+                                          onChange={() => togglePermission(selectedRole, p.id)}
+                                          disabled={roleSettings[selectedRole]?.allAccess}
+                                        />
+                                        <div className={`p-2 rounded-lg mr-3 ${isPermissionEnabled(selectedRole, p.id) ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                                           <p.icon size={18} />
+                                        </div>
+                                        <span className="text-sm font-bold">{p.name}</span>
+                                        {isPermissionEnabled(selectedRole, p.id) && <Check size={16} className="ml-auto text-blue-600" />}
+                                     </label>
+                                     {p.subPermissions && (
+                                        <button 
+                                          onClick={() => toggleCatExpand(p.id)}
+                                          className="p-2 ml-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                                        >
+                                           {isExpanded ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                                        </button>
+                                     )}
+                                  </div>
+                                  
+                                  {/* Sub-permissions List */}
+                                  {isExpanded && p.subPermissions && (
+                                     <div className="pl-12 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-in slide-in-from-top-2 duration-300">
+                                        {p.subPermissions.map(sub => (
+                                           <label 
+                                            key={sub.id}
+                                            className={`flex items-center p-3 rounded-lg border text-xs font-bold transition-all cursor-pointer ${
+                                              isPermissionEnabled(selectedRole, sub.id)
+                                              ? 'border-blue-300 bg-blue-50 text-blue-800'
+                                              : 'border-gray-50 bg-gray-50/30 text-gray-400 opacity-60'
+                                            }`}
+                                           >
+                                              <input 
+                                                type="checkbox"
+                                                className="hidden"
+                                                checked={isPermissionEnabled(selectedRole, sub.id)}
+                                                onChange={() => togglePermission(selectedRole, sub.id)}
+                                                disabled={roleSettings[selectedRole]?.allAccess}
+                                              />
+                                              <div className={`w-2 h-2 rounded-full mr-3 ${isPermissionEnabled(selectedRole, sub.id) ? 'bg-blue-500' : 'bg-gray-300'}`}></div>
+                                              <span>{sub.name}</span>
+                                           </label>
+                                        ))}
+                                     </div>
+                                  )}
+                               </div>
+                             );
+                          })}
                        </div>
                     </div>
                  </div>

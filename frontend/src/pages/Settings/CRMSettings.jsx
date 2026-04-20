@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Users, Tag, GitMerge } from 'lucide-react';
 
-export default function CRMSettings() {
+export default function CRMSettings({ roleAccess }) {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = (user.role || 'AGENT').toUpperCase();
+  const roleData = roleAccess?.[userRole];
+  const isSuper = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+
+  const canEditDuplicate = isSuper || roleData?.allAccess || roleData?.permissions?.includes('crm_duplicate_detection');
+  const canEditAutoAssign = isSuper || roleData?.allAccess || roleData?.permissions?.includes('crm_auto_assignment');
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState({
@@ -39,7 +47,7 @@ export default function CRMSettings() {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`/api/settings/crm`, {
+      await fetch(`/api/settings/crm`, {
         method: 'PUT',
         headers: { 
           'Authorization': `Bearer ${token}`, 
@@ -55,16 +63,17 @@ export default function CRMSettings() {
     }
   };
 
-  const Toggle = ({ label, description, checked, onChange }) => (
-    <div className="flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl hover:border-teal-100 transition-colors">
+  const Toggle = ({ label, description, checked, onChange, disabled }) => (
+    <div className={`flex items-center justify-between p-4 bg-gray-50 border border-gray-100 rounded-xl transition-colors ${disabled ? '' : 'hover:border-teal-100'}`}>
       <div className="pr-4">
         <div className="text-sm font-bold text-gray-800">{label}</div>
         <div className="text-xs text-gray-500 mt-0.5 leading-relaxed">{description}</div>
       </div>
       <button 
         type="button"
-        onClick={() => onChange(!checked)}
-        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${checked ? 'bg-teal-500' : 'bg-gray-300'}`}
+        disabled={disabled}
+        onClick={() => !disabled && onChange(!checked)}
+        className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none shadow-inner ${checked ? 'bg-teal-500' : 'bg-gray-300'} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
       >
         <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${checked ? 'translate-x-5' : 'translate-x-0'}`} />
       </button>
@@ -86,21 +95,35 @@ export default function CRMSettings() {
             label="Duplicate Contact Detection" 
             description="Automatically merge or flag contacts with the same phone number or email address."
             checked={settings.duplicateDetection}
-            onChange={(val) => setSettings({...settings, duplicateDetection: val})}
+            onChange={(val) => canEditDuplicate && setSettings({...settings, duplicateDetection: val})}
+            disabled={!canEditDuplicate}
           />
+          
+          {!canEditDuplicate && (
+            <div className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100 flex items-center">
+              <span className="font-bold mr-1 italic">RESTRICTED:</span> You do not have permission to change duplicate detection rules.
+            </div>
+          )}
           
           <Toggle 
             label="Auto Lead Assignment" 
             description="Round-robin assign new incoming WhatsApp leads to available active agents."
             checked={settings.autoAssignment}
-            onChange={(val) => setSettings({...settings, autoAssignment: val})}
+            onChange={(val) => canEditAutoAssign && setSettings({...settings, autoAssignment: val})}
+            disabled={!canEditAutoAssign}
           />
+
+          {!canEditAutoAssign && (
+            <div className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100 flex items-center">
+              <span className="font-bold mr-1 italic">RESTRICTED:</span> You do not have permission to change assignment rules.
+            </div>
+          )}
         </div>
 
         <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end">
           <button 
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || (!canEditDuplicate && !canEditAutoAssign)}
             className="flex items-center px-5 py-2.5 bg-[var(--theme-bg)] text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition shadow-sm disabled:opacity-50"
           >
             {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={16} className="mr-2" />}
