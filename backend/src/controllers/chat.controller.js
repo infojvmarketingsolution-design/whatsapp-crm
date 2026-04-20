@@ -7,6 +7,7 @@ const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs');
 const CampaignSchema = require('../models/tenant/Campaign');
+const User = require('../models/core/User');
 
 const createContact = async (req, res) => {
   try {
@@ -66,12 +67,30 @@ const getContacts = async (req, res) => {
           qualification: 1,
           score: 1,
           heatLevel: 1,
-          source: 1,
+          source: { $ifNull: ['$leadSource', '$source'] }, // Support both for compatibility
+          leadSource: 1,
           tasks: 1, 
           email: 1,
           address: 1,
+          pincode: 1,
+          state: 1,
           timeline: 1,
           createdAt: 1,
+          assignedAgent: 1,
+          pipelineStage: 1,
+          estimatedValue: 1,
+          selectedProgram: 1,
+          preferredCallTime: 1,
+          budget: 1,
+          purchaseTimeline: 1,
+          decisionMakerStatus: 1,
+          profession: 1,
+          companyName: 1,
+          linkedinUrl: 1,
+          firstName: 1,
+          lastName: 1,
+          secondaryPhone: 1,
+          nextFollowUp: 1,
           lastMessageAt: { $ifNull: ['$lastMsgDoc.timestamp', '$updatedAt'] },
           lastMessage: { $ifNull: ['$lastMsgDoc.content', ''] },
           lastMessageType: { $ifNull: ['$lastMsgDoc.type', 'text'] }
@@ -91,7 +110,7 @@ const getContacts = async (req, res) => {
 
 const performContactAction = async (req, res) => {
   try {
-    const { contactId } = req.params;
+    const contactId = req.params.contactId || req.body.contactId;
     const { action, payload } = req.body;
     
     let contact;
@@ -121,7 +140,7 @@ const performContactAction = async (req, res) => {
         if (payload.pincode !== undefined) contact.pincode = payload.pincode;
         if (payload.state !== undefined) contact.state = payload.state;
         if (payload.qualification !== undefined) contact.qualification = payload.qualification;
-        if (payload.status !== undefined) contact.status = payload.status;
+        // Status handled below with timeline event
         if (payload.budget !== undefined) contact.budget = payload.budget;
         if (payload.purchaseTimeline !== undefined) contact.purchaseTimeline = payload.purchaseTimeline;
         if (payload.decisionMakerStatus !== undefined) contact.decisionMakerStatus = payload.decisionMakerStatus;
@@ -134,14 +153,40 @@ const performContactAction = async (req, res) => {
         if (payload.leadConsiderDate !== undefined) contact.leadConsiderDate = payload.leadConsiderDate;
         if (payload.firstName !== undefined) contact.firstName = payload.firstName;
         if (payload.lastName !== undefined) contact.lastName = payload.lastName;
+        
+        // Sync name field for display consistency across the app
+        if (payload.firstName !== undefined || payload.lastName !== undefined) {
+           const newName = [contact.firstName, contact.lastName].filter(Boolean).join(' ');
+           if (newName) contact.name = newName;
+        }
+
         if (payload.secondaryPhone !== undefined) contact.secondaryPhone = payload.secondaryPhone;
         if (payload.pipelineStage !== undefined) {
            contact.pipelineStage = payload.pipelineStage;
            contact.timeline.push({ eventType: 'PIPELINE_MOVE', description: `Moved to ${payload.pipelineStage} stage`, timestamp: new Date() });
         }
-        if (payload.estimatedValue !== undefined) contact.estimatedValue = payload.estimatedValue;
+        if (payload.estimatedValue !== undefined) contact.estimatedValue = Number(payload.estimatedValue) || 0;
         if (payload.leadSource !== undefined) contact.leadSource = payload.leadSource;
         if (payload.nextFollowUp !== undefined) contact.nextFollowUp = payload.nextFollowUp;
+        if (payload.selectedProgram !== undefined) contact.selectedProgram = payload.selectedProgram;
+        if (payload.preferredCallTime !== undefined) contact.preferredCallTime = payload.preferredCallTime;
+
+        if (payload.assignedAgent !== undefined && payload.assignedAgent !== contact.assignedAgent?.toString()) {
+           const oldAgentId = contact.assignedAgent;
+           contact.assignedAgent = payload.assignedAgent || null;
+           
+           let agentName = 'Unassigned';
+           if (payload.assignedAgent) {
+              const agent = await User.findById(payload.assignedAgent);
+              agentName = agent ? agent.name : 'Unknown Agent';
+           }
+           
+           contact.timeline.push({ 
+              eventType: 'AGENT_ASSIGNED', 
+              description: payload.assignedAgent ? `Assigned to ${agentName}` : 'Lead unassigned', 
+              timestamp: new Date() 
+           });
+        }
 
         if (payload.status !== undefined && payload.status !== contact.status) {
            contact.status = payload.status;
@@ -150,10 +195,7 @@ const performContactAction = async (req, res) => {
         }
         
         contact.timeline.push({ eventType: 'CONTACT_UPDATED', description: 'Contact details updated', timestamp: new Date() });
-        await contact.save();
-        if (payload.status) {
-           contact.timeline.push({ eventType: 'STATUS_CHANGE', description: `Moved to ${payload.status}`, timestamp: new Date() });
-        }
+        // Redundant save removed, will save at end of function
     } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
@@ -336,7 +378,7 @@ const sendMessage = async (req, res) => {
     
     const Contact = req.tenantDb.model('Contact', ContactSchema);
     const Message = req.tenantDb.model('Message', MessageSchema);
-    const User = require('../models/core/User');
+    // User already required at top
 
     const contact = await Contact.findById(contactId);
     if (!contact) return res.status(404).json({ error: 'Contact not found' });
@@ -526,7 +568,7 @@ const getContactStats = async (req, res) => {
 
 const getAgents = async (req, res) => {
   try {
-    const User = require('../models/core/User');
+    // User already required at top
     const agents = await User.find({ tenantId: req.tenantId, status: 'ACTIVE' }).select('name email role');
     res.json(agents);
   } catch (error) {
@@ -536,7 +578,7 @@ const getAgents = async (req, res) => {
 
 const updateFcmToken = async (req, res) => {
   try {
-    const User = require('../models/core/User');
+    // User already required at top
     const { token, action } = req.body; // action: 'register' or 'unregister'
 
     if (action === 'register') {
