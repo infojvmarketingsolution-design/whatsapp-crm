@@ -32,17 +32,17 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
   const allMenuItems = [
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
     { id: 'tasks', name: 'Tasks', icon: CheckSquare, path: '/tasks', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
-    { id: 'pipeline', name: 'Pipeline', icon: KanbanSquare, path: '/pipeline', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER'] },
+    { id: 'pipeline', name: 'Pipeline', icon: KanbanSquare, path: '/pipeline', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
     { id: 'chat', name: 'Chat', icon: MessageSquare, path: '/inbox', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
     { id: 'contacts', name: 'Contacts', icon: Users, path: '/contacts', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
-    { id: 'campaigns', name: 'Campaigns', icon: Megaphone, path: '/campaigns', roles: ['ADMIN', 'SUPER_ADMIN'] },
-    { id: 'ai-chatbot', name: 'AI Chatbot', icon: Bot, path: '/ai-chatbot', roles: ['ADMIN', 'SUPER_ADMIN'] },
-    { id: 'flows', name: 'Flows', icon: Bot, path: '/flows', roles: ['ADMIN', 'SUPER_ADMIN'] },
-    { id: 'templates', name: 'Templates', icon: FileText, path: '/templates', roles: ['ADMIN', 'SUPER_ADMIN'] },
-    { id: 'agents', name: 'Agents', icon: UserPlus, path: '/agents', roles: ['ADMIN', 'SUPER_ADMIN'] },
-    { id: 'web-widgets', name: 'Web Widget', icon: Globe, path: '/widget', roles: ['ADMIN', 'SUPER_ADMIN'] },
-    { id: 'api', name: 'API', icon: Code, path: '/api', roles: ['ADMIN', 'SUPER_ADMIN'] },
-    { id: 'settings', name: 'Settings', icon: Settings, path: '/settings', roles: ['ADMIN', 'SUPER_ADMIN'] },
+    { id: 'campaigns', name: 'Campaigns', icon: Megaphone, path: '/campaigns', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { id: 'ai-chatbot', name: 'AI Chatbot', icon: Bot, path: '/ai-chatbot', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { id: 'flows', name: 'Flows', icon: Bot, path: '/flows', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { id: 'templates', name: 'Templates', icon: FileText, path: '/templates', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { id: 'agents', name: 'Agents', icon: UserPlus, path: '/agents', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { id: 'web-widgets', name: 'Web Widget', icon: Globe, path: '/widget', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { id: 'api', name: 'API', icon: Code, path: '/api', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
+    { id: 'settings', name: 'Settings', icon: Settings, path: '/settings', roles: ['ADMIN', 'SUPER_ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'] },
   ];
 
   const menuItems = allMenuItems.filter(item => {
