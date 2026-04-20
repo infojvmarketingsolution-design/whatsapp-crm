@@ -139,9 +139,13 @@ export default function Inbox({ roleAccess }) {
           setFollowupTime('');
           setShowTagInput(false);
           setNewTagName('');
+          toast.success("Lead Updated Successfully");
+       } else {
+          toast.error("Failed to update lead");
        }
     } catch (err) {
       console.error("Action failed", err);
+      toast.error("An error occurred during update");
     }
   };
 

@@ -171,21 +171,23 @@ const performContactAction = async (req, res) => {
         if (payload.selectedProgram !== undefined) contact.selectedProgram = payload.selectedProgram;
         if (payload.preferredCallTime !== undefined) contact.preferredCallTime = payload.preferredCallTime;
 
-        if (payload.assignedAgent !== undefined && payload.assignedAgent !== contact.assignedAgent?.toString()) {
-           const oldAgentId = contact.assignedAgent;
-           contact.assignedAgent = payload.assignedAgent || null;
-           
-           let agentName = 'Unassigned';
-           if (payload.assignedAgent) {
-              const agent = await User.findById(payload.assignedAgent);
-              agentName = agent ? agent.name : 'Unknown Agent';
+        if (payload.assignedAgent !== undefined) {
+           const newAgent = payload.assignedAgent && payload.assignedAgent !== "" ? payload.assignedAgent : null;
+           if (newAgent?.toString() !== contact.assignedAgent?.toString()) {
+              contact.assignedAgent = newAgent;
+              
+              let agentName = 'Unassigned';
+              if (newAgent) {
+                 const agent = await User.findById(newAgent);
+                 agentName = agent ? agent.name : 'Unknown Agent';
+              }
+              
+              contact.timeline.push({ 
+                 eventType: 'AGENT_ASSIGNED', 
+                 description: newAgent ? `Assigned to ${agentName}` : 'Lead unassigned', 
+                 timestamp: new Date() 
+              });
            }
-           
-           contact.timeline.push({ 
-              eventType: 'AGENT_ASSIGNED', 
-              description: payload.assignedAgent ? `Assigned to ${agentName}` : 'Lead unassigned', 
-              timestamp: new Date() 
-           });
         }
 
         if (payload.status !== undefined && payload.status !== contact.status) {
@@ -202,8 +204,9 @@ const performContactAction = async (req, res) => {
        contact.notes.push(newNote);
        contact.timeline.push({ eventType: 'NOTE_ADDED', description: `Note added`, timestamp: new Date() });
     } else if (action === 'assign_agent') {
-       contact.assignedAgent = payload.agentId;
-       contact.timeline.push({ eventType: 'AGENT_ASSIGNED', description: `Assigned to agent ${payload.agentId}`, timestamp: new Date() });
+       const agentId = payload.agentId || payload.assignedAgent; // Support both keys
+       contact.assignedAgent = agentId && agentId !== "" ? agentId : null;
+       contact.timeline.push({ eventType: 'AGENT_ASSIGNED', description: agentId ? `Assigned to agent ${agentId}` : 'Lead unassigned', timestamp: new Date() });
     } else if (action === 'log_call') {
        contact.timeline.push({ eventType: 'CALL_LOGGED', description: `Call Logged - Outcome: ${payload.outcome}`, timestamp: new Date() });
        const newNote = { content: `Duration: ${payload.duration} mins\nNotes: ${payload.notes}`, createdBy: req.user?._id || 'System', createdAt: new Date() };
