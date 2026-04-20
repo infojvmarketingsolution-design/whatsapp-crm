@@ -466,7 +466,6 @@ export default function Contacts({ roleAccess }) {
                   <span>Add Profile</span>
                </button>
             )}
-            </button>
          </div>
       </div>
 
