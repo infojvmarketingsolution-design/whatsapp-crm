@@ -223,11 +223,21 @@ class PRDFlowService {
               const currentQual = contact.flowVariables?.qualification;
               const stream = contact.flowVariables?.selectedStream;
               const tqc = aggressiveNormalize(currentQual);
-              const qk = Object.keys(prompts.programMap || {}).find(k => {
-                 const nk = aggressiveNormalize(k);
-                 return nk === tqc || nk.startsWith(tqc) || tqc.startsWith(nk);
-              });
-              const qm = qk ? prompts.programMap[qk] : {};
+              
+              const keys = Object.keys(prompts.programMap || {});
+              let qk = keys.find(k => aggressiveNormalize(k) === tqc); 
+              if (!qk) qk = keys.find(k => aggressiveNormalize(k).startsWith(tqc) || tqc.startsWith(aggressiveNormalize(k)));
+              
+              let qm = qk ? prompts.programMap[qk] : {};
+
+              // 🛡️ HARD OVERRIDE FOR 12th Pass (If mapping is wrong or missing)
+              if (tqc === '12thpass' && (!qk || Object.keys(qm).length === 0 || Object.keys(qm).join('').toLowerCase().includes('diploma'))) {
+                 console.log(`[PRD Flow] 🛠️ Applying manual override for 12th Pass for ${contact.phone}`);
+                 qm = {
+                    "Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation", "VFX & Game Design"],
+                    "Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"]
+                 };
+              }
 
               if (!stream) {
                  const categories = Object.keys(qm);
