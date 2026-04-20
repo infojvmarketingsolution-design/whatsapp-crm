@@ -256,7 +256,7 @@ class PRDFlowService {
                   customBody = "Please select your preferred stream/category:";
                } else {
                   // Phase 2: Show Programs for Stream
-                  const val = qualMap[selectedStream];
+                  const actualStreamKey = Object.keys(qualMap).find(sk => aggressiveNormalize(sk) === aggressiveNormalize(selectedStream)); const val = actualStreamKey ? qualMap[actualStreamKey] : null;
                   let programOpts = [];
                   if (val) {
                      if (Array.isArray(val)) {
