@@ -238,11 +238,17 @@ class PRDFlowService {
                
                // 🧩 ROBUST QUAL LOOKUP FOR SENDER
                const targetQualCode = aggressiveNormalize(currentQual);
+               console.log(`[PRD Flow Debug] 🔍 Looking for Qual: "${currentQual}" (Normalized: "${targetQualCode}")`);
+               
                const actualQualKey = Object.keys(prompts.programMap || {}).find(k => {
                   const normK = aggressiveNormalize(k);
+                  console.log(`[PRD Flow Debug] 🧐 Checking against Map Key: "${k}" (Normalized: "${normK}")`);
                   return normK === targetQualCode || normK.startsWith(targetQualCode) || targetQualCode.startsWith(normK);
                });
+               
+               console.log(`[PRD Flow Debug] 🎯 Match Result: ${actualQualKey || 'NONE'}`);
                const qualMap = actualQualKey ? prompts.programMap[actualQualKey] : {};
+               console.log(`[PRD Flow Debug] 📂 Map Keys found: ${Object.keys(qualMap)}`);
                
                if (!selectedStream) {
                   // Phase 1: Show Categories
