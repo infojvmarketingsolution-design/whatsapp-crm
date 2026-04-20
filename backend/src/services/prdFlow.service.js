@@ -48,7 +48,7 @@ class PRDFlowService {
       const Lead = tenantDb.model('Lead', LeadSchema);
 
       const settings = await Settings.findOne({ tenantId });
-      let prompts = { qualificationOptions: ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'], prdFlowSteps: this.DEFAULT_PRD_FLOW_STEPS };
+      let prompts = { qualificationOptions: ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation Complete', 'Master Complete', 'PhD Complete'], prdFlowSteps: this.DEFAULT_PRD_FLOW_STEPS };
       if (settings?.automation?.aiPrompts) prompts = { ...prompts, ...settings.automation.aiPrompts.toObject() };
 
       const flowStepsRaw = settings?.automation?.aiPrompts?.prdFlowSteps && settings.automation.aiPrompts.prdFlowSteps.length > 0 
@@ -164,7 +164,7 @@ class PRDFlowService {
               const categories = Object.keys(qualMap);
 
               // 🧩 Check if User clicked a CATEGORY (Stream)
-              const matchedCategory = categories.find(c => aggressiveNormalize(c) === normalizedInput);
+              const matchedCategory = categories.find(c => { const normC = aggressiveNormalize(c); return normC === normalizedInput || normC.startsWith(normalizedInput) || normalizedInput.startsWith(normC); }); console.log(`[PRD Flow Debug] ?? Checking Category: "${normalizedInput}" against [${categories}] | Match: ${matchedCategory || "NONE"}`);
 
               if (varName === 'program' && matchedCategory) {
                  console.log(`[PRD Flow] 📂 Category Matched: ${matchedCategory}. Saving as selectedStream.`);
