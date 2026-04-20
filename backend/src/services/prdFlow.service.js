@@ -48,7 +48,10 @@ class PRDFlowService {
       const Lead = tenantDb.model('Lead', LeadSchema);
 
       const settings = await Settings.findOne({ tenantId });
-      let prompts = { qualificationOptions: ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation Complete', 'Master Complete', 'PhD Complete'], prdFlowSteps: this.DEFAULT_PRD_FLOW_STEPS };
+      let prompts = { 
+         qualificationOptions: ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation Complete', 'Master Complete', 'PhD Complete'], 
+         prdFlowSteps: this.DEFAULT_PRD_FLOW_STEPS 
+      };
       if (settings?.automation?.aiPrompts) prompts = { ...prompts, ...settings.automation.aiPrompts.toObject() };
 
       const flowStepsRaw = settings?.automation?.aiPrompts?.prdFlowSteps && settings.automation.aiPrompts.prdFlowSteps.length > 0 
@@ -73,7 +76,7 @@ class PRDFlowService {
          } else if (step.type === 'PROGRAM_SELECTION') {
             nodeData.msgType = 'LIST_MESSAGE';
             nodeData.variableName = 'program';
-            nodeData.isProgramSelection = true; // Flag for dynamic resolution
+            nodeData.isProgramSelection = true;
          } else if (step.type === 'SUCCESS_PROOF') {
             nodeData.msgType = step.image ? 'IMAGE' : 'TEXT';
             nodeData.mediaUrl = step.image;
@@ -103,50 +106,46 @@ class PRDFlowService {
       };
 
       const saveAndEmit = async (type, payload, waResult) => {
-        const msg = await Message.create({ contactId: contact._id, messageId: waResult?.messages?.[0]?.id || `out_${Date.now()}`, direction: 'OUTBOUND', type, content: payload, status: 'SENT' });
+        const msgId = waResult?.messages?.[0]?.id || `out_${Date.now()}`;
+        const msg = await Message.create({ contactId: contact._id, messageId: msgId, direction: 'OUTBOUND', type, content: payload, status: 'SENT' });
         if (io) io.to(tenantId).emit('current_chat_message', { ...msg._doc, contact });
       };
 
-      // 🧩 STEP 1: LOAD LAST NODE
-      let stepToProcess = flowSteps.find(s => s.id === (contact.currentFlowStep || 'START_PRD_FLOW')) || flowSteps[0];
-      let iterations = 0;
-      let consumeInput = !!contact.currentFlowStep;
-      // 🔥 Rule 16: Execution Loop
       const aggressiveNormalize = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
 
-      while (stepToProcess && iterations < 10) {
+      // 🧩 STEP 1: LOAD CURRENT NODE
+      let currentStepId = contact.currentFlowStep || (flowSteps[0] ? flowSteps[0].id : 'START');
+      let stepToProcess = flowSteps.find(s => s.id === currentStepId) || flowSteps[0];
+      
+      let iterations = 0;
+      let consumeInput = !!contact.currentFlowStep;
+      
+      // 🚀 EXECUTION LOOP
+      while (stepToProcess && iterations < 12) {
         iterations++;
         const nodeData = stepToProcess.data || {};
         const msgType = nodeData.msgType || 'TEXT';
-        let isSubStep = false;
+        let forceStay = false;
 
-        // 🧩 Rule 6 Step 2: SAVE USER INPUT
+        // 🧩 STEP A: SAVE USER INPUT
         if (consumeInput && !isAutoFollowup && nodeData.variableName) {
            const varName = nodeData.variableName;
-           let val = messageText.trim();
-           
-           // 🧩 Rule 6 Step 3: NORMALIZE INPUT
-           const normalizedInput = aggressiveNormalize(replyValue || messageText);
+           let val = (replyValue || messageText || '').trim();
+           const normalizedInput = aggressiveNormalize(val);
 
            if (varName === 'name') {
               const extName = await AIService.extractData(val, 'NAME');
               val = (extName && extName.length < 50) ? extName : val;
-              
               const nameParts = val.trim().split(' ');
               const firstName = nameParts[0] || '';
               const lastName = nameParts.slice(1).join(' ') || '';
               
-              await Contact.findOneAndUpdate({ phone: contact.phone }, { 
-                  'flowVariables.name': val, 
-                  name: val,
-                  firstName: firstName,
-                  lastName: lastName
-              });
+              const updates = { 'flowVariables.name': val, name: val, firstName, lastName };
+              await Contact.findOneAndUpdate({ phone: contact.phone }, updates);
               contact.flowVariables = { ...(contact.flowVariables || {}), name: val };
-              contact.name = val;
-              contact.firstName = firstName;
-              contact.lastName = lastName;
-           } else if (varName === 'qualification') {
+              Object.assign(contact, updates);
+           } 
+           else if (varName === 'qualification') {
               const opts = prompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation Complete', 'Master Complete', 'PhD Complete'];
               const matched = opts.find(o => o.toLowerCase().includes(val.toLowerCase()) || val.toLowerCase().includes(o.toLowerCase()) || o === val);
               if (matched) {
@@ -154,167 +153,132 @@ class PRDFlowService {
                  contact.flowVariables = { ...(contact.flowVariables || {}), qualification: matched };
                  contact.qualification = matched;
               }
-           } else {
+           } 
+           else if (varName === 'program' && nodeData.isProgramSelection) {
               const currentQual = contact.flowVariables?.qualification;
-              // 🧩 ROBUST QUAL LOOKUP
               const targetQualCode = aggressiveNormalize(currentQual);
-              const actualQualKey = Object.keys(prompts.programMap || {}).find(k => { const normK = aggressiveNormalize(k); return normK === targetQualCode || normK.startsWith(targetQualCode) || targetQualCode.startsWith(normK); });
+              const actualQualKey = Object.keys(prompts.programMap || {}).find(k => {
+                 const nk = aggressiveNormalize(k);
+                 return nk === targetQualCode || nk.startsWith(targetQualCode) || targetQualCode.startsWith(nk);
+              });
               const qualMap = actualQualKey ? prompts.programMap[actualQualKey] : {};
               
+              // 📂 CATEGORY MATCH CHECK
               const categories = Object.keys(qualMap);
+              const matchedCategory = categories.find(c => {
+                 const nc = aggressiveNormalize(c);
+                 return nc === normalizedInput || nc.startsWith(normalizedInput) || normalizedInput.startsWith(nc);
+              });
 
-              // 🧩 Check if User clicked a CATEGORY (Stream)
-              const matchedCategory = categories.find(c => { const normC = aggressiveNormalize(c); return normC === normalizedInput || normC.startsWith(normalizedInput) || normalizedInput.startsWith(normC); }); console.log(`[PRD Flow Debug] ?? Checking Category: "${normalizedInput}" against [${categories}] | Match: ${matchedCategory || "NONE"}`);
-
-              if (varName === 'program' && matchedCategory) {
-                 console.log(`[PRD Flow] 📂 Category Matched: ${matchedCategory}. Saving as selectedStream.`);
+              if (matchedCategory) {
+                 console.log(`[PRD Flow] 📂 Category Match: ${matchedCategory}. Phase 1 complete.`);
                  await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.selectedStream': matchedCategory });
                  contact.flowVariables = { ...(contact.flowVariables || {}), selectedStream: matchedCategory };
-
-                 // 🔄 STAY ON THIS NODE to send program list
-                 isSubStep = true;
-                 consumeInput = false; 
+                 forceStay = true; // STAY to show programs list
               } else {
-                 // 🧩 Standard Variable Saving
-                 const dbUpdates = { [`flowVariables.${varName}`]: val };
-                 if (varName === 'program') {
-                     dbUpdates.selectedProgram = val;
-                     dbUpdates['flowVariables.selectedStream'] = null; // Clear stream after program picked
-                 }
-                 if (varName === 'time') dbUpdates.preferredCallTime = val;
-                 
-                 await Contact.findOneAndUpdate({ phone: contact.phone }, dbUpdates);
-                 contact.flowVariables = { ...(contact.flowVariables || {}), [varName]: val };
-                 if (varName === 'program') {
-                     contact.selectedProgram = val;
-                     delete contact.flowVariables.selectedStream;
-                 }
-                 if (varName === 'time') contact.preferredCallTime = val;
-                 
-                 if (varName === 'time') {
-                    // Final Completion Lead
-                    await Lead.create({ tenantId, name: contact.flowVariables.name, phone: contact.phone, qualification: contact.flowVariables.qualification, selectedProgram: contact.flowVariables.program, status: 'QUALIFIED' });
-                 }
+                 // Final Program Selection
+                 await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.program': val, selectedProgram: val, 'flowVariables.selectedStream': null });
+                 contact.flowVariables = { ...(contact.flowVariables || {}), program: val };
+                 delete contact.flowVariables.selectedStream;
               }
-           }
-
-           // 🧩 Rule 6 Step 4: FIND EDGE / MOVE NEXT (Only if not a sub-step category pick)
-           if (!isSubStep) {
-              const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);
-              if (idx !== -1 && flowSteps[idx + 1]) {
-                 stepToProcess = flowSteps[idx + 1];
-                 consumeInput = false;
-                 continue; // Execute next node immediately
-              } else {
-                 // END OF FLOW INTERCEPT - If the last node was a question (like "May I help you with anything else?")
-                 if (msgType === 'QUESTION') {
-                     const isPositive = val.toLowerCase().match(/yes|yeah|sure|yep|please|ok|y/);
-                     const finalReply = isPositive 
-                         ? "Transferring to counsellor. Please wait, our counsellor will contact you on call asap."
-                         : "Thank you.";
-                     const res = await waService.sendTextMessage(contact.phone, finalReply);
-                     await saveAndEmit('text', finalReply, res);
-                 }
-                 break; 
+           } 
+           else {
+              // General variable capture
+              const dbUpdates = { [`flowVariables.${varName}`]: val };
+              if (varName === 'time') {
+                 dbUpdates.preferredCallTime = val;
+                 await Lead.create({ tenantId, name: contact.flowVariables.name, phone: contact.phone, qualification: contact.flowVariables.qualification, selectedProgram: contact.flowVariables.program, status: 'QUALIFIED' });
               }
+              await Contact.findOneAndUpdate({ phone: contact.phone }, dbUpdates);
+              contact.flowVariables = { ...(contact.flowVariables || {}), [varName]: val };
            }
         }
 
-        // 🧩 STEP 6: Execute Next (Send Message)
-        console.log(`[PRD Flow] 📤 Sending: ${stepToProcess.id} (${msgType})`);
-        const interpolatedText = replaceVars(nodeData.text || '');
+        // 🧩 STEP B: MOVE TO NEXT NODE (If not stayed for sub-step)
+        if (consumeInput && !forceStay) {
+           const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);
+           if (idx !== -1 && flowSteps[idx + 1]) {
+              stepToProcess = flowSteps[idx + 1];
+              consumeInput = false;
+              continue; 
+           } else {
+              break; // End of flow
+           }
+        }
+
+        // 🧩 STEP C: EXECUTE CURRENT NODE (Send Message)
+        console.log(`[PRD Flow] 📤 Output: ${stepToProcess.id}`);
+        const text = replaceVars(nodeData.text || '');
         const media = this.makeAbsolute(nodeData.mediaUrl || '');
 
         if (msgType === 'IMAGE' && media) {
-           const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, interpolatedText, /^\d+$/.test(media) ? null : media);
-           await saveAndEmit('image', interpolatedText, res);
-        } else if (msgType === 'LIST_MESSAGE') {
-            let opts = nodeData.listOptions || prompts.qualificationOptions || ['Option 1'];
-            let customBody = interpolatedText;
-            
-            if (nodeData.isProgramSelection) {
-               const currentQual = contact.flowVariables?.qualification;
-               const selectedStream = contact.flowVariables?.selectedStream;
-               
-               // 🧩 ROBUST QUAL LOOKUP FOR SENDER
-               const targetQualCode = aggressiveNormalize(currentQual);
-               console.log(`[PRD Flow Debug] 🔍 Looking for Qual: "${currentQual}" (Normalized: "${targetQualCode}")`);
-               
-               const actualQualKey = Object.keys(prompts.programMap || {}).find(k => {
-                  const normK = aggressiveNormalize(k);
-                  console.log(`[PRD Flow Debug] 🧐 Checking against Map Key: "${k}" (Normalized: "${normK}")`);
-                  return normK === targetQualCode || normK.startsWith(targetQualCode) || targetQualCode.startsWith(normK);
-               });
-               
-               console.log(`[PRD Flow Debug] 🎯 Match Result: ${actualQualKey || 'NONE'}`);
-               const qualMap = actualQualKey ? prompts.programMap[actualQualKey] : {};
-               console.log(`[PRD Flow Debug] 📂 Map Keys found: ${Object.keys(qualMap)}`);
-               
-               if (!selectedStream) {
-                  // Phase 1: Show Categories
-                  opts = Object.keys(qualMap);
-                  customBody = "Please select your preferred stream/category:";
-               } else {
-                  // Phase 2: Show Programs for Stream
-                  const actualStreamKey = Object.keys(qualMap).find(sk => aggressiveNormalize(sk) === aggressiveNormalize(selectedStream)); const val = actualStreamKey ? qualMap[actualStreamKey] : null;
-                  let programOpts = [];
-                  if (val) {
-                     if (Array.isArray(val)) {
-                        programOpts = val;
-                     } else if (typeof val === 'object') {
-                        Object.values(val).forEach(arr => {
-                           if (Array.isArray(arr)) programOpts.push(...arr);
-                        });
-                     }
-                  }
-                  opts = programOpts.length > 0 ? programOpts.slice(0, 10) : ['General Inquiry'];
-                  customBody = `Great! Now choose a program under ${selectedStream}:`;
-               }
-            }
-            
-            await waService.sendListMessage(contact.phone, { body: customBody, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
-            await saveAndEmit('interactive', customBody, null);
-        } else if (msgType === 'INTERACTIVE') {
+           const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, text, /^\d+$/.test(media) ? null : media);
+           await saveAndEmit('image', text, res);
+        } 
+        else if (msgType === 'LIST_MESSAGE') {
+           let opts = nodeData.listOptions || prompts.qualificationOptions || ['Options'];
+           let body = text;
+
+           if (nodeData.isProgramSelection) {
+              const currentQual = contact.flowVariables?.qualification;
+              const stream = contact.flowVariables?.selectedStream;
+              const tqc = aggressiveNormalize(currentQual);
+              const qk = Object.keys(prompts.programMap || {}).find(k => {
+                 const nk = aggressiveNormalize(k);
+                 return nk === tqc || nk.startsWith(tqc) || tqc.startsWith(nk);
+              });
+              const qm = qk ? prompts.programMap[qk] : {};
+
+              if (!stream) {
+                 opts = Object.keys(qm);
+                 body = "Please select your preferred stream/category:";
+              } else {
+                 const sk = Object.keys(qm).find(k => aggressiveNormalize(k) === aggressiveNormalize(stream));
+                 const val = sk ? qm[sk] : null;
+                 let progs = [];
+                 if (Array.isArray(val)) progs = val;
+                 else if (val && typeof val === 'object') Object.values(val).forEach(a => Array.isArray(a) && progs.push(...a));
+                 opts = progs.length > 0 ? progs.slice(0, 10) : ['General Inquiry'];
+                 body = `Great! Now choose a program under ${stream}:`;
+              }
+           }
+
+           await waService.sendListMessage(contact.phone, { body, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
+           await saveAndEmit('interactive', body, null);
+        } 
+        else if (msgType === 'INTERACTIVE') {
            const btns = nodeData.buttons || ['Morning', 'Afternoon', 'Evening'];
-           await waService.sendInteractiveButtonMessage(contact.phone, { body: interpolatedText, buttons: btns.slice(0,3) });
-           await saveAndEmit('interactive', interpolatedText, null);
-        } else {
-           if (interpolatedText && interpolatedText.trim() !== '') {
-               const res = await waService.sendTextMessage(contact.phone, interpolatedText);
-               await saveAndEmit('text', interpolatedText, res);
-           } else {
-               console.warn(`[PRD Flow] ⚠️ Skipping empty text message for node: ${stepToProcess.id}`);
+           await waService.sendInteractiveButtonMessage(contact.phone, { body: text, buttons: btns.slice(0, 3) });
+           await saveAndEmit('interactive', text, null);
+        } 
+        else {
+           if (text) {
+              const res = await waService.sendTextMessage(contact.phone, text);
+              await saveAndEmit('text', text, res);
            }
         }
 
-        // 🛑 Rule 9: WAITING CONDITION (BREAK)
+        // 🧩 STEP D: UPDATE STATE & CHECK WAIT
         await Contact.findOneAndUpdate({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
 
         if (['QUESTION', 'LIST_MESSAGE', 'INTERACTIVE'].includes(msgType)) {
-           console.log(`[PRD Flow] 🛑 STOPPING execution for: ${stepToProcess.id}`);
-           break;
+           console.log(`[PRD Flow] 🛑 WAIT at ${stepToProcess.id}`);
+           return; // EXIT WEBHOOK TURN
         }
 
-        // ⏱️ Rule 16b: preserve sequence order by waiting before next message
-        if (iterations < 10) {
-           const delayMs = msgType === 'IMAGE' ? 1500 : 1000;
-           console.log(`[PRD Flow] ⏱️ Preservation Delay: ${delayMs}ms...`);
-           await this.sleep(delayMs);
-        }
-
-        // Linear Sequence Move
+        // Move to next automatically if no wait
         const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);
         if (idx !== -1 && flowSteps[idx + 1]) {
            stepToProcess = flowSteps[idx + 1];
            consumeInput = false;
+           await this.sleep(msgType === 'IMAGE' ? 1500 : 1000);
         } else {
-           console.log(`[PRD Flow] 🏁 END of flow. Cleaning session.`);
            await Contact.findOneAndUpdate({ phone: contact.phone }, { $unset: { currentFlowStep: '' } });
            break;
         }
       }
     } catch (err) {
-      console.error(`[PRD Flow] FATAL ERROR:`, err);
+      console.error(`[PRD Flow] ERROR:`, err);
     } finally {
       this.activeProcesses.delete(lockKey);
     }
