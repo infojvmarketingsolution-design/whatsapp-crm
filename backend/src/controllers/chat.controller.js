@@ -385,7 +385,7 @@ const getMessages = async (req, res) => {
 
     if (roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
        const contact = await Contact.findById(req.params.contactId);
-       if (contact && contact.assignedAgent !== req.user._id.toString()) {
+       if (contact && contact.assignedAgent?.toString() !== req.user._id.toString()) {
           return res.status(403).json({ message: 'Access denied: This lead is not assigned to you.' });
        }
     }
