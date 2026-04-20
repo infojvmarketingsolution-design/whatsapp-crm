@@ -220,23 +220,26 @@ class PRDFlowService {
            let body = text;
 
            if (nodeData.isProgramSelection) {
-              const currentQual = contact.flowVariables?.qualification;
+              const currentQual = contact.flowVariables?.qualification || contact.qualification || '';
               const stream = contact.flowVariables?.selectedStream;
               const tqc = aggressiveNormalize(currentQual);
               
-              const keys = Object.keys(prompts.programMap || {});
-              let qk = keys.find(k => aggressiveNormalize(k) === tqc); 
-              if (!qk) qk = keys.find(k => aggressiveNormalize(k).startsWith(tqc) || tqc.startsWith(aggressiveNormalize(k)));
-              
-              let qm = qk ? prompts.programMap[qk] : {};
+              console.log(`[PRD Flow] 🧭 Resolving programs for: "${currentQual}" (tqc: ${tqc}) | LocalStream: ${stream}`);
 
-              // 🛡️ HARD OVERRIDE FOR 12th Pass (If mapping is wrong or missing)
-              if (tqc === '12thpass' && (!qk || Object.keys(qm).length === 0 || Object.keys(qm).join('').toLowerCase().includes('diploma'))) {
-                 console.log(`[PRD Flow] 🛠️ Applying manual override for 12th Pass for ${contact.phone}`);
+              let qm = {};
+              
+              // 🛡️ ABSOLUTE OVERRIDE FOR 12th Pass (Force Trending/Traditional)
+              if (tqc.includes('12th') || tqc.includes('12') || currentQual.includes('12')) {
+                 console.log(`[PRD Flow] 🔥 FORCE-FIX: Manual 12th Pass Programs Injected for ${contact.phone}`);
                  qm = {
                     "Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation", "VFX & Game Design"],
                     "Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"]
                  };
+              } else {
+                 const keys = Object.keys(prompts.programMap || {});
+                 let qk = keys.find(k => aggressiveNormalize(k) === tqc); 
+                 if (!qk) qk = keys.find(k => aggressiveNormalize(k).startsWith(tqc) || tqc.startsWith(aggressiveNormalize(k)));
+                 qm = qk ? prompts.programMap[qk] : {};
               }
 
               if (!stream) {
