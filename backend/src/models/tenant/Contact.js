@@ -57,6 +57,12 @@ const ContactSchema = new mongoose.Schema({
   estimatedValue: { type: Number, default: 0 },
   leadSource: { type: String, default: 'Manual Entry' },
   nextFollowUp: { type: Date },
+  // Counselling & Admission Tracking
+  visitStatus: { type: String, enum: ['Not Visited', 'Visited'], default: 'Not Visited' },
+  admissionStatus: { type: String, enum: ['None', 'Pending', 'Admitted', 'Cancelled'], default: 'None' },
+  collectionAmount: { type: Number, default: 0 },
+  pendingCollectionAmount: { type: Number, default: 0 },
+  isClosed: { type: Boolean, default: false },
   isArchived: { type: Boolean, default: false }
 }, { timestamps: true });
 

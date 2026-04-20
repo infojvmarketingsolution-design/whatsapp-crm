@@ -554,6 +554,26 @@ const getDashboardStats = async (req, res) => {
     // Priority Leads: Hot and Warm
     const hotLeads = await Contact.countDocuments({ ...baseFilter, heatLevel: 'Hot' });
     const warmLeads = await Contact.countDocuments({ ...baseFilter, heatLevel: 'Warm' });
+
+    // Counselling & Admission Stats (for Counsellor Dashboard)
+    const counselStatsArr = await Contact.aggregate([
+      { $match: { ...baseFilter } },
+      { $group: {
+        _id: null,
+        newLeads: { $sum: { $cond: [{ $eq: ["$status", "NEW LEAD"] }, 1, 0] } },
+        openLeads: { $sum: { $cond: [{ $and: [{ $eq: ["$isArchived", { $ne: true }] }, { $eq: ["$isClosed", { $ne: true }] }] }, 1, 0] } },
+        totalVisit: { $sum: { $cond: [{ $eq: ["$visitStatus", "Visited"] }, 1, 0] } },
+        totalAdmission: { $sum: { $cond: [{ $eq: ["$admissionStatus", "Admitted"] }, 1, 0] } },
+        pendingAdmission: { $sum: { $cond: [{ $eq: ["$admissionStatus", "Pending"] }, 1, 0] } },
+        closedLeads: { $sum: { $cond: [{ $eq: ["$isClosed", true] }, 1, 0] } },
+        totalCollection: { $sum: { $ifNull: ["$collectionAmount", 0] } },
+        pendingCollection: { $sum: { $ifNull: ["$pendingCollectionAmount", 0] } }
+      }}
+    ]);
+    const counselStats = counselStatsArr[0] || { 
+      newLeads: 0, openLeads: 0, totalVisit: 0, totalAdmission: 0, 
+      pendingAdmission: 0, closedLeads: 0, totalCollection: 0, pendingCollection: 0 
+    };
     
     res.json({
       leads: totalContacts,
@@ -562,7 +582,16 @@ const getDashboardStats = async (req, res) => {
       qualifiedLeads,
       waitingForAgent,
       hotLeads,
-      warmLeads
+      warmLeads,
+      // Counselor specific
+      newLeads: counselStats.newLeads,
+      openLeads: counselStats.openLeads,
+      totalVisit: counselStats.totalVisit,
+      totalAdmission: counselStats.totalAdmission,
+      pendingAdmission: counselStats.pendingAdmission,
+      closedLeads: counselStats.closedLeads,
+      totalCollection: counselStats.totalCollection,
+      pendingCollection: counselStats.pendingCollection
     });
   } catch (error) {
     console.error(`[GET /stats] FAILED! Error:`, error);

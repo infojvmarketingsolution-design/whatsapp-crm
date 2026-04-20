@@ -948,6 +948,71 @@ export default function Inbox({ roleAccess }) {
              )}
          </div>
 
+          <div className="px-6 py-2">
+             <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100/50 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-1 bg-indigo-100 rounded-bl-lg">
+                   <Megaphone size={12} className="text-indigo-600" />
+                </div>
+                <h3 className="text-[10px] font-bold text-indigo-800 mb-3 tracking-widest uppercase">
+                  Counselling & Admission
+                </h3>
+                <div className="space-y-3">
+                   <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-indigo-600 font-bold uppercase">Visit Status</span>
+                      <select 
+                         value={activeChat?.visitStatus || 'Not Visited'} 
+                         onChange={(e) => handleAction('update_contact', { visitStatus: e.target.value })}
+                         className="bg-white border border-indigo-100 rounded px-2 py-1 text-[10px] font-bold outline-none"
+                      >
+                         <option value="Not Visited">Not Visited</option>
+                         <option value="Visited">Visited</option>
+                      </select>
+                   </div>
+                   <div className="flex justify-between items-center text-[10px]">
+                      <span className="text-indigo-600 font-bold uppercase">Admission</span>
+                      <select 
+                         value={activeChat?.admissionStatus || 'None'} 
+                         onChange={(e) => handleAction('update_contact', { admissionStatus: e.target.value })}
+                         className="bg-white border border-indigo-100 rounded px-2 py-1 text-[10px] font-bold outline-none"
+                      >
+                         <option value="None">None</option>
+                         <option value="Pending">Pending</option>
+                         <option value="Admitted">Admitted</option>
+                         <option value="Cancelled">Cancelled</option>
+                      </select>
+                   </div>
+                   <div className="pt-1">
+                      <span className="text-[9px] font-bold text-indigo-400 uppercase block mb-1">Total Collection (₹)</span>
+                      <input 
+                         type="number" 
+                         placeholder="0"
+                         value={activeChat?.collectionAmount || ''} 
+                         onChange={(e) => handleAction('update_contact', { collectionAmount: Number(e.target.value) || 0 })}
+                         className="w-full bg-white border border-indigo-100 rounded px-2 py-1 text-[10px] font-bold outline-none"
+                      />
+                   </div>
+                   <div>
+                      <span className="text-[9px] font-bold text-indigo-400 uppercase block mb-1">Pending Collection (₹)</span>
+                      <input 
+                         type="number" 
+                         placeholder="0"
+                         value={activeChat?.pendingCollectionAmount || ''} 
+                         onChange={(e) => handleAction('update_contact', { pendingCollectionAmount: Number(e.target.value) || 0 })}
+                         className="w-full bg-white border border-indigo-100 rounded px-2 py-1 text-[10px] font-bold outline-none"
+                      />
+                   </div>
+                   <div className="flex items-center space-x-2 pt-1">
+                      <input 
+                         type="checkbox" 
+                         checked={activeChat?.isClosed || false} 
+                         onChange={(e) => handleAction('update_contact', { isClosed: e.target.checked })}
+                         className="w-3 h-3 rounded text-indigo-600 border-indigo-300"
+                      />
+                      <span className="text-[10px] font-bold text-indigo-800 uppercase">Mark as Closed</span>
+                   </div>
+                </div>
+             </div>
+          </div>
          <div className="px-6 py-2 pb-5">
             <div className="bg-gradient-to-br from-[#def3ee] to-[#e8f7f4] rounded-xl p-4 border border-teal-100/50 shadow-sm">
               <div className="space-y-4">

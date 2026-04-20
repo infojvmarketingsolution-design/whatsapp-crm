@@ -112,12 +112,13 @@ function Dashboard() {
         const tenantId = localStorage.getItem('tenantId');
         
         // Fetch data in parallel
-        const [contactRes, wabaRes, campRes, tempRes, analysisRes] = await Promise.all([
+        const [contactRes, wabaRes, campRes, tempRes, analysisRes, statsRes] = await Promise.all([
           fetch('/api/chat/contacts', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
           fetch('/api/whatsapp/config', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
           fetch('/api/campaigns', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
           fetch('/api/templates', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
-          fetch('/api/chat/analysis', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } })
+          fetch('/api/chat/analysis', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
+          fetch('/api/chat/stats', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } })
         ]);
 
         if (analysisRes.ok) {
@@ -143,13 +144,19 @@ function Dashboard() {
         let templatesArr = [];
         if (tempRes.ok) templatesArr = await tempRes.json();
 
-        setStats({ 
+        if (statsRes.ok) {
+           const sData = await statsRes.json();
+           setStats(prev => ({ ...prev, ...sData }));
+        }
+
+        setStats(prev => ({ 
+          ...prev,
           campaigns: campaignsArr.length, 
           recentCampaign: campaignsArr[0]?.name || 'No campaigns yet',
           templates: templatesArr.length, 
           contacts: realContacts, 
           chats: realChats 
-        });
+        }));
     } catch (err) {
         console.error('Failed to refresh dashboard stats', err);
     } finally {
@@ -256,13 +263,29 @@ function Dashboard() {
         )}
         <DashboardCard title="Contacts" value={loading && stats.contacts === 0 ? "..." : stats.contacts} subtext={`${stats.contacts} Total contacts`} icon={Users} />
         <DashboardCard title="Open Chats" value={loading && stats.chats === 0 ? "..." : stats.chats} subtext={`${stats.chats} Active conversations`} icon={MessageCircle} />
-        {!isAdminOrSuperAdmin && (
+        {!isAdminOrSuperAdmin && userRole !== 'MANAGER_COUNSELLOUR' && (
            <>
               <DashboardCard title="Qualified" value={loading ? "..." : stats.qualifiedLeads} subtext="AI Qualified" icon={CheckCircle} />
               <DashboardCard title="Priority" value={loading ? "..." : (stats.hotLeads + stats.warmLeads)} subtext="Hot & Warm Leads" icon={History} />
            </>
         )}
       </div>
+
+      {userRole === 'MANAGER_COUNSELLOUR' && (
+        <div className="animate-fade-in-up">
+           <h3 className="text-xs font-black text-slate-400 tracking-widest uppercase mb-4">Counsellor Progress Tracking</h3>
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <DashboardCard title="New Leads" value={loading ? "..." : stats.newLeads} subtext="Pending Initial Contact" icon={PlusCircle} />
+              <DashboardCard title="Open Leads" value={loading ? "..." : stats.openLeads} subtext="Active in Pipeline" icon={MessageCircle} />
+              <DashboardCard title="Total Visit" value={loading ? "..." : stats.totalVisit} subtext="Campus/Office Visits" icon={Building2} />
+              <DashboardCard title="Admission Closed" value={loading ? "..." : stats.totalAdmission} subtext="Successfully Enrolled" icon={CheckCircle} />
+              <DashboardCard title="Pending Admission" value={loading ? "..." : stats.pendingAdmission} subtext="Documentation Stage" icon={PlusCircle} />
+              <DashboardCard title="Lead Closed" value={loading ? "..." : stats.closedLeads} subtext="Won or Lost" icon={X} />
+              <DashboardCard title="Total Collection" value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} subtext="Total Fee Received" icon={Wallet} />
+              <DashboardCard title="Pending Collection" value={loading ? "..." : `₹${stats.pendingCollection?.toLocaleString()}`} subtext="Outstanding Balance" icon={Wallet} />
+           </div>
+        </div>
+      )}
 
       {!isAdminOrSuperAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 mt-6">
