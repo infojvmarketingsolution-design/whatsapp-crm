@@ -230,8 +230,28 @@ class PRDFlowService {
               const qm = qk ? prompts.programMap[qk] : {};
 
               if (!stream) {
-                 opts = Object.keys(qm);
-                 body = "Please select your preferred stream/category:";
+                 const categories = Object.keys(qm);
+                 if (categories.length === 1) {
+                    const autoStream = categories[0];
+                    console.log(`[PRD Flow] ⚡ Auto-selecting single category: ${autoStream}`);
+                    
+                    // Save automatically
+                    await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.selectedStream': autoStream });
+                    contact.flowVariables.selectedStream = autoStream;
+
+                    // Show programs for this auto-selected stream
+                    const sk = Object.keys(qm).find(k => aggressiveNormalize(k) === aggressiveNormalize(autoStream));
+                    const val = sk ? qm[sk] : null;
+                    let progs = [];
+                    if (Array.isArray(val)) progs = val;
+                    else if (val && typeof val === 'object') Object.values(val).forEach(a => Array.isArray(a) && progs.push(...a));
+                    
+                    opts = progs.length > 0 ? progs.slice(0, 10) : ['General Inquiry'];
+                    body = `Great! Please select your preferred program under ${autoStream}:`;
+                 } else {
+                    opts = categories;
+                    body = "Please select your preferred stream/category:";
+                 }
               } else {
                  const sk = Object.keys(qm).find(k => aggressiveNormalize(k) === aggressiveNormalize(stream));
                  const val = sk ? qm[sk] : null;
