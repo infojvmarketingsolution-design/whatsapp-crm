@@ -3,7 +3,18 @@ import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperc
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
 
-export default function Inbox() {
+export default function Inbox({ roleAccess }) {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = (user.role || 'AGENT').toUpperCase();
+  const roleData = roleAccess?.[userRole];
+  const isSuper = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+
+  const canAssign = isSuper || roleData?.allAccess || rolePermissions?.includes('chat_assign_lead');
+  const isSelfOnly = !isSuper && !roleData?.allAccess && rolePermissions?.includes('chat_assign_self_only');
+  // Helper for actual permissions since roleAccess data structure might vary
+  const rolePermissions = roleData?.permissions || [];
+  const canAssignLead = isSuper || roleData?.allAccess || rolePermissions.includes('chat_assign_lead');
+  const assignSelfOnly = !isSuper && !roleData?.allAccess && rolePermissions.includes('chat_assign_self_only');
   const [contacts, setContacts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [noteText, setNoteText] = useState('');
@@ -42,7 +53,7 @@ export default function Inbox() {
   const messagesEndRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const userRole = localStorage.getItem('role') || 'AGENT';
+  // userRole defined at top
   const [agents, setAgents] = useState([]);
 
 
@@ -947,21 +958,26 @@ export default function Inbox() {
                   <div className="pt-2 border-t border-teal-200/50">
                     <div className="flex justify-between items-center text-xs mb-1.5 focus:scale-105 transition-transform">
                        <span className="text-teal-800/70 font-bold tracking-wide uppercase">Assigned To</span>
-                       <ShieldCheck size={12} className={userRole === 'TELECALLER' ? 'text-gray-400' : 'text-teal-600'} />
+                       <ShieldCheck size={12} className={!canAssignLead ? 'text-gray-400' : 'text-teal-600'} />
                     </div>
                     <select 
-                       disabled={userRole === 'TELECALLER'}
+                       disabled={!canAssignLead}
                        value={activeChat?.assignedAgent || ''}
                        onChange={(e) => handleAction('update_contact', { assignedAgent: e.target.value })}
-                       className={`w-full bg-white px-2 py-1.5 rounded border border-teal-100 text-[10px] font-bold tracking-wide uppercase outline-none focus:ring-2 focus:ring-teal-100 transition shadow-sm ${userRole === 'TELECALLER' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-teal-50'}`}
+                       className={`w-full bg-white px-2 py-1.5 rounded border border-teal-100 text-[10px] font-bold tracking-wide uppercase outline-none focus:ring-2 focus:ring-teal-100 transition shadow-sm ${!canAssignLead ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-teal-50'}`}
                     >
                        <option value="">Unassigned</option>
-                       {agents.map(a => (
-                          <option key={a._id} value={a._id}>{a.name} ({a.role})</option>
+                       {agents
+                         .filter(a => !assignSelfOnly || a._id === user._id)
+                         .map(a => (
+                           <option key={a._id} value={a._id}>{a.name} ({a.role})</option>
                        ))}
                     </select>
-                    {userRole === 'TELECALLER' && (
-                       <p className="text-[8px] text-gray-400 mt-1 italic leading-tight">Telecallers cannot reassign leads.</p>
+                    {!canAssignLead && (
+                       <p className="text-[8px] text-gray-400 mt-1 italic leading-tight">Lead assignment is disabled for your role.</p>
+                    )}
+                    {canAssignLead && assignSelfOnly && (
+                       <p className="text-[8px] text-teal-600 mt-1 italic leading-tight">You can only assign leads to yourself.</p>
                     )}
                   </div>
 

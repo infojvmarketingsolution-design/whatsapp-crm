@@ -523,7 +523,7 @@ function AppLayout() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/pipeline" element={<Pipeline />} />
             <Route path="/tasks" element={<Tasks />} />
-            <Route path="/inbox" element={<Inbox />} />
+            <Route path="/inbox" element={<Inbox roleAccess={roleAccess} />} />
             <Route path="/campaigns" element={<Campaigns />} />
             <Route path="/campaigns/create" element={<CreateCampaign />} />
             <Route path="/flows" element={<Flows />} />

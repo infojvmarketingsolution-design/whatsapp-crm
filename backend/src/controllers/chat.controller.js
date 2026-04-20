@@ -1,5 +1,6 @@
 const ContactSchema = require('../models/tenant/Contact');
 const MessageSchema = require('../models/tenant/Message');
+const Settings = require('../models/core/Settings');
 const WhatsAppService = require('../services/whatsapp.service');
 const Client = require('../models/core/Client');
 const mongoose = require('mongoose');
@@ -22,8 +23,18 @@ const getContacts = async (req, res) => {
     const { status, qualification } = req.query;
     const Contact = req.tenantDb.model('Contact', ContactSchema);
     
+    // Check Permissions for Assigned-Only Restriction
+    const settings = await Settings.findOne({ tenantId: req.tenantId });
+    const userRole = (req.user?.role || 'AGENT').toUpperCase();
+    const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
+    
     // Base match for active leads
     const matchStage = { isArchived: { $ne: true } };
+    
+    // Apply "Show Assigned Only" filter
+    if (roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
+      matchStage.assignedAgent = req.user._id.toString();
+    }
     if (status) matchStage.status = status;
     if (qualification) matchStage.qualification = qualification;
 
@@ -297,6 +308,20 @@ const getMessages = async (req, res) => {
   try {
     console.log(`[GET /messages] Request received for contactId: ${req.params.contactId}`);
     const Message = req.tenantDb.model('Message', MessageSchema);
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+
+    // Security Check: Verify Assigned Agent permission
+    const settings = await Settings.findOne({ tenantId: req.tenantId });
+    const userRole = (req.user?.role || 'AGENT').toUpperCase();
+    const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
+
+    if (roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
+       const contact = await Contact.findById(req.params.contactId);
+       if (contact && contact.assignedAgent !== req.user._id.toString()) {
+          return res.status(403).json({ message: 'Access denied: This lead is not assigned to you.' });
+       }
+    }
+
     const messages = await Message.find({ contactId: req.params.contactId }).sort({ timestamp: 1 });
     res.json(messages);
   } catch (error) {
@@ -434,23 +459,33 @@ const getDashboardStats = async (req, res) => {
     const Contact = req.tenantDb.model('Contact', ContactSchema);
     const Campaign = req.tenantDb.model('Campaign', CampaignSchema);
     
-    const totalContacts = await Contact.countDocuments({});
+    // Permission Check for Stats Filtering
+    const settings = await Settings.findOne({ tenantId: req.tenantId });
+    const userRole = (req.user?.role || 'AGENT').toUpperCase();
+    const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
+
+    const baseFilter = {};
+    if (roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
+       baseFilter.assignedAgent = req.user._id.toString();
+    }
+
+    const totalContacts = await Contact.countDocuments(baseFilter);
     
     // Active chats: contacts with activity in the last 24 hours
     const activeThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const activeChats = await Contact.countDocuments({ lastMessageAt: { $gte: activeThreshold } });
+    const activeChats = await Contact.countDocuments({ ...baseFilter, lastMessageAt: { $gte: activeThreshold } });
     
     const totalCampaigns = await Campaign.countDocuments({});
     
     // Qualified Leads: contacts with a qualification field set
-    const qualifiedLeads = await Contact.countDocuments({ qualification: { $exists: true, $ne: null } });
+    const qualifiedLeads = await Contact.countDocuments({ ...baseFilter, qualification: { $exists: true, $ne: null } });
     
     // Waiting for Agent: FOLLOW_UP status
-    const waitingForAgent = await Contact.countDocuments({ status: 'FOLLOW_UP' });
+    const waitingForAgent = await Contact.countDocuments({ ...baseFilter, status: 'FOLLOW_UP' });
     
     // Priority Leads: Hot and Warm
-    const hotLeads = await Contact.countDocuments({ heatLevel: 'Hot' });
-    const warmLeads = await Contact.countDocuments({ heatLevel: 'Warm' });
+    const hotLeads = await Contact.countDocuments({ ...baseFilter, heatLevel: 'Hot' });
+    const warmLeads = await Contact.countDocuments({ ...baseFilter, heatLevel: 'Warm' });
     
     res.json({
       leads: totalContacts,

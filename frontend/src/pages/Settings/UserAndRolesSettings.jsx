@@ -47,6 +47,16 @@ export default function UserAndRolesSettings() {
       id: 'whatsapp', name: 'WhatsApp API', icon: MessageCircle 
     },
     { 
+      id: 'chat', 
+      name: 'Chat (Inbox)', 
+      icon: MessageSquare,
+      subPermissions: [
+        { id: 'chat_show_assigned_only', name: 'Show Assigned Leads Only', desc: 'Agent only sees leads explicitly assigned to them' },
+        { id: 'chat_assign_lead', name: 'Assign Lead Permission', desc: 'Allow user to change the assigned agent' },
+        { id: 'chat_assign_self_only', name: 'Restrict to Self-Assignment', desc: 'User can only assign leads to themselves' }
+      ]
+    },
+    { 
       id: 'crm', 
       name: 'CRM Settings', 
       icon: Users,
