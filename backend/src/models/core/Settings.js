@@ -118,10 +118,16 @@ const SettingsSchema = new mongoose.Schema({
     type: Map,
     of: RoleAccessSchema,
     default: () => ({
-      'ADMIN': { allAccess: true },
-      'TELECALLER': { allAccess: false },
-      'MANAGER_COUNSELLOUR': { allAccess: false },
-      'AGENT': { allAccess: false }
+      'ADMIN': { 
+        allAccess: true,
+        permissions: [
+          'dashboard', 'tasks', 'pipeline', 'chat', 'contacts', 'campaigns', 'ai-chatbot', 'flows', 'templates', 'agents', 'web-widgets', 'api', 'settings',
+          'workspace', 'whatsapp', 'crm', 'users', 'billing', 'integrations', 'automations', 'security', 'notifications', 'customization'
+        ]
+      },
+      'TELECALLER': { allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts'] },
+      'MANAGER_COUNSELLOUR': { allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts', 'campaigns'] },
+      'AGENT': { allAccess: false, permissions: ['dashboard', 'tasks', 'chat', 'contacts'] }
     })
   }
 }, { timestamps: true });

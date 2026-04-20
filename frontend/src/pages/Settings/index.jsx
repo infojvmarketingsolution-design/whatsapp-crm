@@ -41,9 +41,12 @@ const PlaceholderSettings = ({ title, icon: Icon, description }) => (
   </div>
 );
 
-export default function Settings() {
+export default function Settings({ roleAccess }) {
   const [activeTab, setActiveTab] = useState('workspace');
   const [searchQuery, setSearchQuery] = useState('');
+  
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = user.role || 'AGENT';
 
   const menuItems = [
     { id: 'workspace', name: 'Workspace', icon: Building2, desc: 'Company details, timezone, language' },
@@ -58,7 +61,18 @@ export default function Settings() {
     { id: 'customization', name: 'Customization', icon: Palette, desc: 'Branding, colors, login page' },
   ];
 
-  const filteredItems = menuItems.filter(item => 
+  const allowedMenuItems = menuItems.filter(item => {
+    if (roleAccess && roleAccess[userRole]) {
+       const roleData = roleAccess[userRole];
+       if (roleData.allAccess) return true;
+       if (roleData.permissions) {
+          return roleData.permissions.includes(item.id);
+       }
+    }
+    return true; // Default show
+  });
+
+  const filteredItems = allowedMenuItems.filter(item => 
     item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
     item.desc.toLowerCase().includes(searchQuery.toLowerCase())
   );

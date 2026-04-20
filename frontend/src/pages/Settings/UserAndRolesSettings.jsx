@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { UserCog, UserPlus, MoreVertical, Shield, ShieldCheck, Check, Save, ShieldAlert } from 'lucide-react';
+import { 
+  UserCog, UserPlus, MoreVertical, Shield, ShieldCheck, Check, Save, ShieldAlert,
+  LayoutDashboard, MessageSquare, Megaphone, Users, FileText, Bot, UserPlus as AgentIcon, 
+  Globe, Code, Settings, KanbanSquare, CheckSquare, Building2, MessageCircle, CreditCard, 
+  Link as LinkIcon, ShieldCheck as SecurityIcon, Bell, Palette
+} from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
 export default function UserAndRolesSettings() {
@@ -15,6 +20,35 @@ export default function UserAndRolesSettings() {
     { id: 'TELECALLER', name: 'Telecaller', icon: Shield },
     { id: 'MANAGER_COUNSELLOUR', name: 'Manager/Counsellour', icon: Shield },
     { id: 'AGENT', name: 'Standard Agent', icon: Shield },
+  ];
+
+  const MODULE_PERMISSIONS = [
+    { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
+    { id: 'tasks', name: 'Tasks', icon: CheckSquare },
+    { id: 'pipeline', name: 'Pipeline', icon: KanbanSquare },
+    { id: 'chat', name: 'Chat', icon: MessageSquare },
+    { id: 'contacts', name: 'Contacts', icon: Users },
+    { id: 'campaigns', name: 'Campaigns', icon: Megaphone },
+    { id: 'ai-chatbot', name: 'AI Chatbot', icon: Bot },
+    { id: 'flows', name: 'Flows', icon: Bot },
+    { id: 'templates', name: 'Templates', icon: FileText },
+    { id: 'agents', name: 'Agents', icon: AgentIcon },
+    { id: 'web-widgets', name: 'Web Widget', icon: Globe },
+    { id: 'api', name: 'API', icon: Code },
+    { id: 'settings', name: 'Settings (Parent)', icon: Settings },
+  ];
+
+  const SETTING_PERMISSIONS = [
+    { id: 'workspace', name: 'Workspace', icon: Building2 },
+    { id: 'whatsapp', name: 'WhatsApp API', icon: MessageCircle },
+    { id: 'crm', name: 'CRM Settings', icon: Users },
+    { id: 'users', name: 'User & Roles', icon: UserCog },
+    { id: 'billing', name: 'Billing & Plan', icon: CreditCard },
+    { id: 'integrations', name: 'Integrations', icon: LinkIcon },
+    { id: 'automations', name: 'Automations', icon: Bot },
+    { id: 'security', name: 'Data & Security', icon: SecurityIcon },
+    { id: 'notifications', name: 'Notifications', icon: Bell },
+    { id: 'customization', name: 'Customization', icon: Palette },
   ];
 
   useEffect(() => {
@@ -46,13 +80,7 @@ export default function UserAndRolesSettings() {
         if (settingsData.roleAccess) {
           setRoleSettings(settingsData.roleAccess);
         } else {
-          // Default fallbacks if not present
-          setRoleSettings({
-            'ADMIN': { allAccess: true },
-            'TELECALLER': { allAccess: false },
-            'MANAGER_COUNSELLOUR': { allAccess: false },
-            'AGENT': { allAccess: false }
-          });
+          // Fallback handled by Backend default
         }
       }
     } catch (err) {
@@ -91,13 +119,53 @@ export default function UserAndRolesSettings() {
   };
 
   const toggleAllAccess = (roleId) => {
+    const isNowAllAccess = !roleSettings[roleId]?.allAccess;
+    let newPermissions = roleSettings[roleId]?.permissions || [];
+    
+    if (isNowAllAccess) {
+      // Add all possible keys
+      const allKeys = [
+        ...MODULE_PERMISSIONS.map(p => p.id),
+        ...SETTING_PERMISSIONS.map(p => p.id)
+      ];
+      newPermissions = Array.from(new Set([...newPermissions, ...allKeys]));
+    }
+
     setRoleSettings(prev => ({
       ...prev,
       [roleId]: {
         ...prev[roleId],
-        allAccess: !prev[roleId]?.allAccess
+        allAccess: isNowAllAccess,
+        permissions: newPermissions
       }
     }));
+  };
+
+  const togglePermission = (roleId, permissionId) => {
+    if (roleSettings[roleId]?.allAccess) return; // Cant toggle if allAccess is ON
+
+    setRoleSettings(prev => {
+      const currentRoleData = prev[roleId] || { allAccess: false, permissions: [] };
+      const currentPermissions = currentRoleData.permissions || [];
+      const isPresent = currentPermissions.includes(permissionId);
+      
+      const newPermissions = isPresent 
+        ? currentPermissions.filter(p => p !== permissionId)
+        : [...currentPermissions, permissionId];
+      
+      return {
+        ...prev,
+        [roleId]: {
+          ...currentRoleData,
+          permissions: newPermissions
+        }
+      };
+    });
+  };
+
+  const isPermissionEnabled = (roleId, permissionId) => {
+    if (roleSettings[roleId]?.allAccess) return true;
+    return roleSettings[roleId]?.permissions?.includes(permissionId);
   };
 
   if (loading) return <div className="animate-pulse space-y-4"><div className="h-64 bg-gray-200 rounded-xl"></div></div>;
@@ -122,6 +190,7 @@ export default function UserAndRolesSettings() {
 
       {activeTab === 'users' ? (
         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 overflow-hidden">
+          {/* Existing Team Members Table... (remains the same) */}
           <div className="flex justify-between items-center mb-6">
              <h2 className="text-lg font-bold text-gray-900 flex items-center">
                <UserCog className="mr-2 text-teal-600" size={20} />
@@ -174,9 +243,9 @@ export default function UserAndRolesSettings() {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {/* Role Access List (Sidebar style as per image) */}
-          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          {/* Role Access List */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 h-fit">
             <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 px-2">Role Access</h3>
             <div className="space-y-2">
               {roles.map(role => (
@@ -200,7 +269,7 @@ export default function UserAndRolesSettings() {
           </div>
 
           {/* Permissions Area */}
-          <div className="md:col-span-2 space-y-6">
+          <div className="md:col-span-3 space-y-6">
             <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
               <div className="flex justify-between items-center mb-8 pb-4 border-b border-gray-50">
                  <div>
@@ -208,7 +277,7 @@ export default function UserAndRolesSettings() {
                       <ShieldCheck className="mr-2 text-teal-600" size={24} />
                       {roles.find(r => r.id === selectedRole)?.name} Permissions
                     </h2>
-                    <p className="text-sm text-gray-500 mt-1">Configure what this designation can access across the workspace.</p>
+                    <p className="text-sm text-gray-500 mt-1">Configure what this designation can access.</p>
                  </div>
                  <button 
                   onClick={handleSaveRoles}
@@ -220,7 +289,7 @@ export default function UserAndRolesSettings() {
                  </button>
               </div>
 
-              <div className="space-y-6">
+              <div className="space-y-8">
                  {/* All Access Toggle */}
                  <div className={`p-5 rounded-2xl border-2 transition-all flex items-center justify-between ${
                    roleSettings[selectedRole]?.allAccess 
@@ -248,17 +317,78 @@ export default function UserAndRolesSettings() {
                  {selectedRole === 'ADMIN' && (
                     <div className="flex items-center space-x-3 p-4 bg-purple-50 text-purple-700 rounded-xl border border-purple-100 text-sm font-medium">
                        <ShieldAlert size={18} className="shrink-0" />
-                       <p>Administrators always have full access to all modules and configurations by default.</p>
+                       <p>Administrators always have full access by default.</p>
                     </div>
                  )}
 
-                 {/* Information Message if All Access is ON */}
-                 {roleSettings[selectedRole]?.allAccess && selectedRole !== 'ADMIN' && (
-                    <div className="flex items-start space-x-3 p-4 bg-teal-50 text-teal-700 rounded-xl border border-teal-100 text-sm font-medium animate-in fade-in slide-in-from-top-2">
-                       <Check size={18} className="shrink-0 mt-0.5" />
-                       <p>This role currently has <strong>full bypass</strong> on all feature restrictions. They can view, edit, and delete any data in this workspace.</p>
+                 {/* Granular Permissions */}
+                 <div className="space-y-8 opacity-100 transition-opacity">
+                    {/* Main Modules Group */}
+                    <div>
+                       <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center">
+                          <LayoutDashboard size={16} className="mr-2" />
+                          Application Modules
+                       </h3>
+                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {MODULE_PERMISSIONS.map(p => (
+                             <label 
+                              key={p.id}
+                              className={`flex items-center p-4 rounded-xl border transition-all cursor-pointer ${
+                                isPermissionEnabled(selectedRole, p.id)
+                                ? 'border-teal-200 bg-teal-50/50 text-teal-900 shadow-sm'
+                                : 'border-gray-100 bg-white text-gray-500 grayscale opacity-60 hover:grayscale-0 hover:opacity-100'
+                              } ${roleSettings[selectedRole]?.allAccess ? 'cursor-default' : 'hover:border-teal-300'}`}
+                             >
+                                <input 
+                                  type="checkbox"
+                                  className="hidden"
+                                  checked={isPermissionEnabled(selectedRole, p.id)}
+                                  onChange={() => togglePermission(selectedRole, p.id)}
+                                  disabled={roleSettings[selectedRole]?.allAccess}
+                                />
+                                <div className={`p-2 rounded-lg mr-3 ${isPermissionEnabled(selectedRole, p.id) ? 'bg-teal-500 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                                   <p.icon size={18} />
+                                </div>
+                                <span className="text-sm font-bold">{p.name}</span>
+                                {isPermissionEnabled(selectedRole, p.id) && <Check size={16} className="ml-auto text-teal-600" />}
+                             </label>
+                          ))}
+                       </div>
                     </div>
-                 )}
+
+                    {/* Settings Group */}
+                    <div>
+                       <h3 className="text-sm font-black text-gray-400 uppercase tracking-widest mb-4 flex items-center">
+                          <Settings size={16} className="mr-2" />
+                          Settings Configuration
+                       </h3>
+                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {SETTING_PERMISSIONS.map(p => (
+                             <label 
+                              key={p.id}
+                              className={`flex items-center p-4 rounded-xl border transition-all cursor-pointer ${
+                                isPermissionEnabled(selectedRole, p.id)
+                                ? 'border-blue-200 bg-blue-50/50 text-blue-900 shadow-sm'
+                                : 'border-gray-100 bg-white text-gray-500 grayscale opacity-60 hover:grayscale-0 hover:opacity-100'
+                              } ${roleSettings[selectedRole]?.allAccess ? 'cursor-default' : 'hover:border-blue-300'}`}
+                             >
+                                <input 
+                                  type="checkbox"
+                                  className="hidden"
+                                  checked={isPermissionEnabled(selectedRole, p.id)}
+                                  onChange={() => togglePermission(selectedRole, p.id)}
+                                  disabled={roleSettings[selectedRole]?.allAccess}
+                                />
+                                <div className={`p-2 rounded-lg mr-3 ${isPermissionEnabled(selectedRole, p.id) ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-400'}`}>
+                                   <p.icon size={18} />
+                                </div>
+                                <span className="text-sm font-bold">{p.name}</span>
+                                {isPermissionEnabled(selectedRole, p.id) && <Check size={16} className="ml-auto text-blue-600" />}
+                             </label>
+                          ))}
+                       </div>
+                    </div>
+                 </div>
               </div>
             </div>
           </div>

@@ -371,6 +371,7 @@ function AppLayout() {
   const [themeColor, setThemeColor] = React.useState('#10b981'); // Default Teal
   const [isMaintenance, setIsMaintenance] = React.useState(false);
   const [whatsappConfig, setWhatsappConfig] = React.useState(null);
+  const [roleAccess, setRoleAccess] = React.useState(null);
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = user.role || 'AGENT';
@@ -418,12 +419,15 @@ function AppLayout() {
             const data = await res.json();
             const fetchedColor = data.customization?.themeColor;
             const locallySaved = localStorage.getItem('themeColor');
-            // Prevent the backend's default 'offline' teal from overwriting the user's locally preferred color
             if (fetchedColor && fetchedColor !== '#10b981') {
                setThemeColor(fetchedColor);
                localStorage.setItem('themeColor', fetchedColor);
             } else if (locallySaved && fetchedColor === '#10b981') {
                setThemeColor(locallySaved);
+            }
+
+            if (data.roleAccess) {
+               setRoleAccess(data.roleAccess);
             }
          }
        } catch (e) {}
@@ -510,7 +514,7 @@ function AppLayout() {
     <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden`}>
       <Toaster position="top-right" reverseOrder={false} />
       {!isAuthPage && <GlobalSuspensionTimer />}
-      {!isAuthPage && (userRole === 'SUPER_ADMIN' ? <AdminSidebar onLogout={handleLogout} /> : <Sidebar whatsappConfig={whatsappConfig} />)}
+      {!isAuthPage && (userRole === 'SUPER_ADMIN' ? <AdminSidebar onLogout={handleLogout} /> : <Sidebar whatsappConfig={whatsappConfig} roleAccess={roleAccess} />)}
       <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-hidden">
         <div className="flex-1 overflow-y-auto custom-scrollbar">
           <Routes>
@@ -529,7 +533,7 @@ function AppLayout() {
             <Route path="/contacts" element={<Contacts />} />
             <Route path="/templates" element={<Templates />} />
             <Route path="/api" element={<ApiSetup />} />
-            <Route path="/settings" element={<Settings />} />
+            <Route path="/settings" element={<Settings roleAccess={roleAccess} />} />
             <Route path="/ai-chatbot" element={<AIChatbot />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
