@@ -34,7 +34,7 @@ const getContacts = async (req, res) => {
     
     // Apply "Show Assigned Only" filter
     if (roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
-      matchStage.assignedAgent = req.user._id.toString();
+      matchStage.assignedAgent = new mongoose.Types.ObjectId(req.user._id);
     }
     if (status) matchStage.status = status;
     if (qualification) matchStage.qualification = qualification;
@@ -76,7 +76,7 @@ const getContacts = async (req, res) => {
           state: 1,
           timeline: 1,
           createdAt: 1,
-          assignedAgent: 1,
+          assignedAgent: { $toString: '$assignedAgent' },
           pipelineStage: 1,
           estimatedValue: 1,
           selectedProgram: 1,
@@ -172,21 +172,44 @@ const performContactAction = async (req, res) => {
         if (payload.preferredCallTime !== undefined) contact.preferredCallTime = payload.preferredCallTime;
 
         if (payload.assignedAgent !== undefined) {
-           const newAgent = payload.assignedAgent && payload.assignedAgent !== "" ? payload.assignedAgent : null;
-           if (newAgent?.toString() !== contact.assignedAgent?.toString()) {
-              contact.assignedAgent = newAgent;
+           // ENFORCE PERMISSIONS
+           const settings = await Settings.findOne({ tenantId: req.tenantId });
+           const userRole = (req.user?.role || 'AGENT').toUpperCase();
+           const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
+           const isSuper = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+           
+           const rolePermissions = roleAccess?.permissions || [];
+           const canAssignLead = isSuper || roleAccess?.allAccess || rolePermissions.includes('chat_assign_lead');
+           const assignSelfOnly = !isSuper && !roleAccess?.allAccess && rolePermissions.includes('chat_assign_self_only');
+
+           if (!canAssignLead && !assignSelfOnly) {
+              // Not allowed to assign at all - silently skip or error? 
+              // We'll skip to match frontend UI behavior where they shouldn't even see the dropdown.
+           } else {
+              const newAgent = payload.assignedAgent && payload.assignedAgent !== "" ? payload.assignedAgent : null;
               
-              let agentName = 'Unassigned';
-              if (newAgent) {
-                 const agent = await User.findById(newAgent);
-                 agentName = agent ? agent.name : 'Unknown Agent';
+              // If self-only, ensure they are only assigning to themselves (or unassigning if allowed, but usually self-only means only themselves)
+              if (assignSelfOnly && newAgent && newAgent.toString() !== req.user._id.toString()) {
+                 return res.status(0).json({ error: 'You can only assign leads to yourself.' });
               }
-              
-              contact.timeline.push({ 
-                 eventType: 'AGENT_ASSIGNED', 
-                 description: newAgent ? `Assigned to ${agentName}` : 'Lead unassigned', 
-                 timestamp: new Date() 
-              });
+
+              if (newAgent?.toString() !== contact.assignedAgent?.toString()) {
+                 contact.assignedAgent = newAgent;
+                 
+                 let agentName = 'Unassigned';
+                 if (newAgent) {
+                    const agent = await User.findById(newAgent);
+                    agentName = agent ? agent.name : 'Unknown Agent';
+                 }
+                 
+                 contact.timeline.push({ 
+                    eventType: 'AGENT_ASSIGNED', 
+                    description: newAgent ? `Assigned to ${agentName}` : 'Lead unassigned', 
+                    timestamp: new Date() 
+                 });
+                 
+                 contact.markModified('assignedAgent');
+              }
            }
         }
 

@@ -9,9 +9,6 @@ export default function Inbox({ roleAccess }) {
   const roleData = roleAccess?.[userRole];
   const isSuper = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
-  const canAssign = isSuper || roleData?.allAccess || rolePermissions?.includes('chat_assign_lead');
-  const isSelfOnly = !isSuper && !roleData?.allAccess && rolePermissions?.includes('chat_assign_self_only');
-  // Helper for actual permissions since roleAccess data structure might vary
   const rolePermissions = roleData?.permissions || [];
   const canAssignLead = isSuper || roleData?.allAccess || rolePermissions.includes('chat_assign_lead');
   const assignSelfOnly = !isSuper && !roleData?.allAccess && rolePermissions.includes('chat_assign_self_only');
