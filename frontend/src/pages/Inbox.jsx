@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2 } from 'lucide-react';
+import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2, Megaphone } from 'lucide-react';
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
 
