@@ -384,6 +384,28 @@ function AppLayout() {
   };
 
   React.useEffect(() => {
+    // 1. Initialize Facebook SDK dynamically
+    const appId = import.meta.env.VITE_FACEBOOK_APP_ID;
+    if (appId) {
+      window.fbAsyncInit = function() {
+        window.FB.init({
+          appId: appId,
+          cookie: true,
+          xfbml: true,
+          version: 'v19.0'
+        });
+        window.FB.AppEvents.logPageView();
+      };
+
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "https://connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+    }
+
     const fetchGlobalTheme = async () => {
        try {
          const token = localStorage.getItem('token');
