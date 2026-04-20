@@ -329,7 +329,7 @@ const performContactAction = async (req, res) => {
     }
 
     await contact.save();
-    res.json({ success: true, contact });
+    req.app.get("io")?.to(req.tenantId).emit("contact_updated", { contactId: contact._id, contact: contact.toObject() }); res.json({ success: true, contact: contact.toObject() });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

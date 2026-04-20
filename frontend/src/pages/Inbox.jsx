@@ -294,8 +294,35 @@ export default function Inbox({ roleAccess }) {
       }
     });
 
+    socket.on('contact_updated', (data) => {
+      const { contactId, contact } = data;
+      setContacts(prev => {
+         const showAssignedOnly = roleData?.permissions?.includes('chat_show_assigned_only');
+         const isAssignedToMe = contact.assignedAgent?.toString() === user._id?.toString();
+         
+         // If restricted to assigned leads and lead is no longer assigned to me, remove from list
+         if (showAssignedOnly && !isAssignedToMe && !isSuper) {
+            return prev.filter(c => c._id !== contactId);
+          }
+          
+          const exists = prev.find(c => c._id === contactId);
+          if (exists) {
+             return prev.map(c => c._id === contactId ? { ...c, ...contact } : c);
+          } else if (isAssignedToMe || !showAssignedOnly || isSuper) {
+             // If it's a new assignment for me, add it to the top
+             return [{ ...contact, role: contact.source || 'WhatsApp Chat' }, ...prev];
+          }
+          return prev;
+       });
+
+       // Also update active chat if matches
+       if (activeChatRef.current && activeChatRef.current._id === contactId) {
+          setActiveChat(prev => ({ ...prev, ...contact }));
+       }
+    });
+
     return () => socket.disconnect();
-  }, []);
+  }, [roleAccess, user._id, isSuper]);
 
   // Fetch Inbox Contacts from Database
   useEffect(() => {
