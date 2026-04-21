@@ -143,33 +143,33 @@ export default function Login() {
                       </Field>
                     )}
                     
-                    <Field label="WHATSAPP API NUMBER" icon={<Smartphone className="w-4 h-4" />}>
-                      <input type="text" value={apiNumber} onChange={e => setApiNumber(e.target.value)} required placeholder="919904XXXXXX" className="field-input" />
-                    </Field>
-                    
-                    <Field label="LOGIN CONTACT NUMBER" icon={<User className="w-4 h-4" />}>
-                      <input type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="Email or Mobile" className="field-input" />
-                    </Field>
-
-                    {usePassword || isRegister ? (
-                      <Field label="PASSWORD" icon={<Lock className="w-4 h-4" />}>
-                        <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" className="field-input" />
-                      </Field>
+                    {usePassword ? (
+                      <>
+                        <Field label="EMAIL ID" icon={<Mail className="w-4 h-4" />}>
+                          <input type="email" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="admin@domain.com" className="field-input" />
+                        </Field>
+                        <Field label="PASSWORD" icon={<Lock className="w-4 h-4" />}>
+                          <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" className="field-input" />
+                        </Field>
+                      </>
                     ) : (
-                      <div className="pt-2 space-y-3">
-                        <label className="text-[11px] font-black tracking-[0.1em] text-slate-400 uppercase ml-1">OTP DELIVERY VIA</label>
-                        <div className="grid grid-cols-3 gap-3">
-                          {deliveryOptions.map(opt => (
-                            <button
-                              key={opt.id} type="button" onClick={() => setDeliveryMethod(opt.id)}
-                              className={`flex flex-col items-center justify-center p-3 rounded-2xl border-2 transition-all ${deliveryMethod === opt.id ? 'border-teal-500 bg-teal-50/50' : 'border-slate-100 bg-white'}`}
-                            >
-                              <opt.icon className={`w-6 h-6 mb-1 ${opt.color}`} />
-                              <span className="text-[9px] font-bold text-slate-500 uppercase">{opt.label}</span>
-                            </button>
-                          ))}
+                      <>
+                        <Field label="WHATSAPP API NUMBER" icon={<Smartphone className="w-4 h-4" />}>
+                          <input type="text" value={apiNumber} onChange={e => setApiNumber(e.target.value)} required placeholder="919904XXXXXX" className="field-input" />
+                        </Field>
+                        
+                        <Field label="LOGIN CONTACT NUMBER" icon={<User className="w-4 h-4" />}>
+                          <input type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="User Email or Mobile" className="field-input" />
+                        </Field>
+
+                        <div className="pt-2">
+                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center mb-4 italic">Code will be sent to your Secondary WhatsApp</p>
+                          <div className="hidden">
+                             {/* Hidden delivery selection, defaulting to WhatsApp */}
+                             <input type="hidden" value="WHATSAPP" />
+                          </div>
                         </div>
-                      </div>
+                      </>
                     )}
                   </div>
                 </>
