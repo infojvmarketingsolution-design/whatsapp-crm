@@ -96,7 +96,15 @@ const getContacts = async (req, res) => {
           nextFollowUp: 1,
           lastMessageAt: { $ifNull: ['$lastMsgDoc.timestamp', '$updatedAt'] },
           lastMessage: { $ifNull: ['$lastMsgDoc.content', ''] },
-          lastMessageType: { $ifNull: ['$lastMsgDoc.type', 'text'] }
+          lastMessageType: { $ifNull: ['$lastMsgDoc.type', 'text'] },
+          visitStatus: 1,
+          admissionStatus: 1,
+          collectionAmount: 1,
+          pendingCollectionAmount: 1,
+          isClosed: 1,
+          assignedCounsellor: 1,
+          meetingType: 1,
+          meetingRemark: 1
         }
       },
       { $sort: { lastMessageAt: -1 } }
