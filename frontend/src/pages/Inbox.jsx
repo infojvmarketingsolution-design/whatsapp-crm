@@ -990,75 +990,53 @@ export default function Inbox({ roleAccess }) {
             )}
             
             {showFollowupModal && (
-                <div className="mt-4 bg-emerald-50/80 backdrop-blur-md p-5 rounded-2xl border border-emerald-200/50 animate-fade-in relative shadow-xl overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/20 transition-all duration-700"></div>
-                  <h4 className="text-[11px] font-black text-emerald-900 mb-4 tracking-[0.2em] uppercase flex items-center"><Clock size={14} className="mr-2 text-emerald-600"/> Set Follow-up</h4>
+                <div className="mt-3 bg-blue-50 p-4 rounded-xl border border-blue-200 animate-fade-in relative shadow-sm">
+                  <h4 className="text-xs font-bold text-blue-900 mb-3 tracking-wide flex items-center"><Clock size={14} className="mr-1.5"/> Follow Up</h4>
                   
-                  <label className="text-[10px] font-bold text-emerald-800 mb-1 block">Subject</label>
                   <input 
                      type="text" 
                      value={followupHeading} 
                      onChange={e => setFollowupHeading(e.target.value)} 
-                     placeholder="E.g., Call to discuss admission..." 
-                     className="w-full mb-4 bg-white border border-emerald-100/80 rounded-xl p-2.5 text-xs text-gray-700 font-bold focus:ring-2 focus:ring-emerald-200 outline-none transition-all placeholder-emerald-300" 
+                     placeholder="Follow Up heading..." 
+                     className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" 
                   />
                   
-                  <label className="text-[10px] font-bold text-emerald-800 mb-1 block">Follow-up Type</label>
-                  <div className="grid grid-cols-3 gap-2 mb-4">
-                     {[
-                        { id: 'Call', icon: <Phone size={14}/> },
-                        { id: 'Meeting', icon: <Video size={14}/> },
-                        { id: 'Update', icon: <FileText size={14}/> }
-                     ].map(type => (
-                        <button 
-                           key={type.id}
-                           onClick={() => setFollowupType(type.id)}
-                           className={`flex flex-col items-center justify-center py-2.5 rounded-xl border-2 transition-all duration-300 ${
-                              followupType === type.id 
-                              ? 'bg-white border-emerald-400 shadow-md scale-[1.02] text-emerald-700' 
-                              : 'bg-white/50 border-transparent text-emerald-500 hover:border-emerald-200 hover:bg-white'
-                           }`}
-                        >
-                           <div className="mb-1">{type.icon}</div>
-                           <span className="text-[9px] font-black uppercase tracking-wider">{type.id}</span>
-                        </button>
-                     ))}
-                  </div>
+                  <select 
+                     value={followupType} 
+                     onChange={e => setFollowupType(e.target.value)} 
+                     className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300"
+                  >
+                     <option value="Call">Call</option>
+                     <option value="Meeting">Meeting</option>
+                     <option value="Update">Updates</option>
+                  </select>
 
                   {followupType === 'Meeting' && (
-                     <div className="flex bg-white/50 p-1 rounded-xl mb-4 border border-emerald-100">
-                        {['Office Visit', 'Campus Visit'].map(visit => (
-                           <button 
-                              key={visit}
-                              onClick={() => setFollowupVisitType(visit)}
-                              className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
-                                 followupVisitType === visit 
-                                 ? 'bg-emerald-500 text-white shadow-md' 
-                                 : 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50'
-                              }`}
-                           >
-                              {visit}
-                           </button>
-                        ))}
-                     </div>
+                     <select 
+                        value={followupVisitType} 
+                        onChange={e => setFollowupVisitType(e.target.value)} 
+                        className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300"
+                     >
+                        <option value="Online">Online</option>
+                        <option value="Campus Visit">Campus Visit</option>
+                        <option value="Office Visit">Office Visit</option>
+                     </select>
                   )}
                     
-                  <label className="text-[10px] font-bold text-emerald-800 mb-1 block">Date & Time</label>
-                  <div className="flex space-x-2 mb-4">
-                     <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)} className="w-1/2 bg-white border border-emerald-100/80 rounded-xl p-2.5 text-xs text-gray-700 font-bold outline-none ring-2 ring-transparent focus:ring-emerald-200 transition-all" />
-                     <input type="time" value={followupTime} onChange={e => setFollowupTime(e.target.value)} className="w-1/2 bg-white border border-emerald-100/80 rounded-xl p-2.5 text-xs text-gray-700 font-bold outline-none ring-2 ring-transparent focus:ring-emerald-200 transition-all" />
+                  <div className="flex space-x-2 mb-2">
+                     <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)} className="w-1/2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
+                     <input type="time" value={followupTime} onChange={e => setFollowupTime(e.target.value)} className="w-1/2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
                   </div>
 
-                  <label className="text-[10px] font-bold text-emerald-800 mb-1 block">Notes & Expectations</label>
                   <textarea 
                      value={followupDescription} 
                      onChange={e => setFollowupDescription(e.target.value)} 
-                     placeholder="What needs to be discussed?..." 
-                     rows="3" 
-                     className="w-full bg-white border border-emerald-100/80 rounded-xl p-3 text-xs text-gray-700 font-bold outline-none resize-none ring-2 ring-transparent focus:ring-emerald-200 transition-all placeholder-emerald-300"
+                     placeholder="Description..." 
+                     rows="2" 
+                     className="w-full bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none resize-none focus:border-blue-300"
                   ></textarea>
 
-                  <div className="flex justify-end mt-4">
+                  <div className="flex justify-end mt-2">
                      <button 
                        onClick={() => handleAction('add_followup', { 
                          title: `[${followupType}${followupType === 'Meeting' ? `: ${followupVisitType}` : ''}] ${followupHeading}`, 
@@ -1066,9 +1044,9 @@ export default function Inbox({ roleAccess }) {
                          description: followupDescription,
                          metadata: { visitType: followupType === 'Meeting' ? followupVisitType : null }
                        })} 
-                       className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-wider px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 active:scale-95 transition-all"
+                       className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-4 py-1.5 rounded inline-block transition-colors"
                      >
-                        Confirm Follow-up
+                        Confirm Follow Up
                      </button>
                   </div>
                 </div>
