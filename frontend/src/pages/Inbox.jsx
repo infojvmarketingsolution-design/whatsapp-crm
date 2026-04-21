@@ -37,6 +37,7 @@ export default function Inbox({ roleAccess }) {
   const [followupTime, setFollowupTime] = useState('');
   const [followupDescription, setFollowupDescription] = useState('');
   const [followupVisitType, setFollowupVisitType] = useState('Office Visit');
+  const [followupTemplate, setFollowupTemplate] = useState('None');
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const PREDEFINED_TAGS = ['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'];
@@ -136,9 +137,12 @@ export default function Inbox({ roleAccess }) {
           setShowMeetingModal(false);
           setShowFollowupModal(false);
           setFollowupHeading('');
+          setFollowupType('Call');
           setFollowupDescription('');
           setFollowupDate('');
           setFollowupTime('');
+          setFollowupVisitType('Office Visit');
+          setFollowupTemplate('None');
           setCallCount(1);
           setCallDate('');
           setCallTime('');
@@ -1033,17 +1037,78 @@ export default function Inbox({ roleAccess }) {
                      onChange={e => setFollowupDescription(e.target.value)} 
                      placeholder="Description..." 
                      rows="2" 
-                     className="w-full bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none resize-none focus:border-blue-300"
+                     className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none resize-none focus:border-blue-300"
                   ></textarea>
+
+                  <select 
+                     value={followupTemplate} 
+                     onChange={e => setFollowupTemplate(e.target.value)} 
+                     className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300"
+                  >
+                     <option value="None">No Automated Message</option>
+                     <option value="General">General Follow-Up</option>
+                     <option value="Document">Document Submission Follow-Up</option>
+                     <option value="Decision">Pending Decision Follow-Up</option>
+                     <option value="Details">After Sharing Details</option>
+                     <option value="Strong">Strong Conversion</option>
+                     <option value="CallBack">Call Back Follow-Up</option>
+                     <option value="Final">Final Gentle Reminder</option>
+                  </select>
 
                   <div className="flex justify-end mt-2">
                      <button 
-                       onClick={() => handleAction('add_followup', { 
-                         title: `[${followupType}${followupType === 'Meeting' ? `: ${followupVisitType}` : ''}] ${followupHeading}`, 
-                         dateTime: new Date(`${followupDate}T${followupTime || '09:00'}`).toISOString(),
-                         description: followupDescription,
-                         metadata: { visitType: followupType === 'Meeting' ? followupVisitType : null }
-                       })} 
+                       onClick={async () => {
+                           let followupMsg = '';
+                           const studentName = activeChat?.name || 'Student';
+                           const counselorName = user?.name || 'Counselor';
+                           const courseName = activeChat?.metadata?.course || 'your desired course';
+                           
+                           let formattedNextCall = '';
+                           if (followupDate && followupTime) {
+                               const d = new Date(`${followupDate}T${followupTime}`);
+                               const fDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                               const fTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+                               formattedNextCall = `${fDate} at ${fTime}`;
+                           }
+
+                           if (followupTemplate === 'General') {
+                               followupMsg = `🎓 *Admission Follow-Up*\n\nHello ${studentName} 👋\n\nIt was great speaking with you regarding your admission into ${courseName}!\n\nJust checking in to see if you have any questions or need further guidance. 😊\n`;
+                               if (formattedNextCall) followupMsg += `\n📅 *Next Step:* ${formattedNextCall}\n`;
+                               followupMsg += `\nWe’re here to help you at every step! 🚀\n\nBest Regards,\n*${counselorName}*`;
+                           } else if (followupTemplate === 'Document') {
+                               followupMsg = `📄 *Documents Reminder*\n\nHello ${studentName} 👋\n\nThis is a quick reminder to submit your required documents for admission processing.\n\n📌 Completing this step will help us move forward with your application smoothly.\n\nIf you need any help, feel free to ask! 😊\n\nBest Regards,\n*${counselorName}*`;
+                           } else if (followupTemplate === 'Decision') {
+                               followupMsg = `⏳ *Admission Decision Follow-Up*\n\nHello ${studentName} 👋\n\nJust following up regarding your admission decision.\n\nSeats are filling fast, so we recommend confirming your admission soon to secure your spot. 🎯\n\nLet us know if you need any assistance!\n\nBest Regards,\n*${counselorName}*`;
+                           } else if (followupTemplate === 'Details') {
+                               followupMsg = `💬 *Quick Follow-Up*\n\nHello ${studentName} 👋\n\nHope you had a chance to review the details we shared about the course and admission process.\n\nDo let us know if you have any questions or would like to proceed further. 😊\n\nWe’d be happy to assist you!\n\nBest Regards,\n*${counselorName}*`;
+                           } else if (followupTemplate === 'Strong') {
+                               followupMsg = `🔥 *Secure Your Admission*\n\nHello ${studentName} 👋\n\nWe’d love to have you join our university 🎓\n\n✨ Limited seats available\n✨ High placement opportunities\n\n👉 Complete your admission process soon to confirm your seat!\n\nLet us know how we can assist you further 😊\n\nBest Regards,\n*${counselorName}*`;
+                           } else if (followupTemplate === 'CallBack') {
+                               followupMsg = `📞 *Let’s Connect Again*\n\nHello ${studentName} 👋\n\nWe’d like to connect with you to discuss your admission in detail.\n\n⏰ Please share a convenient time for a quick call.\n\nLooking forward to assisting you! 😊\n\nBest Regards,\n*${counselorName}*`;
+                           } else if (followupTemplate === 'Final') {
+                               followupMsg = `🎯 *Last Reminder*\n\nHello ${studentName} 👋\n\nThis is a gentle reminder regarding your admission process.\n\nIf you’re still interested, we’d be happy to help you complete the next steps. 😊\n\nFeel free to reply anytime!\n\nBest Regards,\n*${counselorName}*`;
+                           }
+
+                           if (followupMsg) {
+                               await handleSendMessage(null, followupMsg);
+                           }
+
+                           await handleAction('add_followup', { 
+                             title: `[${followupType}${followupType === 'Meeting' ? `: ${followupVisitType}` : ''}] ${followupHeading}`, 
+                             dateTime: new Date(`${followupDate}T${followupTime || '09:00'}`).toISOString(),
+                             description: followupDescription,
+                             metadata: { visitType: followupType === 'Meeting' ? followupVisitType : null }
+                           });
+
+                           setShowFollowupModal(false);
+                           setFollowupHeading('');
+                           setFollowupType('Call');
+                           setFollowupDate('');
+                           setFollowupTime('');
+                           setFollowupDescription('');
+                           setFollowupVisitType('Office Visit');
+                           setFollowupTemplate('None');
+                       }} 
                        className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-4 py-1.5 rounded inline-block transition-colors"
                      >
                         Confirm Follow Up
