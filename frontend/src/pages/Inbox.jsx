@@ -890,9 +890,9 @@ export default function Inbox({ roleAccess }) {
                            const formattedDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
                            const formattedTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
                            
-                           let msg = `✨ Thank you for connecting with us! ✨\n\nYour *${meetingMode}* is scheduled for:\n📅 *${formattedDate}* at ⏰ *${formattedTime}*\n`;
-                           if (locationLink) msg += `\n📍 *Location Link:* ${locationLink}\n`;
-                           msg += `\nLooking forward to seeing you!`;
+                           let msg = `🎉 *You're Invited!*\n\nYour *${meetingMode}* is scheduled! 🌟\n\n📅 *${formattedDate}*\n⏰ *${formattedTime}*\n`;
+                           if (locationLink) msg += `\n📍 ${locationLink}\n`;
+                           msg += `\n🔥 Explore the campus\n🤝 Meet our team\n🚀 Start your journey\n\n👉 Don’t miss it—see you there!`;
 
                            handleSendMessage(null, msg);
                            setShowMeetingModal(false);
