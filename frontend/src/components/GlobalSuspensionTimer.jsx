@@ -23,20 +23,26 @@ const CountdownTimer = ({ targetDate }) => {
 
 export default function GlobalSuspensionTimer() {
   const [criticalSuspendAt, setCriticalSuspendAt] = useState(null);
+  const [isBackendSuspended, setIsBackendSuspended] = useState(false);
 
   useEffect(() => {
     const checkCriticalOverdue = async () => {
       try {
         const token = localStorage.getItem('token');
         const tenantId = localStorage.getItem('tenantId');
+        const role = localStorage.getItem('role');
+        
         if(!token || !tenantId) return;
+        if(role === 'SUPER_ADMIN' || role === 'ADMIN') return;
 
         const res = await fetch('/api/chat/contacts', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } });
         
         // Handle explicit backend suspension (User.status === 'SUSPENDED')
         if (res.status === 403) {
-            setCriticalSuspendAt(Date.now()); // Trigger lockout immediately
+            setIsBackendSuspended(true);
             return;
+        } else {
+            setIsBackendSuspended(false);
         }
 
         if(res.ok) {
@@ -72,24 +78,25 @@ export default function GlobalSuspensionTimer() {
     return () => clearInterval(intervalId);
   }, []);
 
-  if(!criticalSuspendAt) return null;
-
-  const now = Date.now();
-  const isSuspended = criticalSuspendAt <= now;
+  const role = localStorage.getItem('role');
+  if (role === 'SUPER_ADMIN' || role === 'ADMIN') return null;
+  if (!criticalSuspendAt && !isBackendSuspended) return null;
 
   return (
     <>
-      <div className="fixed top-6 right-6 z-[9999] bg-rose-600 border border-rose-400 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center shadow-rose-500/30 animate-pop-in cursor-default transition-all hover:scale-105">
-         <AlertCircle className="animate-pulse mr-4" size={28} />
-         <div>
-           <div className="text-[11px] font-black uppercase tracking-widest opacity-80">Account Suspension In</div>
-           <div className="text-2xl font-black font-mono tracking-widest leading-none mt-1">
-              <CountdownTimer targetDate={criticalSuspendAt} />
+      {criticalSuspendAt && !isBackendSuspended && (
+        <div className="fixed top-6 right-6 z-[9999] bg-rose-600 border border-rose-400 text-white px-5 py-3.5 rounded-2xl shadow-2xl flex items-center shadow-rose-500/30 animate-pop-in cursor-default transition-all hover:scale-105">
+           <AlertCircle className="animate-pulse mr-4" size={28} />
+           <div>
+             <div className="text-[11px] font-black uppercase tracking-widest opacity-80">Account Suspension In</div>
+             <div className="text-2xl font-black font-mono tracking-widest leading-none mt-1">
+                <CountdownTimer targetDate={criticalSuspendAt} />
+             </div>
            </div>
-         </div>
-      </div>
+        </div>
+      )}
 
-      {isSuspended && (
+      {isBackendSuspended && (
         <div className="fixed inset-0 z-[10000] bg-rose-950/90 backdrop-blur-xl flex items-center justify-center p-6 animate-fade-in">
            <div className="bg-white rounded-[40px] max-w-lg w-full p-12 text-center shadow-2xl border-4 border-rose-500/30 animate-pop-in">
               <div className="w-24 h-24 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl">
