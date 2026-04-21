@@ -994,66 +994,94 @@ export default function Inbox({ roleAccess }) {
             )}
             
             {showFollowupModal && (
-                <div className="mt-3 bg-blue-50 p-4 rounded-xl border border-blue-200 animate-fade-in relative shadow-sm">
-                  <h4 className="text-xs font-bold text-blue-900 mb-3 tracking-wide flex items-center"><Clock size={14} className="mr-1.5"/> Follow Up</h4>
-                  
-                  <input 
-                     type="text" 
-                     value={followupHeading} 
-                     onChange={e => setFollowupHeading(e.target.value)} 
-                     placeholder="Follow Up heading..." 
-                     className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" 
-                  />
-                  
-                  <select 
-                     value={followupType} 
-                     onChange={e => setFollowupType(e.target.value)} 
-                     className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300"
-                  >
-                     <option value="Call">Call</option>
-                     <option value="Meeting">Meeting</option>
-                     <option value="Update">Updates</option>
-                  </select>
-
-                  {followupType === 'Meeting' && (
-                     <select 
-                        value={followupVisitType} 
-                        onChange={e => setFollowupVisitType(e.target.value)} 
-                        className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300"
-                     >
-                        <option value="Online">Online</option>
-                        <option value="Campus Visit">Campus Visit</option>
-                        <option value="Office Visit">Office Visit</option>
-                     </select>
-                  )}
-                    
-                  <div className="flex space-x-2 mb-2">
-                     <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)} className="w-1/2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
-                     <input type="time" value={followupTime} onChange={e => setFollowupTime(e.target.value)} className="w-1/2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
+                <div className="mt-3 bg-gradient-to-br from-indigo-50 to-purple-50 p-4 rounded-xl border border-indigo-100/50 animate-fade-in relative shadow-sm overflow-hidden">
+                  <div className="absolute top-0 right-0 p-1.5 bg-indigo-100 rounded-bl-lg">
+                     <Clock size={12} className="text-indigo-600" />
                   </div>
+                  <h4 className="text-[10px] font-bold text-indigo-800 mb-3 tracking-widest uppercase">
+                    Set Follow-Up
+                  </h4>
+                  
+                  <div className="space-y-3">
+                     <div className="flex flex-col">
+                        <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Subject</span>
+                        <input 
+                           type="text" 
+                           value={followupHeading} 
+                           onChange={e => setFollowupHeading(e.target.value)} 
+                           placeholder="Follow Up heading..." 
+                           className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold outline-none text-slate-700 w-full focus:border-indigo-300" 
+                        />
+                     </div>
 
-                  <textarea 
-                     value={followupDescription} 
-                     onChange={e => setFollowupDescription(e.target.value)} 
-                     placeholder="Description..." 
-                     rows="2" 
-                     className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none resize-none focus:border-blue-300"
-                  ></textarea>
+                     <div className="flex flex-col">
+                        <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Follow-up Type</span>
+                        <select 
+                           value={followupType} 
+                           onChange={e => setFollowupType(e.target.value)} 
+                           className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold outline-none text-slate-700 w-full focus:border-indigo-300"
+                        >
+                           <option value="Call">Call</option>
+                           <option value="Meeting">Meeting</option>
+                           <option value="Update">Updates</option>
+                        </select>
+                     </div>
 
-                  <select 
-                     value={followupTemplate} 
-                     onChange={e => setFollowupTemplate(e.target.value)} 
-                     className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300"
-                  >
-                     <option value="None">No Automated Message</option>
-                     <option value="General">General Follow-Up</option>
-                     <option value="Document">Document Submission Follow-Up</option>
-                     <option value="Decision">Pending Decision Follow-Up</option>
-                     <option value="Details">After Sharing Details</option>
-                     <option value="Strong">Strong Conversion</option>
-                     <option value="CallBack">Call Back Follow-Up</option>
-                     <option value="Final">Final Gentle Reminder</option>
-                  </select>
+                     {followupType === 'Meeting' && (
+                        <div className="flex flex-col">
+                           <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Meeting Mode</span>
+                           <select 
+                              value={followupVisitType} 
+                              onChange={e => setFollowupVisitType(e.target.value)} 
+                              className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold outline-none text-slate-700 w-full focus:border-indigo-300"
+                           >
+                              <option value="Online">Online</option>
+                              <option value="Campus Visit">Campus Visit</option>
+                              <option value="Office Visit">Office Visit</option>
+                           </select>
+                        </div>
+                     )}
+                       
+                     <div className="flex space-x-2">
+                        <div className="flex flex-col w-1/2">
+                           <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Date</span>
+                           <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)} className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold outline-none text-slate-700 w-full focus:border-indigo-300" />
+                        </div>
+                        <div className="flex flex-col w-1/2">
+                           <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Time</span>
+                           <input type="time" value={followupTime} onChange={e => setFollowupTime(e.target.value)} className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold outline-none text-slate-700 w-full focus:border-indigo-300" />
+                        </div>
+                     </div>
+
+                     <div className="flex flex-col">
+                        <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Description</span>
+                        <textarea 
+                           value={followupDescription} 
+                           onChange={e => setFollowupDescription(e.target.value)} 
+                           placeholder="Description..." 
+                           rows="2" 
+                           className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold outline-none text-slate-700 w-full resize-none focus:border-indigo-300"
+                        ></textarea>
+                     </div>
+
+                     <div className="flex flex-col">
+                        <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Automated WhatsApp Message</span>
+                        <select 
+                           value={followupTemplate} 
+                           onChange={e => setFollowupTemplate(e.target.value)} 
+                           className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold outline-none text-indigo-700 w-full focus:border-indigo-300 shadow-sm"
+                        >
+                           <option value="None">No Automated Message</option>
+                           <option value="General">General Follow-Up</option>
+                           <option value="Document">Document Submission Follow-Up</option>
+                           <option value="Decision">Pending Decision Follow-Up</option>
+                           <option value="Details">After Sharing Details</option>
+                           <option value="Strong">Strong Conversion</option>
+                           <option value="CallBack">Call Back Follow-Up</option>
+                           <option value="Final">Final Gentle Reminder</option>
+                        </select>
+                     </div>
+                  </div>
 
                   <div className="flex justify-end mt-2">
                      <button 
