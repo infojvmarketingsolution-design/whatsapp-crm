@@ -247,6 +247,17 @@ const performContactAction = async (req, res) => {
        const newNote = { content: callDetails, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
        contact.notes.push(newNote);
+
+       if (payload.nextDate && payload.nextTime) {
+           if (!contact.tasks) contact.tasks = [];
+           contact.tasks.push({
+             type: 'FOLLOW_UP', 
+             title: `Follow-up after ${payload.outcome} call`, 
+             dueDate: new Date(`${payload.nextDate}T${payload.nextTime}`), 
+             status: 'PENDING',
+             description: payload.notes || `Scheduled from call log`
+           });
+       }
     } else if (action === 'schedule_meeting') {
        if (!contact.tasks) contact.tasks = [];
        contact.tasks.push({ 
