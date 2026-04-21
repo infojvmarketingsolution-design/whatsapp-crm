@@ -109,7 +109,8 @@ export default function Tasks() {
                  ...t, 
                  contactName: c.name || c.phone, 
                  contactId: c._id,
-                 phone: c.phone
+                 phone: c.phone,
+                 assignedAgent: c.assignedAgent
               });
             });
           }
@@ -415,9 +416,16 @@ export default function Tasks() {
   // 48-hour alert for overdue tasks
   useEffect(() => {
     const checkCriticalOverdue = () => {
+      const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const currentUserId = currentUser._id;
+      
       const now = new Date();
       const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000);
-      const criticalTasks = tasks.filter(t => t.status === 'PENDING' && new Date(t.dueDate) < fortyEightHoursAgo);
+      const criticalTasks = tasks.filter(t => 
+        t.status === 'PENDING' && 
+        new Date(t.dueDate) < fortyEightHoursAgo && 
+        t.assignedAgent === currentUserId
+      );
       
       if (criticalTasks.length > 0) {
         setShowCriticalOverduePopup(true);
