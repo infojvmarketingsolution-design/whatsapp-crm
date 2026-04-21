@@ -1,24 +1,29 @@
 const nodemailer = require('nodemailer');
+const twilio = require('twilio');
 const WhatsAppService = require('./whatsapp.service');
 const Client = require('../models/core/Client');
 
 /**
  * NotificationService handles sending OTPs and other notifications via multiple channels.
+ * Integrates: Gmail (SMTP), Twilio (SMS), and Meta API (WhatsApp).
  */
 class NotificationService {
   /**
-   * Send Email OTP using Nodemailer
+   * Send Email OTP using Gmail / SMTP
    */
   async sendEmail(to, otp) {
     try {
-      // Create a transporter using environment variables
+      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.warn('⚠️ SMTP_USER or SMTP_PASS not configured. Redirecting OTP to Console.');
+        console.log(`[CONSOLE LOG - EMAIL OTP] To: ${to}, Code: ${otp}`);
+        return true; 
+      }
+
       const transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST || 'smtp.gmail.com',
-        port: process.env.SMTP_PORT || 587,
-        secure: process.env.SMTP_SECURE === 'true',
+        service: 'gmail',
         auth: {
           user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS,
+          pass: process.env.SMTP_PASS, // Needs Gmail App Password
         },
       });
 
@@ -41,12 +46,6 @@ class NotificationService {
         `,
       };
 
-      if (!process.env.SMTP_USER) {
-        console.warn('⚠️ SMTP_USER not configured. OTP logging to console instead.');
-        console.log(`[EMAIL OTP] To: ${to}, Code: ${otp}`);
-        return true;
-      }
-
       await transporter.sendMail(mailOptions);
       return true;
     } catch (error) {
@@ -56,11 +55,10 @@ class NotificationService {
   }
 
   /**
-   * Send WhatsApp OTP using Meta API
+   * Send WhatsApp OTP using Meta API (Already Configured)
    */
   async sendWhatsApp(to, otp, tenantId) {
     try {
-      // Find client config for this tenant to get Meta API credentials
       const client = await Client.findOne({ tenantId });
       if (!client || !client.whatsappConfig || !client.whatsappConfig.accessToken) {
         throw new Error('WhatsApp configuration missing for this tenant');
@@ -81,16 +79,30 @@ class NotificationService {
   }
 
   /**
-   * Send SMS OTP using generic gateway (placeholder)
+   * Send SMS OTP using Twilio
    */
   async sendSMS(to, otp) {
     try {
-      console.log(`[SMS OTP] To: ${to}, Code: ${otp}`);
-      // Implement your SMS gateway logic here (e.g., axios call to Twilio or Fast2SMS)
-      // Since Credentials: Yes, the user will need to provide endpoint details.
+      const sid = process.env.TWILIO_ACCOUNT_SID;
+      const auth = process.env.TWILIO_AUTH_TOKEN;
+      const fromNum = process.env.TWILIO_PHONE_NUMBER;
+
+      if (!sid || !auth || !fromNum) {
+        console.warn('⚠️ Twilio credentials missing. Redirecting OTP to Console.');
+        console.log(`[CONSOLE LOG - SMS OTP] To: ${to}, Code: ${otp}`);
+        return true;
+      }
+
+      const client = twilio(sid, auth);
+      await client.messages.create({
+        body: `Your WapiPulse security code is: ${otp}`,
+        to: to, 
+        from: fromNum,
+      });
+      
       return true; 
     } catch (error) {
-      console.error('❌ SMS notification error:', error.message);
+      console.error('❌ SMS (Twilio) notification error:', error.message);
       return false;
     }
   }
@@ -115,3 +127,4 @@ class NotificationService {
 }
 
 module.exports = new NotificationService();
+
