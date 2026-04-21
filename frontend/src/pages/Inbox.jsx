@@ -19,7 +19,9 @@ export default function Inbox({ roleAccess }) {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showCallModal, setShowCallModal] = useState(false);
   const [callOutcome, setCallOutcome] = useState('Connected');
-  const [callDuration, setCallDuration] = useState(5);
+  const [callCount, setCallCount] = useState(1);
+  const [callDate, setCallDate] = useState('');
+  const [callTime, setCallTime] = useState('');
   const [callNotes, setCallNotes] = useState('');
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [meetingMode, setMeetingMode] = useState('Online');
@@ -135,6 +137,9 @@ export default function Inbox({ roleAccess }) {
           setFollowupDescription('');
           setFollowupDate('');
           setFollowupTime('');
+          setCallCount(1);
+          setCallDate('');
+          setCallTime('');
           setShowTagInput(false);
           setNewTagName('');
           // toast is not imported in original snippet but used - keeping as is if it exists globally
@@ -796,10 +801,18 @@ export default function Inbox({ roleAccess }) {
                     <option>Interested</option>
                     <option>Not Interested</option>
                  </select>
-                 <input type="number" value={callDuration} onChange={e => setCallDuration(e.target.value)} placeholder="Duration (mins)" className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
-                 <textarea value={callNotes} onChange={e => setCallNotes(e.target.value)} placeholder="Call notes..." rows="2" className="w-full bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none resize-none focus:border-blue-300"></textarea>
+                 
+                 <div className="flex space-x-2 mb-2">
+                    <input type="date" value={callDate} onChange={e => setCallDate(e.target.value)} className="w-1/2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
+                    <input type="time" value={callTime} onChange={e => setCallTime(e.target.value)} className="w-1/2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
+                 </div>
+
+                 <input type="number" min="1" value={callCount} onChange={e => setCallCount(e.target.value)} placeholder="Call Count (e.g. 1)" className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
+                 
+                 <textarea value={callNotes} onChange={e => setCallNotes(e.target.value)} placeholder="Description..." rows="2" className="w-full bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none resize-none focus:border-blue-300"></textarea>
+                 
                  <div className="flex justify-end mt-2">
-                    <button onClick={() => handleAction('log_call', { outcome: callOutcome, duration: callDuration, notes: callNotes })} className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-4 py-1.5 rounded inline-block transition-colors">
+                    <button onClick={() => handleAction('log_call', { outcome: callOutcome, count: callCount, date: callDate, time: callTime, notes: callNotes })} className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-4 py-1.5 rounded inline-block transition-colors">
                        Save Call Log
                     </button>
                  </div>

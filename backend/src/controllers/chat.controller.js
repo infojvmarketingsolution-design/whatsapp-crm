@@ -235,7 +235,14 @@ const performContactAction = async (req, res) => {
        contact.timeline.push({ eventType: 'AGENT_ASSIGNED', description: agentId ? `Assigned to agent ${agentId}` : 'Lead unassigned', timestamp: new Date() });
     } else if (action === 'log_call') {
        contact.timeline.push({ eventType: 'CALL_LOGGED', description: `Call Logged - Outcome: ${payload.outcome}`, timestamp: new Date() });
-       const newNote = { content: `Duration: ${payload.duration} mins\nNotes: ${payload.notes}`, createdBy: req.user?._id || 'System', createdAt: new Date() };
+       
+       let callDetails = `Outcome: ${payload.outcome}`;
+       if (payload.date) callDetails += `\nCall Date: ${payload.date}`;
+       if (payload.time) callDetails += `\nCall Time: ${payload.time}`;
+       if (payload.count) callDetails += `\nCall Count: ${payload.count}`;
+       callDetails += `\nDescription: ${payload.notes || 'N/A'}`;
+
+       const newNote = { content: callDetails, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
        contact.notes.push(newNote);
     } else if (action === 'schedule_meeting') {
