@@ -109,10 +109,17 @@ const requestOTP = async (req, res) => {
 
   console.log(`[Auth] OTP Request for: ${cleanIdentifier} (orig: ${identifier}) via ${method} (API #: ${cleanApiNumber || 'None'})`);
   try {
-    let query = { $or: [{ email: cleanIdentifier }, { phoneNumber: cleanIdentifier }] };
+    let query = { $or: [{ email: cleanIdentifier }] };
+    if (!cleanIdentifier.includes('@') && cleanIdentifier.length >= 10) {
+      const last10Id = cleanIdentifier.slice(-10);
+      query.$or.push({ phoneNumber: { $regex: new RegExp(`${last10Id}$`) } });
+    } else {
+      query.$or.push({ phoneNumber: cleanIdentifier });
+    }
 
-    if (cleanApiNumber) {
-      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': cleanApiNumber });
+    if (cleanApiNumber && cleanApiNumber.length >= 10) {
+      const last10Api = cleanApiNumber.slice(-10);
+      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': { $regex: new RegExp(`${last10Api}$`) } });
       if (!client) return res.status(404).json({ message: 'Invalid API Number. Workspace not found.' });
       query.tenantId = client.tenantId;
     }
@@ -157,10 +164,17 @@ const verifyOTP = async (req, res) => {
 
   console.log(`[Auth] OTP Verification Attempt for: ${cleanIdentifier} (API #: ${cleanApiNumber || 'None'})`);
   try {
-    let query = { $or: [{ email: cleanIdentifier }, { phoneNumber: cleanIdentifier }] };
+    let query = { $or: [{ email: cleanIdentifier }] };
+    if (!cleanIdentifier.includes('@') && cleanIdentifier.length >= 10) {
+      const last10Id = cleanIdentifier.slice(-10);
+      query.$or.push({ phoneNumber: { $regex: new RegExp(`${last10Id}$`) } });
+    } else {
+      query.$or.push({ phoneNumber: cleanIdentifier });
+    }
 
-    if (cleanApiNumber) {
-      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': cleanApiNumber });
+    if (cleanApiNumber && cleanApiNumber.length >= 10) {
+      const last10Api = cleanApiNumber.slice(-10);
+      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': { $regex: new RegExp(`${last10Api}$`) } });
       if (client) query.tenantId = client.tenantId;
     }
 
