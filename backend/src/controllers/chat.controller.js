@@ -383,10 +383,10 @@ const performBulkContactAction = async (req, res) => {
         }
       );
       return res.json({ success: true, message: `${contactIds.length} leads archived` });
-    } else if (action === 'transfer_leads') {
-      const { agentId } = payload;
+    } else if (action === 'transfer_leads' || action === 'assignedAgent') {
+      const agentId = typeof payload === 'string' ? payload : (payload.agentId || payload);
       let agentName = 'Unassigned';
-      if (agentId) {
+      if (agentId && agentId !== "") {
          const agent = await User.findById(agentId);
          agentName = agent ? agent.name : 'Unknown Agent';
       }
@@ -405,8 +405,30 @@ const performBulkContactAction = async (req, res) => {
         }
       );
       return res.json({ success: true, message: `${contactIds.length} leads transferred to ${agentName}` });
-    } else if (action === 'update_stage') {
-       const stage = typeof payload === 'string' ? payload : payload.stage;
+    } else if (action === 'transfer_counsellor') {
+      const counsellorId = typeof payload === 'string' ? payload : (payload.counsellorId || payload);
+      let counsellorName = 'Unassigned';
+      if (counsellorId && counsellorId !== "") {
+         const counsellor = await User.findById(counsellorId);
+         counsellorName = counsellor ? counsellor.name : 'Unknown Counsellor';
+      }
+
+      await ContactModel.updateMany(
+        { _id: { $in: contactIds } },
+        { 
+          $set: { assignedCounsellor: counsellorId && counsellorId !== "" ? counsellorId : null },
+          $push: { 
+            timeline: { 
+              eventType: 'COUNSELLOR_ASSIGNED', 
+              description: counsellorId ? `Enquiry Expert assigned to ${counsellorName} in bulk` : 'Counsellor unassigned in bulk', 
+              timestamp: new Date() 
+            } 
+          }
+        }
+      );
+      return res.json({ success: true, message: `${contactIds.length} leads assigned to counsellor ${counsellorName}` });
+    } else if (action === 'update_stage' || action === 'pipelineStage') {
+       const stage = typeof payload === 'string' ? payload : (payload.stage || payload);
        await ContactModel.updateMany(
          { _id: { $in: contactIds } },
          { 
