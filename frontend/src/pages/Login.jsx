@@ -218,7 +218,7 @@ export default function Login() {
                           </Field>
                           
                           <Field label="LOGIN CONTACT NUMBER" icon={<User className="w-4 h-4" />}>
-                            <input type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="Provide secondary contact number for login" className="field-input" />
+                            <input type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="User Registred Mobile Number for Whatsapp OTP" className="field-input" />
                           </Field>
 
                           <div className="pt-2">
