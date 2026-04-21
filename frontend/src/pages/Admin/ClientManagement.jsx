@@ -440,27 +440,50 @@ const ClientManagement = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-200">
             <div className="flex justify-between items-center p-6 border-b border-slate-100">
-                <h2 className="text-xl font-bold text-slate-900">Edit Client: {selectedClient.companyName}</h2>
+                <h2 className="text-xl font-bold text-slate-900">Edit Client Details</h2>
                 <button onClick={() => setShowEditModal(false)} className="text-slate-400 hover:text-slate-600 p-2"><X size={20} /></button>
             </div>
             <form onSubmit={handleUpdateClient} className="p-6 space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Organization Name</label>
+                      <input 
+                          value={selectedClient.companyName || ''}
+                          onChange={(e) => setSelectedClient({...selectedClient, companyName: e.target.value})}
+                          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                  </div>
+                  <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Admin Email</label>
+                      <input 
+                          value={selectedClient.email || ''}
+                          onChange={(e) => setSelectedClient({...selectedClient, email: e.target.value, loginEmail: e.target.value})}
+                          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="admin@email.com"
+                      />
+                  </div>
+                </div>
+
                 <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Organization Name</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Login Contact through Whatsapp OTP</label>
                     <input 
-                        value={selectedClient.companyName}
-                        onChange={(e) => setSelectedClient({...selectedClient, companyName: e.target.value})}
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none"
+                        value={selectedClient.mobileNumber || ''}
+                        onChange={(e) => setSelectedClient({...selectedClient, mobileNumber: e.target.value})}
+                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="e.g. 6354..."
                     />
                 </div>
+
                 <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Admin Email</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Login Email ID</label>
                     <input 
-                        value={selectedClient.email}
-                        onChange={(e) => setSelectedClient({...selectedClient, email: e.target.value})}
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none"
-                        placeholder="admin@email.com"
+                        value={selectedClient.loginEmail || selectedClient.email || ''}
+                        onChange={(e) => setSelectedClient({...selectedClient, loginEmail: e.target.value})}
+                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="login@email.com"
                     />
                 </div>
+
                 <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Reset Password</label>
                     <input 
@@ -468,40 +491,51 @@ const ClientManagement = () => {
                         placeholder="New password (leave blank to keep current)"
                         value={selectedClient.password || ''}
                         onChange={(e) => setSelectedClient({...selectedClient, password: e.target.value})}
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none"
+                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
-                <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Status</label>
-                    <select 
-                        value={selectedClient.status}
-                        onChange={(e) => setSelectedClient({...selectedClient, status: e.target.value})}
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none"
-                    >
-                        <option value="ACTIVE">ACTIVE</option>
-                        <option value="SUSPENDED">SUSPENDED</option>
-                    </select>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Status</label>
+                      <select 
+                          value={selectedClient.status}
+                          onChange={(e) => setSelectedClient({...selectedClient, status: e.target.value})}
+                          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                          <option value="ACTIVE">ACTIVE</option>
+                          <option value="SUSPENDED">SUSPENDED</option>
+                      </select>
+                  </div>
+                  <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Plan</label>
+                      <select 
+                          value={selectedClient.plan}
+                          onChange={(e) => setSelectedClient({...selectedClient, plan: e.target.value})}
+                          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                          <option value="BASIC">BASIC</option>
+                          <option value="PRO">PRO</option>
+                          <option value="PREMIUM">PREMIUM</option>
+                      </select>
+                  </div>
                 </div>
-                <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Plan</label>
-                    <select 
-                        value={selectedClient.plan}
-                        onChange={(e) => setSelectedClient({...selectedClient, plan: e.target.value})}
-                        className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none"
-                    >
-                        <option value="BASIC">BASIC</option>
-                        <option value="PRO">PRO</option>
-                        <option value="PREMIUM">PREMIUM</option>
-                    </select>
-                </div>
+
                 <div className="pt-4 flex justify-end space-x-3">
-                    <button type="button" onClick={() => setShowEditModal(false)} className="px-6 py-2 text-sm font-bold text-slate-600 rounded-lg outline-none">Cancel</button>
-                    <button type="submit" className="px-8 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm outline-none">Update Client</button>
+                    <button type="button" onClick={() => setShowEditModal(false)} className="px-6 py-2.5 text-sm font-bold text-slate-600 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+                    <button 
+                      type="submit" 
+                      disabled={submitting}
+                      className="px-8 py-2.5 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition-all shadow-lg shadow-blue-100 disabled:opacity-50"
+                    >
+                      {submitting ? 'Updating...' : 'Update Client & Sync DB'}
+                    </button>
                 </div>
             </form>
           </div>
         </div>
       )}
+
 
       {/* WhatsApp Config Modal */}
       {showConfigModal && selectedClient && (

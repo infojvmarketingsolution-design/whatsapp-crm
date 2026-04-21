@@ -13,9 +13,16 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
+  // Saved User for Fast Login
+  const [savedUser, setSavedUser] = useState(() => {
+    const saved = localStorage.getItem('lastLoginInfo');
+    return saved ? JSON.parse(saved) : null;
+  });
+  const [showFastLogin, setShowFastLogin] = useState(!!savedUser);
+
   // Form Fields
-  const [apiNumber, setApiNumber] = useState(''); // Workspace ID
-  const [identifier, setIdentifier] = useState(''); // User Email or Phone
+  const [apiNumber, setApiNumber] = useState(savedUser?.apiNumber || ''); 
+  const [identifier, setIdentifier] = useState(savedUser?.identifier || ''); 
   const [password, setPassword] = useState('');
   const [otpCode, setOtpCode] = useState('');
   
@@ -68,6 +75,7 @@ export default function Login() {
           if (!res.ok) throw new Error(data.message);
           setOtpStep('VERIFY');
           setCountdown(60);
+          setShowFastLogin(false); // Switch to verification view
           toast.success(`OTP sent via ${deliveryMethod}`);
         } else {
           const res = await fetch('/api/auth/verify-otp', {
@@ -88,10 +96,19 @@ export default function Login() {
   };
 
   const completeLogin = (data) => {
+    // 1. Core Auth Storage
     localStorage.setItem('token', data.token);
     localStorage.setItem('tenantId', data.tenantId || '');
     localStorage.setItem('role', data.role || 'AGENT');
     localStorage.setItem('user', JSON.stringify(data));
+
+    // 2. Fast Login Persistence (For returning later)
+    localStorage.setItem('lastLoginInfo', JSON.stringify({
+      name: data.name || 'User',
+      identifier: identifier,
+      apiNumber: apiNumber
+    }));
+
     toast.success('Authentication successful!');
     
     setTimeout(() => {
@@ -124,94 +141,124 @@ export default function Login() {
               <img src="/logo.png" alt="WapiPulse Logo" className="h-20 w-auto relative object-contain" />
             </motion.div>
             <h1 className="text-3xl font-black tracking-tight text-slate-900">
-              {isRegister ? 'New Workspace' : (otpStep === 'VERIFY' ? 'Check your phone' : 'Welcome Back')}
+              {showFastLogin ? 'Welcome Back' : (isRegister ? 'New Workspace' : (otpStep === 'VERIFY' ? 'Check your phone' : 'Sign In'))}
             </h1>
             <p className="text-slate-500 mt-2 text-sm font-medium text-center">
-              {isRegister ? 'Register your organization today' : 'Log in to your professional CRM workspace'}
+              {showFastLogin ? `Logged in last as ${savedUser.name}` : (isRegister ? 'Register your organization today' : 'Log in to your professional CRM workspace')}
             </p>
           </div>
 
           <AnimatePresence mode="wait">
-            <motion.form key={`${isRegister}-${usePassword}-${otpStep}`} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} onSubmit={handleAuth} className="space-y-6">
-              
-              {otpStep === 'REQUEST' ? (
-                <>
-                  <div className="space-y-4">
-                    {isRegister && (
-                      <Field label="ORGANIZATION NAME" icon={<Globe className="w-4 h-4" />}>
-                        <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Acme University" className="field-input" />
-                      </Field>
-                    )}
-                    
-                    {usePassword ? (
-                      <>
-                        <Field label="EMAIL ID" icon={<Mail className="w-4 h-4" />}>
-                          <input type="email" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="admin@domain.com" className="field-input" />
-                        </Field>
-                        <Field label="PASSWORD" icon={<Lock className="w-4 h-4" />}>
-                          <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" className="field-input" />
-                        </Field>
-                      </>
-                    ) : (
-                      <>
-                        <Field label="WHATSAPP API NUMBER" icon={<Smartphone className="w-4 h-4" />}>
-                          <input type="text" value={apiNumber} onChange={e => setApiNumber(e.target.value)} required placeholder="919904XXXXXX" className="field-input" />
-                        </Field>
-                        
-                        <Field label="LOGIN CONTACT NUMBER" icon={<User className="w-4 h-4" />}>
-                          <input type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="User Email or Mobile" className="field-input" />
-                        </Field>
+            {showFastLogin ? (
+              <motion.div key="fast-login" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
+                 <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-6 flex flex-col items-center">
+                    <div className="w-16 h-16 bg-white border-2 border-teal-500/20 rounded-full flex items-center justify-center mb-4 shadow-sm">
+                      <User className="w-8 h-8 text-teal-600" />
+                    </div>
+                    <div className="text-center">
+                       <p className="font-black text-slate-900 text-lg">{savedUser.name}</p>
+                       <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">{savedUser.identifier}</p>
+                    </div>
+                 </div>
 
-                        <div className="pt-2">
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center mb-4 italic">Code will be sent to your Secondary WhatsApp</p>
-                          <div className="hidden">
-                             {/* Hidden delivery selection, defaulting to WhatsApp */}
-                             <input type="hidden" value="WHATSAPP" />
-                          </div>
-                        </div>
+                 <button 
+                    onClick={handleAuth}
+                    disabled={loading}
+                    className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-2"
+                 >
+                    {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
+                      <>
+                        <CheckCircle2 className="w-5 h-5" />
+                        <span>Continue with {savedUser.identifier}</span>
                       </>
                     )}
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-6 text-center">
-                  <div className="w-16 h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mx-auto">
-                    <CheckCircle2 className="w-8 h-8" />
-                  </div>
-                  <p className="text-sm text-slate-500 font-medium">Code sent to <b>{identifier}</b> via <b>{deliveryMethod}</b></p>
-                  <input 
-                    type="text" maxLength={6} value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                    className="w-full text-center tracking-[0.5em] text-3xl font-black py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-teal-500"
-                    placeholder="••••••" autoFocus
-                  />
-                  <div className="flex justify-between items-center text-sm px-1">
-                    <button type="button" onClick={() => setOtpStep('REQUEST')} className="text-slate-400 font-bold flex items-center"><ChevronLeft className="w-4 h-4" /> Back</button>
-                    {countdown > 0 ? <span className="text-slate-400">Resend in {countdown}s</span> : <button type="button" onClick={handleAuth} className="text-teal-600 font-bold">Resend Code</button>}
-                  </div>
-                </div>
-              )}
+                 </button>
 
-              <button 
-                type="submit" disabled={loading}
-                className="group w-full py-4 bg-[#114a43] hover:bg-[#0c3631] text-white font-black rounded-2xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center relative overflow-hidden"
-              >
-                {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
+                 <div className="text-center">
+                    <button onClick={() => setShowFastLogin(false)} className="text-sm font-bold text-slate-400 hover:text-teal-600 underline underline-offset-4">Sign in with a different user</button>
+                 </div>
+              </motion.div>
+            ) : (
+              <motion.form key={`${isRegister}-${usePassword}-${otpStep}`} initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} onSubmit={handleAuth} className="space-y-6">
+                
+                {otpStep === 'REQUEST' ? (
                   <>
-                    <span>{isRegister ? 'Register Account' : (otpStep === 'VERIFY' ? 'Verify & Enter' : (usePassword ? 'Login with Password' : 'Generate Access Code'))}</span>
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    <div className="space-y-4">
+                      {usePassword ? (
+                        <>
+                          <Field label="EMAIL ID" icon={<Mail className="w-4 h-4" />}>
+                            <input type="email" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="admin@domain.com" className="field-input" />
+                          </Field>
+                          <Field label="PASSWORD" icon={<Lock className="w-4 h-4" />}>
+                            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" className="field-input" />
+                          </Field>
+                        </>
+                      ) : (
+                        <>
+                          {isRegister && (
+                            <Field label="ORGANIZATION NAME" icon={<Globe className="w-4 h-4" />}>
+                              <input type="text" value={name} onChange={e => setName(e.target.value)} required placeholder="Acme University" className="field-input" />
+                            </Field>
+                          )}
+                          
+                          <Field label="WHATSAPP API NUMBER" icon={<Smartphone className="w-4 h-4" />}>
+                            <input type="text" value={apiNumber} onChange={e => setApiNumber(e.target.value)} required placeholder="919904XXXXXX" className="field-input" />
+                          </Field>
+                          
+                          <Field label="LOGIN CONTACT NUMBER" icon={<User className="w-4 h-4" />}>
+                            <input type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="User Email or Mobile" className="field-input" />
+                          </Field>
+
+                          <div className="pt-2">
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center mb-4 italic">Code will be sent to your Secondary WhatsApp</p>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </>
+                ) : (
+                  <div className="space-y-6 text-center">
+                    <div className="w-16 h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mx-auto">
+                      <CheckCircle2 className="w-8 h-8" />
+                    </div>
+                    <p className="text-sm text-slate-500 font-medium">Code sent to <b>{identifier}</b> via <b>{deliveryMethod}</b></p>
+                    <input 
+                      type="text" maxLength={6} value={otpCode} onChange={e => setOtpCode(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-center tracking-[0.5em] text-3xl font-black py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl outline-none focus:border-teal-500"
+                      placeholder="••••••" autoFocus
+                    />
+                    <div className="flex justify-between items-center text-sm px-1">
+                      <button type="button" onClick={() => setOtpStep('REQUEST')} className="text-slate-400 font-bold flex items-center"><ChevronLeft className="w-4 h-4" /> Back</button>
+                      {countdown > 0 ? <span className="text-slate-400">Resend in {countdown}s</span> : <button type="button" onClick={handleAuth} className="text-teal-600 font-bold">Resend Code</button>}
+                    </div>
+                  </div>
                 )}
-              </button>
-            </motion.form>
+
+                <button 
+                  type="submit" disabled={loading}
+                  className="group w-full py-4 bg-[#114a43] hover:bg-[#0c3631] text-white font-black rounded-2xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center relative overflow-hidden"
+                >
+                  {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
+                    <>
+                      <span>{isRegister ? 'Register Account' : (otpStep === 'VERIFY' ? 'Verify & Enter' : (usePassword ? 'Login with Password' : 'Generate Access Code'))}</span>
+                      <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </>
+                  )}
+                </button>
+              </motion.form>
+            )}
           </AnimatePresence>
 
           <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col items-center space-y-4">
             {!isRegister && (
-              <button onClick={() => { setUsePassword(!usePassword); setOtpStep('REQUEST'); }} className="text-sm font-bold text-slate-500 hover:text-teal-600 transition-colors underline decoration-slate-200 underline-offset-4">
+              <button 
+                onClick={() => { setUsePassword(!usePassword); setOtpStep('REQUEST'); setShowFastLogin(false); }} 
+                className="text-sm font-bold text-slate-500 hover:text-teal-600 transition-colors underline decoration-slate-200 underline-offset-4"
+              >
                 {usePassword ? 'Switch to OTP Login' : 'Login with Password instead'}
               </button>
             )}
-            <button onClick={() => { setIsRegister(!isRegister); setUsePassword(false); setOtpStep('REQUEST'); }} className="text-sm font-black text-teal-600 uppercase tracking-wide">
+            <button onClick={() => { setIsRegister(!isRegister); setUsePassword(false); setOtpStep('REQUEST'); setShowFastLogin(false); }} className="text-sm font-black text-teal-600 uppercase tracking-wide">
               {isRegister ? 'Already have an account?' : 'New here? Create Client Account'}
             </button>
           </div>
@@ -246,5 +293,3 @@ function Field({ label, icon, children }) {
     </div>
   );
 }
-
-
