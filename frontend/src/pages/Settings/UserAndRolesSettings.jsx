@@ -15,6 +15,13 @@ export default function UserAndRolesSettings() {
   const [selectedRole, setSelectedRole] = useState('ADMIN');
   const [saving, setSaving] = useState(false);
   const [expandedCats, setExpandedCats] = useState(['crm']); // Default expand CRM to show new sub-options
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteFormData, setInviteFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'AGENT'
+  });
 
   const roles = [
     { id: 'ADMIN', name: 'Admin', icon: ShieldCheck },
@@ -120,6 +127,40 @@ export default function UserAndRolesSettings() {
       toast.error('Failed to load settings');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleInviteSubmit = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      
+      const res = await fetch(`/api/agents`, {
+        method: 'POST',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'x-tenant-id': tenantId,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(inviteFormData)
+      });
+
+      if (res.ok) {
+        toast.success('User invited successfully');
+        setShowInviteModal(false);
+        setInviteFormData({ name: '', email: '', password: '', role: 'AGENT' });
+        fetchData(); // Refresh list
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Failed to invite user');
+      }
+    } catch (err) {
+      console.error('Invite error', err);
+      toast.error('Connection error');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -236,7 +277,10 @@ export default function UserAndRolesSettings() {
                <UserCog className="mr-2 text-teal-600" size={20} />
                Team Members
              </h2>
-             <button className="flex items-center px-4 py-2 bg-[var(--theme-bg)] text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition shadow-sm">
+             <button 
+               onClick={() => setShowInviteModal(true)}
+               className="flex items-center px-4 py-2 bg-[var(--theme-bg)] text-white rounded-lg text-sm font-bold hover:bg-teal-700 transition shadow-sm"
+             >
                <UserPlus size={16} className="mr-2" />
                Invite User
              </button>
@@ -461,6 +505,109 @@ export default function UserAndRolesSettings() {
           </div>
         </div>
       )}
+      <InviteUserModal 
+        isOpen={showInviteModal}
+        onClose={() => setShowInviteModal(false)}
+        formData={inviteFormData}
+        setFormData={setInviteFormData}
+        onSubmit={handleInviteSubmit}
+        saving={saving}
+      />
+    </div>
+  );
+}
+
+// Invite User Modal
+function InviteUserModal({ isOpen, onClose, formData, setFormData, onSubmit, saving }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+      <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+        <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+          <h3 className="text-lg font-bold text-gray-900 flex items-center">
+            <UserPlus size={20} className="mr-2 text-teal-600" />
+            Invite Team Member
+          </h3>
+          <button 
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <ChevronDown size={24} className="rotate-45" />
+          </button>
+        </div>
+        
+        <form onSubmit={onSubmit} className="p-6 space-y-4">
+          <div>
+            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+            <input 
+              required
+              type="text"
+              placeholder="e.g. John Doe"
+              value={formData.name}
+              onChange={(e) => setFormData({...formData, name: e.target.value})}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Email Address</label>
+            <input 
+              required
+              type="email"
+              placeholder="john@example.com"
+              value={formData.email}
+              onChange={(e) => setFormData({...formData, email: e.target.value})}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Password</label>
+            <input 
+              required
+              type="password"
+              placeholder="Set a temporary password"
+              value={formData.password}
+              onChange={(e) => setFormData({...formData, password: e.target.value})}
+              className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium"
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Designated Role</label>
+            <div className="relative">
+              <select 
+                value={formData.role}
+                onChange={(e) => setFormData({...formData, role: e.target.value})}
+                className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium appearance-none"
+              >
+                <option value="AGENT">Standard Agent</option>
+                <option value="TELECALLER">Telecaller</option>
+                <option value="MANAGER_COUNSELLOUR">Manager / Counsellour</option>
+                <option value="ADMIN">Administrator</option>
+              </select>
+              <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            </div>
+          </div>
+
+          <div className="pt-4 flex space-x-3">
+            <button 
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition"
+            >
+              Cancel
+            </button>
+            <button 
+              type="submit"
+              disabled={saving}
+              className="flex-[2] px-8 py-2.5 bg-[var(--theme-bg)] text-white rounded-xl text-sm font-bold hover:bg-teal-700 transition shadow-lg shadow-teal-500/20 disabled:opacity-50 flex items-center justify-center min-w-[140px]"
+            >
+              {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Send Invitation'}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
