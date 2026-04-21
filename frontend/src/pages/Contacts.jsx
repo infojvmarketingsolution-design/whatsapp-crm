@@ -5,7 +5,7 @@ import {
   Search, Plus, X, Mail, MapPin, Phone, Users, 
   Clock, Activity, Target, Tag, Save, Filter, 
   Briefcase, Building2, Download, MoreVertical, 
-  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet
+  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones
 } from 'lucide-react';
 
 export default function Contacts({ roleAccess }) {
@@ -69,6 +69,8 @@ export default function Contacts({ roleAccess }) {
 
   const [isImporting, setIsImporting] = useState(false);
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
+  const [showBulkTransfer, setShowBulkTransfer] = useState(false);
+  const [bulkTargetAgent, setBulkTargetAgent] = useState('');
   const fileInputRef = React.useRef(null);
 
   const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing', 'Won', 'Lost'];
@@ -375,18 +377,24 @@ export default function Contacts({ roleAccess }) {
       const tenantId = localStorage.getItem('tenantId');
       const ids = Array.from(selectedIds);
       
-      // Process in batches of 5 to avoid overloading
-      for (const id of ids) {
-         await fetch(`/api/chat/action`, {
-           method: 'POST',
-           headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-           body: JSON.stringify({ contactId: id, action: 'update_contact', payload: { [action]: value } })
-         });
+      const res = await fetch(`/api/chat/bulk-action`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+           contactIds: ids, 
+           action: action === 'transfer' ? 'transfer_leads' : (action === 'archive' ? 'archive_leads' : action), 
+           payload: action === 'transfer' ? { agentId: value } : value 
+        })
+      });
+
+      if (res.ok) {
+         toast.success(`Successfully processed ${selectedIds.size} leads!`, { id: 'bulk' });
+         setSelectedIds(new Set());
+         fetchContacts();
+         setShowBulkTransfer(false);
+      } else {
+         throw new Error("Bulk update failed");
       }
-      
-      toast.success(`Successfully updated ${selectedIds.size} leads!`, { id: 'bulk' });
-      setSelectedIds(new Set());
-      fetchContacts();
     } catch (err) {
       toast.error("Bulk update failed", { id: 'bulk' });
     } finally {
@@ -802,25 +810,45 @@ export default function Contacts({ roleAccess }) {
                              </div>
                           </div>
 
-                          <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-sm">
-                             <div className="flex justify-between items-center mb-2">
-                                <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">Assigned To</label>
-                                <ShieldCheck size={14} className={userRole === 'TELECALLER' ? 'text-gray-300' : 'text-blue-600'} />
-                             </div>
-                             <div className="relative">
-                                 <Users size={14} className="absolute left-3 top-2.5 text-gray-400" />
-                                 <select 
-                                   disabled={userRole === 'TELECALLER'}
-                                   value={editedContact.assignedAgent || ''} 
-                                   onChange={e=>handleFieldChange('assignedAgent', e.target.value)} 
-                                   className={`w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none ${userRole === 'TELECALLER' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-blue-300'}`}
-                                 >
-                                    <option value="">Unassigned</option>
-                                    {agents.map(a => <option key={a._id} value={a._id}>{a.name} ({a.role})</option>)}
-                                 </select>
-                             </div>
-                             {userRole === 'TELECALLER' && <p className="text-[9px] text-gray-400 mt-1 italic">Permissions restricted for Telecallers.</p>}
-                          </div>
+                          {/* SECTION 4: ASSIGNMENT & OWNERSHIP */}
+                           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-5">
+                              <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center">
+                                 <ShieldCheck size={14} className="mr-2 text-blue-600" /> Assignment & Ownership
+                              </h3>
+                              
+                              <div>
+                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Sales Rep (Telecaller)</label>
+                                 <div className="relative">
+                                     <Users size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                                     <select 
+                                       disabled={userRole === 'TELECALLER'}
+                                       value={editedContact.assignedAgent || ''} 
+                                       onChange={e=>handleFieldChange('assignedAgent', e.target.value)} 
+                                       className={`w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none ${userRole === 'TELECALLER' ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-blue-300'}`}
+                                     >
+                                        <option value="">Unassigned</option>
+                                        {agents.map(a => <option key={a._id} value={a._id}>{a.name} ({a.role})</option>)}
+                                     </select>
+                                 </div>
+                              </div>
+
+                              <div>
+                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Enquiry Expert (Counsellor)</label>
+                                 <div className="relative">
+                                     <Headphones size={14} className="absolute left-3 top-2.5 text-gray-400" />
+                                     <select 
+                                       value={editedContact.assignedCounsellor || ''} 
+                                       onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} 
+                                       className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none cursor-pointer hover:border-blue-300"
+                                     >
+                                        <option value="">No Counsellor Assigned</option>
+                                        {agents.filter(a => a.role === 'MANAGER_COUNSELLOUR' || a.role === 'ADMIN').map(a => (
+                                           <option key={a._id} value={a._id}>{a.name}</option>
+                                        ))}
+                                     </select>
+                                 </div>
+                              </div>
+                           </div>
                        </div>
                     </section>
                  </div>
@@ -1137,6 +1165,73 @@ export default function Contacts({ roleAccess }) {
               </form>
            </div>
         </div>
+      )}
+      {/* FLOATING BULK ACTIONS BAR */}
+      {selectedIds.size > 0 && (
+         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white rounded-[2.5rem] px-8 py-5 shadow-3xl flex items-center space-x-8 animate-slide-up border border-white/10 backdrop-blur-md">
+            <div className="flex items-center space-x-3 pr-8 border-r border-white/10 uppercase tracking-widest text-[11px] font-black">
+               <div className="w-8 h-8 bg-[var(--theme-bg)] rounded-xl flex items-center justify-center text-white shadow-glow">{selectedIds.size}</div>
+               <span>Leads Selected</span>
+            </div>
+
+            <div className="flex items-center space-x-4">
+               {/* BULK TRANSFER */}
+               <div className="relative flex items-center bg-white/5 rounded-2xl p-1 border border-white/10 group">
+                  <select 
+                     value={bulkTargetAgent}
+                     onChange={(e) => setBulkTargetAgent(e.target.value)}
+                     className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[200px]"
+                  >
+                     <option value="" className="text-slate-900">Choose Transfer Agent...</option>
+                     {agents.map(a => <option key={a._id} value={a._id} className="text-slate-900">{a.name} ({a.role})</option>)}
+                  </select>
+                  <button 
+                    disabled={!bulkTargetAgent || isBulkUpdating}
+                    onClick={() => handleBulkAction('transfer', bulkTargetAgent)}
+                    className="bg-teal-500 hover:bg-teal-600 disabled:bg-slate-700 disabled:opacity-50 text-white p-2.5 rounded-xl transition-all shadow-lg active:scale-95"
+                  >
+                     <ArrowUpRight size={18} />
+                  </button>
+                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap border border-white/5">Transfer Workspace Assignment</div>
+               </div>
+
+               <div className="w-[1px] h-6 bg-white/10 mx-2"></div>
+
+               <button 
+                  onClick={handleExportCSV}
+                  className="flex items-center space-x-2 px-5 py-3 hover:bg-white/10 rounded-2xl transition-all text-xs font-bold"
+               >
+                  <Download size={16} />
+                  <span>Export</span>
+               </button>
+
+               <button 
+                  onClick={() => handleBulkAction('archive', true)}
+                  className="flex items-center space-x-2 px-5 py-3 hover:bg-orange-500/20 text-orange-400 rounded-2xl transition-all text-xs font-bold"
+               >
+                  <ShieldCheck size={16} />
+                  <span>Archive</span>
+               </button>
+
+               <button 
+                  onClick={() => {
+                     if(window.confirm(`Permanently delete ${selectedIds.size} leads? This cannot be undone.`)) {
+                        handleBulkAction('hard_delete_leads', {});
+                     }
+                  }}
+                  className="p-3 hover:bg-red-500/20 text-red-400 rounded-2xl transition-all"
+               >
+                  <MoreVertical size={16} />
+               </button>
+            </div>
+            
+            <button 
+               onClick={() => setSelectedIds(new Set())}
+               className="ml-4 p-2.5 hover:bg-white/10 text-white/40 hover:text-white rounded-xl transition-all border border-transparent hover:border-white/10"
+            >
+               <X size={20} />
+            </button>
+         </div>
       )}
     </div>
   );

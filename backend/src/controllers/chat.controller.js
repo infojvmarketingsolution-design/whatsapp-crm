@@ -383,6 +383,28 @@ const performBulkContactAction = async (req, res) => {
         }
       );
       return res.json({ success: true, message: `${contactIds.length} leads archived` });
+    } else if (action === 'transfer_leads') {
+      const { agentId } = payload;
+      let agentName = 'Unassigned';
+      if (agentId) {
+         const agent = await User.findById(agentId);
+         agentName = agent ? agent.name : 'Unknown Agent';
+      }
+
+      await ContactModel.updateMany(
+        { _id: { $in: contactIds } },
+        { 
+          $set: { assignedAgent: agentId && agentId !== "" ? agentId : null },
+          $push: { 
+            timeline: { 
+              eventType: 'AGENT_ASSIGNED', 
+              description: agentId ? `Assigned to ${agentName} in bulk` : 'Lead unassigned in bulk', 
+              timestamp: new Date() 
+            } 
+          }
+        }
+      );
+      return res.json({ success: true, message: `${contactIds.length} leads transferred to ${agentName}` });
     } else if (action === 'hard_delete_leads') {
       await MessageModel.deleteMany({ contactId: { $in: contactIds } });
       await ContactModel.deleteMany({ _id: { $in: contactIds } });
