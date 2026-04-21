@@ -890,9 +890,18 @@ export default function Inbox({ roleAccess }) {
                            const formattedDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
                            const formattedTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
                            
-                           let msg = `🎉 *You're Invited!*\n\nYour *${meetingMode}* is scheduled! 🌟\n\n📅 *${formattedDate}*\n⏰ *${formattedTime}*\n`;
-                           if (locationLink) msg += `\n📍 ${locationLink}\n`;
-                           msg += `\n🔥 Explore the campus\n🤝 Meet our team\n🚀 Start your journey\n\n👉 Don’t miss it—see you there!`;
+                           let msg = '';
+                           if (meetingMode === 'Campus Visit') {
+                               msg = `🎉 *You're Invited!*\n\nYour *Campus Visit* is scheduled! 🌟\n\n📅 *${formattedDate}*\n⏰ *${formattedTime}*\n`;
+                               if (locationLink) msg += `\n📍 ${locationLink}\n`;
+                               msg += `\n🔥 Explore the campus\n🤝 Meet our team\n🚀 Start your journey\n\n👉 Don’t miss it—see you there!`;
+                           } else if (meetingMode === 'Office Visit') {
+                               msg = `🎉 *You're Invited!*\n\nYour *Office Visit* is scheduled! 🌟\n\n📅 *${formattedDate}*\n⏰ *${formattedTime}*\n`;
+                               if (locationLink) msg += `\n📍 ${locationLink}\n`;
+                               msg += `\n🏢 See our workspace\n🤝 Meet our team\n🚀 Start your journey\n\n👉 Don’t miss it—see you there!`;
+                           } else {
+                               msg = `✨ *Meeting Confirmed!*\n\nYour *${meetingMode}* is scheduled! 🌟\n\n📅 *${formattedDate}*\n⏰ *${formattedTime}*\n\n💻 We will share the meeting link with you shortly.\n\n🤝 Meet our team\n🚀 Discuss your journey\n\n👉 Don’t miss it—see you online!`;
+                           }
 
                            handleSendMessage(null, msg);
                            setShowMeetingModal(false);
