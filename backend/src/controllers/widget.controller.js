@@ -3,6 +3,7 @@ const LeadSchema = require('../models/crm/Lead');
 const Settings = require('../models/core/Settings');
 const { getTenantConnection } = require('../config/db');
 const assignmentService = require('../services/assignment.service');
+const notificationService = require('../services/notification.service');
 
 const getWidgetConfig = async (req, res) => {
   try {
@@ -113,6 +114,12 @@ const submitWidgetLead = async (req, res) => {
         if (assignedAgentId) {
            console.log(`[Widget] Auto-assigned new lead ${phone} to agent ${assignedAgentId}`);
         }
+
+        // 🔔 NOTIFICATION ALERT
+        notificationService.sendAdminAlert(clientId, {
+           subject: 'New Website Widget Lead',
+           text: `A new inquiry from *${name}* (${phone}) has been received via the Web Widget. Source: *${lead.source}*. Assigned: ${assignedAgentId || 'Unassigned'}`
+        });
     }
 
     let whatsappRedirect = null;

@@ -13,6 +13,7 @@ const WhatsAppService = require('../services/whatsapp.service');
 const { lockUser, unlockUser } = require('../services/redis.service');
 const Settings = require('../models/core/Settings');
 const assignmentService = require('../services/assignment.service');
+const notificationService = require('../services/notification.service');
 
 const verifyWebhook = (req, res) => {
   console.log('--- WEBHOOK VERIFICATION ATTEMPT ---');
@@ -240,6 +241,12 @@ const handleIncomingMessage = async (req, res) => {
            }
            
            isNewContact = true;
+
+           // 🔔 NOTIFICATION ALERT
+           notificationService.sendAdminAlert(client.tenantId, {
+              subject: 'New WhatsApp Lead Arrival',
+              text: `A new lead (*${contactName}*) has messaged your WhatsApp line from *${from}*. Assigned Agent: ${assignedAgentId || 'Unassigned'}`
+           });
         } else {
           // 🔥 SAVE MESSAGE ID (ANTI DUPLICATE) & UPDATE TIMESTAMP
           await Contact.updateOne(

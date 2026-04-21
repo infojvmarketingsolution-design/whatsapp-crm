@@ -108,20 +108,95 @@ class NotificationService {
   }
 
   /**
-   * Master dispatch method
+   * Master dispatch method for OTPs
    */
   async sendOTP(user, otp, method) {
     const target = (method === 'EMAIL') ? user.email : user.phoneNumber;
     
     switch (method) {
       case 'EMAIL':
-        return await this.sendEmail(target, otp);
+        return await this.sendEmail(target, otp, 'Your WapiPulse Security Code');
       case 'WHATSAPP':
         return await this.sendWhatsApp(target, otp, user.tenantId);
       case 'SMS':
         return await this.sendSMS(target, otp);
       default:
         return false;
+    }
+  }
+
+  /**
+   * Send a generic administrative alert (Email/WhatsApp) based on tenant settings
+   */
+  async sendAdminAlert(tenantId, { subject, text }) {
+    try {
+      const User = require('../models/core/User');
+      const Settings = require('../models/core/Settings');
+
+      // 1. Find the Primary Admin for this tenant
+      const admin = await User.findOne({ tenantId, role: 'ADMIN', status: 'ACTIVE' });
+      if (!admin) {
+        console.warn(`[NotificationService] No active admin found for tenant ${tenantId}`);
+        return;
+      }
+
+      // 2. Fetch Notification Settings
+      const settings = await Settings.findOne({ tenantId });
+      const prefs = settings?.notifications || { email: true, whatsapp: true, inApp: true };
+
+      const results = [];
+
+      // 3. Send Email Alert
+      if (prefs.email && admin.email) {
+        console.log(`[NotificationService] Sending Email alert to ${admin.email}`);
+        results.push(this.sendEmail(admin.email, text, subject)); // Note: Updated sendEmail signature below
+      }
+
+      // 4. Send WhatsApp Alert
+      if (prefs.whatsapp && admin.phoneNumber) {
+        console.log(`[NotificationService] Sending WhatsApp alert to ${admin.phoneNumber}`);
+        results.push(this.sendWhatsApp(admin.phoneNumber, `*Admin Alert: ${subject}*\n\n${text}`, tenantId));
+      }
+
+      await Promise.all(results);
+    } catch (err) {
+      console.error('[NotificationService] Failed to send admin alert:', err);
+    }
+  }
+
+  /**
+   * Updated sendEmail to support arbitrary body/subject
+   */
+  async sendEmail(to, body, subject = 'WapiPulse Alert') {
+    try {
+      if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+        console.log(`[CONSOLE LOG - EMAIL] To: ${to}, Subject: ${subject}, Body: ${body}`);
+        return true; 
+      }
+
+      const transporter = nodemailer.createTransport({
+        service: 'gmail', auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      });
+
+      const mailOptions = {
+        from: `"WapiPulse Alerts" <${process.env.SMTP_USER}>`,
+        to: to,
+        subject: subject,
+        html: `
+          <div style="font-family: sans-serif; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+            <h2 style="color: #114a43;">${subject}</h2>
+            <p style="font-size: 16px; line-height: 1.6;">${body}</p>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+            <p style="font-size: 12px; color: #888;">This is an automated notification from your WapiPulse CRM.</p>
+          </div>
+        `
+      };
+
+      await transporter.sendMail(mailOptions);
+      return true;
+    } catch (error) {
+      console.error('❌ Email Alert error:', error.message);
+      return false;
     }
   }
 }

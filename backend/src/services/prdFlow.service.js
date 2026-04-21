@@ -6,6 +6,7 @@ const AIService = require('./ai.service');
 const Settings = require('../models/core/Settings');
 const mongoose = require('mongoose');
 const assignmentService = require('./assignment.service');
+const notificationService = require('./notification.service');
 
 class PRDFlowService {
   constructor() {
@@ -204,6 +205,12 @@ class PRDFlowService {
                     status: 'QUALIFIED',
                     assignedAgent: assignedAgentId,
                     leadSource: 'whatsapp_ai_bot'
+                 });
+
+                 // 🔔 NOTIFICATION ALERT
+                 notificationService.sendAdminAlert(tenantId, {
+                    subject: 'New AI Qualified Lead 🎓',
+                    text: `Prospect *${contact.flowVariables.name}* (${contact.phone}) has just been qualified by the AI Bot.\nQualification: ${contact.flowVariables.qualification}\nPreferred Program: ${contact.flowVariables.program}\nAssigned: ${assignedAgentId || 'Unassigned'}`
                  });
               }
               await Contact.findOneAndUpdate({ phone: contact.phone }, dbUpdates);
