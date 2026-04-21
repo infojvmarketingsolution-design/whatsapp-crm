@@ -458,17 +458,17 @@ function Dashboard() {
       {breakdownModal.show && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/40 backdrop-blur-md animate-fade-in p-4" onClick={() => setBreakdownModal(prev => ({ ...prev, show: false }))}>
            <div className="bg-white/90 backdrop-blur-xl w-full max-w-3xl rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
-              <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
+              <div className="p-8 border-b border-slate-100 flex flex-col items-center justify-center text-center relative bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
                  <div>
                     <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase">{breakdownModal.categoryName}</h2>
                     <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">User Performance Breakdown</p>
                  </div>
-                 <button onClick={() => setBreakdownModal(prev => ({ ...prev, show: false }))} className="p-3 bg-white/50 text-slate-400 hover:text-rose-500 rounded-2xl transition-all shadow-sm">
+                 <button onClick={() => setBreakdownModal(prev => ({ ...prev, show: false }))} className="absolute right-6 top-1/2 -translate-y-1/2 p-3 bg-white/50 text-slate-400 hover:text-rose-500 rounded-2xl transition-all shadow-sm">
                     <X size={20} />
                  </button>
               </div>
 
-              <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+              <div className="p-8 max-h-[70vh] overflow-y-auto scrollbar-hide">
                  {breakdownModal.loading ? (
                    <div className="flex flex-col items-center justify-center py-20">
                       <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-600 rounded-full animate-spin mb-4"></div>
