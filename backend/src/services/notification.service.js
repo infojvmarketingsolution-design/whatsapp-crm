@@ -55,10 +55,27 @@ class NotificationService {
   }
 
   /**
+   * Helper: Format phone number for Meta API (International Format)
+   */
+  formatPhoneNumber(phone) {
+    if (!phone) return '';
+    let cleaned = String(phone).replace(/\D/g, '');
+    
+    // Handle Indian numbers (Primary user base)
+    if (cleaned.length === 10) return `91${cleaned}`;
+    if (cleaned.length === 11 && cleaned.startsWith('0')) return `91${cleaned.substring(1)}`;
+    if (cleaned.length > 10 && cleaned.startsWith('0')) return cleaned.substring(1);
+    
+    return cleaned;
+  }
+
+  /**
    * Send WhatsApp OTP using Meta API (Already Configured)
    */
   async sendWhatsApp(to, otp, tenantId) {
     try {
+      const formattedTo = this.formatPhoneNumber(to);
+      console.log(`[NotificationService] Attempting WhatsApp OTP to: ${formattedTo} (original: ${to})`);
       const client = await Client.findOne({ tenantId });
       if (!client || !client.whatsappConfig || !client.whatsappConfig.accessToken) {
         throw new Error('WhatsApp configuration missing for this tenant');
@@ -70,10 +87,14 @@ class NotificationService {
       });
 
       const message = `Your WapiPulse login OTP is: *${otp}*. It expires in 5 minutes.`;
-      await waService.sendTextMessage(to, message);
+      const result = await waService.sendTextMessage(formattedTo, message);
+      console.log(`[NotificationService] ✅ WhatsApp OTP sent to ${formattedTo}. Meta ID: ${result?.messages?.[0]?.id || 'N/A'}`);
       return true;
     } catch (error) {
       console.error('❌ WhatsApp notification error:', error.message);
+      if (error.response?.data) {
+        console.error('❌ Meta API Details:', JSON.stringify(error.response.data, null, 2));
+      }
       return false;
     }
   }

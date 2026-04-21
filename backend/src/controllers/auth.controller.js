@@ -98,6 +98,7 @@ const logout = async (req, res) => {
 
 const requestOTP = async (req, res) => {
   const { identifier, method, apiNumber } = req.body; 
+  console.log(`[Auth] OTP Request for: ${identifier} via ${method} (API #: ${apiNumber || 'None'})`);
   try {
     let query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
 
@@ -142,6 +143,7 @@ const requestOTP = async (req, res) => {
 
 const verifyOTP = async (req, res) => {
   const { identifier, code, apiNumber } = req.body;
+  console.log(`[Auth] OTP Verification Attempt for: ${identifier} (API #: ${apiNumber || 'None'})`);
   try {
     let query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
 
