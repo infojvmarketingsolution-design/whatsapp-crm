@@ -52,9 +52,12 @@ import {
   CheckCircle 
 } from 'lucide-react';
 
-function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add" }) {
+function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add", onClick, isClickable }) {
   return (
-    <div className="bg-crm-card p-5 rounded-lg shadow-sm border border-crm-border flex flex-col hover:shadow-premium transition-shadow group relative">
+    <div 
+      onClick={isClickable ? onClick : undefined}
+      className={`bg-crm-card p-5 rounded-lg shadow-sm border border-crm-border flex flex-col transition-all duration-300 group relative ${isClickable ? 'cursor-pointer hover:shadow-premium hover:border-blue-300 hover:-translate-y-1' : 'hover:shadow-soft'}`}
+    >
       <div className="flex justify-between items-start mb-2">
         <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase">{title}</h3>
         <div className="flex items-center space-x-2">
@@ -66,7 +69,11 @@ function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction
                <Plus size={10} className="mr-1" /> {actionLabel}
              </button>
            )}
-           {Icon && <div className="p-2 bg-blue-500 rounded-full text-white"><Icon size={16} /></div>}
+           {Icon && (
+             <div className={`p-2 rounded-full text-white ${isClickable ? 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-glow' : 'bg-blue-500'}`}>
+                <Icon size={16} />
+             </div>
+           )}
         </div>
       </div>
       <div className="mb-2">
@@ -76,7 +83,14 @@ function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction
           <span className="text-xl font-bold text-gray-800">{value}</span>
         )}
       </div>
-      <p className="text-xs text-gray-500 font-medium">{subtext}</p>
+      <div className="flex justify-between items-end">
+        <p className="text-xs text-gray-500 font-medium">{subtext}</p>
+        {isClickable && (
+          <div className="text-[10px] text-blue-500 font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
+            Details →
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -116,10 +130,26 @@ function LeadAnalysisCard({ title, data, type = 'status' }) {
 function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = React.useState({ campaigns: 0, recentCampaign: '', templates: 0, contacts: 0, chats: 0 });
-  const [analysisData, setAnalysisData] = React.useState({ statusStats: [], sourceStats: [] });
-  const [loading, setLoading] = React.useState(true);
-  const [wabaConfig, setWabaConfig] = React.useState(null);
   const [showRefillModal, setShowRefillModal] = React.useState(false);
+  const [breakdownModal, setBreakdownModal] = React.useState({ show: false, category: '', categoryName: '', data: [], loading: false });
+
+  const fetchUserBreakdown = async (category, categoryName) => {
+    setBreakdownModal({ show: true, category, categoryName, data: [], loading: true });
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/chat/stats/user-breakdown?category=${category}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setBreakdownModal(prev => ({ ...prev, data, loading: false }));
+      }
+    } catch (err) {
+      console.error('Failed to fetch user breakdown', err);
+      setBreakdownModal(prev => ({ ...prev, loading: false }));
+    }
+  };
   
   // Pull active user directly from local session context
   const activeUser = JSON.parse(localStorage.getItem('user') || '{}');
@@ -328,6 +358,66 @@ function Dashboard() {
       )}
 
       {isAdminOrSuperAdmin && (
+        <div className="mt-8 animate-fade-in-up">
+           <div className="flex items-center space-x-2 mb-6">
+              <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
+              <h3 className="text-sm font-black text-slate-700 tracking-widest uppercase">Lead & Revenue Performance</h3>
+              <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold animate-pulse">Live Stats</span>
+           </div>
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              <DashboardCard 
+                isClickable={true} 
+                onClick={() => fetchUserBreakdown('new_leads', 'New Leads')}
+                title="New Leads" 
+                value={loading ? "..." : stats.newLeads} 
+                subtext="Pending initial contact" 
+                icon={PlusCircle} 
+              />
+              <DashboardCard 
+                isClickable={true} 
+                onClick={() => fetchUserBreakdown('open_leads', 'Open Leads')}
+                title="Open Leads" 
+                value={loading ? "..." : stats.openLeads} 
+                subtext="Active in pipeline" 
+                icon={MessageCircle} 
+              />
+              <DashboardCard 
+                isClickable={true} 
+                onClick={() => fetchUserBreakdown('closed_leads', 'Lead Closed')}
+                title="Lead Closed" 
+                value={loading ? "..." : stats.closedLeads} 
+                subtext="Total Won/Lost" 
+                icon={X} 
+              />
+              <DashboardCard 
+                isClickable={true} 
+                onClick={() => fetchUserBreakdown('admissions', 'Admission Closed')}
+                title="Admissions" 
+                value={loading ? "..." : stats.totalAdmission} 
+                subtext="Successfully enrolled" 
+                icon={CheckCircle} 
+              />
+              <DashboardCard 
+                isClickable={true} 
+                onClick={() => fetchUserBreakdown('collections', 'Total Fee Collection')}
+                title="Total Collection" 
+                value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} 
+                subtext="Total fee received" 
+                icon={Wallet} 
+              />
+              <DashboardCard 
+                isClickable={true} 
+                onClick={() => fetchUserBreakdown('pending_collections', 'Pending Collection')}
+                title="Pending Collection" 
+                value={loading ? "..." : `₹${stats.pendingCollection?.toLocaleString()}`} 
+                subtext="Outstanding balance" 
+                icon={Wallet} 
+              />
+           </div>
+        </div>
+      )}
+
+      {isAdminOrSuperAdmin && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <DashboardCard title="Reply Bots" value={loading && !wabaConfig ? "..." : "0"} subtext="0 Messages sent" icon={Bot} />
           <DashboardCard 
@@ -350,6 +440,60 @@ function Dashboard() {
             subtext={`Sent Today: ${sentToday}`} 
             icon={Database} 
           />
+        </div>
+      )}
+
+      {/* User Breakdown Modal */}
+      {breakdownModal.show && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/40 backdrop-blur-md animate-fade-in p-4" onClick={() => setBreakdownModal(prev => ({ ...prev, show: false }))}>
+           <div className="bg-white/90 backdrop-blur-xl w-full max-w-3xl rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
+              <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
+                 <div>
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase">{breakdownModal.categoryName}</h2>
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">User Performance Breakdown</p>
+                 </div>
+                 <button onClick={() => setBreakdownModal(prev => ({ ...prev, show: false }))} className="p-3 bg-white/50 text-slate-400 hover:text-rose-500 rounded-2xl transition-all shadow-sm">
+                    <X size={20} />
+                 </button>
+              </div>
+
+              <div className="p-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                 {breakdownModal.loading ? (
+                   <div className="flex flex-col items-center justify-center py-20">
+                      <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-600 rounded-full animate-spin mb-4"></div>
+                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Fetching data...</p>
+                   </div>
+                 ) : breakdownModal.data.length === 0 ? (
+                   <div className="text-center py-20 text-slate-400 font-medium">No data found for this category</div>
+                 ) : (
+                   <div className="space-y-3">
+                      {breakdownModal.data.map((user, i) => (
+                        <div key={i} className="flex items-center justify-between p-5 bg-slate-50/50 border border-slate-100 rounded-2xl hover:bg-white hover:shadow-soft transition-all group">
+                           <div className="flex items-center space-x-4">
+                              <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-600 font-black text-lg border border-slate-100 group-hover:scale-110 transition-transform">
+                                 {user.name.charAt(0)}
+                              </div>
+                              <div>
+                                 <p className="text-sm font-black text-slate-800">{user.name}</p>
+                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{user.role} • {user.email}</p>
+                              </div>
+                           </div>
+                           <div className="text-right">
+                              <p className="text-2xl font-black text-blue-600 leading-none">{user.count}</p>
+                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Leads</p>
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                 )}
+              </div>
+              
+              <div className="p-6 bg-slate-50/50 border-t border-slate-100 text-center">
+                 <button onClick={() => setBreakdownModal(prev => ({ ...prev, show: false }))} className="px-8 py-3 bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-premium">
+                    Close Breakdown
+                 </button>
+              </div>
+           </div>
         </div>
       )}
 

@@ -815,6 +815,67 @@ const getLeadAnalysis = async (req, res) => {
   }
 };
 
+const getUserBreakdownStats = async (req, res) => {
+  try {
+    const { category } = req.query;
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+
+    let matchQuery = {};
+    let groupField = '$assignedAgent'; // Default to assigned agent
+
+    switch (category) {
+      case 'new_leads':
+        matchQuery = { status: 'NEW LEAD' };
+        break;
+      case 'open_leads':
+        matchQuery = { isArchived: { $ne: true }, isClosed: { $ne: true } };
+        break;
+      case 'closed_leads':
+        matchQuery = { isClosed: true };
+        break;
+      case 'admissions':
+        matchQuery = { admissionStatus: 'Admitted' };
+        groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
+        break;
+      case 'collections':
+        matchQuery = { collectionAmount: { $gt: 0 } };
+        groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
+        break;
+      case 'pending_collections':
+        matchQuery = { pendingCollectionAmount: { $gt: 0 } };
+        groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid category' });
+    }
+
+    const stats = await Contact.aggregate([
+      { $match: matchQuery },
+      { $group: { _id: groupField, count: { $sum: 1 } } }
+    ]);
+
+    // Fetch user details for the IDs found
+    const userIds = stats.map(s => s._id).filter(Boolean);
+    const users = await User.find({ _id: { $in: userIds } }).select('name email role');
+
+    const result = stats.map(s => {
+      const user = users.find(u => u._id.toString() === s._id?.toString());
+      return {
+        userId: s._id,
+        name: user ? user.name : 'Unassigned',
+        email: user ? user.email : 'N/A',
+        role: user ? user.role : 'N/A',
+        count: s.count
+      };
+    }).sort((a, b) => b.count - a.count);
+
+    res.json(result);
+  } catch (error) {
+    console.error(`[GET /stats/user-breakdown] FAILED:`, error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getContacts,
   getMessages,
@@ -827,5 +888,6 @@ module.exports = {
   getAgents,
   updateFcmToken,
   summarizeLead,
-  getLeadAnalysis
+  getLeadAnalysis,
+  getUserBreakdownStats
 };

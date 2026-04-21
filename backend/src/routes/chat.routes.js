@@ -15,6 +15,7 @@ router.post('/action', performContactAction); // Fix for current frontend
 router.put('/contacts/:contactId/action', performContactAction);
 router.get('/stats', getDashboardStats);
 router.get('/stats/contacts', getContactStats);
+router.get('/stats/user-breakdown', getUserBreakdownStats);
 router.get('/analysis', getLeadAnalysis);
 router.get('/messages/:contactId', getMessages);
 router.post('/send', upload.single('media'), sendMessage);
