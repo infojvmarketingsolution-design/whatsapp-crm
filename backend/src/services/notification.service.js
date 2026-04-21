@@ -2,6 +2,8 @@ const nodemailer = require('nodemailer');
 const twilio = require('twilio');
 const WhatsAppService = require('./whatsapp.service');
 const Client = require('../models/core/Client');
+const { getTenantConnection } = require('../config/db');
+const TemplateSchema = require('../models/tenant/Template');
 
 /**
  * NotificationService handles sending OTPs and other notifications via multiple channels.
@@ -86,8 +88,36 @@ class NotificationService {
         phoneNumberId: client.whatsappConfig.phoneNumberId
       });
 
-      const message = `Your WapiPulse login OTP is: *${otp}*. It expires in 5 minutes.`;
-      const result = await waService.sendTextMessage(formattedTo, message);
+      // 🔍 1. Check if an approved AUTHENTICATION/UTILITY template exists
+      const db = await getTenantConnection(tenantId);
+      const Template = db.model('Template', TemplateSchema);
+      const otpTemplate = await Template.findOne({ 
+        category: { $in: ['AUTHENTICATION', 'UTILITY'] }, 
+        status: 'APPROVED' 
+      });
+
+      let result;
+      if (otpTemplate) {
+        console.log(`[NotificationService] Using Template "${otpTemplate.name}" for OTP delivery to ${formattedTo}`);
+        // For Meta AUTHENTICATION templates, the OTP is usually the first parameter
+        result = await waService.sendTemplate(formattedTo, otpTemplate.name, otpTemplate.language || 'en_US', [
+          {
+            type: 'body',
+            parameters: [{ type: 'text', text: otp }]
+          },
+          {
+            type: 'button',
+            sub_type: 'url',
+            index: '0',
+            parameters: [{ type: 'text', text: otp }]
+          }
+        ]);
+      } else {
+        console.warn(`[NotificationService] ⚠️ No approved Authentication template found. Falling back to free-form text.`);
+        const message = `Your WapiPulse login OTP is: *${otp}*. It expires in 5 minutes.`;
+        result = await waService.sendTextMessage(formattedTo, message);
+      }
+
       console.log(`[NotificationService] ✅ WhatsApp OTP sent to ${formattedTo}. Meta ID: ${result?.messages?.[0]?.id || 'N/A'}`);
       return true;
     } catch (error) {
