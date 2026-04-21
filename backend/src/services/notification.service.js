@@ -88,32 +88,31 @@ class NotificationService {
         phoneNumberId: client.whatsappConfig.phoneNumberId
       });
 
-      // 🔍 1. Check if an approved AUTHENTICATION/UTILITY template exists
+      // 🔍 1. Discovery: Search for AUTHENTICATION template first, then UTILITY
       const db = await getTenantConnection(tenantId);
       const Template = db.model('Template', TemplateSchema);
-      const otpTemplate = await Template.findOne({ 
-        category: { $in: ['AUTHENTICATION', 'UTILITY'] }, 
-        status: 'APPROVED' 
-      });
+      const otpTemplate = await Template.findOne({ category: 'AUTHENTICATION', status: 'APPROVED' })
+                       || await Template.findOne({ category: 'UTILITY', status: 'APPROVED' });
 
       let result;
+      let usedTemplate = false;
+
       if (otpTemplate) {
-        console.log(`[NotificationService] Using Template "${otpTemplate.name}" for OTP delivery to ${formattedTo}`);
-        // For Meta AUTHENTICATION templates, the OTP is usually the first parameter
-        result = await waService.sendTemplate(formattedTo, otpTemplate.name, otpTemplate.language || 'en_US', [
-          {
-            type: 'body',
-            parameters: [{ type: 'text', text: otp }]
-          },
-          {
-            type: 'button',
-            sub_type: 'url',
-            index: '0',
-            parameters: [{ type: 'text', text: otp }]
-          }
-        ]);
-      } else {
-        console.warn(`[NotificationService] ⚠️ No approved Authentication template found. Falling back to free-form text.`);
+        try {
+          console.log(`[NotificationService] Attempting Template "${otpTemplate.name}" for OTP delivery to ${formattedTo}`);
+          result = await waService.sendTemplate(formattedTo, otpTemplate.name, otpTemplate.language || 'en_US', [
+            { type: 'body', parameters: [{ type: 'text', text: otp }] },
+            { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: otp }] }
+          ]);
+          usedTemplate = true;
+        } catch (templateError) {
+          console.warn(`[NotificationService] ❌ Template delivery failed: ${templateError.message}. Falling back to text message...`);
+        }
+      }
+
+      // 🔍 2. Fallback: If no template found or template sending failed
+      if (!usedTemplate) {
+        console.log(`[NotificationService] Sending standard text OTP to ${formattedTo}`);
         const message = `Your WapiPulse login OTP is: *${otp}*. It expires in 5 minutes.`;
         result = await waService.sendTextMessage(formattedTo, message);
       }
