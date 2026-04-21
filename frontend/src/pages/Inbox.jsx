@@ -153,9 +153,10 @@ export default function Inbox({ roleAccess }) {
     }
   };
 
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = async (e, customMessage = null) => {
     e?.preventDefault();
-    if (!newMessage.trim() && !attachment) return;
+    const msgContent = customMessage || newMessage.trim();
+    if (!msgContent && !attachment) return;
     
     try {
       const token = localStorage.getItem('token');
@@ -163,9 +164,9 @@ export default function Inbox({ roleAccess }) {
       
       const formData = new FormData();
       formData.append('contactId', activeChat._id);
-      if (newMessage.trim()) formData.append('content', newMessage.trim());
-      if (attachment) formData.append('media', attachment);
-      if (isPrivateNote) formData.append('isInternal', 'true');
+      if (msgContent) formData.append('content', msgContent);
+      if (attachment && !customMessage) formData.append('media', attachment);
+      if (isPrivateNote && !customMessage) formData.append('isInternal', 'true');
 
       const res = await fetch('/api/chat/send', {
         method: 'POST',
@@ -196,9 +197,12 @@ export default function Inbox({ roleAccess }) {
            return prev;
         });
 
-        setNewMessage('');
-        setAttachment(null);
-        if (fileInputRef.current) fileInputRef.current.value = '';
+        if (!customMessage) {
+           setNewMessage('');
+           setAttachment(null);
+           if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+        scrollToBottom();
       } else {
         const errData = await res.json();
         alert(`Send Error: ${errData.message || errData.error || 'Unknown error'}`);
@@ -890,7 +894,10 @@ export default function Inbox({ roleAccess }) {
                            if (locationLink) msg += `\n📍 *Location Link:* ${locationLink}\n`;
                            msg += `\nLooking forward to seeing you!`;
 
-                           setNewMessage(msg);
+                           handleSendMessage(null, msg);
+                           setShowMeetingModal(false);
+                           setMeetingDate('');
+                           setMeetingDescription('');
                         }} 
                         className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider px-6 py-2.5 rounded-xl shadow-lg shadow-purple-600/20 active:scale-95 transition-all"
                      >
