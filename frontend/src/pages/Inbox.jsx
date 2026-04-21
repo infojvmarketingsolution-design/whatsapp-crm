@@ -22,6 +22,8 @@ export default function Inbox({ roleAccess }) {
   const [callCount, setCallCount] = useState(1);
   const [callDate, setCallDate] = useState('');
   const [callTime, setCallTime] = useState('');
+  const [nextCallDate, setNextCallDate] = useState('');
+  const [nextCallTime, setNextCallTime] = useState('');
   const [callNotes, setCallNotes] = useState('');
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [meetingMode, setMeetingMode] = useState('Online Meeting (Zoom/Google)');
@@ -140,6 +142,8 @@ export default function Inbox({ roleAccess }) {
           setCallCount(1);
           setCallDate('');
           setCallTime('');
+          setNextCallDate('');
+          setNextCallTime('');
           setMeetingDescription('');
           setShowTagInput(false);
           setNewTagName('');
@@ -807,14 +811,23 @@ export default function Inbox({ roleAccess }) {
                     <option>Not Interested</option>
                  </select>
                  
-                 <div className="flex space-x-2 mb-2">
+                 <label className="text-[10px] font-bold text-blue-900 mb-1 block">1st Call Date & Time</label>
+                 <div className="flex space-x-2 mb-3">
                     <input type="date" value={callDate} onChange={e => setCallDate(e.target.value)} className="w-1/2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
                     <input type="time" value={callTime} onChange={e => setCallTime(e.target.value)} className="w-1/2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
                  </div>
 
-                 <input type="number" min="1" value={callCount} onChange={e => setCallCount(e.target.value)} placeholder="Call Count (e.g. 1)" className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
+                 <label className="text-[10px] font-bold text-blue-900 mb-1 block">Call Count :</label>
+                 <input type="number" min="1" value={callCount} onChange={e => setCallCount(e.target.value)} placeholder="e.g. 1" className="w-full mb-3 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
                  
-                 <textarea value={callNotes} onChange={e => setCallNotes(e.target.value)} placeholder="Description..." rows="2" className="w-full bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none resize-none focus:border-blue-300"></textarea>
+                 <label className="text-[10px] font-bold text-blue-900 mb-1 block">Next Follow Up Date & Time</label>
+                 <div className="flex space-x-2 mb-3">
+                    <input type="date" value={nextCallDate} onChange={e => setNextCallDate(e.target.value)} className="w-1/2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
+                    <input type="time" value={nextCallTime} onChange={e => setNextCallTime(e.target.value)} className="w-1/2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-blue-300" />
+                 </div>
+
+                 <label className="text-[10px] font-bold text-blue-900 mb-1 block">Description</label>
+                 <textarea value={callNotes} onChange={e => setCallNotes(e.target.value)} placeholder="Enter details..." rows="2" className="w-full mb-2 bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none resize-none focus:border-blue-300"></textarea>
                  
                  <div className="flex justify-end mt-2">
                     <button 
@@ -832,20 +845,22 @@ export default function Inbox({ roleAccess }) {
                                callMsg = `Thank you for your time.`;
                            }
 
-                           if (callDate && callTime) {
-                               const d = new Date(`${callDate}T${callTime}`);
+                           if (nextCallDate && nextCallTime) {
+                               const d = new Date(`${nextCallDate}T${nextCallTime}`);
                                const formattedDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
                                const formattedTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
                                callMsg += `\n\nOur team's next call is scheduled for:\n📅 *${formattedDate}* at ⏰ *${formattedTime}*`;
                            }
 
                            await handleSendMessage(null, callMsg);
-                           await handleAction('log_call', { outcome: callOutcome, count: callCount, date: callDate, time: callTime, notes: callNotes });
+                           await handleAction('log_call', { outcome: callOutcome, count: callCount, date: callDate, time: callTime, nextDate: nextCallDate, nextTime: nextCallTime, notes: callNotes });
 
                            setShowCallModal(false);
                            setCallCount(1);
                            setCallDate('');
                            setCallTime('');
+                           setNextCallDate('');
+                           setNextCallTime('');
                            setCallNotes('');
                         }} 
                         className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-4 py-1.5 rounded inline-block transition-colors"

@@ -237,10 +237,12 @@ const performContactAction = async (req, res) => {
        contact.timeline.push({ eventType: 'CALL_LOGGED', description: `Call Logged - Outcome: ${payload.outcome}`, timestamp: new Date() });
        
        let callDetails = `Outcome: ${payload.outcome}`;
-       if (payload.date) callDetails += `\nCall Date: ${payload.date}`;
-       if (payload.time) callDetails += `\nCall Time: ${payload.time}`;
-       if (payload.count) callDetails += `\nCall Count: ${payload.count}`;
-       callDetails += `\nDescription: ${payload.notes || 'N/A'}`;
+        if (payload.date) callDetails += `\n1st Call Date: ${payload.date}`;
+        if (payload.time) callDetails += `\n1st Call Time: ${payload.time}`;
+        if (payload.count) callDetails += `\nCall Count: ${payload.count}`;
+        if (payload.nextDate) callDetails += `\nNext Follow Up Date: ${payload.nextDate}`;
+        if (payload.nextTime) callDetails += `\nNext Follow Up Time: ${payload.nextTime}`;
+        callDetails += `\nDescription: ${payload.notes || 'N/A'}`;
 
        const newNote = { content: callDetails, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
