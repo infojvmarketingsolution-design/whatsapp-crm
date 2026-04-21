@@ -63,7 +63,10 @@ const ContactSchema = new mongoose.Schema({
   collectionAmount: { type: Number, default: 0 },
   pendingCollectionAmount: { type: Number, default: 0 },
   isClosed: { type: Boolean, default: false },
-  isArchived: { type: Boolean, default: false }
+  isArchived: { type: Boolean, default: false },
+  assignedCounsellor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  meetingType: { type: String }, // e.g. 'Office Visit', 'Campus Visit'
+  meetingRemark: { type: String }
 }, { timestamps: true });
 
 // Exporting Schema, not model, because models are bound to tenant DB dynamically

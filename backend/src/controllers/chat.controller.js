@@ -248,7 +248,8 @@ const performContactAction = async (req, res) => {
          title: payload.title || 'Follow-up Reminder', 
          dueDate: new Date(payload.dateTime), 
          status: 'PENDING',
-         description: payload.description || ''
+         description: payload.description || '',
+         metadata: payload.metadata || {} // Store visit types here
        });
        contact.timeline.push({ 
          eventType: 'FOLLOWUP_SET', 
@@ -277,8 +278,30 @@ const performContactAction = async (req, res) => {
        if (!contact.tasks) contact.tasks = [];
        const taskIndex = contact.tasks.findIndex(t => t._id.toString() === payload.taskId);
        if (taskIndex > -1) {
-           contact.tasks[taskIndex].status = 'COMPLETED';
-           contact.timeline.push({ eventType: 'TASK_COMPLETED', description: `Task completed: ${contact.tasks[taskIndex].title}`, timestamp: new Date() });
+           const task = contact.tasks[taskIndex];
+           task.status = 'COMPLETED';
+           task.outcome = payload.remark || 'Task completed';
+           
+           // Update Contact Metadata if meeting outcome is provided
+           if (payload.assignedCounsellor) {
+              contact.assignedCounsellor = payload.assignedCounsellor;
+              const counsellor = await User.findById(payload.assignedCounsellor);
+              contact.timeline.push({ 
+                 eventType: 'COUNSELLOR_ASSIGNED', 
+                 description: `Enquiry lead by: ${counsellor?.name || 'Counsellor'}`, 
+                 timestamp: new Date() 
+              });
+           }
+
+           if (payload.remark) {
+              contact.meetingRemark = payload.remark;
+              if (task.metadata?.visitType) {
+                 contact.visitType = task.metadata.visitType;
+                 contact.visitStatus = 'Visited';
+              }
+           }
+
+           contact.timeline.push({ eventType: 'TASK_COMPLETED', description: `Task completed: ${task.title}`, timestamp: new Date() });
        }
     } else if (action === 'in_progress_task') {
         if (!contact.tasks) contact.tasks = [];
@@ -534,7 +557,10 @@ const getDashboardStats = async (req, res) => {
 
     const baseFilter = {};
     if (roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
-       baseFilter.assignedAgent = req.user._id.toString();
+       baseFilter.$or = [
+         { assignedAgent: req.user._id.toString() },
+         { assignedCounsellor: req.user._id.toString() }
+       ];
     }
 
     const totalContacts = await Contact.countDocuments(baseFilter);

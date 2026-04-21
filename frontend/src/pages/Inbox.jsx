@@ -32,6 +32,7 @@ export default function Inbox({ roleAccess }) {
   const [followupDate, setFollowupDate] = useState('');
   const [followupTime, setFollowupTime] = useState('');
   const [followupDescription, setFollowupDescription] = useState('');
+  const [followupVisitType, setFollowupVisitType] = useState('Office Visit');
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const PREDEFINED_TAGS = ['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'];
@@ -844,10 +845,18 @@ export default function Inbox({ roleAccess }) {
                  <h4 className="text-xs font-bold text-orange-900 mb-3 tracking-wide flex items-center"><Clock size={14} className="mr-1.5"/> Set Follow-up</h4>
                  <input type="text" value={followupHeading} onChange={e => setFollowupHeading(e.target.value)} placeholder="Heading/Subject..." className="w-full mb-2 bg-white border border-orange-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-orange-300" />
                  <select value={followupType} onChange={e => setFollowupType(e.target.value)} className="w-full mb-2 bg-white border border-orange-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-orange-300">
-                    <option>Call</option>
-                    <option>Meeting</option>
-                    <option>Update</option>
-                 </select>
+                     <option>Call</option>
+                     <option>Meeting</option>
+                     <option>Update</option>
+                  </select>
+
+                  {followupType === 'Meeting' && (
+                     <select value={followupVisitType} onChange={e => setFollowupVisitType(e.target.value)} className="w-full mb-2 bg-white border border-teal-100 rounded p-1.5 text-xs text-teal-700 outline-none focus:border-teal-300 font-bold">
+                        <option>Office Visit</option>
+                        <option>Campus Visit</option>
+                     </select>
+                  )}
+                    
                  <div className="flex space-x-2 mb-2">
                     <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)} className="w-1/2 bg-white border border-orange-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-orange-300" />
                     <input type="time" value={followupTime} onChange={e => setFollowupTime(e.target.value)} className="w-1/2 bg-white border border-orange-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-orange-300" />
@@ -856,9 +865,10 @@ export default function Inbox({ roleAccess }) {
                  <div className="flex justify-end mt-2">
                     <button 
                       onClick={() => handleAction('add_followup', { 
-                        title: `[${followupType}] ${followupHeading}`, 
+                        title: `[${followupType}${followupType === 'Meeting' ? `: ${followupVisitType}` : ''}] ${followupHeading}`, 
                         dateTime: new Date(`${followupDate}T${followupTime || '09:00'}`).toISOString(),
-                        description: followupDescription
+                        description: followupDescription,
+                        metadata: { visitType: followupType === 'Meeting' ? followupVisitType : null }
                       })} 
                       className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-bold px-4 py-1.5 rounded inline-block transition-colors"
                     >

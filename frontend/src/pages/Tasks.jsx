@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle2, PhoneCall, Calendar, Clock, AlertCircle, 
   Search, Filter, ChevronRight, User, Check, CalendarDays,
@@ -44,6 +44,7 @@ export default function Tasks() {
   const [nextFollowUpTitle, setNextFollowUpTitle] = useState('');
   const [nextFollowUpDate, setNextFollowUpDate] = useState('');
   const [nextFollowUpDescription, setNextFollowUpDescription] = useState('');
+  const [assignedCounsellorId, setAssignedCounsellorId] = useState('');
   const [isSubmittingCompletion, setIsSubmittingCompletion] = useState(false);
 
   // Edit Task State
@@ -341,7 +342,14 @@ export default function Tasks() {
        await fetch(`/api/chat/contacts/${completingTask.contactId}/action`, {
          method: 'PUT',
          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-         body: JSON.stringify({ action: 'complete_task', payload: { taskId: completingTask._id } })
+         body: JSON.stringify({ 
+           action: 'complete_task', 
+           payload: { 
+              taskId: completingTask._id, 
+              remark: completionNotes,
+              assignedCounsellor: assignedCounsellorId
+           } 
+        })
        });
 
        // 2. Add Completion Notes
@@ -965,7 +973,7 @@ export default function Tasks() {
                           <div className="p-4 bg-slate-900 rounded-2xl shadow-xl">
                              <label className="text-[8px] font-black text-white/30 uppercase tracking-[0.2em] block mb-2">Est. Deal Value</label>
                              <div className="flex items-center space-x-3">
-                                <span className="text-xl font-black text-white opacity-40">₹</span>
+                                <span className="text-xl font-black text-white opacity-40">â‚¹</span>
                                 <input type="number" value={editedContact.estimatedValue || 0} onChange={e=>handleFieldChange('estimatedValue', e.target.value)} className="bg-transparent text-2xl font-black text-white outline-none w-full placeholder-white/10" />
                              </div>
                           </div>
@@ -1101,15 +1109,30 @@ export default function Tasks() {
                 </button>
              </div>
              
-             <div className="p-6 space-y-6">
+             <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
                 <div>
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Completion Notes / Outcome</label>
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Meeting / Task Remark</label>
                    <textarea 
                      value={completionNotes} 
-                     onChange={e => setCompletionNotes(e.target.value)}
-                     placeholder="What happened during this task? Any important details?"
-                     className="w-full bg-slate-50 border-2 border-transparent focus:border-teal-500 rounded-xl px-4 py-3 text-sm font-bold outline-none h-24 custom-scrollbar transition-all" 
+                     onChange={(e) => setCompletionNotes(e.target.value)}
+                     placeholder="How was the interaction? Enter any specific visit notes..."
+                     className="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-teal-100 transition-all min-h-[100px] resize-none"
                    />
+                </div>
+
+                <div>
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Enquiry Lead By (Counsellor)</label>
+                   <select 
+                     value={assignedCounsellorId} 
+                     onChange={(e) => setAssignedCounsellorId(e.target.value)}
+                     className="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-teal-100 transition-all"
+                   >
+                     <option value="">Select Counsellor...</option>
+                     {agents.filter(a => a.role === 'MANAGER_COUNSELLOUR').map(agent => (
+                        <option key={agent._id} value={agent._id}>{agent.name}</option>
+                     ))}
+                   </select>
+                   <p className="mt-2 text-[9px] font-bold text-slate-400 leading-relaxed italic">Selecting a counsellor will share this lead in both your dashboard and theirs.</p>
                 </div>
 
                 <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
