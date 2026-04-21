@@ -205,10 +205,6 @@ function Dashboard() {
              <span>Send campaign</span>
           </button>
         )}
-        <button onClick={() => navigate('/contacts')} className="flex items-center space-x-2 px-4 py-2 border border-blue-200 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors shadow-soft">
-           <PlusCircle size={14} />
-           <span>Create contact</span>
-        </button>
         {isAdminOrSuperAdmin && (
           <>
             <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-4 py-2 border border-blue-200 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors shadow-soft">
