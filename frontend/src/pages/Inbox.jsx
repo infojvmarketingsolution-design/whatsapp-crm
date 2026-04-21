@@ -817,7 +817,39 @@ export default function Inbox({ roleAccess }) {
                  <textarea value={callNotes} onChange={e => setCallNotes(e.target.value)} placeholder="Description..." rows="2" className="w-full bg-white border border-blue-100 rounded p-1.5 text-xs text-gray-700 outline-none resize-none focus:border-blue-300"></textarea>
                  
                  <div className="flex justify-end mt-2">
-                    <button onClick={() => handleAction('log_call', { outcome: callOutcome, count: callCount, date: callDate, time: callTime, notes: callNotes })} className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-4 py-1.5 rounded inline-block transition-colors">
+                    <button 
+                        onClick={async () => {
+                           let callMsg = '';
+                           if (callOutcome === 'Connected') {
+                               callMsg = `Thank you for connecting with us today!`;
+                           } else if (callOutcome === 'Not Answered') {
+                               callMsg = `We tried to call you but you didn't answer. Please provide a suitable time for calling.`;
+                           } else if (callOutcome === 'Busy') {
+                               callMsg = `You were busy when we called. Please provide a convenient time for us to call you.`;
+                           } else if (callOutcome === 'Interested') {
+                               callMsg = `Thank you for your interest in our university.`;
+                           } else if (callOutcome === 'Not Interested') {
+                               callMsg = `Thank you for your time.`;
+                           }
+
+                           if (callDate && callTime) {
+                               const d = new Date(`${callDate}T${callTime}`);
+                               const formattedDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                               const formattedTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+                               callMsg += `\n\nOur team's next call is scheduled for:\n📅 *${formattedDate}* at ⏰ *${formattedTime}*`;
+                           }
+
+                           await handleSendMessage(null, callMsg);
+                           await handleAction('log_call', { outcome: callOutcome, count: callCount, date: callDate, time: callTime, notes: callNotes });
+
+                           setShowCallModal(false);
+                           setCallCount(1);
+                           setCallDate('');
+                           setCallTime('');
+                           setCallNotes('');
+                        }} 
+                        className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-4 py-1.5 rounded inline-block transition-colors"
+                     >
                        Save Call Log
                     </button>
                  </div>
