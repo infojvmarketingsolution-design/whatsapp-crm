@@ -963,19 +963,6 @@ export default function Contacts({ roleAccess }) {
         </div>
       )}
 
-
-
-                  <button 
-                    onClick={() => setSelectedIds(new Set())}
-                    className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition-colors pl-4 border-l border-white/10"
-                  >
-                     <X size={14} /> <span>Dismiss</span>
-                  </button>
-               </div>
-            </div>
-         </div>
-      )}
-
       {/* ADVANCED FILTER PRO CONSOLE (SIDEBAR) */}
       {showFilters && (
         <div className="fixed inset-0 z-[200] flex justify-end bg-slate-900/40 backdrop-blur-[4px] animate-fade-in" onClick={() => setShowFilters(false)}>
