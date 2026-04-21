@@ -5,7 +5,7 @@ export default function AgentsDashboard() {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'AGENT' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '' });
   const roleFormatMap = {
     'AGENT': 'Standard Agent',
     'TELECALLER': 'Telecaller',
@@ -38,12 +38,12 @@ export default function AgentsDashboard() {
   };
 
   const openCreateModal = () => {
-    setFormData({ name: '', email: '', password: '', role: 'AGENT' });
+    setFormData({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '' });
     setShowModal(true);
   };
 
   const openEditModal = (agent) => {
-    setFormData({ ...agent, password: '' });
+    setFormData({ ...agent, password: '', phoneNumber: agent.phoneNumber || '' });
     setShowModal(true);
   };
 
@@ -61,7 +61,7 @@ export default function AgentsDashboard() {
       });
       
       if (res.ok) {
-        setFormData({ name: '', email: '', password: '', role: 'AGENT' });
+        setFormData({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '' });
         setShowModal(false);
         fetchAgents();
       } else {
@@ -232,6 +232,18 @@ export default function AgentsDashboard() {
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                 />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">WhatsApp Number (For OTP Login)</label>
+                <input 
+                  type="tel" 
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium text-gray-800"
+                  placeholder="e.g. 919876543210"
+                  value={formData.phoneNumber || ''}
+                  onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
+                />
+                <p className="text-[10px] text-gray-400 mt-2 font-medium">Used to send WhatsApp OTP for secure, passwordless authentication.</p>
               </div>
 
               <div>
