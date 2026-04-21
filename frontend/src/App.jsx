@@ -226,6 +226,20 @@ function Dashboard() {
     return () => clearInterval(interval);
   }, []);
 
+  React.useEffect(() => {
+    const container = document.getElementById('main-scroll-container');
+    if (container) {
+      if (breakdownModal.show || showRefillModal) {
+        container.style.overflow = 'hidden';
+      } else {
+        container.style.overflow = 'auto';
+      }
+    }
+    return () => {
+      if (container) container.style.overflow = 'auto';
+    };
+  }, [breakdownModal.show, showRefillModal]);
+
   const limitValues = { 'TIER_1': 1000, 'TIER_2': 10000, 'TIER_3': 100000, 'TIER_4': Infinity };
   const limitNum = limitValues[wabaConfig?.limitTier] || 0;
   const sentToday = wabaConfig?.sentToday || 0;
@@ -735,7 +749,7 @@ function AppLayout() {
       {!isAuthPage && <GlobalSuspensionTimer />}
       {!isAuthPage && (userRole === 'SUPER_ADMIN' ? <AdminSidebar onLogout={handleLogout} /> : <Sidebar whatsappConfig={whatsappConfig} roleAccess={roleAccess} />)}
       <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-hidden">
-        <div className="flex-1 overflow-y-auto custom-scrollbar">
+        <div id="main-scroll-container" className="flex-1 overflow-y-auto custom-scrollbar">
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
