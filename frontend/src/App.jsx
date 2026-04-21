@@ -130,6 +130,9 @@ function LeadAnalysisCard({ title, data, type = 'status' }) {
 function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = React.useState({ campaigns: 0, recentCampaign: '', templates: 0, contacts: 0, chats: 0 });
+  const [analysisData, setAnalysisData] = React.useState({ statusStats: [], sourceStats: [] });
+  const [loading, setLoading] = React.useState(true);
+  const [wabaConfig, setWabaConfig] = React.useState(null);
   const [showRefillModal, setShowRefillModal] = React.useState(false);
   const [breakdownModal, setBreakdownModal] = React.useState({ show: false, category: '', categoryName: '', data: [], loading: false });
 
