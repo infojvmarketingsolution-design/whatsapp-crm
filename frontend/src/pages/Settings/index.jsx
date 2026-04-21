@@ -27,7 +27,19 @@ import UserAndRolesSettings from './UserAndRolesSettings';
 import AccessLogSettings from './AccessLogSettings';
 import ApiSetup from '../ApiSetup';
 
-// ... Placeholder component ...
+const PlaceholderSettings = ({ title, icon: Icon, description }) => (
+  <div className="bg-white rounded-xl border border-gray-100 p-8 text-center max-w-2xl mx-auto mt-8 shadow-sm">
+    <div className="w-16 h-16 bg-teal-50 text-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
+      <Icon size={32} />
+    </div>
+    <h2 className="text-2xl font-bold text-gray-800 mb-2">{title}</h2>
+    <p className="text-gray-500 mb-6">{description}</p>
+    <div className="inline-flex items-center px-4 py-2 bg-gray-50 text-gray-600 rounded-lg text-sm font-medium border border-gray-200">
+      <AlertCircle size={16} className="mr-2" />
+      This module is being configured
+    </div>
+  </div>
+);
 
 export default function Settings({ roleAccess }) {
   const [activeTab, setActiveTab] = useState('workspace');
@@ -50,7 +62,23 @@ export default function Settings({ roleAccess }) {
     { id: 'activity_logs', name: 'Access Logs', icon: History, desc: 'User login activity and sessions' },
   ];
 
-  // ... [allowedMenuItems, filteredItems, activeCategory logic] ...
+  const allowedMenuItems = menuItems.filter(item => {
+    if (roleAccess && roleAccess[userRole]) {
+       const roleData = roleAccess[userRole];
+       if (roleData.allAccess) return true;
+       if (roleData.permissions) {
+          return roleData.permissions.includes(item.id);
+       }
+    }
+    return true; // Default show
+  });
+
+  const filteredItems = allowedMenuItems.filter(item => 
+    item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    item.desc.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const activeCategory = menuItems.find(m => m.id === activeTab);
 
   const renderContent = () => {
     switch (activeTab) {
