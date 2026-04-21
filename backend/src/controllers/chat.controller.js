@@ -542,6 +542,23 @@ const sendMessage = async (req, res) => {
 
     if (req.file) {
       const mimeType = req.file.mimetype;
+      const originalName = req.file.originalname;
+      const extension = path.extname(originalName).toLowerCase().replace('.', '');
+      
+      // Strict Security: Allow-list of safe business and media extensions
+      const allowedExtensions = [
+        'jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', // Images
+        'mp4', 'mpeg', 'avi', 'mov', 'm4v',          // Video
+        'mp3', 'ogg', 'wav', 'm4a',                   // Audio
+        'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar' // Documents
+      ];
+
+      if (!allowedExtensions.includes(extension)) {
+        // Delete the temporary file if it fails validation
+        if (fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path);
+        return res.status(400).json({ error: `Security: File type (.${extension}) is not allowed for security reasons.` });
+      }
+
       if (mimeType.startsWith('image/')) messageType = 'image';
       else if (mimeType.startsWith('video/')) messageType = 'video';
       else messageType = 'document';
@@ -549,7 +566,7 @@ const sendMessage = async (req, res) => {
       const targetDir = path.join(__dirname, '../../public/uploads/media', req.tenantId);
       if (!fs.existsSync(targetDir)) fs.mkdirSync(targetDir, { recursive: true });
       
-      const fileName = `out_${Date.now()}_${req.file.originalname}`;
+      const fileName = `out_${Date.now()}_${originalName.replace(/[^a-zA-Z0-9.-]/g, '_')}`; // Sanitize filename
       const targetPath = path.join(targetDir, fileName);
       fs.renameSync(req.file.path, targetPath);
       messageContent = `/uploads/media/${req.tenantId}/${fileName}`;

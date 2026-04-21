@@ -5,7 +5,7 @@ export default function AgentsDashboard() {
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', phoneNumber: '', password: '', role: 'AGENT' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'AGENT' });
   const roleFormatMap = {
     'AGENT': 'Standard Agent',
     'TELECALLER': 'Telecaller',
@@ -38,7 +38,7 @@ export default function AgentsDashboard() {
   };
 
   const openCreateModal = () => {
-    setFormData({ name: '', email: '', phoneNumber: '', password: '', role: 'AGENT' });
+    setFormData({ name: '', email: '', password: '', role: 'AGENT' });
     setShowModal(true);
   };
 
@@ -61,7 +61,7 @@ export default function AgentsDashboard() {
       });
       
       if (res.ok) {
-        setFormData({ name: '', email: '', phoneNumber: '', password: '', role: 'AGENT' });
+        setFormData({ name: '', email: '', password: '', role: 'AGENT' });
         setShowModal(false);
         fetchAgents();
       } else {
@@ -149,8 +149,7 @@ export default function AgentsDashboard() {
                               </div>
                               <div>
                                  <p className="text-sm font-bold text-gray-900">{agent.name}</p>
-                                 <p className="text-[11px] text-gray-500 font-medium">✉️ {agent.email}</p>
-                                 {agent.phoneNumber && <p className="text-[11px] text-teal-600 font-bold">📲 {agent.phoneNumber}</p>}
+                                 <p className="text-xs text-gray-500">{agent.email}</p>
                               </div>
                            </div>
                         </td>
@@ -233,18 +232,6 @@ export default function AgentsDashboard() {
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                 />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">Login Contact Number (for WhatsApp OTP)</label>
-                <input 
-                  type="text" 
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium text-gray-800"
-                  placeholder="e.g. 919876543210 (with country code)"
-                  value={formData.phoneNumber || ''}
-                  onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
-                />
-                <p className="text-[10px] text-slate-400 mt-2 font-medium italic">Agent can log in using this number via WhatsApp OTP.</p>
               </div>
 
               <div>

@@ -2,8 +2,6 @@ const nodemailer = require('nodemailer');
 const twilio = require('twilio');
 const WhatsAppService = require('./whatsapp.service');
 const Client = require('../models/core/Client');
-const { getTenantConnection } = require('../config/db');
-const TemplateSchema = require('../models/tenant/Template');
 
 /**
  * NotificationService handles sending OTPs and other notifications via multiple channels.
@@ -57,27 +55,10 @@ class NotificationService {
   }
 
   /**
-   * Helper: Format phone number for Meta API (International Format)
-   */
-  formatPhoneNumber(phone) {
-    if (!phone) return '';
-    let cleaned = String(phone).replace(/\D/g, '');
-    
-    // Handle Indian numbers (Primary user base)
-    if (cleaned.length === 10) return `91${cleaned}`;
-    if (cleaned.length === 11 && cleaned.startsWith('0')) return `91${cleaned.substring(1)}`;
-    if (cleaned.length > 10 && cleaned.startsWith('0')) return cleaned.substring(1);
-    
-    return cleaned;
-  }
-
-  /**
    * Send WhatsApp OTP using Meta API (Already Configured)
    */
   async sendWhatsApp(to, otp, tenantId) {
     try {
-      const formattedTo = this.formatPhoneNumber(to);
-      console.log(`[NotificationService] Attempting WhatsApp OTP to: ${formattedTo} (original: ${to})`);
       const client = await Client.findOne({ tenantId });
       if (!client || !client.whatsappConfig || !client.whatsappConfig.accessToken) {
         throw new Error('WhatsApp configuration missing for this tenant');
@@ -88,42 +69,11 @@ class NotificationService {
         phoneNumberId: client.whatsappConfig.phoneNumberId
       });
 
-      // 🔍 1. Discovery: Search for AUTHENTICATION template first, then UTILITY
-      const db = await getTenantConnection(tenantId);
-      const Template = db.model('Template', TemplateSchema);
-      const otpTemplate = await Template.findOne({ category: 'AUTHENTICATION', status: 'APPROVED' })
-                       || await Template.findOne({ category: 'UTILITY', status: 'APPROVED' });
-
-      let result;
-      let usedTemplate = false;
-
-      if (otpTemplate) {
-        try {
-          console.log(`[NotificationService] Attempting Template "${otpTemplate.name}" for OTP delivery to ${formattedTo}`);
-          result = await waService.sendTemplate(formattedTo, otpTemplate.name, otpTemplate.language || 'en_US', [
-            { type: 'body', parameters: [{ type: 'text', text: otp }] },
-            { type: 'button', sub_type: 'url', index: '0', parameters: [{ type: 'text', text: otp }] }
-          ]);
-          usedTemplate = true;
-        } catch (templateError) {
-          console.warn(`[NotificationService] ❌ Template delivery failed: ${templateError.message}. Falling back to text message...`);
-        }
-      }
-
-      // 🔍 2. Fallback: If no template found or template sending failed
-      if (!usedTemplate) {
-        console.log(`[NotificationService] Sending standard text OTP to ${formattedTo}`);
-        const message = `Your WapiPulse login OTP is: *${otp}*. It expires in 5 minutes.`;
-        result = await waService.sendTextMessage(formattedTo, message);
-      }
-
-      console.log(`[NotificationService] ✅ WhatsApp OTP sent to ${formattedTo}. Meta ID: ${result?.messages?.[0]?.id || 'N/A'}`);
+      const message = `Your WapiPulse login OTP is: *${otp}*. It expires in 5 minutes.`;
+      await waService.sendTextMessage(to, message);
       return true;
     } catch (error) {
       console.error('❌ WhatsApp notification error:', error.message);
-      if (error.response?.data) {
-        console.error('❌ Meta API Details:', JSON.stringify(error.response.data, null, 2));
-      }
       return false;
     }
   }

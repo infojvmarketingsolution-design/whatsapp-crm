@@ -12,12 +12,6 @@ const generateToken = (id) => {
   });
 };
 
-const sanitizePhone = (input) => {
-  if (!input) return '';
-  if (input.includes('@')) return input; // Keep email format
-  return String(input).replace(/\D/g, ''); // Strip all non-digits
-};
-
 /**
  * HELPER: Create a new user session
  */
@@ -104,22 +98,11 @@ const logout = async (req, res) => {
 
 const requestOTP = async (req, res) => {
   const { identifier, method, apiNumber } = req.body; 
-  const cleanIdentifier = sanitizePhone(identifier);
-  const cleanApiNumber = sanitizePhone(apiNumber);
-
-  console.log(`[Auth] OTP Request for: ${cleanIdentifier} (orig: ${identifier}) via ${method} (API #: ${cleanApiNumber || 'None'})`);
   try {
-    let query = { $or: [{ email: cleanIdentifier }] };
-    if (!cleanIdentifier.includes('@') && cleanIdentifier.length >= 10) {
-      const last10Id = cleanIdentifier.slice(-10);
-      query.$or.push({ phoneNumber: { $regex: new RegExp(`${last10Id}$`) } });
-    } else {
-      query.$or.push({ phoneNumber: cleanIdentifier });
-    }
+    let query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
 
-    if (cleanApiNumber && cleanApiNumber.length >= 10) {
-      const last10Api = cleanApiNumber.slice(-10);
-      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': { $regex: new RegExp(`${last10Api}$`) } });
+    if (apiNumber) {
+      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': apiNumber });
       if (!client) return res.status(404).json({ message: 'Invalid API Number. Workspace not found.' });
       query.tenantId = client.tenantId;
     }
@@ -159,22 +142,11 @@ const requestOTP = async (req, res) => {
 
 const verifyOTP = async (req, res) => {
   const { identifier, code, apiNumber } = req.body;
-  const cleanIdentifier = sanitizePhone(identifier);
-  const cleanApiNumber = sanitizePhone(apiNumber);
-
-  console.log(`[Auth] OTP Verification Attempt for: ${cleanIdentifier} (API #: ${cleanApiNumber || 'None'})`);
   try {
-    let query = { $or: [{ email: cleanIdentifier }] };
-    if (!cleanIdentifier.includes('@') && cleanIdentifier.length >= 10) {
-      const last10Id = cleanIdentifier.slice(-10);
-      query.$or.push({ phoneNumber: { $regex: new RegExp(`${last10Id}$`) } });
-    } else {
-      query.$or.push({ phoneNumber: cleanIdentifier });
-    }
+    let query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
 
-    if (cleanApiNumber && cleanApiNumber.length >= 10) {
-      const last10Api = cleanApiNumber.slice(-10);
-      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': { $regex: new RegExp(`${last10Api}$`) } });
+    if (apiNumber) {
+      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': apiNumber });
       if (client) query.tenantId = client.tenantId;
     }
 
