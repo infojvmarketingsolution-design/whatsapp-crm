@@ -29,6 +29,8 @@ import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import Maintenance from './pages/Maintenance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import AdBudgetRefill from './components/AdBudgetRefill';
+import AutoLogout from './components/AutoLogout';
+import UserActivityDashboard from './pages/Admin/UserActivityDashboard';
 import OAuthCallback from './pages/OAuthCallback';
 import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, AlertCircle, History, Clock, X, Plus, CheckCircle } from 'lucide-react';
 
@@ -413,10 +415,17 @@ function AppLayout() {
   const userRole = user.role || 'AGENT';
   const isAdminPath = location.pathname.startsWith('/admin');
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('tenantId');
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      }
+    } catch (e) {}
+    localStorage.clear();
     navigate('/login');
   };
 
