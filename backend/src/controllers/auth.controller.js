@@ -12,6 +12,12 @@ const generateToken = (id) => {
   });
 };
 
+const sanitizePhone = (input) => {
+  if (!input) return '';
+  if (input.includes('@')) return input; // Keep email format
+  return String(input).replace(/\D/g, ''); // Strip all non-digits
+};
+
 /**
  * HELPER: Create a new user session
  */
@@ -98,12 +104,15 @@ const logout = async (req, res) => {
 
 const requestOTP = async (req, res) => {
   const { identifier, method, apiNumber } = req.body; 
-  console.log(`[Auth] OTP Request for: ${identifier} via ${method} (API #: ${apiNumber || 'None'})`);
-  try {
-    let query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
+  const cleanIdentifier = sanitizePhone(identifier);
+  const cleanApiNumber = sanitizePhone(apiNumber);
 
-    if (apiNumber) {
-      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': apiNumber });
+  console.log(`[Auth] OTP Request for: ${cleanIdentifier} (orig: ${identifier}) via ${method} (API #: ${cleanApiNumber || 'None'})`);
+  try {
+    let query = { $or: [{ email: cleanIdentifier }, { phoneNumber: cleanIdentifier }] };
+
+    if (cleanApiNumber) {
+      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': cleanApiNumber });
       if (!client) return res.status(404).json({ message: 'Invalid API Number. Workspace not found.' });
       query.tenantId = client.tenantId;
     }
@@ -143,12 +152,15 @@ const requestOTP = async (req, res) => {
 
 const verifyOTP = async (req, res) => {
   const { identifier, code, apiNumber } = req.body;
-  console.log(`[Auth] OTP Verification Attempt for: ${identifier} (API #: ${apiNumber || 'None'})`);
-  try {
-    let query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
+  const cleanIdentifier = sanitizePhone(identifier);
+  const cleanApiNumber = sanitizePhone(apiNumber);
 
-    if (apiNumber) {
-      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': apiNumber });
+  console.log(`[Auth] OTP Verification Attempt for: ${cleanIdentifier} (API #: ${cleanApiNumber || 'None'})`);
+  try {
+    let query = { $or: [{ email: cleanIdentifier }, { phoneNumber: cleanIdentifier }] };
+
+    if (cleanApiNumber) {
+      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': cleanApiNumber });
       if (client) query.tenantId = client.tenantId;
     }
 
