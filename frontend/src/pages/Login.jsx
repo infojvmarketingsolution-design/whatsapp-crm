@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { 
+  ArrowRight, 
+  Mail, 
+  Lock, 
+  Smartphone, 
+  User, 
+  Shield, 
+  MessageSquare,
+  CheckCircle2,
+  Loader2,
+  Globe,
+  ChevronLeft
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Mail, Shield, Smartphone, MessageSquare, ArrowRight, Lock, User, CheckCircle2, ChevronLeft, Loader2, Globe } from 'lucide-react';
-import toast, { Toaster } from 'react-hot-toast';
+import { toast, Toaster } from 'react-hot-toast';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -144,7 +156,7 @@ export default function Login() {
               {showFastLogin ? 'Welcome Back' : (isRegister ? 'New Workspace' : (otpStep === 'VERIFY' ? 'Check your phone' : 'Sign In'))}
             </h1>
             <p className="text-slate-500 mt-2 text-sm font-medium text-center">
-              {showFastLogin ? `Logged in last as ${savedUser.name}` : (isRegister ? 'Register your organization today' : 'Log in to your professional CRM workspace')}
+              {showFastLogin ? `Logged in last as ${savedUser?.name}` : (isRegister ? 'Register your organization today' : 'Log in to your professional CRM workspace')}
             </p>
           </div>
 
@@ -156,8 +168,8 @@ export default function Login() {
                       <User className="w-8 h-8 text-teal-600" />
                     </div>
                     <div className="text-center">
-                       <p className="font-black text-slate-900 text-lg">{savedUser.name}</p>
-                       <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">{savedUser.identifier}</p>
+                       <p className="font-black text-slate-900 text-lg">{savedUser?.name}</p>
+                       <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mt-1">{savedUser?.identifier}</p>
                     </div>
                  </div>
 
@@ -169,7 +181,7 @@ export default function Login() {
                     {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                       <>
                         <CheckCircle2 className="w-5 h-5" />
-                        <span>Continue with {savedUser.identifier}</span>
+                        <span>Continue with {savedUser?.identifier}</span>
                       </>
                     )}
                  </button>
@@ -187,7 +199,7 @@ export default function Login() {
                       {usePassword ? (
                         <>
                           <Field label="EMAIL ID" icon={<Mail className="w-4 h-4" />}>
-                            <input type="email" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="admin@domain.com" className="field-input" />
+                            <input type="email" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="Email" className="field-input" />
                           </Field>
                           <Field label="PASSWORD" icon={<Lock className="w-4 h-4" />}>
                             <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" className="field-input" />
@@ -206,7 +218,7 @@ export default function Login() {
                           </Field>
                           
                           <Field label="LOGIN CONTACT NUMBER" icon={<User className="w-4 h-4" />}>
-                            <input type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="User Email or Mobile" className="field-input" />
+                            <input type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="Email" className="field-input" />
                           </Field>
 
                           <div className="pt-2">
