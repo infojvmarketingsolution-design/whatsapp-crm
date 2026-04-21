@@ -185,7 +185,7 @@ export default function AgentsDashboard() {
                                   : 'border-green-600 bg-green-600 text-white hover:bg-green-700 shadow-md shadow-green-200 ring-2 ring-green-100 ring-offset-1'
                               }`}
                            >
-                              {agent.status === 'ACTIVE' ? 'Suspend Seat' : 'Restore Login'}
+                              {agent.status === 'ACTIVE' ? 'Suspend Seat' : 'Reactivate Account'}
                            </button>
                         </td>
                      </tr>
