@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   CheckCircle2, PhoneCall, Calendar, Clock, AlertCircle, 
   Search, Filter, ChevronRight, User, Check, CalendarDays,
@@ -6,7 +6,7 @@ import {
   X, Mail, MapPin, Phone, Users, Activity, Target, Tag, Save, Edit3,
   Briefcase, Building2, Download, Flame, Sun, Snowflake, Send, 
   ShieldCheck, History, TrendingUp, Globe, Smartphone, Bell, 
-  Landmark, Hash, Wallet
+  Landmark, Hash, Wallet, Video, Home, School
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
@@ -45,6 +45,7 @@ export default function Tasks() {
   const [nextFollowUpDate, setNextFollowUpDate] = useState('');
   const [nextFollowUpDescription, setNextFollowUpDescription] = useState('');
   const [assignedCounsellorId, setAssignedCounsellorId] = useState('');
+  const [meetingType, setMeetingType] = useState('Office Visit');
   const [isSubmittingCompletion, setIsSubmittingCompletion] = useState(false);
 
   // Edit Task State
@@ -347,7 +348,8 @@ export default function Tasks() {
            payload: { 
               taskId: completingTask._id, 
               remark: completionNotes,
-              assignedCounsellor: assignedCounsellorId
+              assignedCounsellor: assignedCounsellorId,
+              meetingType: completingTask.type === 'MEETING' ? meetingType : null
            } 
         })
        });
@@ -377,6 +379,8 @@ export default function Tasks() {
        setNextFollowUpTitle('');
        setNextFollowUpDate('');
        setNextFollowUpDescription('');
+       setAssignedCounsellorId('');
+       setMeetingType('Office Visit');
        
        fetchTasks();
     fetchAgents();
@@ -457,7 +461,7 @@ export default function Tasks() {
   });
 
   const getInitials = (name) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+    return name?.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2) || 'UT';
   }
 
   const formatDateTime = (dateString) => {
@@ -605,154 +609,200 @@ export default function Tasks() {
          <div className="max-w-5xl mx-auto space-y-4 pb-20">
             {filteredTasks.length > 0 ? filteredTasks.map(t => {
                const isOverdue = t.status === 'PENDING' && new Date(t.dueDate) < new Date();
+               const counsellor = t.metadata?.assignedCounsellor ? agents.find(a => a._id === t.metadata.assignedCounsellor) : null;
+               
                return (
-                  <div key={t._id} className="group bg-white rounded-2xl border border-slate-200 p-4 flex items-center justify-between hover:border-teal-200 hover:shadow-lg hover:shadow-teal-900/5 transition-all animate-fade-in relative hover:z-10">
-                     <div className="flex items-center space-x-5">
-                        <button 
-                          onClick={() => openContactProfile(t.contactId)}
-                          className="relative group/avatar"
-                        >
-                           <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all group-hover/avatar:scale-105 group-hover/avatar:shadow-lg ${
-                             t.type === 'CALL' ? 'bg-blue-50 text-blue-600' : 
-                             t.type === 'MEETING' ? 'bg-purple-50 text-purple-600' : 
-                             'bg-orange-50 text-orange-600'
-                           }`}>
-                             {getInitials(t.contactName)}
-                           </div>
-                           <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-lg border-2 border-white flex items-center justify-center shadow-sm ${
-                             t.type === 'CALL' ? 'bg-blue-500 text-white' : 
-                             t.type === 'MEETING' ? 'bg-purple-500 text-white' : 
-                             'bg-orange-500 text-white'
-                           }`}>
-                             {t.type === 'CALL' && <PhoneCall size={10} />}
-                             {t.type === 'MEETING' && <Calendar size={10} />}
-                             {t.type === 'FOLLOW_UP' && <Clock size={10} />}
-                           </div>
-                        </button>
+                  <div key={t._id} className="group bg-white rounded-2xl border border-slate-200 p-5 flex flex-col hover:border-teal-200 hover:shadow-xl hover:shadow-teal-900/5 transition-all animate-fade-in relative hover:z-10">
+                     <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-5 text-left">
+                           <button 
+                             onClick={() => openContactProfile(t.contactId)}
+                             className="relative group/avatar"
+                           >
+                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all group-hover/avatar:scale-105 group-hover/avatar:shadow-lg ${
+                                t.type === 'CALL' ? 'bg-blue-50 text-blue-600' : 
+                                t.type === 'MEETING' ? 'bg-purple-50 text-purple-600' : 
+                                'bg-orange-50 text-orange-600'
+                              }`}>
+                                {getInitials(t.contactName)}
+                              </div>
+                              <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-lg border-2 border-white flex items-center justify-center shadow-sm ${
+                                t.type === 'CALL' ? 'bg-blue-500 text-white' : 
+                                t.type === 'MEETING' ? 'bg-purple-500 text-white' : 
+                                'bg-orange-500 text-white'
+                              }`}>
+                                {t.type === 'CALL' && <PhoneCall size={10} />}
+                                {t.type === 'MEETING' && <Calendar size={10} />}
+                                {t.type === 'FOLLOW_UP' && <Clock size={10} />}
+                              </div>
+                           </button>
 
-                        <div>
-                           <div className="flex items-center space-x-3 mb-1">
-                              <h3 className="text-sm font-black text-slate-800 tracking-tight">{t.title}</h3>
-                              {isOverdue && <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-black uppercase rounded">Overdue</span>}
-                              {t.status === 'COMPLETED' && <span className="px-1.5 py-0.5 bg-teal-100 text-teal-600 text-[9px] font-black uppercase rounded">Completed</span>}
-                              {t.status === 'IN_PROGRESS' && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[9px] font-black uppercase rounded">Changing</span>}
-                              {t.status === 'CANCELLED' && <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase rounded">Cancelled</span>}
-                           </div>
-                           <div className="flex items-center space-x-4">
-                               <button 
-                                 onClick={() => openContactProfile(t.contactId)}
-                                 className="flex items-center text-[11px] font-bold text-slate-400 hover:text-teal-600 transition-colors"
-                               >
-                                  <User size={12} className="mr-1.5 opacity-60" />
-                                  {t.contactName}
-                               </button>
-                              <div className={`flex items-center text-[11px] font-bold ${isOverdue ? 'text-rose-500' : 'text-slate-400'}`}>
-                                 <Calendar size={12} className="mr-1.5 opacity-60" />
-                                 {new Date(t.dueDate).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                           <div>
+                              <div className="flex items-center space-x-3 mb-1">
+                                 <h3 className="text-sm font-black text-slate-800 tracking-tight">{t.title}</h3>
+                                 {isOverdue && <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-black uppercase rounded">Overdue</span>}
+                                 {t.status === 'COMPLETED' && <span className="px-1.5 py-0.5 bg-teal-100 text-teal-600 text-[9px] font-black uppercase rounded">Completed</span>}
+                                 {t.status === 'IN_PROGRESS' && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[9px] font-black uppercase rounded">Changing</span>}
+                                 {t.status === 'CANCELLED' && <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase rounded">Cancelled</span>}
+                              </div>
+                              <div className="flex items-center space-x-4">
+                                  <button 
+                                    onClick={() => openContactProfile(t.contactId)}
+                                    className="flex items-center text-[11px] font-bold text-slate-400 hover:text-teal-600 transition-colors"
+                                  >
+                                     <User size={12} className="mr-1.5 opacity-60" />
+                                     {t.contactName}
+                                  </button>
+                                 <div className={`flex items-center text-[11px] font-bold ${isOverdue ? 'text-rose-500' : 'text-slate-400'}`}>
+                                    <Calendar size={12} className="mr-1.5 opacity-60" />
+                                    {new Date(t.dueDate).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                                 </div>
                               </div>
                            </div>
                         </div>
-                     </div>
 
-                      <div className="flex items-center space-x-2">
-                        {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
-                           <>
+                        <div className="flex items-center space-x-2">
+                           {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
                               <button 
                                 onClick={() => { setCompletingTask(t); setActiveDropdown(null); }}
                                 className="h-9 px-4 bg-teal-600 text-white text-xs font-black rounded-xl hover:bg-teal-700 transition-all flex items-center shadow-md shadow-teal-600/10 active:scale-95"
                               >
                                 <Check size={14} className="mr-2" /> Done
                               </button>
-                           </>
-                        )}
-                        <div className="relative" ref={activeDropdown === t._id ? dropdownRef : null}>
-                           <button 
-                              onClick={(e) => {
-                                 e.stopPropagation();
-                                 setActiveDropdown(activeDropdown === t._id ? null : t._id);
-                              }}
-                              className={`h-9 w-9 text-slate-400 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center ${activeDropdown === t._id ? 'bg-slate-100 text-slate-600' : ''}`}
-                           >
-                              <MoreHorizontal size={18} />
-                           </button>
+                           )}
+                           <div className="relative" ref={activeDropdown === t._id ? dropdownRef : null}>
+                              <button 
+                                 onClick={(e) => {
+                                    e.stopPropagation();
+                                    setActiveDropdown(activeDropdown === t._id ? null : t._id);
+                                 }}
+                                 className={`h-9 w-9 text-slate-400 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center ${activeDropdown === t._id ? 'bg-slate-100 text-slate-600' : ''}`}
+                              >
+                                 <MoreHorizontal size={18} />
+                              </button>
 
-                           {activeDropdown === t._id && (
-                              <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[100] animate-pop-in divide-y divide-slate-50">
-                                 {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
-                                    <div className="pb-2">
+                              {activeDropdown === t._id && (
+                                 <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[100] animate-pop-in divide-y divide-slate-50">
+                                    {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
+                                       <div className="pb-2">
+                                          <button 
+                                             onClick={() => {
+                                                setEditingTask(t);
+                                                setEditTaskTitle(t.title);
+                                                setEditTaskDate(new Date(t.dueDate).toISOString().slice(0, 16));
+                                                setEditTaskType(t.type);
+                                                setActiveDropdown(null);
+                                             }}
+                                             className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
+                                          >
+                                             <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
+                                                <Edit3 size={16} />
+                                             </div>
+                                             Edit Task
+                                          </button>
+                                          <button 
+                                             onClick={() => { updateTaskStatus(t.contactId, t._id, 'in_progress_task'); }}
+                                             className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
+                                          >
+                                             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
+                                                <ArrowUpRight size={16} />
+                                             </div>
+                                             Reschedule
+                                          </button>
+                                          <button 
+                                             onClick={() => { updateTaskStatus(t.contactId, t._id, 'cancel_task'); }}
+                                             className="w-full text-left px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center transition-colors"
+                                          >
+                                             <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3">
+                                                <AlertCircle size={16} />
+                                             </div>
+                                             Cancel Task
+                                          </button>
+                                          <button 
+                                             onClick={() => { rescheduleToToday(t.contactId, t._id); setActiveDropdown(null); }}
+                                             className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
+                                          >
+                                             <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
+                                                <Clock size={16} />
+                                             </div>
+                                             Set to Today
+                                          </button>
+                                       </div>
+                                    )}
+                                    <div className="py-2">
                                        <button 
                                           onClick={() => {
-                                             setEditingTask(t);
-                                             setEditTaskTitle(t.title);
-                                             setEditTaskDate(new Date(t.dueDate).toISOString().slice(0, 16));
-                                             setEditTaskType(t.type);
-                                             setActiveDropdown(null);
+                                             localStorage.setItem('activeChatId', t.contactId);
+                                             navigate('/inbox', { state: { selectedContact: t.phone } });
                                           }}
                                           className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
                                        >
-                                          <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
-                                             <Edit3 size={16} />
-                                          </div>
-                                          Edit Task
-                                       </button>
-                                       <button 
-                                          onClick={() => { updateTaskStatus(t.contactId, t._id, 'in_progress_task'); }}
-                                          className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
-                                       >
-                                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
+                                          <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center mr-3">
                                              <ArrowUpRight size={16} />
                                           </div>
-                                          Reschedule
+                                          Go to Chat
                                        </button>
+                                    </div>
+                                    <div className="pt-2">
                                        <button 
-                                          onClick={() => { updateTaskStatus(t.contactId, t._id, 'cancel_task'); }}
+                                          onClick={() => deleteTask(t.contactId, t._id)}
                                           className="w-full text-left px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center transition-colors"
                                        >
                                           <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3">
                                              <AlertCircle size={16} />
                                           </div>
-                                          Cancel Task
-                                       </button>
-                                       <button 
-                                          onClick={() => { rescheduleToToday(t.contactId, t._id); setActiveDropdown(null); }}
-                                          className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
-                                       >
-                                          <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
-                                             <Clock size={16} />
-                                          </div>
-                                          Set to Today
+                                          Delete Task
                                        </button>
                                     </div>
-                                 )}
-                                 <div className="py-2">
-                                    <button 
-                                       onClick={() => {
-                                          localStorage.setItem('activeChatId', t.contactId);
-                                          navigate('/inbox', { state: { selectedContact: t.phone } });
-                                       }}
-                                       className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
-                                    >
-                                       <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-500 flex items-center justify-center mr-3">
-                                          <ArrowUpRight size={16} />
-                                       </div>
-                                       Go to Chat
-                                    </button>
                                  </div>
-                                 <div className="pt-2">
-                                    <button 
-                                       onClick={() => deleteTask(t.contactId, t._id)}
-                                       className="w-full text-left px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center transition-colors"
-                                    >
-                                       <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3">
-                                          <AlertCircle size={16} />
-                                       </div>
-                                       Delete Task
-                                    </button>
-                                 </div>
-                              </div>
-                           )}
+                              )}
+                           </div>
                         </div>
-                      </div>
+                     </div>
+
+                     {/* RICH COMPLETED DETAILS (Redesigned) */}
+                     {t.status === 'COMPLETED' && (
+                        <div className="mt-4 pt-4 border-t border-slate-50 bg-slate-50/50 -mx-5 -mb-5 px-5 pb-5 rounded-b-2xl">
+                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+                                 <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest block mb-1">Interaction Outcome</span>
+                                 <p className="text-[11px] font-bold text-slate-700 italic leading-relaxed">"{t.remark || 'No remarks provided'}"</p>
+                              </div>
+                              
+                              {counsellor && (
+                                 <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-3">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-black text-indigo-600 shrink-0 uppercase">
+                                       {getInitials(counsellor.name)}
+                                    </div>
+                                    <div>
+                                       <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest block">Expert Assigned</span>
+                                       <span className="text-[10px] font-bold text-slate-800">{counsellor.name}</span>
+                                    </div>
+                                 </div>
+                              )}
+
+                              {t.metadata?.meetingType && (
+                                 <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-3">
+                                    <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                                       {t.metadata.meetingType.includes('Online') ? <Video size={14}/> : t.metadata.meetingType.includes('Campus') ? <School size={14}/> : <Home size={14}/>}
+                                    </div>
+                                    <div>
+                                       <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest block">Visit Format</span>
+                                       <span className="text-[10px] font-bold text-slate-800">{t.metadata.meetingType}</span>
+                                    </div>
+                                 </div>
+                              )}
+                           </div>
+                           
+                           {/* Quick indicators for potential follow-up links */}
+                           <div className="mt-3 flex items-center space-x-4">
+                              <div className="flex items-center text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                                 <Clock size={12} className="mr-1.5 opacity-60" />
+                                 Completed {new Date(t.completedAt || Date.now()).toLocaleDateString()}
+                              </div>
+                           </div>
+                        </div>
+                     )}
                   </div>
                );
             }) : (
@@ -830,8 +880,8 @@ export default function Tasks() {
                       {PIPELINE_STAGES.map((stage, idx) => (
                          <React.Fragment key={stage}>
                             <button 
-                              onClick={() => handleFieldChange('pipelineStage', stage)}
-                              className={`flex flex-col items-center group relative z-[110] px-2 py-1 cursor-pointer pointer-events-auto ${idx < PIPELINE_STAGES.length - 1 ? 'flex-1' : ''}`}
+                               onClick={() => handleFieldChange('pipelineStage', stage)}
+                               className={`flex flex-col items-center group relative z-[110] px-2 py-1 cursor-pointer pointer-events-auto ${idx < PIPELINE_STAGES.length - 1 ? 'flex-1' : ''}`}
                             >
                                <div className={`w-10 h-10 rounded-full flex items-center justify-center text-[11px] font-black transition-all border-4 shadow-xl ${
                                   editedContact.pipelineStage === stage 
@@ -1092,107 +1142,160 @@ export default function Tasks() {
       )}
 
       {completingTask && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-fade-in">
-           <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-pop-in">
-             <div className="p-6 border-b border-slate-100 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                   <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center">
-                     <CheckCircle2 size={24} />
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-fade-in">
+           <div className="bg-white rounded-[2.5rem] shadow-3xl w-full max-w-xl overflow-hidden animate-pop-in border border-white/20">
+             
+             {/* Modal Dynamic Header */}
+             <div className="p-8 bg-gradient-to-br from-teal-500 to-emerald-600 text-white relative">
+                <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+                <div className="flex items-center justify-between relative z-10">
+                   <div className="flex items-center space-x-4">
+                      <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center shadow-lg">
+                        <CheckCircle2 size={32} />
+                      </div>
+                      <div>
+                         <h2 className="text-2xl font-black tracking-tight">Finalize Activity</h2>
+                         <p className="text-teal-50 text-[11px] font-bold uppercase tracking-widest opacity-80">Recording Outcome for {completingTask.contactName}</p>
+                      </div>
                    </div>
-                   <div>
-                     <h2 className="text-xl font-black text-slate-800">Complete Task</h2>
-                     <p className="text-xs font-bold text-slate-400">Add outcome details & schedule next step</p>
-                   </div>
+                   <button onClick={() => setCompletingTask(null)} className="p-3 bg-white/10 hover:bg-white/20 rounded-2xl transition-all"><X size={20} /></button>
                 </div>
-                <button onClick={() => setCompletingTask(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
-                   <X size={20} />
-                </button>
              </div>
              
-             <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
-                <div>
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Meeting / Task Remark</label>
+             <div className="p-8 space-y-8 max-h-[65vh] overflow-y-auto custom-scrollbar bg-slate-50/30">
+                
+                {/* Meeting Type Selector (If applicable) */}
+                {completingTask.type === 'MEETING' && (
+                   <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-4">Visit Format</label>
+                      <div className="grid grid-cols-3 gap-3">
+                         {[
+                            { id: 'Online', label: 'Zoom/Call', icon: <Video size={18}/> },
+                            { id: 'Office Visit', label: 'Office', icon: <Home size={18}/> },
+                            { id: 'Campus Visit', label: 'Campus', icon: <School size={18}/> }
+                         ].map(mode => (
+                            <button 
+                               key={mode.id}
+                               onClick={() => setMeetingType(mode.id)}
+                               className={`flex flex-col items-center justify-center p-4 rounded-2xl border-2 transition-all duration-300 ${
+                                  meetingType === mode.id 
+                                  ? 'bg-white border-teal-500 shadow-xl shadow-teal-900/5 ring-4 ring-teal-50 scale-105' 
+                                  : 'bg-white border-transparent hover:border-teal-200'
+                               }`}
+                            >
+                               <div className={`mb-2 p-2 rounded-xl ${meetingType === mode.id ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                                  {mode.icon}
+                               </div>
+                               <span className={`text-[10px] font-black uppercase tracking-tighter ${meetingType === mode.id ? 'text-teal-900' : 'text-slate-400'}`}>{mode.label}</span>
+                            </button>
+                         ))}
+                      </div>
+                   </div>
+                )}
+
+                {/* Outcome Remarks */}
+                <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-3">Meeting / Interaction Remark</label>
                    <textarea 
                      value={completionNotes} 
                      onChange={(e) => setCompletionNotes(e.target.value)}
-                     placeholder="How was the interaction? Enter any specific visit notes..."
-                     className="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-teal-100 transition-all min-h-[100px] resize-none"
+                     placeholder="Detail the outcome of this interaction... e.g. Student is interested in Engineering, requested campus tour."
+                     className="w-full bg-white border-2 border-slate-100 focus:border-teal-500 rounded-3xl p-5 text-sm font-bold text-slate-700 outline-none transition-all min-h-[120px] resize-none shadow-inner"
                    />
                 </div>
 
-                <div>
-                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Enquiry Lead By (Counsellor)</label>
-                   <select 
-                     value={assignedCounsellorId} 
-                     onChange={(e) => setAssignedCounsellorId(e.target.value)}
-                     className="w-full bg-slate-50 border-none rounded-2xl p-4 text-xs font-bold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-teal-100 transition-all"
-                   >
-                     <option value="">Select Counsellor...</option>
-                     {agents.filter(a => a.role === 'MANAGER_COUNSELLOUR').map(agent => (
-                        <option key={agent._id} value={agent._id}>{agent.name}</option>
-                     ))}
-                   </select>
-                   <p className="mt-2 text-[9px] font-bold text-slate-400 leading-relaxed italic">Selecting a counsellor will share this lead in both your dashboard and theirs.</p>
+                {/* Counsellor Referral */}
+                <div className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] block mb-4">Lead Handover (Counsellor)</label>
+                   <div className="grid grid-cols-2 gap-3">
+                      {agents.filter(a => a.role === 'MANAGER_COUNSELLOUR').length > 0 ? (
+                        agents.filter(a => a.role === 'MANAGER_COUNSELLOUR').map(agent => (
+                           <button 
+                              key={agent._id}
+                              onClick={() => setAssignedCounsellorId(assignedCounsellorId === agent._id ? '' : agent._id)}
+                              className={`flex items-center space-x-3 p-3 rounded-2xl border-2 transition-all ${
+                                 assignedCounsellorId === agent._id 
+                                 ? 'bg-indigo-50 border-indigo-500 shadow-lg scale-[1.02]' 
+                                 : 'bg-white border-slate-100 hover:border-indigo-200'
+                              }`}
+                           >
+                              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-[10px] font-black border-2 ${assignedCounsellorId === agent._id ? 'bg-indigo-500 text-white border-white' : 'bg-slate-100 text-slate-400 border-transparent'}`}>
+                                 {getInitials(agent.name)}
+                              </div>
+                              <div className="text-left">
+                                 <p className={`text-[11px] font-black ${assignedCounsellorId === agent._id ? 'text-indigo-900' : 'text-slate-700'}`}>{agent.name}</p>
+                                 <p className="text-[9px] font-bold text-slate-400 uppercase">Expert Counselor</p>
+                              </div>
+                           </button>
+                        ))
+                      ) : (
+                        <p className="col-span-2 py-4 px-6 bg-slate-100 rounded-2xl text-[10px] font-bold text-slate-500 italic text-center">No counsellors available for handover.</p>
+                      )}
+                   </div>
+                   <p className="mt-3 text-[9px] font-bold text-indigo-400 leading-relaxed flex items-start animate-pulse">
+                      <ShieldCheck size={12} className="mr-2 mt-0.5 shrink-0" />
+                      <span>Shared Access: Assigning a counsellor ensures the lead is visible on both dashboards.</span>
+                   </p>
                 </div>
 
-                <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100">
-                   <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center space-x-3">
-                         <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isAddingFollowUp ? 'bg-blue-100 text-blue-600' : 'bg-slate-200 text-slate-400'}`}>
-                           <CalendarDays size={16} />
+                {/* Follow-up Logic Overlay */}
+                <div className={`p-6 rounded-[2rem] border transition-all duration-500 ${isAddingFollowUp ? 'bg-orange-50/50 border-orange-200 shadow-xl shadow-orange-900/5' : 'bg-slate-100 border-slate-200 opacity-60'}`}>
+                   <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center space-x-4">
+                         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors ${isAddingFollowUp ? 'bg-orange-600 text-white' : 'bg-slate-200 text-slate-400'}`}>
+                           <CalendarDays size={20} />
                          </div>
                          <div>
-                            <p className="text-sm font-black text-slate-700">Next Follow-up</p>
-                            <p className="text-[10px] font-bold text-slate-400">Schedule the next interaction</p>
+                            <p className={`text-base font-black ${isAddingFollowUp ? 'text-orange-900' : 'text-slate-600'}`}>Next Follow-up</p>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Lifecycle Management</p>
                          </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input type="checkbox" checked={isAddingFollowUp} onChange={e => setIsAddingFollowUp(e.target.checked)} className="sr-only peer" />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
+                        <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[4px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-orange-500 shadow-inner"></div>
                       </label>
                    </div>
 
                    {isAddingFollowUp && (
-                     <div className="space-y-4 pt-4 border-t border-slate-200/60 animate-fade-in">
-                        <div>
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Follow-up Title</label>
-                           <input 
-                             type="text" 
-                             value={nextFollowUpTitle} 
-                             onChange={e => setNextFollowUpTitle(e.target.value)}
-                             placeholder="e.g. Call to discuss proposal"
-                             className="w-full bg-white border border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 text-xs font-bold outline-none transition-all" 
-                           />
-                        </div>
-                        <div>
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Date & Time</label>
-                           <input 
-                             type="datetime-local" 
-                             value={nextFollowUpDate} 
-                             onChange={e => setNextFollowUpDate(e.target.value)}
-                             className="w-full bg-white border border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 text-xs font-bold outline-none transition-all text-slate-600" 
-                           />
-                        </div>
-                        <div>
-                           <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Description (Optional)</label>
-                           <textarea 
-                             value={nextFollowUpDescription} 
-                             onChange={e => setNextFollowUpDescription(e.target.value)}
-                             placeholder="Details for the next step..."
-                             className="w-full bg-white border border-slate-200 focus:border-blue-500 rounded-xl px-4 py-2.5 text-xs font-bold outline-none transition-all resize-none h-16 custom-scrollbar" 
-                           />
+                     <div className="space-y-5 animate-fade-in">
+                        <div className="grid grid-cols-2 gap-4">
+                           <div className="col-span-2">
+                              <label className="text-[10px] font-black text-orange-400 uppercase tracking-[0.2em] mb-2 block">Interaction Subject</label>
+                              <input 
+                                type="text" 
+                                value={nextFollowUpTitle} 
+                                onChange={e => setNextFollowUpTitle(e.target.value)}
+                                placeholder="e.g. Closing Call / Documents Submission"
+                                className="w-full bg-white border-2 border-orange-100/50 focus:border-orange-500 rounded-2xl px-5 py-3 text-sm font-bold text-slate-700 outline-none transition-all shadow-sm" 
+                              />
+                           </div>
+                           <div className="col-span-2">
+                              <label className="text-[10px] font-black text-orange-400 uppercase tracking-[0.2em] mb-2 block">Scheduled Time</label>
+                              <input 
+                                type="datetime-local" 
+                                value={nextFollowUpDate} 
+                                onChange={e => setNextFollowUpDate(e.target.value)}
+                                className="w-full bg-white border-2 border-orange-100/50 focus:border-orange-500 rounded-2xl px-5 py-3 text-sm font-bold text-slate-700 outline-none transition-all shadow-sm" 
+                              />
+                           </div>
                         </div>
                      </div>
                    )}
                 </div>
              </div>
 
-             <div className="p-6 border-t border-slate-100 flex justify-end space-x-3 bg-slate-50/50">
-                <button onClick={() => setCompletingTask(null)} className="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-500 hover:bg-slate-100 transition-all">Cancel</button>
-                <button onClick={submitTaskCompletion} disabled={isSubmittingCompletion || (isAddingFollowUp && !nextFollowUpDate)} className="px-6 py-2.5 rounded-xl text-sm font-black text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 flex items-center shadow-lg shadow-teal-600/20 transition-all active:scale-95">
-                   {isSubmittingCompletion ? <Clock size={18} className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
-                   Save & Complete
-                </button>
+             <div className="p-8 border-t border-slate-100 flex items-center justify-between bg-white">
+                <button onClick={() => setCompletingTask(null)} className="px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all">Discard</button>
+                <div className="flex space-x-3">
+                   <button 
+                     onClick={submitTaskCompletion} 
+                     disabled={isSubmittingCompletion || (isAddingFollowUp && !nextFollowUpDate)} 
+                     className="px-8 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] text-white bg-[var(--theme-bg)] hover:bg-emerald-700 disabled:opacity-50 flex items-center shadow-xl shadow-teal-900/20 transition-all active:scale-95 group"
+                   >
+                      {isSubmittingCompletion ? <Clock size={18} className="animate-spin mr-3" /> : <Save size={18} className="mr-3 group-hover:scale-110 transition-transform" />}
+                      Finalize Activity
+                   </button>
+                </div>
              </div>
            </div>
         </div>

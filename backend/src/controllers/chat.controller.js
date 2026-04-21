@@ -34,7 +34,10 @@ const getContacts = async (req, res) => {
     
     // Apply "Show Assigned Only" filter
     if (roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
-      matchStage.assignedAgent = new mongoose.Types.ObjectId(req.user._id);
+      matchStage.$or = [
+        { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
+        { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) }
+      ];
     }
     if (status) matchStage.status = status;
     if (qualification) matchStage.qualification = qualification;
@@ -296,7 +299,7 @@ const performContactAction = async (req, res) => {
            if (payload.remark) {
               contact.meetingRemark = payload.remark;
               if (task.metadata?.visitType) {
-                 contact.visitType = task.metadata.visitType;
+                 contact.meetingType = task.metadata.visitType;
                  contact.visitStatus = 'Visited';
               }
            }

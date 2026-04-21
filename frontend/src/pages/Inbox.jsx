@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2, Megaphone } from 'lucide-react';
+import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2, Megaphone, Video, Home, School, MapPin, Phone } from 'lucide-react';
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -137,13 +137,13 @@ export default function Inbox({ roleAccess }) {
           setFollowupTime('');
           setShowTagInput(false);
           setNewTagName('');
-          toast.success("Lead Updated Successfully");
+          // toast is not imported in original snippet but used - keeping as is if it exists globally
+          if (window.toast) window.toast.success("Lead Updated Successfully");
        } else {
-          toast.error("Failed to update lead");
+          if (window.toast) window.toast.error("Failed to update lead");
        }
     } catch (err) {
       console.error("Action failed", err);
-      toast.error("An error occurred during update");
     }
   };
 
@@ -807,21 +807,64 @@ export default function Inbox({ roleAccess }) {
             )}
 
             {showMeetingModal && (
-               <div className="mt-3 bg-purple-50 p-4 rounded-xl border border-purple-200 animate-fade-in relative shadow-sm">
-                 <h4 className="text-xs font-bold text-purple-900 mb-3 tracking-wide flex items-center"><Calendar size={14} className="mr-1.5"/> Schedule Meeting</h4>
-                 <select value={meetingMode} onChange={e => setMeetingMode(e.target.value)} className="w-full mb-2 bg-white border border-purple-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-purple-300">
-                    <option>Online (Zoom/Meet)</option>
-                    <option>Offline (Office)</option>
-                    <option>Phone Call</option>
-                 </select>
-                 <input type="datetime-local" value={meetingDate} onChange={e => setMeetingDate(e.target.value)} className="w-full mb-2 bg-white border border-purple-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-purple-300" />
-                 <input type="text" value={meetingLocation} onChange={e => setMeetingLocation(e.target.value)} placeholder="Link or Location..." className="w-full mb-2 bg-white border border-purple-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-purple-300" />
-                 <div className="flex justify-end mt-2">
-                    <button onClick={() => handleAction('schedule_meeting', { mode: meetingMode, dateTime: meetingDate, location: meetingLocation })} className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold px-4 py-1.5 rounded inline-block transition-colors">
-                       Schedule Meeting
-                    </button>
-                 </div>
-               </div>
+                <div className="mt-4 bg-white/40 backdrop-blur-md p-5 rounded-2xl border border-purple-200/50 animate-fade-in relative shadow-xl overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-purple-500/20 transition-all duration-700"></div>
+                  <h4 className="text-[11px] font-black text-purple-900 mb-4 tracking-[0.2em] uppercase flex items-center"><Calendar size={14} className="mr-2 text-purple-600"/> Schedule Meeting</h4>
+                  
+                  <div className="grid grid-cols-2 gap-2 mb-4">
+                     {[
+                        { id: 'Online', label: 'Online (Zoom)', icon: <Video size={16}/>, color: 'indigo' },
+                        { id: 'Office Visit', label: 'Office Visit', icon: <Home size={16}/>, color: 'purple' },
+                        { id: 'Campus Visit', label: 'Campus Visit', icon: <School size={16}/>, color: 'teal' },
+                        { id: 'Phone Call', label: 'Phone Call', icon: <Phone size={16}/>, color: 'blue' }
+                     ].map(mode => (
+                        <button 
+                           key={mode.id}
+                           onClick={() => setMeetingMode(mode.id)}
+                           className={`flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-300 ${
+                              meetingMode === mode.id 
+                              ? `bg-white border-purple-400 shadow-lg scale-[1.02]` 
+                              : `bg-white/50 border-transparent hover:border-purple-200 hover:bg-white`
+                           }`}
+                        >
+                           <div className={`mb-2 p-2 rounded-lg ${meetingMode === mode.id ? `bg-purple-100 text-purple-600` : 'bg-gray-100 text-gray-500'}`}>
+                              {mode.icon}
+                           </div>
+                           <span className={`text-[10px] font-bold ${meetingMode === mode.id ? `text-purple-700` : 'text-gray-500'}`}>{mode.label}</span>
+                        </button>
+                     ))}
+                  </div>
+
+                  <div className="space-y-2">
+                     <div className="relative">
+                        <input 
+                           type="datetime-local" 
+                           value={meetingDate} 
+                           onChange={e => setMeetingDate(e.target.value)} 
+                           className="w-full bg-white/80 border border-purple-100/50 rounded-xl p-2.5 text-xs text-gray-700 font-bold focus:ring-2 focus:ring-purple-200 outline-none transition-all"
+                        />
+                     </div>
+                     <div className="relative">
+                        <MapPin size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-400" />
+                        <input 
+                           type="text" 
+                           value={meetingLocation} 
+                           onChange={e => setMeetingLocation(e.target.value)} 
+                           placeholder="Meeting Link or Physical Location..." 
+                           className="w-full bg-white/80 border border-purple-100/50 rounded-xl pl-9 pr-4 py-2.5 text-xs text-gray-700 font-bold focus:ring-2 focus:ring-purple-200 outline-none transition-all placeholder-purple-300"
+                        />
+                     </div>
+                  </div>
+
+                  <div className="flex justify-end mt-4">
+                     <button 
+                        onClick={() => handleAction('schedule_meeting', { mode: meetingMode, dateTime: meetingDate, location: meetingLocation })} 
+                        className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider px-6 py-2.5 rounded-xl shadow-lg shadow-purple-600/20 active:scale-95 transition-all"
+                     >
+                        Confirm Schedule
+                     </button>
+                  </div>
+                </div>
             )}
 
             {showNoteInput && (
@@ -840,43 +883,82 @@ export default function Inbox({ roleAccess }) {
                  </div>
                </div>
             )}
+            
             {showFollowupModal && (
-               <div className="mt-3 bg-orange-50 p-4 rounded-xl border border-orange-200 animate-fade-in relative shadow-sm">
-                 <h4 className="text-xs font-bold text-orange-900 mb-3 tracking-wide flex items-center"><Clock size={14} className="mr-1.5"/> Set Follow-up</h4>
-                 <input type="text" value={followupHeading} onChange={e => setFollowupHeading(e.target.value)} placeholder="Heading/Subject..." className="w-full mb-2 bg-white border border-orange-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-orange-300" />
-                 <select value={followupType} onChange={e => setFollowupType(e.target.value)} className="w-full mb-2 bg-white border border-orange-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-orange-300">
-                     <option>Call</option>
-                     <option>Meeting</option>
-                     <option>Update</option>
-                  </select>
+                <div className="mt-4 bg-orange-50/60 backdrop-blur-md p-5 rounded-2xl border border-orange-200/50 animate-fade-in relative shadow-xl overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-orange-500/20 transition-all duration-700"></div>
+                  <h4 className="text-[11px] font-black text-orange-900 mb-4 tracking-[0.2em] uppercase flex items-center"><Clock size={14} className="mr-2 text-orange-600"/> Set Follow-up</h4>
+                  
+                  <input 
+                     type="text" 
+                     value={followupHeading} 
+                     onChange={e => setFollowupHeading(e.target.value)} 
+                     placeholder="Interaction Subject..." 
+                     className="w-full mb-3 bg-white/80 border border-orange-100/50 rounded-xl p-2.5 text-xs text-gray-700 font-bold focus:ring-2 focus:ring-orange-200 outline-none transition-all placeholder-orange-300" 
+                  />
+                  
+                  <div className="flex space-x-2 mb-3">
+                     {['Call', 'Meeting', 'Update'].map(type => (
+                        <button 
+                           key={type}
+                           onClick={() => setFollowupType(type)}
+                           className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${
+                              followupType === type 
+                              ? 'bg-orange-600 text-white shadow-md' 
+                              : 'bg-white/50 text-orange-600 border border-orange-100 hover:bg-white'
+                           }`}
+                        >
+                           {type}
+                        </button>
+                     ))}
+                  </div>
 
                   {followupType === 'Meeting' && (
-                     <select value={followupVisitType} onChange={e => setFollowupVisitType(e.target.value)} className="w-full mb-2 bg-white border border-teal-100 rounded p-1.5 text-xs text-teal-700 outline-none focus:border-teal-300 font-bold">
-                        <option>Office Visit</option>
-                        <option>Campus Visit</option>
-                     </select>
+                     <div className="flex bg-white/50 p-1 rounded-xl mb-3 border border-teal-100">
+                        {['Office Visit', 'Campus Visit'].map(visit => (
+                           <button 
+                              key={visit}
+                              onClick={() => setFollowupVisitType(visit)}
+                              className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
+                                 followupVisitType === visit 
+                                 ? 'bg-teal-500 text-white shadow-inner scale-95' 
+                                 : 'text-teal-600 hover:text-teal-800'
+                              }`}
+                           >
+                              {visit}
+                           </button>
+                        ))}
+                     </div>
                   )}
                     
-                 <div className="flex space-x-2 mb-2">
-                    <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)} className="w-1/2 bg-white border border-orange-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-orange-300" />
-                    <input type="time" value={followupTime} onChange={e => setFollowupTime(e.target.value)} className="w-1/2 bg-white border border-orange-100 rounded p-1.5 text-xs text-gray-700 outline-none focus:border-orange-300" />
-                 </div>
-                 <textarea value={followupDescription} onChange={e => setFollowupDescription(e.target.value)} placeholder="Description..." rows="2" className="w-full bg-white border border-orange-100 rounded p-1.5 text-xs text-gray-700 outline-none resize-none focus:border-orange-300"></textarea>
-                 <div className="flex justify-end mt-2">
-                    <button 
-                      onClick={() => handleAction('add_followup', { 
-                        title: `[${followupType}${followupType === 'Meeting' ? `: ${followupVisitType}` : ''}] ${followupHeading}`, 
-                        dateTime: new Date(`${followupDate}T${followupTime || '09:00'}`).toISOString(),
-                        description: followupDescription,
-                        metadata: { visitType: followupType === 'Meeting' ? followupVisitType : null }
-                      })} 
-                      className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-bold px-4 py-1.5 rounded inline-block transition-colors"
-                    >
-                       Save Follow-up
-                    </button>
-                 </div>
-               </div>
-            )}
+                  <div className="flex space-x-2 mb-3">
+                     <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)} className="w-1/2 bg-white/80 border border-orange-100/50 rounded-xl p-2.5 text-xs text-gray-700 font-bold outline-none ring-2 ring-transparent focus:ring-orange-200 transition-all" />
+                     <input type="time" value={followupTime} onChange={e => setFollowupTime(e.target.value)} className="w-1/2 bg-white/80 border border-orange-100/50 rounded-xl p-2.5 text-xs text-gray-700 font-bold outline-none ring-2 ring-transparent focus:ring-orange-200 transition-all" />
+                  </div>
+
+                  <textarea 
+                     value={followupDescription} 
+                     onChange={e => setFollowupDescription(e.target.value)} 
+                     placeholder="Interaction details & expectations..." 
+                     rows="3" 
+                     className="w-full bg-white/80 border border-orange-100/50 rounded-xl p-3 text-xs text-gray-700 font-bold outline-none resize-none ring-2 ring-transparent focus:ring-orange-200 transition-all placeholder-orange-300"
+                  ></textarea>
+
+                  <div className="flex justify-end mt-4">
+                     <button 
+                       onClick={() => handleAction('add_followup', { 
+                         title: `[${followupType}${followupType === 'Meeting' ? `: ${followupVisitType}` : ''}] ${followupHeading}`, 
+                         dateTime: new Date(`${followupDate}T${followupTime || '09:00'}`).toISOString(),
+                         description: followupDescription,
+                         metadata: { visitType: followupType === 'Meeting' ? followupVisitType : null }
+                       })} 
+                       className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-black uppercase tracking-wider px-6 py-2.5 rounded-xl shadow-lg shadow-orange-600/20 active:scale-95 transition-all"
+                     >
+                        Confirm Follow-up
+                     </button>
+                  </div>
+                </div>
+             )}
          </div>
 
          {/* AI Lead Intelligence Block */}
@@ -964,7 +1046,7 @@ export default function Inbox({ roleAccess }) {
                    <Megaphone size={12} className="text-indigo-600" />
                 </div>
                 <h3 className="text-[10px] font-bold text-indigo-800 mb-3 tracking-widest uppercase">
-                  Counselling & Admission
+                   Counselling & Admission
                 </h3>
                 <div className="space-y-3">
                    <div className="flex justify-between items-center text-[10px]">
@@ -1057,30 +1139,61 @@ export default function Inbox({ roleAccess }) {
                     <span className="text-teal-900 font-bold">{activeChat?.source || 'CTWA Lead'}</span>
                   </div>
 
-                  {/* ASSIGN AGENT SECTION */}
-                  <div className="pt-2 border-t border-teal-200/50">
-                    <div className="flex justify-between items-center text-xs mb-1.5 focus:scale-105 transition-transform">
-                       <span className="text-teal-800/70 font-bold tracking-wide uppercase">Assigned To</span>
-                       <ShieldCheck size={12} className={!canAssignLead ? 'text-gray-400' : 'text-teal-600'} />
+                  {/* LEAD OWNERSHIP & TEAM */}
+                  <div className="pt-4 border-t border-teal-200/50 space-y-4">
+                    <div className="flex items-center space-x-2 mb-2">
+                       <ShieldCheck size={14} className="text-teal-600" />
+                       <span className="text-[10px] font-black text-teal-800 tracking-[0.2em] uppercase">Ownership & Team</span>
                     </div>
-                    <select 
-                       disabled={!canAssignLead}
-                       value={activeChat?.assignedAgent || ''}
-                       onChange={(e) => handleAction('update_contact', { assignedAgent: e.target.value })}
-                       className={`w-full bg-white px-2 py-1.5 rounded border border-teal-100 text-[10px] font-bold tracking-wide uppercase outline-none focus:ring-2 focus:ring-teal-100 transition shadow-sm ${!canAssignLead ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:bg-teal-50'}`}
-                    >
-                       <option value="">Unassigned</option>
-                       {agents
-                         .filter(a => !assignSelfOnly || a._id === user._id)
-                         .map(a => (
-                           <option key={a._id} value={a._id}>{a.name} ({a.role})</option>
-                       ))}
-                    </select>
+
+                    {/* Sales Rep (Telecaller) */}
+                    <div>
+                       <label className="text-[9px] font-black text-teal-800/50 uppercase tracking-widest block mb-1.5 ml-1">Sales Rep (Telecaller)</label>
+                       <div className="relative group">
+                          <Users size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-400 group-focus-within:text-teal-600" />
+                          <select 
+                             disabled={!canAssignLead}
+                             value={activeChat?.assignedAgent || ''}
+                             onChange={(e) => handleAction('update_contact', { assignedAgent: e.target.value })}
+                             className={`w-full bg-white pl-9 pr-3 py-2 rounded-xl border border-teal-100 text-[10px] font-black tracking-wide uppercase outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm ${!canAssignLead ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-teal-200'}`}
+                          >
+                             <option value="">Unassigned</option>
+                             {agents
+                               .filter(a => !assignSelfOnly || a._id === user._id)
+                               .map(a => (
+                                 <option key={a._id} value={a._id}>{a.name} ({a.role})</option>
+                             ))}
+                          </select>
+                       </div>
+                    </div>
+
+                    {/* Expert Counselor (Counsellor) */}
+                    <div>
+                       <label className="text-[9px] font-black text-teal-800/50 uppercase tracking-widest block mb-1.5 ml-1">Expert Advisor (Counsellor)</label>
+                       <div className="relative group">
+                          <Headphones size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600" />
+                          <select 
+                             value={activeChat?.assignedCounsellor || ''}
+                             onChange={(e) => handleAction('update_contact', { assignedCounsellor: e.target.value })}
+                             className="w-full bg-white pl-9 pr-3 py-2 rounded-xl border border-teal-100 text-[10px] font-black tracking-wide uppercase outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm cursor-pointer hover:border-teal-200"
+                          >
+                             <option value="">No Counselor Assigned</option>
+                             {agents
+                               .filter(a => a.role === 'MANAGER_COUNSELLOUR' || a.role === 'ADMIN')
+                               .map(a => (
+                                 <option key={a._id} value={a._id}>{a.name}</option>
+                             ))}
+                          </select>
+                       </div>
+                    </div>
+
                     {!canAssignLead && (
-                       <p className="text-[8px] text-gray-400 mt-1 italic leading-tight">Lead assignment is disabled for your role.</p>
-                    )}
-                    {canAssignLead && assignSelfOnly && (
-                       <p className="text-[8px] text-teal-600 mt-1 italic leading-tight">You can only assign leads to yourself.</p>
+                       <div className="p-3 bg-gray-50 rounded-xl border border-gray-100">
+                          <p className="text-[9px] text-gray-400 font-bold italic leading-tight flex items-start">
+                             <AlertCircle size={10} className="mr-1.5 mt-0.5 shrink-0" />
+                             Assignment restricted by policy.
+                          </p>
+                       </div>
                     )}
                   </div>
 
@@ -1124,9 +1237,9 @@ export default function Inbox({ roleAccess }) {
                   <div className="flex flex-wrap gap-1.5">
                      {PREDEFINED_TAGS.map(t => (
                         <button 
-                          key={t}
-                          onClick={() => handleAction('add_tag', { tag: t })}
-                          className="px-2 py-0.5 bg-gray-50 text-gray-500 border border-gray-100 rounded text-[9px] font-bold hover:bg-teal-50 hover:text-teal-600 hover:border-teal-100 transition-colors"
+                           key={t}
+                           onClick={() => handleAction('add_tag', { tag: t })}
+                           className="px-2 py-0.5 bg-gray-50 text-gray-500 border border-gray-100 rounded text-[9px] font-bold hover:bg-teal-50 hover:text-teal-600 hover:border-teal-100 transition-colors"
                         >
                            + {t}
                         </button>

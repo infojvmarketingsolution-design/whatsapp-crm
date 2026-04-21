@@ -8,6 +8,12 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, enum: ['SUPER_ADMIN', 'ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'], default: 'SUPER_ADMIN' },
   tenantId: { type: String }, // Binds Agents and Admins to explicit SaaS instances
   status: { type: String, enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED'], default: 'ACTIVE' },
+  phoneNumber: { type: String },
+  otp: {
+    code: { type: String },
+    expiresAt: { type: Date },
+    method: { type: String, enum: ['EMAIL', 'SMS', 'WHATSAPP'] }
+  },
   fcmTokens: [String] // Store multiple device tokens for cloud messaging
 }, { timestamps: true });
 
