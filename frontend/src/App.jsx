@@ -287,6 +287,20 @@ function Dashboard() {
         </div>
       )}
 
+      {userRole === 'TELECALLER' && (
+        <div className="animate-fade-in-up">
+           <h3 className="text-xs font-black text-slate-400 tracking-widest uppercase mb-4 text-brand-light">Telecaller Workspace Performance</h3>
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <DashboardCard title="New Leads" value={loading ? "..." : stats.newLeads} subtext="Unattended Contacts" icon={PlusCircle} />
+              <DashboardCard title="Open Leads" value={loading ? "..." : stats.openLeads} subtext="Active Conversations" icon={MessageCircle} />
+              <DashboardCard title="Total Visited" value={loading ? "..." : stats.totalVisit} subtext="Leads who Visited" icon={Building2} />
+              <DashboardCard title="Pending Visited" value={loading ? "..." : stats.pendingVisit} subtext="Follow-up required" icon={History} />
+              <DashboardCard title="Total Admissions" value={loading ? "..." : stats.totalAdmission} subtext="Closed Enrolments" icon={CheckCircle} />
+              <DashboardCard title="Closed Leads" value={loading ? "..." : stats.closedLeads} subtext="Pipeline Finished" icon={X} />
+           </div>
+        </div>
+      )}
+
       {!isAdminOrSuperAdmin && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 mt-6">
            <LeadAnalysisCard title="Lead Status Report" data={analysisData.statusStats} type="status" />

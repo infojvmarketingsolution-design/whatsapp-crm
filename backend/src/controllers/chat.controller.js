@@ -561,8 +561,9 @@ const getDashboardStats = async (req, res) => {
       { $group: {
         _id: null,
         newLeads: { $sum: { $cond: [{ $eq: ["$status", "NEW LEAD"] }, 1, 0] } },
-        openLeads: { $sum: { $cond: [{ $and: [{ $eq: ["$isArchived", { $ne: true }] }, { $eq: ["$isClosed", { $ne: true }] }] }, 1, 0] } },
+        openLeads: { $sum: { $cond: [{ $and: [{ $ne: ["$isArchived", true] }, { $ne: ["$isClosed", true] }] }, 1, 0] } },
         totalVisit: { $sum: { $cond: [{ $eq: ["$visitStatus", "Visited"] }, 1, 0] } },
+        pendingVisit: { $sum: { $cond: [{ $eq: ["$visitStatus", "Not Visited"] }, 1, 0] } },
         totalAdmission: { $sum: { $cond: [{ $eq: ["$admissionStatus", "Admitted"] }, 1, 0] } },
         pendingAdmission: { $sum: { $cond: [{ $eq: ["$admissionStatus", "Pending"] }, 1, 0] } },
         closedLeads: { $sum: { $cond: [{ $eq: ["$isClosed", true] }, 1, 0] } },
@@ -571,7 +572,7 @@ const getDashboardStats = async (req, res) => {
       }}
     ]);
     const counselStats = counselStatsArr[0] || { 
-      newLeads: 0, openLeads: 0, totalVisit: 0, totalAdmission: 0, 
+      newLeads: 0, openLeads: 0, totalVisit: 0, pendingVisit: 0, totalAdmission: 0, 
       pendingAdmission: 0, closedLeads: 0, totalCollection: 0, pendingCollection: 0 
     };
     
