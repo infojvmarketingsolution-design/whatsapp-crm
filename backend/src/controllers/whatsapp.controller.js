@@ -11,6 +11,8 @@ const TemplateSchema = require('../models/tenant/Template');
 const { mapMetaError } = require('../utils/metaErrorMapper');
 const WhatsAppService = require('../services/whatsapp.service');
 const { lockUser, unlockUser } = require('../services/redis.service');
+const Settings = require('../models/core/Settings');
+const assignmentService = require('../services/assignment.service');
 
 const verifyWebhook = (req, res) => {
   console.log('--- WEBHOOK VERIFICATION ATTEMPT ---');
@@ -195,6 +197,12 @@ const handleIncomingMessage = async (req, res) => {
       }
 
       try {
+        // Fetch CRM Settings for this tenant to respect user preferences
+        let tenantSettings = await Settings.findOne({ tenantId: client.tenantId });
+        if (!tenantSettings) {
+           tenantSettings = { crm: { duplicateDetection: true, autoAssignment: false } }; // Fallback
+        }
+
         let contact = await Contact.findOne({ phone: from });
         
         // 🔒 2. Deduplication (Rule 2)
@@ -208,6 +216,13 @@ const handleIncomingMessage = async (req, res) => {
 
         if (!contact) {
            const contactName = value.contacts?.[0]?.profile?.name || 'Unknown';
+           
+           // AUTO ASSIGNMENT LOGIC: Find an agent before creation
+           let assignedAgentId = null;
+           if (tenantSettings.crm?.autoAssignment) {
+              assignedAgentId = await assignmentService.getNextAgentForTenant(client.tenantId);
+           }
+
            contact = await Contact.create({ 
              phone: from, 
              name: contactName, 
@@ -215,8 +230,15 @@ const handleIncomingMessage = async (req, res) => {
              status: 'NEW LEAD',
              isFlowActive: false,
              flowVariables: {},
-             lastProcessedMessageId: msgId
+             lastProcessedMessageId: msgId,
+             assignedAgent: assignedAgentId,
+             leadSource: 'whatsapp_direct'
            });
+           
+           if (assignedAgentId) {
+              console.log(`[Webhook] Auto-assigned new lead ${from} to agent ${assignedAgentId}`);
+           }
+           
            isNewContact = true;
         } else {
           // 🔥 SAVE MESSAGE ID (ANTI DUPLICATE) & UPDATE TIMESTAMP

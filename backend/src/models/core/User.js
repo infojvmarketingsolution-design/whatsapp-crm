@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema({
   tenantId: { type: String }, // Binds Agents and Admins to explicit SaaS instances
   status: { type: String, enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED'], default: 'ACTIVE' },
   phoneNumber: { type: String },
+  lastLeadAssignedAt: { type: Date },
   otp: {
     code: { type: String },
     expiresAt: { type: Date },

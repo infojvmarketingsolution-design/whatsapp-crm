@@ -12,7 +12,8 @@ const LeadSchema = new mongoose.Schema({
   qualification: { type: String },
   selectedProgram: { type: String },
   preferredCallTime: { type: String },
-  leadSource: { type: String, default: 'whatsapp_ai_bot' }
+  leadSource: { type: String, default: 'whatsapp_ai_bot' },
+  assignedAgent: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 }, { timestamps: true });
 
 module.exports = LeadSchema;

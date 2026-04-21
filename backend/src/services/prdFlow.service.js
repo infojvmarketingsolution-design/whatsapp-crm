@@ -5,6 +5,7 @@ const { getTenantConnection } = require('../config/db');
 const AIService = require('./ai.service');
 const Settings = require('../models/core/Settings');
 const mongoose = require('mongoose');
+const assignmentService = require('./assignment.service');
 
 class PRDFlowService {
   constructor() {
@@ -187,7 +188,23 @@ class PRDFlowService {
               const dbUpdates = { [`flowVariables.${varName}`]: val };
               if (varName === 'time') {
                  dbUpdates.preferredCallTime = val;
-                 await Lead.create({ tenantId, name: contact.flowVariables.name, phone: contact.phone, qualification: contact.flowVariables.qualification, selectedProgram: contact.flowVariables.program, status: 'QUALIFIED' });
+                 
+                 // AUTO ASSIGNMENT LOGIC for AI Bot Leads
+                 let assignedAgentId = null;
+                 if (settings?.crm?.autoAssignment) {
+                    assignedAgentId = await assignmentService.getNextAgentForTenant(tenantId);
+                 }
+
+                 await Lead.create({ 
+                    tenantId, 
+                    name: contact.flowVariables.name, 
+                    phone: contact.phone, 
+                    qualification: contact.flowVariables.qualification, 
+                    selectedProgram: contact.flowVariables.program, 
+                    status: 'QUALIFIED',
+                    assignedAgent: assignedAgentId,
+                    leadSource: 'whatsapp_ai_bot'
+                 });
               }
               await Contact.findOneAndUpdate({ phone: contact.phone }, dbUpdates);
               contact.flowVariables = { ...(contact.flowVariables || {}), [varName]: val };

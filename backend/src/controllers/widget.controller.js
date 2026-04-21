@@ -1,6 +1,8 @@
 const Widget = require('../models/core/Widget');
 const LeadSchema = require('../models/crm/Lead');
+const Settings = require('../models/core/Settings');
 const { getTenantConnection } = require('../config/db');
+const assignmentService = require('../services/assignment.service');
 
 const getWidgetConfig = async (req, res) => {
   try {
@@ -63,14 +65,55 @@ const submitWidgetLead = async (req, res) => {
     const tenantDb = getTenantConnection(clientId);
     const Lead = tenantDb.model('Lead', LeadSchema);
 
-    const newLead = await Lead.create({
-      name,
-      phone,
-      email,
-      message,
-      source: 'web_widget',
-      tags: ['Website Lead']
-    });
+    // Fetch CRM Settings
+    let tenantSettings = await Settings.findOne({ tenantId: clientId });
+    if (!tenantSettings) {
+       tenantSettings = { crm: { duplicateDetection: true, autoAssignment: false } };
+    }
+
+    let existingLead = null;
+    if (tenantSettings.crm?.duplicateDetection) {
+        // Check for existing lead by phone or email
+        existingLead = await Lead.findOne({
+            $or: [
+                { phone: phone },
+                { email: email && email !== "" ? email : "NONE_PROVIDED" }
+            ]
+        });
+    }
+
+    let lead;
+    if (existingLead) {
+        // Update existing lead
+        existingLead.name = name || existingLead.name;
+        existingLead.message = message || existingLead.message;
+        if (email) existingLead.email = email;
+        await existingLead.save();
+        lead = existingLead;
+        console.log(`[Widget] Updated existing lead: ${phone} / ${email}`);
+    } else {
+        // Create new lead
+        
+        // AUTO ASSIGNMENT LOGIC
+        let assignedAgentId = null;
+        if (tenantSettings.crm?.autoAssignment) {
+           assignedAgentId = await assignmentService.getNextAgentForTenant(clientId);
+        }
+
+        lead = await Lead.create({
+          name,
+          phone,
+          email,
+          message,
+          source: 'web_widget',
+          tags: ['Website Lead'],
+          assignedAgent: assignedAgentId
+        });
+        
+        if (assignedAgentId) {
+           console.log(`[Widget] Auto-assigned new lead ${phone} to agent ${assignedAgentId}`);
+        }
+    }
 
     let whatsappRedirect = null;
     if (widget.whatsapp_number_id) {
