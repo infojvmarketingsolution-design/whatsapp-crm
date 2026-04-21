@@ -246,7 +246,8 @@ function Dashboard() {
   const remainingNum = limitNum === Infinity ? Infinity : Math.max(0, limitNum - sentToday);
 
   return (
-    <div className="p-8 bg-crm-bg min-h-full animate-fade-in-up">
+    <>
+      <div className="p-8 bg-crm-bg min-h-full animate-fade-in-up">
       <div className="flex justify-between items-center mb-8">
         <div>
            <h1 className="text-sm font-bold text-gray-600 tracking-wider uppercase">Dashboard</h1>
@@ -467,6 +468,7 @@ function Dashboard() {
           />
         </div>
       )}
+      </div>
 
       {/* User Breakdown Modal */}
       {breakdownModal.show && (
@@ -541,7 +543,7 @@ function Dashboard() {
            </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
