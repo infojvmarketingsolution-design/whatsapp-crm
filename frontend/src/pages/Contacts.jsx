@@ -377,13 +377,23 @@ export default function Contacts({ roleAccess }) {
       const tenantId = localStorage.getItem('tenantId');
       const ids = Array.from(selectedIds);
       
+      // Intelligent action mapping for batch backend
+      const actionMap = {
+         'transfer': 'transfer_leads',
+         'archive': 'archive_leads',
+         'stage': 'update_stage',
+         'assignedAgent': 'transfer_leads',
+         'pipelineStage': 'update_stage'
+      };
+
       const res = await fetch(`/api/chat/bulk-action`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
            contactIds: ids, 
-           action: action === 'transfer' ? 'transfer_leads' : (action === 'archive' ? 'archive_leads' : action), 
-           payload: action === 'transfer' ? { agentId: value } : value 
+           action: actionMap[action] || action, 
+           payload: (action === 'transfer' || action === 'assignedAgent') ? { agentId: value } : 
+                    (action === 'stage' || action === 'pipelineStage') ? { stage: value } : value 
         })
       });
 
@@ -396,6 +406,7 @@ export default function Contacts({ roleAccess }) {
          throw new Error("Bulk update failed");
       }
     } catch (err) {
+      console.error(err);
       toast.error("Bulk update failed", { id: 'bulk' });
     } finally {
       setIsBulkUpdating(false);
@@ -949,55 +960,202 @@ export default function Contacts({ roleAccess }) {
         </div>
       )}
 
-      {/* FLOATING BULK COMMAND BAR */}
-      {selectedIds.size > 0 && (
-         <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[100] animate-slide-up">
-            <div className="bg-slate-900 text-white rounded-[2.5rem] px-8 py-5 shadow-3xl flex items-center space-x-8 border border-white/10 backdrop-blur-xl">
-               <div className="flex items-center space-x-3 pr-8 border-r border-white/10">
-                  <div className="w-10 h-10 bg-teal-500 rounded-xl flex items-center justify-center font-black text-white shadow-glow">
-                     {selectedIds.size}
+
+
+                  <button 
+                    onClick={() => setSelectedIds(new Set())}
+                    className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest text-red-400 hover:text-red-500 transition-colors pl-4 border-l border-white/10"
+                  >
+                     <X size={14} /> <span>Dismiss</span>
+                  </button>
+               </div>
+            </div>
+         </div>
+      )}
+
+      {/* ADVANCED FILTER PRO CONSOLE (SIDEBAR) */}
+      {showFilters && (
+        <div className="fixed inset-0 z-[200] flex justify-end bg-slate-900/40 backdrop-blur-[4px] animate-fade-in" onClick={() => setShowFilters(false)}>
+            <div 
+              className="w-[480px] h-full bg-white shadow-3xl flex flex-col animate-slide-up relative"
+              onClick={(e) => e.stopPropagation()}
+            >
+               <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-slate-50/50">
+                  <div className="flex items-center space-x-4">
+                     <div className="p-3 bg-teal-500 text-white rounded-2xl shadow-glow">
+                        <Filter size={20} />
+                     </div>
+                     <div>
+                        <h2 className="text-xl font-black text-slate-800 tracking-tight">Filter Console</h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Data Mining & Precision Hunting</p>
+                     </div>
                   </div>
-                  <div>
-                     <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Leads Selected</p>
-                     <p className="text-xs font-black uppercase tracking-[0.2em]">{isBulkUpdating ? 'Processing...' : 'Bulk Command'}</p>
+                  <button onClick={() => setShowFilters(false)} className="p-3 hover:bg-gray-100 rounded-2xl text-gray-400 transition-all"><X size={24} /></button>
+               </div>
+
+               <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-10">
+                  {/* DATA PULSE SECTION */}
+                  <div className="space-y-6">
+                     <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.25em] flex items-center">
+                        <Activity size={14} className="mr-2" /> Data Pulsing
+                     </h3>
+                     <div className="grid grid-cols-2 gap-4">
+                        <button 
+                          onClick={() => setFilters({...filters, hasUnread: !filters.hasUnread})}
+                          className={`p-5 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center space-y-3 ${filters.hasUnread ? 'bg-teal-50 border-teal-500 shadow-inner' : 'bg-white border-gray-50'}`}
+                        >
+                           <Mail className={filters.hasUnread ? 'text-teal-600' : 'text-gray-300'} />
+                           <span className={`text-[10px] font-black uppercase tracking-widest ${filters.hasUnread ? 'text-teal-700' : 'text-slate-400'}`}>Unread Only</span>
+                        </button>
+                        <button 
+                          onClick={() => setFilters({...filters, hasTasks: !filters.hasTasks})}
+                          className={`p-5 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center space-y-3 ${filters.hasTasks ? 'bg-orange-50 border-orange-500 shadow-inner' : 'bg-white border-gray-50'}`}
+                        >
+                           <Bell className={filters.hasTasks ? 'text-orange-600' : 'text-gray-300'} />
+                           <span className={`text-[10px] font-black uppercase tracking-widest ${filters.hasTasks ? 'text-orange-700' : 'text-slate-400'}`}>With Tasks</span>
+                        </button>
+                     </div>
+                  </div>
+
+                  {/* ATTRIBUTE FILTERS */}
+                  <div className="space-y-6">
+                     <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.25em] flex items-center">
+                        <Target size={14} className="mr-2" /> Lead Attributes
+                     </h3>
+                     
+                     <div className="space-y-4">
+                        <div className="p-4 bg-slate-50 rounded-3xl border border-gray-50">
+                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">origination Source</label>
+                           <select value={filters.source} onChange={e=>setFilters({...filters, source: e.target.value})} className="w-full bg-white border-none text-[11px] font-black text-slate-700 py-3 px-4 rounded-2xl outline-none shadow-sm capitalize">
+                              <option value="ALL">ANY SOURCE</option>
+                              {['Manual Entry', 'Meta Ads', 'Google Ads', 'Referral', 'Email Campaign', 'WhatsApp Blast'].map(s => <option key={s} value={s}>{s}</option>)}
+                           </select>
+                        </div>
+
+                        <div className="p-4 bg-slate-50 rounded-3xl border border-gray-50">
+                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Registration Period</label>
+                           <select value={filters.dateRange} onChange={e=>setFilters({...filters, dateRange: e.target.value})} className="w-full bg-white border-none text-[11px] font-black text-slate-700 py-3 px-4 rounded-2xl outline-none shadow-sm">
+                              <option value="ALL">COMPREHENSIVE HISTORY</option>
+                              <option value="TODAY">INITIALIZED TODAY</option>
+                              <option value="WEEK">PAST 7 DAYS</option>
+                              <option value="MONTH">PAST 30 DAYS</option>
+                           </select>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* VALUE & QUALITY RANGES */}
+                  <div className="space-y-6">
+                     <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.25em] flex items-center">
+                        <TrendingUp size={14} className="mr-2" /> Value & Quality
+                     </h3>
+                     
+                     <div className="space-y-8 p-6 bg-slate-900 rounded-[2.5rem] shadow-xl text-white">
+                        <div>
+                           <div className="flex justify-between items-center mb-4">
+                              <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">MIN Lead Score</label>
+                              <span className="text-xl font-black text-teal-400">{filters.minScore}%</span>
+                           </div>
+                           <input 
+                             type="range" min="0" max="100" 
+                             value={filters.minScore} 
+                             onChange={e=>setFilters({...filters, minScore: parseInt(e.target.value)})}
+                             className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-teal-500"
+                           />
+                        </div>
+
+                        <div>
+                           <div className="flex justify-between items-center mb-4">
+                              <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">MIN Deal Value</label>
+                              <span className="text-xl font-black text-teal-400">₹ {(filters.minValue / 1000).toFixed(0)}K +</span>
+                           </div>
+                           <input 
+                             type="range" min="0" max="200000" step="5000" 
+                             value={filters.minValue} 
+                             onChange={e=>setFilters({...filters, minValue: parseInt(e.target.value)})}
+                             className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-teal-500"
+                           />
+                        </div>
+                     </div>
                   </div>
                </div>
 
-               <div className="flex items-center space-x-5">
-                  <div className="group relative">
-                     <button 
-                        disabled={isBulkUpdating}
-                        className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest hover:text-teal-400 transition-colors"
-                     >
-                        <Users size={14} /> <span>Reassign Agent</span>
-                     </button>
-                     <div className="absolute bottom-full mb-4 left-0 bg-slate-800 rounded-2xl p-2 hidden group-hover:block border border-white/5 shadow-2xl min-w-[200px]">
-                        {agents.map(a => (
-                           <button key={a._id} onClick={() => handleBulkAction('assignedAgent', a._id)} className="w-full text-left px-4 py-2 hover:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">{a.name}</button>
-                        ))}
-                     </div>
+               <div className="p-8 border-t border-gray-100 bg-slate-50/50 space-y-4">
+                  <div className="flex items-center justify-between text-xs">
+                     <span className="font-bold text-slate-400 uppercase tracking-tighter">Matches Found:</span>
+                     <span className="font-black text-slate-800 bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">{filteredContacts.length} Profiles</span>
                   </div>
-
-                  <div className="group relative">
+                  <div className="grid grid-cols-2 gap-4">
                      <button 
-                        disabled={isBulkUpdating}
-                        className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest hover:text-teal-400 transition-colors"
+                       onClick={() => {
+                          setFilters({ status: 'ALL', heat: 'ALL', stage: 'ALL', agent: 'ALL', source: 'ALL', minScore: 0, maxScore: 100, minValue: 0, hasUnread: false, hasTasks: false, dateRange: 'ALL' });
+                          toast.success("Filters Cleared");
+                       }}
+                       className="py-4 bg-white border border-gray-200 text-slate-600 text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-50 transition-all"
                      >
-                        <Target size={14} /> <span>Update Stage</span>
+                        Reset All
                      </button>
-                     <div className="absolute bottom-full mb-4 left-0 bg-slate-800 rounded-2xl p-2 hidden group-hover:block border border-white/5 shadow-2xl min-w-[160px]">
-                        {PIPELINE_STAGES.map(s => (
-                           <button key={s} onClick={() => handleBulkAction('pipelineStage', s)} className="w-full text-left px-4 py-2 hover:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">{s}</button>
-                        ))}
-                     </div>
+                     <button 
+                       onClick={() => setShowFilters(false)}
+                       className="py-4 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:-translate-y-1 transition-all"
+                     >
+                        Apply Profile
+                     </button>
                   </div>
+               </div>
+            </div>
+        </div>
+      )}
 
-                  <button 
-                    onClick={handleExportCSV}
-                    className="flex items-center space-x-2 text-[10px] font-black uppercase tracking-widest hover:text-teal-400 transition-colors"
-                  >
-                     <Download size={14} /> <span>Export Set</span>
-                  </button>
+      {showAddModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] animate-fade-in" onClick={() => setShowAddModal(false)}>
+           <div className="bg-white p-12 rounded-[3.5rem] w-[480px] shadow-3xl animate-pop-in relative border border-white/50 overflow-hidden" onClick={e=>e.stopPropagation()}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--theme-bg)]/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+              <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-900 transition-all hover:rotate-90"><X size={26} /></button>
+              <div className="w-16 h-16 bg-[var(--theme-bg)] text-white rounded-3xl flex items-center justify-center shadow-glow mb-8 transform -rotate-6"><Plus size={32} /></div>
+              <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Onboard Entity</h2>
+              <p className="text-base font-bold text-slate-400 mb-10 lowercase tracking-tight">Initialize a new secure lead profile in the workspace.</p>
+              <form onSubmit={handleAddContact} className="space-y-8">
+                 <div className="space-y-2">
+                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Identity Signature</label>
+                    <input autoFocus type="text" value={newLeadName} onChange={e=>setNewLeadName(e.target.value)} required className="w-full bg-[#f9fafb] border border-slate-100 rounded-[2rem] px-7 py-5 outline-none focus:ring-4 focus:ring-[var(--theme-border)]/10 focus:border-[var(--theme-border)]/50 text-base font-bold text-slate-800 transition-all shadow-sm" placeholder="Full name profile" />
+                 </div>
+                 <div className="space-y-2">
+                    <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Communication Hub</label>
+                    <input type="tel" value={newLeadPhone} onChange={e=>setNewLeadPhone(e.target.value)} required className="w-full bg-[#f9fafb] border border-slate-100 rounded-[2rem] px-7 py-5 outline-none focus:ring-4 focus:ring-[var(--theme-border)]/10 focus:border-[var(--theme-border)]/50 text-base font-bold text-slate-800 transition-all shadow-sm" placeholder="+91 XXX XXX XXXX" />
+                             ))}
+                          </div>
+                       )}
+
+                        {/* SECTION 3: LEAD RELATED DETAILS (TIMESTAMPS) */}
+                       <div className="pt-6 border-t border-gray-100 grid grid-cols-2 gap-5 pb-8">
+                           <div className="p-5 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                               <div className="w-10 h-10 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center"><Calendar size={18} /></div>
+                               <div>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 mt-1">Created At</p>
+                                  <p className="text-xs font-bold text-gray-700">{formatDateTime(selectedContact.createdAt)}</p>
+                               </div>
+                           </div>
+                           <div className="p-5 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
+                               <div className="w-10 h-10 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center"><History size={18} /></div>
+                               <div>
+                                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 mt-1">Last Modified</p>
+                                  <p className="text-xs font-bold text-gray-700">{formatDateTime(selectedContact.updatedAt)}</p>
+                               </div>
+                           </div>
+                       </div>
+                    </div>
+                    <div className="px-8 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-[10px] font-bold text-gray-400 uppercase tracking-widest shrink-0">
+                       <div className="flex items-center"><ShieldCheck size={14} className="mr-2 text-teal-600" /> Secure Encryption Active</div>
+                       <div className="flex items-center text-gray-300">WapiPulse CRM v1.2</div>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </div>
+      )}
+
+
 
                   <button 
                     onClick={() => setSelectedIds(new Set())}
@@ -1166,73 +1324,79 @@ export default function Contacts({ roleAccess }) {
            </div>
         </div>
       )}
-      {/* FLOATING BULK ACTIONS BAR */}
+          {/* UNIFIED BULK ACTIONS BAR */}
       {selectedIds.size > 0 && (
-         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[100] bg-slate-900 text-white rounded-[2.5rem] px-8 py-5 shadow-3xl flex items-center space-x-8 animate-slide-up border border-white/10 backdrop-blur-md">
-            <div className="flex items-center space-x-3 pr-8 border-r border-white/10 uppercase tracking-widest text-[11px] font-black">
-               <div className="w-8 h-8 bg-[var(--theme-bg)] rounded-xl flex items-center justify-center text-white shadow-glow">{selectedIds.size}</div>
-               <span>Leads Selected</span>
+         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[150] bg-slate-900/95 text-white rounded-[2.5rem] px-8 py-5 shadow-3xl flex items-center space-x-10 animate-slide-up border border-white/10 backdrop-blur-md">
+            <div className="flex items-center space-x-4 pr-10 border-r border-white/10">
+               <div className="w-12 h-12 bg-teal-500 rounded-2xl flex items-center justify-center text-white shadow-glow animate-pulse">
+                  <Target size={24} />
+               </div>
+               <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-400 mb-1">{selectedIds.size} Leads Selected</p>
+                  <p className="text-sm font-black uppercase tracking-widest">{isBulkUpdating ? 'Executing Command...' : 'Workspace Batch'}</p>
+               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
-               {/* BULK TRANSFER */}
-               <div className="relative flex items-center bg-white/5 rounded-2xl p-1 border border-white/10 group">
-                  <select 
-                     value={bulkTargetAgent}
-                     onChange={(e) => setBulkTargetAgent(e.target.value)}
-                     className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[200px]"
-                  >
-                     <option value="" className="text-slate-900">Choose Transfer Agent...</option>
-                     {agents.map(a => <option key={a._id} value={a._id} className="text-slate-900">{a.name} ({a.role})</option>)}
-                  </select>
-                  <button 
-                    disabled={!bulkTargetAgent || isBulkUpdating}
-                    onClick={() => handleBulkAction('transfer', bulkTargetAgent)}
-                    className="bg-teal-500 hover:bg-teal-600 disabled:bg-slate-700 disabled:opacity-50 text-white p-2.5 rounded-xl transition-all shadow-lg active:scale-95"
-                  >
-                     <ArrowUpRight size={18} />
-                  </button>
-                  <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-[10px] px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap border border-white/5">Transfer Workspace Assignment</div>
+            <div className="flex items-center space-x-6">
+               {/* TRANSFER COMMAND */}
+               <div className="flex flex-col space-y-1">
+                  <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Transfer To</label>
+                  <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10">
+                     <select 
+                        value={bulkTargetAgent}
+                        onChange={(e) => setBulkTargetAgent(e.target.value)}
+                        className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[180px]"
+                     >
+                        <option value="" className="text-slate-900">Choose Agent...</option>
+                        {agents.map(a => <option key={a._id} value={a._id} className="text-slate-900">{a.name} ({a.role})</option>)}
+                     </select>
+                     <button 
+                       disabled={!bulkTargetAgent || isBulkUpdating}
+                       onClick={() => handleBulkAction('transfer', bulkTargetAgent)}
+                       className="bg-teal-500 hover:bg-teal-600 disabled:bg-slate-700 p-2.5 rounded-xl transition-all shadow-lg active:scale-95"
+                     >
+                        <ArrowUpRight size={18} />
+                     </button>
+                  </div>
                </div>
 
-               <div className="w-[1px] h-6 bg-white/10 mx-2"></div>
+               {/* STAGE COMMAND */}
+               <div className="flex flex-col space-y-1">
+                  <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Move To Stage</label>
+                  <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10">
+                     <select 
+                        onChange={(e) => handleBulkAction('stage', e.target.value)}
+                        className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[140px]"
+                        defaultValue=""
+                     >
+                        <option value="" disabled className="text-slate-900">Select Stage...</option>
+                        {PIPELINE_STAGES.map(s => <option key={s} value={s} className="text-slate-900">{s}</option>)}
+                     </select>
+                  </div>
+               </div>
 
-               <button 
-                  onClick={handleExportCSV}
-                  className="flex items-center space-x-2 px-5 py-3 hover:bg-white/10 rounded-2xl transition-all text-xs font-bold"
-               >
-                  <Download size={16} />
-                  <span>Export</span>
-               </button>
+               <div className="w-[1px] h-10 bg-white/10 mx-2"></div>
 
-               <button 
-                  onClick={() => handleBulkAction('archive', true)}
-                  className="flex items-center space-x-2 px-5 py-3 hover:bg-orange-500/20 text-orange-400 rounded-2xl transition-all text-xs font-bold"
-               >
-                  <ShieldCheck size={16} />
-                  <span>Archive</span>
-               </button>
-
-               <button 
-                  onClick={() => {
-                     if(window.confirm(`Permanently delete ${selectedIds.size} leads? This cannot be undone.`)) {
-                        handleBulkAction('hard_delete_leads', {});
-                     }
-                  }}
-                  className="p-3 hover:bg-red-500/20 text-red-400 rounded-2xl transition-all"
-               >
-                  <MoreVertical size={16} />
-               </button>
+               <div className="flex items-center space-x-3">
+                  <button onClick={handleExportCSV} className="p-4 hover:bg-white/10 rounded-2xl transition-all text-white/60 hover:text-white" title="Export Set"><Download size={20} /></button>
+                  <button onClick={() => handleBulkAction('archive', true)} className="p-4 hover:bg-orange-500/20 text-orange-400 rounded-2xl transition-all" title="Archive Leads"><ShieldCheck size={20}/></button>
+                  <button 
+                     onClick={() => { if(window.confirm(`Delete ${selectedIds.size} leads permanently?`)) handleBulkAction('hard_delete_leads', {}); }}
+                     className="p-4 hover:bg-red-500/20 text-red-400 rounded-2xl transition-all font-bold text-lg"
+                  >
+                     <MoreVertical size={20} />
+                  </button>
+               </div>
             </div>
             
             <button 
                onClick={() => setSelectedIds(new Set())}
-               className="ml-4 p-2.5 hover:bg-white/10 text-white/40 hover:text-white rounded-xl transition-all border border-transparent hover:border-white/10"
+               className="ml-6 p-4 hover:bg-white/10 text-white/20 hover:text-white rounded-2xl transition-all border border-transparent hover:border-white/10"
             >
-               <X size={20} />
+               <X size={24} />
             </button>
          </div>
       )}
-    </div>
+</div>
   );
 }

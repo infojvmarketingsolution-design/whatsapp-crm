@@ -405,6 +405,22 @@ const performBulkContactAction = async (req, res) => {
         }
       );
       return res.json({ success: true, message: `${contactIds.length} leads transferred to ${agentName}` });
+    } else if (action === 'update_stage') {
+       const stage = typeof payload === 'string' ? payload : payload.stage;
+       await ContactModel.updateMany(
+         { _id: { $in: contactIds } },
+         { 
+           $set: { pipelineStage: stage },
+           $push: { 
+             timeline: { 
+               eventType: 'PIPELINE_MOVE', 
+               description: `Moved to ${stage} stage in bulk`, 
+               timestamp: new Date() 
+             } 
+           }
+         }
+       );
+       return res.json({ success: true, message: `${contactIds.length} leads moved to ${stage}` });
     } else if (action === 'hard_delete_leads') {
       await MessageModel.deleteMany({ contactId: { $in: contactIds } });
       await ContactModel.deleteMany({ _id: { $in: contactIds } });
