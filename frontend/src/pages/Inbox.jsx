@@ -1225,7 +1225,7 @@ export default function Inbox({ roleAccess }) {
              )}
          </div>
 
-          <div className="px-6 py-2">
+          <div className="px-6 py-2" key={`counselling-${activeChat?._id}`}>
              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100/50 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-1 bg-indigo-100 rounded-bl-lg">
                    <Megaphone size={12} className="text-indigo-600" />
@@ -1263,8 +1263,8 @@ export default function Inbox({ roleAccess }) {
                       <input 
                          type="number" 
                          placeholder="0"
-                         value={activeChat?.collectionAmount || ''} 
-                         onChange={(e) => handleAction('update_contact', { collectionAmount: Number(e.target.value) || 0 })}
+                         defaultValue={activeChat?.collectionAmount || ''} 
+                         onBlur={(e) => handleAction('update_contact', { collectionAmount: Number(e.target.value) || 0 })}
                          className="w-full bg-white border border-indigo-100 rounded px-2 py-1 text-[10px] font-bold outline-none"
                       />
                    </div>
@@ -1273,8 +1273,8 @@ export default function Inbox({ roleAccess }) {
                       <input 
                          type="number" 
                          placeholder="0"
-                         value={activeChat?.pendingCollectionAmount || ''} 
-                         onChange={(e) => handleAction('update_contact', { pendingCollectionAmount: Number(e.target.value) || 0 })}
+                         defaultValue={activeChat?.pendingCollectionAmount || ''} 
+                         onBlur={(e) => handleAction('update_contact', { pendingCollectionAmount: Number(e.target.value) || 0 })}
                          className="w-full bg-white border border-indigo-100 rounded px-2 py-1 text-[10px] font-bold outline-none"
                       />
                    </div>

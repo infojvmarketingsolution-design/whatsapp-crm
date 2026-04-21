@@ -156,6 +156,13 @@ const performContactAction = async (req, res) => {
         if (payload.leadConsiderDate !== undefined) contact.leadConsiderDate = payload.leadConsiderDate;
         if (payload.firstName !== undefined) contact.firstName = payload.firstName;
         if (payload.lastName !== undefined) contact.lastName = payload.lastName;
+
+        // Counselling & Admission fields
+        if (payload.visitStatus !== undefined) contact.visitStatus = payload.visitStatus;
+        if (payload.admissionStatus !== undefined) contact.admissionStatus = payload.admissionStatus;
+        if (payload.collectionAmount !== undefined) contact.collectionAmount = Number(payload.collectionAmount) || 0;
+        if (payload.pendingCollectionAmount !== undefined) contact.pendingCollectionAmount = Number(payload.pendingCollectionAmount) || 0;
+        if (payload.isClosed !== undefined) contact.isClosed = Boolean(payload.isClosed);
         
         // Sync name field for display consistency across the app
         if (payload.firstName !== undefined || payload.lastName !== undefined) {
