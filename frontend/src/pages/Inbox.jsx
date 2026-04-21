@@ -874,7 +874,7 @@ export default function Inbox({ roleAccess }) {
 
                   <div className="flex justify-end mt-4">
                      <button 
-                        onClick={() => {
+                        onClick={async () => {
                            let locationLink = '';
                            const tenantId = localStorage.getItem('tenantId') || '';
                            if (meetingMode === 'Office Visit') {
@@ -883,9 +883,7 @@ export default function Inbox({ roleAccess }) {
                                locationLink = 'https://share.google/QjmS6jP5PqmnXWniH';
                            }
 
-                           handleAction('schedule_meeting', { mode: meetingMode, dateTime: meetingDate, location: locationLink, description: meetingDescription });
-
-                           // Generate eye-catching WhatsApp message
+                           // Send message first before modal closes
                            const d = new Date(meetingDate);
                            const formattedDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
                            const formattedTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
@@ -903,7 +901,9 @@ export default function Inbox({ roleAccess }) {
                                msg = `✨ *Meeting Confirmed!*\n\nYour *${meetingMode}* is scheduled! 🌟\n\n📅 *${formattedDate}*\n⏰ *${formattedTime}*\n\n💻 We will share the meeting link with you shortly.\n\n🤝 Meet our team\n🚀 Discuss your journey\n\n👉 Don’t miss it—see you online!`;
                            }
 
-                           handleSendMessage(null, msg);
+                           await handleSendMessage(null, msg);
+                           await handleAction('schedule_meeting', { mode: meetingMode, dateTime: meetingDate, location: locationLink, description: meetingDescription });
+
                            setShowMeetingModal(false);
                            setMeetingDate('');
                            setMeetingDescription('');
