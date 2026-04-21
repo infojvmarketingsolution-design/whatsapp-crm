@@ -402,6 +402,14 @@ function Dashboard() {
               />
               <DashboardCard 
                 isClickable={true} 
+                onClick={() => fetchUserBreakdown('pending_admissions', 'Admissions Pending')}
+                title="Admissions Pending" 
+                value={loading ? "..." : stats.pendingAdmission} 
+                subtext="Documentation stage" 
+                icon={History} 
+              />
+              <DashboardCard 
+                isClickable={true} 
                 onClick={() => fetchUserBreakdown('collections', 'Total Fee Collection')}
                 title="Total Collection" 
                 value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} 

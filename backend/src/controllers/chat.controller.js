@@ -837,6 +837,10 @@ const getUserBreakdownStats = async (req, res) => {
         matchQuery = { admissionStatus: 'Admitted' };
         groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
         break;
+      case 'pending_admissions':
+        matchQuery = { admissionStatus: 'Pending' };
+        groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
+        break;
       case 'collections':
         matchQuery = { collectionAmount: { $gt: 0 } };
         groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
