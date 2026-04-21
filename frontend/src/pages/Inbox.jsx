@@ -990,44 +990,51 @@ export default function Inbox({ roleAccess }) {
             )}
             
             {showFollowupModal && (
-                <div className="mt-4 bg-orange-50/60 backdrop-blur-md p-5 rounded-2xl border border-orange-200/50 animate-fade-in relative shadow-xl overflow-hidden group">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-orange-500/20 transition-all duration-700"></div>
-                  <h4 className="text-[11px] font-black text-orange-900 mb-4 tracking-[0.2em] uppercase flex items-center"><Clock size={14} className="mr-2 text-orange-600"/> Set Follow-up</h4>
+                <div className="mt-4 bg-emerald-50/80 backdrop-blur-md p-5 rounded-2xl border border-emerald-200/50 animate-fade-in relative shadow-xl overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-emerald-500/20 transition-all duration-700"></div>
+                  <h4 className="text-[11px] font-black text-emerald-900 mb-4 tracking-[0.2em] uppercase flex items-center"><Clock size={14} className="mr-2 text-emerald-600"/> Set Follow-up</h4>
                   
+                  <label className="text-[10px] font-bold text-emerald-800 mb-1 block">Subject</label>
                   <input 
                      type="text" 
                      value={followupHeading} 
                      onChange={e => setFollowupHeading(e.target.value)} 
-                     placeholder="Interaction Subject..." 
-                     className="w-full mb-3 bg-white/80 border border-orange-100/50 rounded-xl p-2.5 text-xs text-gray-700 font-bold focus:ring-2 focus:ring-orange-200 outline-none transition-all placeholder-orange-300" 
+                     placeholder="E.g., Call to discuss admission..." 
+                     className="w-full mb-4 bg-white border border-emerald-100/80 rounded-xl p-2.5 text-xs text-gray-700 font-bold focus:ring-2 focus:ring-emerald-200 outline-none transition-all placeholder-emerald-300" 
                   />
                   
-                  <div className="flex space-x-2 mb-3">
-                     {['Call', 'Meeting', 'Update'].map(type => (
+                  <label className="text-[10px] font-bold text-emerald-800 mb-1 block">Follow-up Type</label>
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                     {[
+                        { id: 'Call', icon: <Phone size={14}/> },
+                        { id: 'Meeting', icon: <Video size={14}/> },
+                        { id: 'Update', icon: <FileText size={14}/> }
+                     ].map(type => (
                         <button 
-                           key={type}
-                           onClick={() => setFollowupType(type)}
-                           className={`flex-1 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${
-                              followupType === type 
-                              ? 'bg-orange-600 text-white shadow-md' 
-                              : 'bg-white/50 text-orange-600 border border-orange-100 hover:bg-white'
+                           key={type.id}
+                           onClick={() => setFollowupType(type.id)}
+                           className={`flex flex-col items-center justify-center py-2.5 rounded-xl border-2 transition-all duration-300 ${
+                              followupType === type.id 
+                              ? 'bg-white border-emerald-400 shadow-md scale-[1.02] text-emerald-700' 
+                              : 'bg-white/50 border-transparent text-emerald-500 hover:border-emerald-200 hover:bg-white'
                            }`}
                         >
-                           {type}
+                           <div className="mb-1">{type.icon}</div>
+                           <span className="text-[9px] font-black uppercase tracking-wider">{type.id}</span>
                         </button>
                      ))}
                   </div>
 
                   {followupType === 'Meeting' && (
-                     <div className="flex bg-white/50 p-1 rounded-xl mb-3 border border-teal-100">
+                     <div className="flex bg-white/50 p-1 rounded-xl mb-4 border border-emerald-100">
                         {['Office Visit', 'Campus Visit'].map(visit => (
                            <button 
                               key={visit}
                               onClick={() => setFollowupVisitType(visit)}
                               className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${
                                  followupVisitType === visit 
-                                 ? 'bg-teal-500 text-white shadow-inner scale-95' 
-                                 : 'text-teal-600 hover:text-teal-800'
+                                 ? 'bg-emerald-500 text-white shadow-md' 
+                                 : 'text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50'
                               }`}
                            >
                               {visit}
@@ -1036,17 +1043,19 @@ export default function Inbox({ roleAccess }) {
                      </div>
                   )}
                     
-                  <div className="flex space-x-2 mb-3">
-                     <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)} className="w-1/2 bg-white/80 border border-orange-100/50 rounded-xl p-2.5 text-xs text-gray-700 font-bold outline-none ring-2 ring-transparent focus:ring-orange-200 transition-all" />
-                     <input type="time" value={followupTime} onChange={e => setFollowupTime(e.target.value)} className="w-1/2 bg-white/80 border border-orange-100/50 rounded-xl p-2.5 text-xs text-gray-700 font-bold outline-none ring-2 ring-transparent focus:ring-orange-200 transition-all" />
+                  <label className="text-[10px] font-bold text-emerald-800 mb-1 block">Date & Time</label>
+                  <div className="flex space-x-2 mb-4">
+                     <input type="date" value={followupDate} onChange={e => setFollowupDate(e.target.value)} className="w-1/2 bg-white border border-emerald-100/80 rounded-xl p-2.5 text-xs text-gray-700 font-bold outline-none ring-2 ring-transparent focus:ring-emerald-200 transition-all" />
+                     <input type="time" value={followupTime} onChange={e => setFollowupTime(e.target.value)} className="w-1/2 bg-white border border-emerald-100/80 rounded-xl p-2.5 text-xs text-gray-700 font-bold outline-none ring-2 ring-transparent focus:ring-emerald-200 transition-all" />
                   </div>
 
+                  <label className="text-[10px] font-bold text-emerald-800 mb-1 block">Notes & Expectations</label>
                   <textarea 
                      value={followupDescription} 
                      onChange={e => setFollowupDescription(e.target.value)} 
-                     placeholder="Interaction details & expectations..." 
+                     placeholder="What needs to be discussed?..." 
                      rows="3" 
-                     className="w-full bg-white/80 border border-orange-100/50 rounded-xl p-3 text-xs text-gray-700 font-bold outline-none resize-none ring-2 ring-transparent focus:ring-orange-200 transition-all placeholder-orange-300"
+                     className="w-full bg-white border border-emerald-100/80 rounded-xl p-3 text-xs text-gray-700 font-bold outline-none resize-none ring-2 ring-transparent focus:ring-emerald-200 transition-all placeholder-emerald-300"
                   ></textarea>
 
                   <div className="flex justify-end mt-4">
@@ -1057,7 +1066,7 @@ export default function Inbox({ roleAccess }) {
                          description: followupDescription,
                          metadata: { visitType: followupType === 'Meeting' ? followupVisitType : null }
                        })} 
-                       className="bg-orange-600 hover:bg-orange-700 text-white text-[10px] font-black uppercase tracking-wider px-6 py-2.5 rounded-xl shadow-lg shadow-orange-600/20 active:scale-95 transition-all"
+                       className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black uppercase tracking-wider px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20 active:scale-95 transition-all"
                      >
                         Confirm Follow-up
                      </button>
