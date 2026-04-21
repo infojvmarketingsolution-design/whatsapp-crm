@@ -32,7 +32,25 @@ import AdBudgetRefill from './components/AdBudgetRefill';
 import AutoLogout from './components/AutoLogout';
 import UserActivityDashboard from './pages/Admin/UserActivityDashboard';
 import OAuthCallback from './pages/OAuthCallback';
-import { Megaphone, FileText, Users, MessageCircle, Bot, Wallet, Database, Send, PlusCircle, UserCircle, Building2, AlertCircle, History, Clock, X, Plus, CheckCircle } from 'lucide-react';
+import { 
+  Megaphone, 
+  FileText, 
+  Users, 
+  MessageCircle, 
+  Bot, 
+  Wallet, 
+  Database, 
+  Send, 
+  PlusCircle, 
+  UserCircle, 
+  Building2, 
+  AlertCircle, 
+  History, 
+  Clock, 
+  X, 
+  Plus, 
+  CheckCircle 
+} from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add" }) {
   return (
