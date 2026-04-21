@@ -549,6 +549,7 @@ function AppLayout() {
   return (
     <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden`}>
       <Toaster position="top-right" reverseOrder={false} />
+      {!isAuthPage && <AutoLogout />}
       {!isAuthPage && <GlobalSuspensionTimer />}
       {!isAuthPage && (userRole === 'SUPER_ADMIN' ? <AdminSidebar onLogout={handleLogout} /> : <Sidebar whatsappConfig={whatsappConfig} roleAccess={roleAccess} />)}
       <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-hidden">
@@ -577,6 +578,7 @@ function AppLayout() {
             {/* Super Admin Routes */}
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/clients" element={<ClientManagement />} />
+            <Route path="/admin/user-sessions" element={<UserActivityDashboard />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/plans" element={<PlanManagement />} />
             <Route path="/admin/settings" element={<AdminSettings />} />

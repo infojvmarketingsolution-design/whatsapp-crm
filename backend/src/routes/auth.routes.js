@@ -1,11 +1,17 @@
 const express = require('express');
 const router = express.Router();
-const { authUser, registerSuperAdmin, registerTenant, requestOTP, verifyOTP } = require('../controllers/auth.controller');
+const { authUser, logout, registerSuperAdmin, registerTenant, requestOTP, verifyOTP } = require('../controllers/auth.controller');
+const { protect } = require('../middleware/auth');
 
 // @desc    Auth user & get token
 // @route   POST /api/auth/login
 // @access  Public
 router.post('/login', authUser);
+
+// @desc    Logout user
+// @route   POST /api/auth/logout
+// @access  Private
+router.post('/logout', protect, logout);
 
 // @desc    Request OTP
 // @route   POST /api/auth/request-otp

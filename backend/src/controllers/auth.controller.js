@@ -1,5 +1,6 @@
 const User = require('../models/core/User');
 const Client = require('../models/core/Client');
+const UserSession = require('../models/core/UserSession');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
 const NotificationService = require('../services/notification.service');
@@ -9,6 +10,30 @@ const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET || 'jv_crm_super_secret', {
     expiresIn: '30d',
   });
+};
+
+/**
+ * HELPER: Create a new user session
+ */
+const createSession = async (user, req) => {
+  try {
+    // Close any previous active sessions for this user
+    await UserSession.updateMany(
+      { userId: user._id, status: 'ACTIVE' },
+      { $set: { status: 'TIMEOUT', logoutAt: new Date() } }
+    );
+
+    await UserSession.create({
+      userId: user._id,
+      tenantId: user.tenantId,
+      userName: user.name,
+      userRole: user.role,
+      ipAddress: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+      userAgent: req.headers['user-agent']
+    });
+  } catch (error) {
+    console.error('Session Creation Error:', error);
+  }
 };
 
 /**
@@ -29,7 +54,6 @@ const authUser = async (req, res) => {
   try {
     let query = { email };
     
-    // If API Number is provided, identify the tenant first
     if (apiNumber) {
       const client = await Client.findOne({ 'whatsappConfig.phoneNumber': apiNumber });
       if (!client) return res.status(404).json({ message: 'Invalid API Number. Account not found.' });
@@ -43,6 +67,7 @@ const authUser = async (req, res) => {
     }
 
     if (user && (await user.matchPassword(password))) {
+      await createSession(user, req);
       res.json({
         _id: user._id,
         name: user.name,
@@ -59,12 +84,23 @@ const authUser = async (req, res) => {
   }
 };
 
+const logout = async (req, res) => {
+  try {
+    await UserSession.updateOne(
+      { userId: req.user._id, status: 'ACTIVE' },
+      { $set: { status: 'LOGGED_OUT', logoutAt: new Date() } }
+    );
+    res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const requestOTP = async (req, res) => {
-  const { identifier, method, apiNumber } = req.body; // identifier can be email or phone
+  const { identifier, method, apiNumber } = req.body; 
   try {
     let query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
 
-    // If API Number is provided, identify the tenant first
     if (apiNumber) {
       const client = await Client.findOne({ 'whatsappConfig.phoneNumber': apiNumber });
       if (!client) return res.status(404).json({ message: 'Invalid API Number. Workspace not found.' });
@@ -81,11 +117,9 @@ const requestOTP = async (req, res) => {
       return res.status(403).json({ message: 'Account suspended' });
     }
 
-    // Generate 6-digit OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60000); // 5 minutes
+    const otpExpiresAt = new Date(Date.now() + 5 * 60000); 
 
-    // Store hashed OTP
     const salt = await bcrypt.genSalt(10);
     user.otp = {
       code: await bcrypt.hash(otp, salt),
@@ -94,7 +128,6 @@ const requestOTP = async (req, res) => {
     };
     await user.save();
 
-    // Send OTP via service
     const sent = await NotificationService.sendOTP(user, otp, method || 'EMAIL');
 
     if (sent) {
@@ -132,9 +165,10 @@ const verifyOTP = async (req, res) => {
       return res.status(401).json({ message: 'Invalid OTP' });
     }
 
-    // Clear OTP after successful use
     user.otp = undefined;
     await user.save();
+
+    await createSession(user, req);
 
     res.json({
       _id: user._id,
@@ -167,6 +201,7 @@ const registerSuperAdmin = async (req, res) => {
     });
 
     if (user) {
+      await createSession(user, req);
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -194,12 +229,10 @@ const registerTenant = async (req, res) => {
       return res.status(400).json({ message: 'Account with this email already exists' });
     }
 
-    // Generate unique tenantId and API Key
     const companyName = name || 'My SaaS Organization';
     const tenantId = companyName.toLowerCase().replace(/[^a-z0-9]/g, '') + '_' + Date.now().toString().slice(-6);
     const apiKey = crypto.randomBytes(32).toString('hex');
 
-    // Dynamic secondary number mapping
     const secondaryOtpNumber = mobileNumber || getSecondaryNumber(companyName);
 
     const client = await Client.create({
@@ -223,6 +256,7 @@ const registerTenant = async (req, res) => {
     });
 
     if (user && client) {
+      await createSession(user, req);
       res.status(201).json({
         _id: user._id,
         name: user.name,
@@ -239,6 +273,6 @@ const registerTenant = async (req, res) => {
   }
 };
 
-module.exports = { authUser, registerSuperAdmin, registerTenant, requestOTP, verifyOTP };
+module.exports = { authUser, logout, registerSuperAdmin, registerTenant, requestOTP, verifyOTP };
 
 
