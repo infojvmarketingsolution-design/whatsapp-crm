@@ -24,9 +24,9 @@ export default function Inbox({ roleAccess }) {
   const [callTime, setCallTime] = useState('');
   const [callNotes, setCallNotes] = useState('');
   const [showMeetingModal, setShowMeetingModal] = useState(false);
-  const [meetingMode, setMeetingMode] = useState('Online');
+  const [meetingMode, setMeetingMode] = useState('Online Meeting (Zoom/Google)');
   const [meetingDate, setMeetingDate] = useState('');
-  const [meetingLocation, setMeetingLocation] = useState('');
+  const [meetingDescription, setMeetingDescription] = useState('');
   const [showFollowupModal, setShowFollowupModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [followupHeading, setFollowupHeading] = useState('');
@@ -140,6 +140,7 @@ export default function Inbox({ roleAccess }) {
           setCallCount(1);
           setCallDate('');
           setCallTime('');
+          setMeetingDescription('');
           setShowTagInput(false);
           setNewTagName('');
           // toast is not imported in original snippet but used - keeping as is if it exists globally
@@ -824,12 +825,11 @@ export default function Inbox({ roleAccess }) {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-purple-500/20 transition-all duration-700"></div>
                   <h4 className="text-[11px] font-black text-purple-900 mb-4 tracking-[0.2em] uppercase flex items-center"><Calendar size={14} className="mr-2 text-purple-600"/> Schedule Meeting</h4>
                   
-                  <div className="grid grid-cols-2 gap-2 mb-4">
+                  <div className="grid grid-cols-3 gap-2 mb-4">
                      {[
-                        { id: 'Online', label: 'Online (Zoom)', icon: <Video size={16}/>, color: 'indigo' },
+                        { id: 'Online Meeting (Zoom/Google)', label: 'Online (Zoom/Google)', icon: <Video size={16}/>, color: 'indigo' },
                         { id: 'Office Visit', label: 'Office Visit', icon: <Home size={16}/>, color: 'purple' },
-                        { id: 'Campus Visit', label: 'Campus Visit', icon: <School size={16}/>, color: 'teal' },
-                        { id: 'Phone Call', label: 'Phone Call', icon: <Phone size={16}/>, color: 'blue' }
+                        { id: 'Campus Visit', label: 'Campus Visit', icon: <School size={16}/>, color: 'teal' }
                      ].map(mode => (
                         <button 
                            key={mode.id}
@@ -843,7 +843,7 @@ export default function Inbox({ roleAccess }) {
                            <div className={`mb-2 p-2 rounded-lg ${meetingMode === mode.id ? `bg-purple-100 text-purple-600` : 'bg-gray-100 text-gray-500'}`}>
                               {mode.icon}
                            </div>
-                           <span className={`text-[10px] font-bold ${meetingMode === mode.id ? `text-purple-700` : 'text-gray-500'}`}>{mode.label}</span>
+                           <span className={`text-[10px] font-bold text-center leading-tight ${meetingMode === mode.id ? `text-purple-700` : 'text-gray-500'}`}>{mode.label}</span>
                         </button>
                      ))}
                   </div>
@@ -858,20 +858,40 @@ export default function Inbox({ roleAccess }) {
                         />
                      </div>
                      <div className="relative">
-                        <MapPin size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-purple-400" />
-                        <input 
-                           type="text" 
-                           value={meetingLocation} 
-                           onChange={e => setMeetingLocation(e.target.value)} 
-                           placeholder="Meeting Link or Physical Location..." 
-                           className="w-full bg-white/80 border border-purple-100/50 rounded-xl pl-9 pr-4 py-2.5 text-xs text-gray-700 font-bold focus:ring-2 focus:ring-purple-200 outline-none transition-all placeholder-purple-300"
-                        />
+                        <textarea 
+                           value={meetingDescription} 
+                           onChange={e => setMeetingDescription(e.target.value)} 
+                           placeholder="Description..." 
+                           rows="2"
+                           className="w-full bg-white/80 border border-purple-100/50 rounded-xl p-3 text-xs text-gray-700 font-bold focus:ring-2 focus:ring-purple-200 outline-none transition-all placeholder-purple-300 resize-none"
+                        ></textarea>
                      </div>
                   </div>
 
                   <div className="flex justify-end mt-4">
                      <button 
-                        onClick={() => handleAction('schedule_meeting', { mode: meetingMode, dateTime: meetingDate, location: meetingLocation })} 
+                        onClick={() => {
+                           let locationLink = '';
+                           const tenantId = localStorage.getItem('tenantId') || '';
+                           if (meetingMode === 'Office Visit') {
+                               locationLink = 'https://share.google/9q0vsZgIu4a5StO6L';
+                           } else if (meetingMode === 'Campus Visit' && tenantId.toLowerCase().includes('gandhinagar')) {
+                               locationLink = 'https://share.google/QjmS6jP5PqmnXWniH';
+                           }
+
+                           handleAction('schedule_meeting', { mode: meetingMode, dateTime: meetingDate, location: locationLink, description: meetingDescription });
+
+                           // Generate eye-catching WhatsApp message
+                           const d = new Date(meetingDate);
+                           const formattedDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                           const formattedTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+                           
+                           let msg = `✨ Thank you for connecting with us! ✨\n\nYour *${meetingMode}* is scheduled for:\n📅 *${formattedDate}* at ⏰ *${formattedTime}*\n`;
+                           if (locationLink) msg += `\n📍 *Location Link:* ${locationLink}\n`;
+                           msg += `\nLooking forward to seeing you!`;
+
+                           setNewMessage(msg);
+                        }} 
                         className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider px-6 py-2.5 rounded-xl shadow-lg shadow-purple-600/20 active:scale-95 transition-all"
                      >
                         Confirm Schedule

@@ -248,7 +248,7 @@ const performContactAction = async (req, res) => {
     } else if (action === 'schedule_meeting') {
        if (!contact.tasks) contact.tasks = [];
        contact.tasks.push({ 
-         type: 'MEETING', title: `Meeting: ${payload.mode}`, dueDate: new Date(payload.dateTime), status: 'PENDING', metadata: { location: payload.location }
+         type: 'MEETING', title: `Meeting: ${payload.mode}`, dueDate: new Date(payload.dateTime), status: 'PENDING', description: payload.description || '', metadata: { location: payload.location }
        });
        contact.timeline.push({ eventType: 'MEETING_SCHEDULED', description: `Scheduled ${payload.mode} Meeting for ${new Date(payload.dateTime).toLocaleString()}`, timestamp: new Date() });
     } else if (action === 'add_followup') {
