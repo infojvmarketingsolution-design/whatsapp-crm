@@ -147,12 +147,12 @@ export default function Login() {
                       <input type="text" value={apiNumber} onChange={e => setApiNumber(e.target.value)} required placeholder="919904XXXXXX" className="field-input" />
                     </Field>
                     
-                    <Field label="EMAIL OR MOBILE" icon={<User className="w-4 h-4" />}>
-                      <input type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="admin@domain.com" className="field-input" />
+                    <Field label="LOGIN CONTACT NUMBER" icon={<User className="w-4 h-4" />}>
+                      <input type="text" value={identifier} onChange={e => setIdentifier(e.target.value)} required placeholder="Email or Mobile" className="field-input" />
                     </Field>
 
                     {usePassword || isRegister ? (
-                      <Field label={isRegister ? "CREATE PASSWORD" : "SECURE PASSWORD"} icon={<Lock className="w-4 h-4" />}>
+                      <Field label="PASSWORD" icon={<Lock className="w-4 h-4" />}>
                         <input type="password" value={password} onChange={e => setPassword(e.target.value)} required placeholder="••••••••" className="field-input" />
                       </Field>
                     ) : (
