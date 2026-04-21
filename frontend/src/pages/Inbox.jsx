@@ -833,23 +833,32 @@ export default function Inbox({ roleAccess }) {
                     <button 
                         onClick={async () => {
                            let callMsg = '';
-                           if (callOutcome === 'Connected') {
-                               callMsg = `Thank you for connecting with us today!`;
-                           } else if (callOutcome === 'Not Answered') {
-                               callMsg = `We tried to call you but you didn't answer. Please provide a suitable time for calling.`;
-                           } else if (callOutcome === 'Busy') {
-                               callMsg = `You were busy when we called. Please provide a convenient time for us to call you.`;
-                           } else if (callOutcome === 'Interested') {
-                               callMsg = `Thank you for your interest in our university.`;
-                           } else if (callOutcome === 'Not Interested') {
-                               callMsg = `Thank you for your time.`;
-                           }
-
+                           let formattedNextCall = '';
+                           
                            if (nextCallDate && nextCallTime) {
                                const d = new Date(`${nextCallDate}T${nextCallTime}`);
-                               const formattedDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-                               const formattedTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-                               callMsg += `\n\nOur team's next call is scheduled for:\n📅 *${formattedDate}* at ⏰ *${formattedTime}*`;
+                               const fDate = d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                               const fTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+                               formattedNextCall = `${fDate} at ${fTime}`;
+                           }
+
+                           if (callOutcome === 'Connected') {
+                               callMsg = `✅ *Great Connecting With You!*\n\nHello 👋\n\nThank you for taking the time to speak with us today.\nWe’re excited to assist you in your journey ahead! 🎓✨\n`;
+                               if (formattedNextCall) callMsg += `\n📅 *Next Call Scheduled:* ${formattedNextCall}\n`;
+                               callMsg += `\nLooking forward to speaking with you again! 😊`;
+                           } else if (callOutcome === 'Not Answered') {
+                               callMsg = `📞 *We Tried Reaching You*\n\nHello 👋\n\nWe tried to connect with you but couldn’t reach you.\n\n⏳ Kindly share a convenient time for a quick call.\nWe’d love to assist you! 😊\n`;
+                               if (formattedNextCall) callMsg += `\n📅 *Next Follow-up:* ${formattedNextCall}\n`;
+                           } else if (callOutcome === 'Busy') {
+                               callMsg = `⏰ *We Understand You're Busy*\n\nHello 👋\n\nWe noticed you were unavailable during our call.\n\n🙏 Please share a suitable time so we can connect at your convenience.\n`;
+                               if (formattedNextCall) callMsg += `\n📅 *Next Attempt:* ${formattedNextCall}\n`;
+                               callMsg += `\nLooking forward to speaking with you! 😊`;
+                           } else if (callOutcome === 'Interested') {
+                               callMsg = `🌟 *Thank You for Your Interest!*\n\nHello 👋\n\nThank you for showing interest in our university 🎓\n\nWe’re excited to guide you toward the right opportunities! 🚀\n`;
+                               if (formattedNextCall) callMsg += `\n📅 *Next Discussion:* ${formattedNextCall}\n`;
+                               callMsg += `\nFeel free to reach out if you have any questions!`;
+                           } else if (callOutcome === 'Not Interested') {
+                               callMsg = `🙏 *Thank You for Your Time*\n\nHello 👋\n\nThank you for your time and response.\n\nIf you need any assistance in the future, we’ll be happy to help. 😊\n\nWishing you all the best for your future! 🌟`;
                            }
 
                            await handleSendMessage(null, callMsg);
