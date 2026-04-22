@@ -74,7 +74,8 @@ const updateClient = async (req, res) => {
     loginEmail, 
     password, 
     status, 
-    plan 
+    plan,
+    whatsappConfig
   } = req.body;
 
   try {
@@ -90,6 +91,9 @@ const updateClient = async (req, res) => {
     client.mobileNumber = mobileNumber || client.mobileNumber;
     client.status = status || client.status;
     client.plan = plan || client.plan;
+    if (whatsappConfig) {
+      client.whatsappConfig = whatsappConfig;
+    }
     await client.save();
 
     // 2. Find and Update the Admin User for this tenant

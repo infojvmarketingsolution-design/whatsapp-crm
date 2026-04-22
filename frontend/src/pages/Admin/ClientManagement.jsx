@@ -145,11 +145,16 @@ const ClientManagement = () => {
         body: JSON.stringify({ whatsappConfig: configData })
       });
       if (res.ok) {
+        toast.success("WhatsApp API Credentials Saved");
         setShowConfigModal(false);
         fetchClients();
+      } else {
+        const errData = await res.json();
+        toast.error(errData.message || "Failed to save API config");
       }
     } catch (error) {
       console.error('Failed to save config', error);
+      toast.error("Network error while saving config");
     } finally {
       setSubmitting(false);
     }
