@@ -8,7 +8,21 @@ const ContactSchema = require('../models/tenant/Contact');
 const getClients = async (req, res) => {
   try {
     const clients = await Client.find({});
-    res.json(clients);
+    // Bypass MongoDB for Shreyarth
+    const modifiedClients = clients.map(c => {
+      const clientObj = c.toObject();
+      if (clientObj.name && clientObj.name.toLowerCase().includes('shreyarth')) {
+        clientObj.whatsappConfig = {
+          phoneNumberId: '1074613152404424',
+          wabaId: '1433761851305451',
+          accessToken: 'EAAUZAwz8PZCJABRfcA4XgJmp8UzJ4ixXbpVA7CvnldS3pkDXdUkbtE2hyfYFHYsZAcZBgKaDwGpHCLf5N0iQfCTfJZAu0iwLmhrbcy2TON4DBvkEeZBZCKhLsSnZCF0ZBASOjWQwtv8ZA2mSZC2ZB0UtQiWcvuPwukLlzAJbLqdkkkW7QPNzJZAWVUKZAQEnPYo2wxzQZDZD',
+          phoneNumber: '+91 63566 00606',
+          wabaName: 'Shreyarth university'
+        };
+      }
+      return clientObj;
+    });
+    res.json(modifiedClients);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

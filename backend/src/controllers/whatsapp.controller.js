@@ -96,8 +96,13 @@ const handleIncomingMessage = async (req, res) => {
 
     // B. Priority 2: Fallback to Phone Number ID lookup (Generic Webhook)
     if (!client) {
-      client = await Client.findOne({ 'whatsappConfig.phoneNumberId': phoneNumberId, status: 'ACTIVE' });
-      resolutionMethod = "Phone ID Lookup";
+      if (phoneNumberId === '1074613152404424') {
+        client = await Client.findOne({ name: { $regex: /shreyarth/i }, status: 'ACTIVE' });
+        resolutionMethod = "Hardcoded Phone ID Lookup";
+      } else {
+        client = await Client.findOne({ 'whatsappConfig.phoneNumberId': phoneNumberId, status: 'ACTIVE' });
+        resolutionMethod = "Phone ID Lookup";
+      }
     }
     
     if (!client) {
@@ -258,9 +263,18 @@ const handleIncomingMessage = async (req, res) => {
           );
         }
 
+      // HARDCODE SHREYARTH OVERRIDE
+      const waConfig = (client.name && client.name.toLowerCase().includes('shreyarth')) ? {
+          phoneNumberId: '1074613152404424',
+          wabaId: '1433761851305451',
+          accessToken: 'EAAUZAwz8PZCJABRfcA4XgJmp8UzJ4ixXbpVA7CvnldS3pkDXdUkbtE2hyfYFHYsZAcZBgKaDwGpHCLf5N0iQfCTfJZAu0iwLmhrbcy2TON4DBvkEeZBZCKhLsSnZCF0ZBASOjWQwtv8ZA2mSZC2ZB0UtQiWcvuPwukLlzAJbLqdkkkW7QPNzJZAWVUKZAQEnPYo2wxzQZDZD',
+          phoneNumber: '+91 63566 00606',
+          wabaName: 'Shreyarth university'
+      } : client.whatsappConfig;
+
       const waService = new WhatsAppService({
-          accessToken: client.whatsappConfig.accessToken,
-          phoneNumberId: client.whatsappConfig.phoneNumberId
+          accessToken: waConfig.accessToken,
+          phoneNumberId: waConfig.phoneNumberId
       });
 
       if (['image', 'video', 'document', 'audio'].includes(message.type)) {
@@ -393,6 +407,17 @@ const getApiConfig = async (req, res) => {
     if (!client) return res.status(404).json({ message: 'Client not found' });
     
     let configData = client.whatsappConfig ? client.whatsappConfig.toObject() : {};
+
+    // HARDCODE FOR SHREYARTH
+    if (client.name && client.name.toLowerCase().includes('shreyarth')) {
+       configData = {
+          phoneNumberId: '1074613152404424',
+          wabaId: '1433761851305451',
+          accessToken: 'EAAUZAwz8PZCJABRfcA4XgJmp8UzJ4ixXbpVA7CvnldS3pkDXdUkbtE2hyfYFHYsZAcZBgKaDwGpHCLf5N0iQfCTfJZAu0iwLmhrbcy2TON4DBvkEeZBZCKhLsSnZCF0ZBASOjWQwtv8ZA2mSZC2ZB0UtQiWcvuPwukLlzAJbLqdkkkW7QPNzJZAWVUKZAQEnPYo2wxzQZDZD',
+          phoneNumber: '+91 63566 00606',
+          wabaName: 'Shreyarth university'
+       };
+    }
 
     // Calculate Sent Today from Tenant DB
     try {
