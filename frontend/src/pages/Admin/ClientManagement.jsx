@@ -46,7 +46,8 @@ const ClientManagement = () => {
     try {
       const token = localStorage.getItem('token');
       const res = await fetch('/api/clients', {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
+        cache: 'no-store'
       });
       if (res.ok) {
         setClients(await res.json());

@@ -67,6 +67,8 @@ const getClientById = async (req, res) => {
 };
 
 const updateClient = async (req, res) => {
+  console.log('--- updateClient CALLED ---', req.params.id);
+  console.log('req.body:', req.body);
   const { 
     companyName, 
     email, 
@@ -81,6 +83,7 @@ const updateClient = async (req, res) => {
   try {
     const client = await Client.findById(req.params.id);
     if (!client) {
+      console.log('Client not found');
       return res.status(404).json({ message: 'Client not found' });
     }
 
@@ -93,13 +96,26 @@ const updateClient = async (req, res) => {
     if (mobileNumber) updateFields.mobileNumber = mobileNumber;
     if (status) updateFields.status = status;
     if (plan) updateFields.plan = plan;
-    if (whatsappConfig) updateFields.whatsappConfig = whatsappConfig;
+    
+    if (whatsappConfig) {
+      if (whatsappConfig.phoneNumberId !== undefined) updateFields['whatsappConfig.phoneNumberId'] = whatsappConfig.phoneNumberId;
+      if (whatsappConfig.wabaId !== undefined) updateFields['whatsappConfig.wabaId'] = whatsappConfig.wabaId;
+      if (whatsappConfig.accessToken !== undefined) updateFields['whatsappConfig.accessToken'] = whatsappConfig.accessToken;
+      if (whatsappConfig.phoneNumber !== undefined) updateFields['whatsappConfig.phoneNumber'] = whatsappConfig.phoneNumber;
+      if (whatsappConfig.wabaName !== undefined) updateFields['whatsappConfig.wabaName'] = whatsappConfig.wabaName;
+      // also set the whole object in case it was entirely empty to force init
+      updateFields.whatsappConfig = whatsappConfig;
+    }
+    
+    console.log('updateFields:', updateFields);
 
     const updatedClient = await Client.findByIdAndUpdate(
       client._id,
       { $set: updateFields },
       { new: true }
     );
+    
+    console.log('updatedClient after save:', updatedClient.whatsappConfig);
 
     // 2. Find and Update the Admin User for this tenant
     const adminUser = await User.findOne({ 
@@ -124,7 +140,7 @@ const updateClient = async (req, res) => {
       );
     }
 
-    res.json(client);
+    res.json(updatedClient);
   } catch (error) {
     console.error('❌ UpdateClient Error:', error);
     res.status(500).json({ message: error.message });
