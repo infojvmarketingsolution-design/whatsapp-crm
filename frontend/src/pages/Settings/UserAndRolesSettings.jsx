@@ -117,12 +117,18 @@ export default function UserAndRolesSettings() {
       if (settingsRes.ok) {
         const settingsData = await settingsRes.json();
         if (settingsData.roleAccess) {
-          setRoleSettings(settingsData.roleAccess);
-          const derivedRoles = Object.keys(settingsData.roleAccess).map(key => ({
-            id: key,
-            name: settingsData.roleAccess[key].name || key,
-            icon: key === 'ADMIN' ? ShieldCheck : Shield
-          }));
+          const sanitizedRoleAccess = { ...settingsData.roleAccess };
+          const derivedRoles = Object.keys(sanitizedRoleAccess).map(key => {
+            if (!sanitizedRoleAccess[key].name) {
+              sanitizedRoleAccess[key].name = key.replace(/_/g, ' '); // Fallback for old DB records
+            }
+            return {
+              id: key,
+              name: sanitizedRoleAccess[key].name,
+              icon: key === 'ADMIN' ? ShieldCheck : Shield
+            };
+          });
+          setRoleSettings(sanitizedRoleAccess);
           setDynamicRoles(derivedRoles);
         }
       }
