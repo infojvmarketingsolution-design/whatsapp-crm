@@ -98,12 +98,6 @@ const updateClient = async (req, res) => {
     if (plan) updateFields.plan = plan;
     
     if (whatsappConfig) {
-      if (whatsappConfig.phoneNumberId !== undefined) updateFields['whatsappConfig.phoneNumberId'] = whatsappConfig.phoneNumberId;
-      if (whatsappConfig.wabaId !== undefined) updateFields['whatsappConfig.wabaId'] = whatsappConfig.wabaId;
-      if (whatsappConfig.accessToken !== undefined) updateFields['whatsappConfig.accessToken'] = whatsappConfig.accessToken;
-      if (whatsappConfig.phoneNumber !== undefined) updateFields['whatsappConfig.phoneNumber'] = whatsappConfig.phoneNumber;
-      if (whatsappConfig.wabaName !== undefined) updateFields['whatsappConfig.wabaName'] = whatsappConfig.wabaName;
-      // also set the whole object in case it was entirely empty to force init
       updateFields.whatsappConfig = whatsappConfig;
     }
     
