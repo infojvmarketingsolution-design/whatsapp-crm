@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authUser, logout, registerSuperAdmin, registerTenant, requestOTP, verifyOTP } = require('../controllers/auth.controller');
+const { authUser, logout, registerSuperAdmin, registerTenant, requestOTP, verifyOTP, updateAvailability } = require('../controllers/auth.controller');
 const { protect } = require('../middleware/auth');
 
 // @desc    Auth user & get token
@@ -12,6 +12,11 @@ router.post('/login', authUser);
 // @route   POST /api/auth/logout
 // @access  Private
 router.post('/logout', protect, logout);
+
+// @desc    Update user availability
+// @route   PUT /api/auth/availability
+// @access  Private
+router.put('/availability', protect, updateAvailability);
 
 // @desc    Request OTP
 // @route   POST /api/auth/request-otp

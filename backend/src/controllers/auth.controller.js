@@ -273,6 +273,25 @@ const registerTenant = async (req, res) => {
   }
 };
 
-module.exports = { authUser, logout, registerSuperAdmin, registerTenant, requestOTP, verifyOTP };
+const updateAvailability = async (req, res) => {
+  try {
+    const { isAvailable } = req.body;
+    
+    // Find the current logged in user and update their status
+    const user = await User.findById(req.user._id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    user.isAvailableForAutoAssign = isAvailable;
+    await user.save();
+    
+    res.json({ message: 'Availability status updated', isAvailable: user.isAvailableForAutoAssign });
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating availability status', error: error.message });
+  }
+};
+
+module.exports = { authUser, logout, registerSuperAdmin, registerTenant, requestOTP, verifyOTP, updateAvailability };
 
 

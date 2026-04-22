@@ -8,6 +8,7 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, default: 'ADMIN' },
   tenantId: { type: String }, // Binds Agents and Admins to explicit SaaS instances
   status: { type: String, enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED'], default: 'ACTIVE' },
+  isAvailableForAutoAssign: { type: Boolean, default: true },
   phoneNumber: { type: String },
   lastLeadAssignedAt: { type: Date },
   otp: {

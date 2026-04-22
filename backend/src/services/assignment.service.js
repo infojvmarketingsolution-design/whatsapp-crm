@@ -10,6 +10,7 @@ exports.getNextAgentForTenant = async (tenantId) => {
     const eligibleAgents = await User.find({
       tenantId,
       status: 'ACTIVE',
+      isAvailableForAutoAssign: { $ne: false },
       role: { $in: ['TELECALLER', 'AGENT', 'MANAGER_COUNSELLOUR'] }
     }).sort({ lastLeadAssignedAt: 1 }); // Oldest first (nulls will be first)
 

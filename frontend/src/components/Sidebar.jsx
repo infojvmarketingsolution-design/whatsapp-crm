@@ -22,6 +22,25 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
   const [collapsed, setCollapsed] = React.useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user.role || localStorage.getItem('role') || 'AGENT').toUpperCase();
+  const [isAvailable, setIsAvailable] = React.useState(localStorage.getItem('isAvailable') !== 'false');
+
+  const toggleAvailability = async () => {
+    const newValue = !isAvailable;
+    setIsAvailable(newValue);
+    localStorage.setItem('isAvailable', newValue);
+    try {
+      await fetch('/api/auth/availability', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ isAvailable: newValue })
+      });
+    } catch (error) {
+      console.error('Failed to update availability', error);
+    }
+  };
 
 
   const handleLogout = () => {
@@ -121,6 +140,23 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
             </div>
           </div>
         )}
+        
+        <div className={`px-6 py-4 border-b border-teal-800/30 bg-teal-900/10 flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
+          {!collapsed && (
+             <div className="flex flex-col">
+                <span className="text-[11px] font-bold text-teal-200 uppercase tracking-wider">Status</span>
+                <span className="text-[9px] text-teal-400/80">{isAvailable ? 'Receiving Leads' : 'Auto-Assign Paused'}</span>
+             </div>
+          )}
+          <button 
+             onClick={toggleAvailability}
+             title={isAvailable ? "Active (Receiving Leads)" : "Non-Active (Auto-Assign Paused)"}
+             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none transition-colors ${isAvailable ? 'bg-green-500' : 'bg-slate-500'}`}
+          >
+             <span className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAvailable ? 'translate-x-1.5' : '-translate-x-1.5'}`} />
+          </button>
+        </div>
+
         <button onClick={handleLogout} className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-teal-200 hover:text-white hover:bg-teal-800/80 transition-colors`}>
           <LogOut size={20} />
           {!collapsed && <span>Logout</span>}
