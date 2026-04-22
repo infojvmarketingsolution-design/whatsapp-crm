@@ -3,7 +3,8 @@ import {
   UserCog, UserPlus, MoreVertical, Shield, ShieldCheck, Check, Save, ShieldAlert,
   LayoutDashboard, MessageSquare, Megaphone, Users, FileText, Bot, UserPlus as AgentIcon, 
   Globe, Code, Settings, KanbanSquare, CheckSquare, Building2, MessageCircle, CreditCard, 
-  Link as LinkIcon, ShieldCheck as SecurityIcon, Bell, Palette, ChevronDown, ChevronRight
+  Link as LinkIcon, ShieldCheck as SecurityIcon, Bell, Palette, ChevronDown, ChevronRight,
+  Plus, Trash2
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
