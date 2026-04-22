@@ -97,7 +97,14 @@ const handleIncomingMessage = async (req, res) => {
     // B. Priority 2: Fallback to Phone Number ID lookup (Generic Webhook)
     if (!client) {
       if (phoneNumberId === '1074613152404424') {
-        client = await Client.findOne({ name: { $regex: /shreyarth/i }, status: 'ACTIVE' });
+        client = await Client.findOne({ 
+            $or: [
+                { tenantId: { $regex: /shreyarth/i } },
+                { companyName: { $regex: /shreyarth/i } },
+                { name: { $regex: /shreyarth/i } }
+            ], 
+            status: 'ACTIVE' 
+        });
         resolutionMethod = "Hardcoded Phone ID Lookup";
       } else {
         client = await Client.findOne({ 'whatsappConfig.phoneNumberId': phoneNumberId, status: 'ACTIVE' });
@@ -264,7 +271,8 @@ const handleIncomingMessage = async (req, res) => {
         }
 
       // HARDCODE SHREYARTH OVERRIDE
-      const waConfig = (client.name && client.name.toLowerCase().includes('shreyarth')) ? {
+      const isShreyarth = client.tenantId?.toLowerCase().includes('shreyarth') || client.companyName?.toLowerCase().includes('shreyarth') || client.name?.toLowerCase().includes('shreyarth');
+      const waConfig = isShreyarth ? {
           phoneNumberId: '1074613152404424',
           wabaId: '1433761851305451',
           accessToken: 'EAAUZAwz8PZCJABRfcA4XgJmp8UzJ4ixXbpVA7CvnldS3pkDXdUkbtE2hyfYFHYsZAcZBgKaDwGpHCLf5N0iQfCTfJZAu0iwLmhrbcy2TON4DBvkEeZBZCKhLsSnZCF0ZBASOjWQwtv8ZA2mSZC2ZB0UtQiWcvuPwukLlzAJbLqdkkkW7QPNzJZAWVUKZAQEnPYo2wxzQZDZD',
@@ -409,7 +417,8 @@ const getApiConfig = async (req, res) => {
     let configData = client.whatsappConfig ? client.whatsappConfig.toObject() : {};
 
     // HARDCODE FOR SHREYARTH
-    if (client.name && client.name.toLowerCase().includes('shreyarth')) {
+    const isShreyarth = client.tenantId?.toLowerCase().includes('shreyarth') || client.companyName?.toLowerCase().includes('shreyarth') || client.name?.toLowerCase().includes('shreyarth');
+    if (isShreyarth) {
        configData = {
           phoneNumberId: '1074613152404424',
           wabaId: '1433761851305451',

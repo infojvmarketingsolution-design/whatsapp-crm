@@ -561,7 +561,8 @@ const sendMessage = async (req, res) => {
     if (!accessToken || !phoneNumberId || accessToken === 'DUMMY') {
         console.warn(`[POST /send] Missing credentials for tenant ${req.tenantId}. Using dummy fallback.`);
        // HARDCODE SHREYARTH OVERRIDE
-      const waConfig = (client.name && client.name.toLowerCase().includes('shreyarth')) ? {
+      const isShreyarth = client.tenantId?.toLowerCase().includes('shreyarth') || client.companyName?.toLowerCase().includes('shreyarth') || client.name?.toLowerCase().includes('shreyarth');
+      const waConfig = isShreyarth ? {
           phoneNumberId: '1074613152404424',
           wabaId: '1433761851305451',
           accessToken: 'EAAUZAwz8PZCJABRfcA4XgJmp8UzJ4ixXbpVA7CvnldS3pkDXdUkbtE2hyfYFHYsZAcZBgKaDwGpHCLf5N0iQfCTfJZAu0iwLmhrbcy2TON4DBvkEeZBZCKhLsSnZCF0ZBASOjWQwtv8ZA2mSZC2ZB0UtQiWcvuPwukLlzAJbLqdkkkW7QPNzJZAWVUKZAQEnPYo2wxzQZDZD',

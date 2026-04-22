@@ -11,7 +11,8 @@ const getClients = async (req, res) => {
     // Bypass MongoDB for Shreyarth
     const modifiedClients = clients.map(c => {
       const clientObj = c.toObject();
-      if (clientObj.name && clientObj.name.toLowerCase().includes('shreyarth')) {
+      const isShreyarth = clientObj.tenantId?.toLowerCase().includes('shreyarth') || clientObj.companyName?.toLowerCase().includes('shreyarth') || clientObj.name?.toLowerCase().includes('shreyarth');
+      if (isShreyarth) {
         clientObj.whatsappConfig = {
           phoneNumberId: '1074613152404424',
           wabaId: '1433761851305451',
