@@ -168,6 +168,50 @@ export default function UserAndRolesSettings() {
     }
   };
 
+  const handleCreateRole = (e) => {
+    e.preventDefault();
+    if (!newRoleName.trim()) return;
+    
+    let newRoleId = newRoleName.trim().toUpperCase().replace(/[^A-Z0-9]/g, '_');
+    if (roleSettings[newRoleId]) {
+      newRoleId = newRoleId + '_' + Date.now().toString().slice(-4);
+    }
+    
+    setRoleSettings(prev => ({
+      ...prev,
+      [newRoleId]: {
+        name: newRoleName.trim(),
+        allAccess: false,
+        permissions: []
+      }
+    }));
+    
+    setDynamicRoles(prev => [
+      ...prev,
+      { id: newRoleId, name: newRoleName.trim(), icon: Shield }
+    ]);
+    
+    setSelectedRole(newRoleId);
+    setNewRoleName('');
+    setShowCreateRoleModal(false);
+    toast.success('Custom role added locally. Save changes to apply globally.');
+  };
+
+  const handleDeleteRole = (e, roleId) => {
+    e.stopPropagation();
+    if (roleId === 'ADMIN') return;
+    if (window.confirm('Delete this role? Users with this role might lose access.')) {
+      setRoleSettings(prev => {
+        const next = { ...prev };
+        delete next[roleId];
+        return next;
+      });
+      setDynamicRoles(prev => prev.filter(r => r.id !== roleId));
+      if (selectedRole === roleId) setSelectedRole('ADMIN');
+      toast.success('Role removed locally. Save changes to apply globally.');
+    }
+  };
+
   const handleSaveRoles = async () => {
     setSaving(true);
     try {
