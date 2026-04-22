@@ -95,8 +95,14 @@ exports.updateSettings = async (req, res) => {
     }
 
     // Merge updates into the specific category
-    settings[category] = { ...settings[category]?.toObject(), ...updates };
-    
+    if (category === 'roleAccess') {
+       settings.set('roleAccess', updates);
+    } else {
+       const currentData = (settings[category] && typeof settings[category].toObject === 'function') 
+           ? settings[category].toObject() 
+           : (settings[category] || {});
+       settings[category] = { ...currentData, ...updates };
+    }
     await settings.save();
     
     res.json(settings);
