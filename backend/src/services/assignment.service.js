@@ -11,7 +11,7 @@ exports.getNextAgentForTenant = async (tenantId) => {
       tenantId,
       status: 'ACTIVE',
       isAvailableForAutoAssign: { $ne: false },
-      role: { $in: ['TELECALLER', 'AGENT', 'MANAGER_COUNSELLOUR'] }
+      role: { $ne: 'SUPER_ADMIN' }
     }).sort({ lastLeadAssignedAt: 1 }); // Oldest first (nulls will be first)
 
     if (!eligibleAgents || eligibleAgents.length === 0) {
