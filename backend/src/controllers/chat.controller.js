@@ -926,6 +926,90 @@ const getUserBreakdownStats = async (req, res) => {
   }
 };
 
+const getPendingTasksTeam = async (req, res) => {
+  try {
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+    
+    // Find contacts with at least one pending task
+    const contactsWithTasks = await Contact.find({ 
+       'tasks.status': { $in: ['PENDING', 'IN_PROGRESS'] },
+       isArchived: { $ne: true } 
+    }).lean();
+
+    let telecallerTasks = [];
+    let counsellorTasks = [];
+    
+    // Collect user IDs to fetch their names
+    const userIds = new Set();
+    contactsWithTasks.forEach(c => {
+       if (c.assignedAgent) userIds.add(c.assignedAgent.toString());
+       if (c.assignedCounsellor) userIds.add(c.assignedCounsellor.toString());
+    });
+    
+    const users = await User.find({ _id: { $in: Array.from(userIds) } }).select('name role');
+    const userMap = users.reduce((acc, u) => {
+       acc[u._id.toString()] = { name: u.name, role: u.role };
+       return acc;
+    }, {});
+
+    contactsWithTasks.forEach(contact => {
+       const pendingTasks = (contact.tasks || []).filter(t => t.status === 'PENDING' || t.status === 'IN_PROGRESS');
+       
+       pendingTasks.forEach(task => {
+          const agentId = contact.assignedAgent?.toString();
+          const counsellorId = contact.assignedCounsellor?.toString();
+          
+          const taskObj = {
+             taskId: task._id,
+             title: task.title,
+             dueDate: task.dueDate,
+             type: task.type,
+             status: task.status,
+             contactName: contact.name,
+             contactPhone: contact.phone,
+             contactId: contact._id
+          };
+          
+          // Categorize task ownership
+          if (task.type === 'MEETING' && counsellorId) {
+             counsellorTasks.push({
+                ...taskObj,
+                assignedTo: userMap[counsellorId]?.name || 'Unknown Counsellor',
+                assignedToId: counsellorId
+             });
+          } else if (agentId) {
+             telecallerTasks.push({
+                ...taskObj,
+                assignedTo: userMap[agentId]?.name || 'Unknown Agent',
+                assignedToId: agentId
+             });
+          } else if (counsellorId) {
+             counsellorTasks.push({
+                ...taskObj,
+                assignedTo: userMap[counsellorId]?.name || 'Unknown Counsellor',
+                assignedToId: counsellorId
+             });
+          } else {
+             telecallerTasks.push({
+                ...taskObj,
+                assignedTo: 'Unassigned',
+                assignedToId: null
+             });
+          }
+       });
+    });
+
+    res.json({
+       telecallerTasks,
+       counsellorTasks
+    });
+
+  } catch (error) {
+    console.error(`[GET /stats/pending-tasks] FAILED:`, error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getContacts,
   getMessages,
@@ -939,5 +1023,6 @@ module.exports = {
   updateFcmToken,
   summarizeLead,
   getLeadAnalysis,
-  getUserBreakdownStats
+  getUserBreakdownStats,
+  getPendingTasksTeam
 };

@@ -135,6 +135,30 @@ function Dashboard() {
   const [wabaConfig, setWabaConfig] = React.useState(null);
   const [showRefillModal, setShowRefillModal] = React.useState(false);
   const [breakdownModal, setBreakdownModal] = React.useState({ show: false, category: '', categoryName: '', data: [], loading: false });
+  const [pendingTasksModal, setPendingTasksModal] = React.useState({ show: false, telecallerTasks: [], counsellorTasks: [], loading: false });
+
+  const fetchPendingTasksTeam = async () => {
+    setPendingTasksModal(prev => ({ ...prev, show: true, loading: true }));
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch('/api/chat/stats/pending-tasks', {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPendingTasksModal({
+          show: true,
+          telecallerTasks: data.telecallerTasks || [],
+          counsellorTasks: data.counsellorTasks || [],
+          loading: false
+        });
+      }
+    } catch (err) {
+      console.error('Failed to fetch pending tasks', err);
+      setPendingTasksModal(prev => ({ ...prev, loading: false }));
+    }
+  };
 
   const fetchUserBreakdown = async (category, categoryName) => {
     setBreakdownModal({ show: true, category, categoryName, data: [], loading: true });
@@ -229,7 +253,7 @@ function Dashboard() {
   React.useEffect(() => {
     const container = document.getElementById('main-scroll-container');
     if (container) {
-      if (breakdownModal.show || showRefillModal) {
+      if (breakdownModal.show || showRefillModal || pendingTasksModal.show) {
         container.style.overflow = 'hidden';
       } else {
         container.style.overflow = 'auto';
@@ -238,7 +262,7 @@ function Dashboard() {
     return () => {
       if (container) container.style.overflow = 'auto';
     };
-  }, [breakdownModal.show, showRefillModal]);
+  }, [breakdownModal.show, showRefillModal, pendingTasksModal.show]);
 
   const limitValues = { 'TIER_1': 1000, 'TIER_2': 10000, 'TIER_3': 100000, 'TIER_4': Infinity };
   const limitNum = limitValues[wabaConfig?.limitTier] || 0;
@@ -363,6 +387,29 @@ function Dashboard() {
               <DashboardCard title="Lead Closed" value={loading ? "..." : stats.closedLeads} subtext="Won or Lost" icon={X} />
               <DashboardCard title="Total Collection" value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} subtext="Total Fee Received" icon={Wallet} />
               <DashboardCard title="Pending Collection" value={loading ? "..." : `₹${stats.pendingCollection?.toLocaleString()}`} subtext="Outstanding Balance" icon={Wallet} />
+           </div>
+        </div>
+      )}
+
+      {userRole === 'BUSINESS_HEAD' && (
+        <div className="animate-fade-in-up mt-6">
+           <h3 className="text-xs font-black text-slate-400 tracking-widest uppercase mb-4">Business Head Overview</h3>
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+              <DashboardCard title="New Leads" value={loading ? "..." : stats.newLeads} subtext="Pending Initial Contact" icon={PlusCircle} />
+              <DashboardCard title="Open Leads" value={loading ? "..." : stats.openLeads} subtext="Active in Pipeline" icon={MessageCircle} />
+              <DashboardCard title="Closed Leads" value={loading ? "..." : stats.closedLeads} subtext="Won or Lost" icon={X} />
+              <DashboardCard title="Admissions" value={loading ? "..." : stats.totalAdmission} subtext="Successfully Enrolled" icon={CheckCircle} />
+              <DashboardCard title="Pending Admission" value={loading ? "..." : stats.pendingAdmission} subtext="Documentation Stage" icon={History} />
+              <DashboardCard title="Total Collection" value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} subtext="Total Fee Received" icon={Wallet} />
+              <DashboardCard title="Pending Collection" value={loading ? "..." : `₹${stats.pendingCollection?.toLocaleString()}`} subtext="Outstanding Balance" icon={Wallet} />
+              <DashboardCard 
+                isClickable={true}
+                onClick={fetchPendingTasksTeam}
+                title="Pending Tasks" 
+                value={loading ? "..." : "View All"} 
+                subtext="Telecallers & Counsellors" 
+                icon={Clock} 
+              />
            </div>
         </div>
       )}
@@ -518,6 +565,108 @@ function Dashboard() {
               <div className="p-6 bg-slate-50/50 border-t border-slate-100 text-center">
                  <button onClick={() => setBreakdownModal(prev => ({ ...prev, show: false }))} className="px-8 py-3 bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-premium">
                     Close Breakdown
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Pending Tasks Modal */}
+      {pendingTasksModal.show && (
+        <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/40 backdrop-blur-md animate-fade-in p-4" onClick={() => setPendingTasksModal(prev => ({ ...prev, show: false }))}>
+           <div className="bg-white/90 backdrop-blur-xl w-full max-w-5xl rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden animate-scale-in flex flex-col max-h-[90vh]" onClick={(e) => e.stopPropagation()}>
+              <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-indigo-50/50 to-purple-50/50 shrink-0">
+                 <div>
+                    <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase">Pending Team Tasks</h2>
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">Telecallers vs Counsellors</p>
+                 </div>
+                 <button onClick={() => setPendingTasksModal(prev => ({ ...prev, show: false }))} className="p-3 bg-white/50 text-slate-400 hover:text-rose-500 rounded-2xl transition-all shadow-sm">
+                    <X size={20} />
+                 </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-6 bg-slate-50/30">
+                 {pendingTasksModal.loading ? (
+                   <div className="flex flex-col items-center justify-center py-20">
+                      <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+                      <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Loading tasks...</p>
+                   </div>
+                 ) : (
+                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                      {/* Telecaller Column */}
+                      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                         <div className="flex items-center space-x-2 mb-4 border-b border-slate-50 pb-3">
+                            <div className="p-2 bg-blue-50 text-blue-600 rounded-lg"><UserCircle size={18} /></div>
+                            <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest">Telecaller Tasks</h3>
+                            <span className="ml-auto bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-md">{pendingTasksModal.telecallerTasks.length} Pending</span>
+                         </div>
+                         <div className="space-y-3">
+                            {pendingTasksModal.telecallerTasks.length === 0 ? (
+                               <p className="text-xs font-medium text-slate-400 text-center py-8">No pending tasks for telecallers</p>
+                            ) : (
+                               pendingTasksModal.telecallerTasks.map((t, i) => (
+                                 <div key={i} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-blue-200 hover:bg-blue-50/30 transition-colors">
+                                    <div className="flex justify-between items-start mb-2">
+                                       <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-100/50 px-2 py-0.5 rounded-full">{t.type}</span>
+                                       <span className="text-[10px] font-bold text-slate-400">{new Date(t.dueDate).toLocaleString()}</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-800 mb-1">{t.title}</p>
+                                    <div className="flex justify-between items-end mt-3">
+                                       <div>
+                                          <p className="text-[10px] font-bold text-slate-400 uppercase">Contact</p>
+                                          <p className="text-xs font-semibold text-slate-600">{t.contactName}</p>
+                                       </div>
+                                       <div className="text-right">
+                                          <p className="text-[10px] font-bold text-slate-400 uppercase">Assigned To</p>
+                                          <p className="text-xs font-bold text-blue-700">{t.assignedTo}</p>
+                                       </div>
+                                    </div>
+                                 </div>
+                               ))
+                            )}
+                         </div>
+                      </div>
+
+                      {/* Counsellor Column */}
+                      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                         <div className="flex items-center space-x-2 mb-4 border-b border-slate-50 pb-3">
+                            <div className="p-2 bg-purple-50 text-purple-600 rounded-lg"><UserCircle size={18} /></div>
+                            <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest">Counsellor Tasks</h3>
+                            <span className="ml-auto bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-1 rounded-md">{pendingTasksModal.counsellorTasks.length} Pending</span>
+                         </div>
+                         <div className="space-y-3">
+                            {pendingTasksModal.counsellorTasks.length === 0 ? (
+                               <p className="text-xs font-medium text-slate-400 text-center py-8">No pending tasks for counsellors</p>
+                            ) : (
+                               pendingTasksModal.counsellorTasks.map((t, i) => (
+                                 <div key={i} className="p-4 bg-slate-50 rounded-xl border border-slate-100 hover:border-purple-200 hover:bg-purple-50/30 transition-colors">
+                                    <div className="flex justify-between items-start mb-2">
+                                       <span className="text-[10px] font-black uppercase text-purple-600 bg-purple-100/50 px-2 py-0.5 rounded-full">{t.type}</span>
+                                       <span className="text-[10px] font-bold text-slate-400">{new Date(t.dueDate).toLocaleString()}</span>
+                                    </div>
+                                    <p className="text-sm font-bold text-slate-800 mb-1">{t.title}</p>
+                                    <div className="flex justify-between items-end mt-3">
+                                       <div>
+                                          <p className="text-[10px] font-bold text-slate-400 uppercase">Contact</p>
+                                          <p className="text-xs font-semibold text-slate-600">{t.contactName}</p>
+                                       </div>
+                                       <div className="text-right">
+                                          <p className="text-[10px] font-bold text-slate-400 uppercase">Assigned To</p>
+                                          <p className="text-xs font-bold text-purple-700">{t.assignedTo}</p>
+                                       </div>
+                                    </div>
+                                 </div>
+                               ))
+                            )}
+                         </div>
+                      </div>
+                   </div>
+                 )}
+              </div>
+              
+              <div className="p-4 bg-white border-t border-slate-100 text-right shrink-0">
+                 <button onClick={() => setPendingTasksModal(prev => ({ ...prev, show: false }))} className="px-6 py-2 bg-slate-800 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all">
+                    Close Monitor
                  </button>
               </div>
            </div>
