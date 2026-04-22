@@ -93,6 +93,7 @@ const updateClient = async (req, res) => {
     client.plan = plan || client.plan;
     if (whatsappConfig) {
       client.whatsappConfig = whatsappConfig;
+      client.markModified('whatsappConfig');
     }
     await client.save();
 
