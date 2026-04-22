@@ -5,7 +5,7 @@ const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['SUPER_ADMIN', 'ADMIN', 'MANAGER_COUNSELLOUR', 'TELECALLER', 'AGENT'], default: 'SUPER_ADMIN' },
+  role: { type: String, default: 'ADMIN' },
   tenantId: { type: String }, // Binds Agents and Admins to explicit SaaS instances
   status: { type: String, enum: ['ACTIVE', 'INACTIVE', 'SUSPENDED'], default: 'ACTIVE' },
   phoneNumber: { type: String },

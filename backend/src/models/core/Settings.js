@@ -95,6 +95,7 @@ const AutomationSettingsSchema = new mongoose.Schema({
 });
 
 const RoleAccessSchema = new mongoose.Schema({
+  name: { type: String, required: true },
   allAccess: { type: Boolean, default: false },
   permissions: { type: [String], default: [] }
 }, { _id: false });
@@ -119,15 +120,16 @@ const SettingsSchema = new mongoose.Schema({
     of: RoleAccessSchema,
     default: () => ({
       'ADMIN': { 
+        name: 'Admin',
         allAccess: true,
         permissions: [
           'dashboard', 'tasks', 'pipeline', 'chat', 'contacts', 'campaigns', 'ai-chatbot', 'flows', 'templates', 'agents', 'web-widgets', 'api', 'settings',
           'workspace', 'whatsapp', 'crm', 'users', 'billing', 'integrations', 'automations', 'security', 'notifications', 'customization'
         ]
       },
-      'TELECALLER': { allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts'] },
-      'MANAGER_COUNSELLOUR': { allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts', 'campaigns'] },
-      'AGENT': { allAccess: false, permissions: ['dashboard', 'tasks', 'chat', 'contacts'] }
+      'TELECALLER': { name: 'Telecaller', allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts'] },
+      'MANAGER_COUNSELLOUR': { name: 'Manager/Counsellour', allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts', 'campaigns'] },
+      'AGENT': { name: 'Standard Agent', allAccess: false, permissions: ['dashboard', 'tasks', 'chat', 'contacts'] }
     })
   }
 }, { timestamps: true });

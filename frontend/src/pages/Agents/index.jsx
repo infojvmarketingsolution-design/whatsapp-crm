@@ -3,32 +3,37 @@ import { Users, Plus, Edit2, Trash2, Shield, Circle, UserPlus, Search, CheckCirc
 
 export default function AgentsDashboard() {
   const [agents, setAgents] = useState([]);
+  const [dynamicRoles, setDynamicRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '' });
-  const roleFormatMap = {
-    'AGENT': 'Standard Agent',
-    'TELECALLER': 'Telecaller',
-    'MANAGER_COUNSELLOUR': 'Manager/Counsellour',
-    'ADMIN': 'Admin',
-    'SUPER_ADMIN': 'Super Admin'
-  };
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    fetchAgents();
+    fetchAgentsAndRoles();
   }, []);
 
-  const fetchAgents = async () => {
+  const fetchAgentsAndRoles = async () => {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`/api/agents`, {
-        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAgents(data);
+      const [agentsRes, settingsRes] = await Promise.all([
+        fetch(`/api/agents`, { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
+        fetch(`/api/settings`, { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } })
+      ]);
+      
+      if (agentsRes.ok) {
+        setAgents(await agentsRes.json());
+      }
+      if (settingsRes.ok) {
+        const settingsData = await settingsRes.json();
+        if (settingsData.roleAccess) {
+          const derivedRoles = Object.keys(settingsData.roleAccess).map(key => ({
+            id: key,
+            name: settingsData.roleAccess[key].name || key
+          }));
+          setDynamicRoles(derivedRoles);
+        }
       }
     } catch (err) {
       console.error(err);
@@ -63,7 +68,7 @@ export default function AgentsDashboard() {
       if (res.ok) {
         setFormData({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '' });
         setShowModal(false);
-        fetchAgents();
+        fetchAgentsAndRoles();
       } else {
         const err = await res.json();
         alert(`${isEdit ? 'Update' : 'Creation'} failed: ${err.message}`);
@@ -84,7 +89,7 @@ export default function AgentsDashboard() {
         body: JSON.stringify({ status: newStatus })
       });
       if (res.ok) {
-        fetchAgents();
+        fetchAgentsAndRoles();
       }
     } catch (err) {
       console.error(err);
@@ -156,7 +161,7 @@ export default function AgentsDashboard() {
                         <td className="px-6 py-4">
                            <div className="flex items-center space-x-1.5 px-3 py-1 bg-purple-50 text-purple-700 rounded-md w-fit border border-purple-100">
                               <Shield size={12} />
-                              <span className="text-[10px] font-bold tracking-widest">{roleFormatMap[agent.role] || agent.role}</span>
+                              <span className="text-[10px] font-bold tracking-widest">{dynamicRoles.find(r => r.id === agent.role)?.name || agent.role}</span>
                            </div>
                         </td>
                         <td className="px-6 py-4">
@@ -266,10 +271,9 @@ export default function AgentsDashboard() {
                   value={formData.role}
                   onChange={(e) => setFormData({...formData, role: e.target.value})}
                 >
-                  <option value="AGENT">Standard Agent</option>
-                  <option value="TELECALLER">Telecaller</option>
-                  <option value="MANAGER_COUNSELLOUR">Manager/Counsellour</option>
-                  <option value="ADMIN">Admin</option>
+                  {dynamicRoles.map(r => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
                 </select>
               </div>
 

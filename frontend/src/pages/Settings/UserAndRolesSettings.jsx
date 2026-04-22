@@ -23,12 +23,9 @@ export default function UserAndRolesSettings() {
     role: 'AGENT'
   });
 
-  const roles = [
-    { id: 'ADMIN', name: 'Admin', icon: ShieldCheck },
-    { id: 'TELECALLER', name: 'Telecaller', icon: Shield },
-    { id: 'MANAGER_COUNSELLOUR', name: 'Manager/Counsellour', icon: Shield },
-    { id: 'AGENT', name: 'Standard Agent', icon: Shield },
-  ];
+  const [dynamicRoles, setDynamicRoles] = useState([]);
+  const [showCreateRoleModal, setShowCreateRoleModal] = useState(false);
+  const [newRoleName, setNewRoleName] = useState('');
 
   const MODULE_PERMISSIONS = [
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
@@ -120,6 +117,12 @@ export default function UserAndRolesSettings() {
         const settingsData = await settingsRes.json();
         if (settingsData.roleAccess) {
           setRoleSettings(settingsData.roleAccess);
+          const derivedRoles = Object.keys(settingsData.roleAccess).map(key => ({
+            id: key,
+            name: settingsData.roleAccess[key].name || key,
+            icon: key === 'ADMIN' ? ShieldCheck : Shield
+          }));
+          setDynamicRoles(derivedRoles);
         }
       }
     } catch (err) {
@@ -329,24 +332,38 @@ export default function UserAndRolesSettings() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-4 h-fit">
-            <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 px-2">Role Access</h3>
+            <div className="flex justify-between items-center mb-6 px-2">
+              <h3 className="text-xs font-black text-gray-400 uppercase tracking-widest">Role Access</h3>
+              <button onClick={() => setShowCreateRoleModal(true)} className="text-teal-600 hover:text-teal-700 bg-teal-50 hover:bg-teal-100 p-1 rounded transition-colors" title="Create Custom Role">
+                 <Plus size={16} />
+              </button>
+            </div>
             <div className="space-y-2">
-              {roles.map(role => (
-                <button 
-                  key={role.id}
-                  onClick={() => setSelectedRole(role.id)}
-                  className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all font-bold text-sm ${
-                    selectedRole === role.id 
-                    ? 'bg-purple-50 text-purple-700 border border-purple-100 shadow-sm' 
-                    : 'text-gray-600 hover:bg-gray-50 border border-transparent'
-                  }`}
-                >
-                  <role.icon size={18} className={selectedRole === role.id ? 'text-purple-600' : 'text-gray-400'} />
-                  <span>{role.name}</span>
-                  {roleSettings[role.id]?.allAccess && (
-                    <div className="ml-auto w-2 h-2 bg-green-500 rounded-full"></div>
-                  )}
-                </button>
+              {dynamicRoles.map(role => (
+                <div key={role.id} className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all font-bold text-sm cursor-pointer ${
+                  selectedRole === role.id 
+                  ? 'bg-purple-50 text-purple-700 border border-purple-100 shadow-sm' 
+                  : 'text-gray-600 hover:bg-gray-50 border border-transparent'
+                }`} onClick={() => setSelectedRole(role.id)}>
+                  <div className="flex items-center space-x-3">
+                    <role.icon size={18} className={selectedRole === role.id ? 'text-purple-600' : 'text-gray-400'} />
+                    <span>{role.name}</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    {roleSettings[role.id]?.allAccess && (
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    )}
+                    {role.id !== 'ADMIN' && (
+                      <button 
+                        onClick={(e) => handleDeleteRole(e, role.id)}
+                        className="text-gray-400 hover:text-red-500 p-1 rounded-md transition-colors"
+                        title="Delete Role"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -357,7 +374,7 @@ export default function UserAndRolesSettings() {
                  <div>
                     <h2 className="text-xl font-bold text-gray-900 flex items-center">
                       <ShieldCheck className="mr-2 text-teal-600" size={24} />
-                      {roles.find(r => r.id === selectedRole)?.name} Permissions
+                      {dynamicRoles.find(r => r.id === selectedRole)?.name} Permissions
                     </h2>
                     <p className="text-sm text-gray-500 mt-1">Configure what this designation can access.</p>
                  </div>
@@ -512,13 +529,56 @@ export default function UserAndRolesSettings() {
         setFormData={setInviteFormData}
         onSubmit={handleInviteSubmit}
         saving={saving}
+        dynamicRoles={dynamicRoles}
       />
+
+      {showCreateRoleModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-sm overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                <Shield size={20} className="mr-2 text-teal-600" />
+                Create Custom Role
+              </h3>
+            </div>
+            <form onSubmit={handleCreateRole} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Role Name</label>
+                <input 
+                  autoFocus
+                  required
+                  type="text"
+                  placeholder="e.g. Marketing Manager"
+                  value={newRoleName}
+                  onChange={(e) => setNewRoleName(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium"
+                />
+              </div>
+              <div className="pt-4 flex space-x-3">
+                <button 
+                  type="button"
+                  onClick={() => setShowCreateRoleModal(false)}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  className="flex-[2] px-8 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-700 transition shadow-lg shadow-teal-500/20"
+                >
+                  Create
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 // Invite User Modal
-function InviteUserModal({ isOpen, onClose, formData, setFormData, onSubmit, saving }) {
+function InviteUserModal({ isOpen, onClose, formData, setFormData, onSubmit, saving, dynamicRoles }) {
   if (!isOpen) return null;
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
@@ -581,10 +641,9 @@ function InviteUserModal({ isOpen, onClose, formData, setFormData, onSubmit, sav
                 onChange={(e) => setFormData({...formData, role: e.target.value})}
                 className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all font-medium appearance-none"
               >
-                <option value="AGENT">Standard Agent</option>
-                <option value="TELECALLER">Telecaller</option>
-                <option value="MANAGER_COUNSELLOUR">Manager / Counsellour</option>
-                <option value="ADMIN">Administrator</option>
+                {dynamicRoles.map(r => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
               </select>
               <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             </div>
