@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getAgents, createAgent, updateAgent, updateAgentStatus } = require('../controllers/agent.controller');
+const { getAgents, createAgent, updateAgent, updateAgentStatus, deleteAgent } = require('../controllers/agent.controller');
 const { protect } = require('../middleware/auth');
 const tenantMiddleware = require('../middleware/tenant');
 
@@ -13,7 +13,8 @@ router.route('/')
   .post(createAgent);
 
 router.route('/:id')
-  .put(updateAgent);
+  .put(updateAgent)
+  .delete(deleteAgent);
 
 router.route('/:id/status')
   .put(updateAgentStatus);

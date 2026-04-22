@@ -93,4 +93,21 @@ const updateAgent = async (req, res) => {
   }
 };
 
-module.exports = { getAgents, createAgent, updateAgent, updateAgentStatus };
+const deleteAgent = async (req, res) => {
+  try {
+    const tenantId = req.tenantId;
+    const agent = await User.findOne({ _id: req.params.id, tenantId, role: { $ne: 'SUPER_ADMIN' } });
+    
+    if (!agent) {
+      return res.status(404).json({ message: 'Agent not found' });
+    }
+
+    await User.deleteOne({ _id: req.params.id });
+
+    res.json({ message: 'Agent deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getAgents, createAgent, updateAgent, updateAgentStatus, deleteAgent };

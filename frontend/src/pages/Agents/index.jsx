@@ -96,6 +96,27 @@ export default function AgentsDashboard() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to PERMANENTLY delete this agent? This action cannot be undone.')) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/agents/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        fetchAgentsAndRoles();
+      } else {
+        const err = await res.json();
+        alert(`Deletion failed: ${err.message}`);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const filteredAgents = agents.filter(a => a.name.toLowerCase().includes(searchTerm.toLowerCase()) || a.email.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
@@ -191,6 +212,12 @@ export default function AgentsDashboard() {
                               }`}
                            >
                               {agent.status === 'ACTIVE' ? 'Suspend Seat' : 'Reactivate Account'}
+                           </button>
+                           <button 
+                              onClick={() => handleDelete(agent._id)}
+                              className="text-xs font-bold px-3 py-1.5 rounded-lg border border-red-100 text-red-600 hover:bg-red-50 transition-colors"
+                           >
+                              <Trash2 size={14} className="inline mr-1"/> Delete
                            </button>
                         </td>
                      </tr>
