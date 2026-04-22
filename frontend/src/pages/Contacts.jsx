@@ -1154,7 +1154,7 @@ export default function Contacts({ roleAccess }) {
                   <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10">
                      <select value={bulkTargetCounsellor} onChange={(e) => setBulkTargetCounsellor(e.target.value)} className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[160px]">
                         <option value="" className="text-slate-900">Choose Expert...</option>
-                        {agents.filter(a => a.role === "MANAGER_COUNSELLOUR" || a.role === "ADMIN").map(a => (<option key={a._id} value={a._id} className="text-slate-900">{a.name}</option>))}
+                        {agents.map(a => (<option key={a._id} value={a._id} className="text-slate-900">{a.name}</option>))}
                      </select>
                      <button disabled={!bulkTargetCounsellor || isBulkUpdating} onClick={() => handleBulkAction("transfer_counsellor", bulkTargetCounsellor)} className="bg-blue-500 hover:bg-blue-600 disabled:bg-slate-700 p-2.5 rounded-xl transition-all shadow-lg active:scale-95 text-white">
                         <Headphones size={18} />
