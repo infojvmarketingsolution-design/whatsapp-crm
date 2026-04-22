@@ -84,18 +84,22 @@ const updateClient = async (req, res) => {
       return res.status(404).json({ message: 'Client not found' });
     }
 
-    // 1. Update Client Record
-    client.companyName = companyName || client.companyName;
-    client.name = companyName || client.name;
-    client.email = email || client.email;
-    client.mobileNumber = mobileNumber || client.mobileNumber;
-    client.status = status || client.status;
-    client.plan = plan || client.plan;
-    if (whatsappConfig) {
-      client.whatsappConfig = whatsappConfig;
-      client.markModified('whatsappConfig');
+    const updateFields = {};
+    if (companyName) {
+      updateFields.companyName = companyName;
+      updateFields.name = companyName;
     }
-    await client.save();
+    if (email) updateFields.email = email;
+    if (mobileNumber) updateFields.mobileNumber = mobileNumber;
+    if (status) updateFields.status = status;
+    if (plan) updateFields.plan = plan;
+    if (whatsappConfig) updateFields.whatsappConfig = whatsappConfig;
+
+    const updatedClient = await Client.findByIdAndUpdate(
+      client._id,
+      { $set: updateFields },
+      { new: true }
+    );
 
     // 2. Find and Update the Admin User for this tenant
     const adminUser = await User.findOne({ 
