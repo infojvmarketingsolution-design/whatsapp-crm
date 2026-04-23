@@ -1137,7 +1137,49 @@ export default function Contacts({ roleAccess }) {
          </div>
        )}
 
+      {/* MINIMAL BULK ASSIGN BAR */}
+      {selectedIds.size > 0 && (
+         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[999] bg-slate-900/95 text-white rounded-3xl px-10 py-5 shadow-3xl flex items-center space-x-12 animate-slide-up border border-white/10 backdrop-blur-md">
+            <div className="flex flex-col border-r border-white/10 pr-10">
+               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-400 mb-1">{selectedIds.size} Selected</p>
+               <p className="text-[11px] font-black uppercase tracking-widest">Bulk Actions</p>
+            </div>
 
+            <div className="flex items-center space-x-6">
+               <div className="flex flex-col space-y-1">
+                  <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Manual Lead Assign</label>
+                  <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10">
+                     <select 
+                        value={bulkTargetAgent} 
+                        onChange={(e) => setBulkTargetAgent(e.target.value)} 
+                        className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[180px]"
+                     >
+                        <option value="" className="text-slate-900">Choose Agent...</option>
+                        <option value="unassign" className="text-slate-900 font-bold text-red-600">-- Unassign Leads --</option>
+                        {agents.map(a => <option key={a._id} value={a._id} className="text-slate-900">{a.name}</option>)}
+                     </select>
+                     <button 
+                        disabled={!bulkTargetAgent || isBulkUpdating} 
+                        onClick={() => {
+                           if (bulkTargetAgent === "unassign") {
+                              handleBulkAction("transfer_leads", ""); 
+                           } else {
+                              handleBulkAction("transfer_leads", bulkTargetAgent);
+                           }
+                        }} 
+                        className="bg-teal-500 hover:bg-teal-600 disabled:bg-slate-700 p-2.5 rounded-xl transition-all shadow-lg active:scale-95 text-white"
+                     >
+                        <ArrowUpRight size={18} />
+                     </button>
+                  </div>
+               </div>
+            </div>
+
+            <button onClick={() => setSelectedIds(new Set())} className="ml-6 p-4 hover:bg-white/10 text-white/20 hover:text-white rounded-2xl transition-all">
+               <X size={24} />
+            </button>
+         </div>
+      )}
     </div>
   );
 }
