@@ -250,7 +250,8 @@ class AIService {
     } catch (err) {
       console.error('[AI Service] Strategic Brief Error:', err.message);
       return null;
-    }
+  }
+}
   }
 }
 
