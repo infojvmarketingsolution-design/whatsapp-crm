@@ -101,7 +101,7 @@ const getTeamStats = async (req, res) => {
         email: member.email,
         phone: member.phoneNumber,
         isAvailable: member.isAvailableForAutoAssign,
-        leadCount,
+        leadCount: openLeads + closedLeads,
         newLeads,
         openLeads,
         closedLeads,
