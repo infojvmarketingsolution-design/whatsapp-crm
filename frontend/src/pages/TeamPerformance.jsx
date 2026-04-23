@@ -197,7 +197,14 @@ export default function TeamPerformance() {
                               </div>
                            </div>
                         </div>
-                        <div className={`w-2.5 h-2.5 rounded-full shadow-glow ${member.isAvailable ? 'bg-teal-500' : 'bg-slate-200'}`} />
+                        <div className="flex flex-col items-end space-y-1.5">
+                           <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full border ${member.isAvailable ? 'bg-teal-50 border-teal-100 text-teal-600 shadow-sm' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                              <div className={`w-1.5 h-1.5 rounded-full ${member.isAvailable ? 'bg-teal-500 animate-pulse' : 'bg-slate-300'}`} />
+                              <span className="text-[7px] font-black uppercase tracking-widest whitespace-nowrap">
+                                 {member.isAvailable ? 'Receiving Leads' : 'Leads Paused'}
+                              </span>
+                           </div>
+                        </div>
                      </div>
 
                      <div className="grid grid-cols-2 gap-3 mb-6">
@@ -265,7 +272,11 @@ export default function TeamPerformance() {
                                </div>
                                <div>
                                   <p className="text-[13px] font-black text-slate-800 tracking-tight leading-tight mb-0.5">{member.name}</p>
-                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{member.email}</p>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5">{member.email}</p>
+                                  <div className={`inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg border text-[7px] font-black uppercase tracking-widest ${member.isAvailable ? 'bg-teal-50 border-teal-100 text-teal-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                                     <div className={`w-1 h-1 rounded-full ${member.isAvailable ? 'bg-teal-500 animate-pulse' : 'bg-slate-300'}`} />
+                                     <span>{member.isAvailable ? 'Receiving Leads' : 'Leads Paused'}</span>
+                                  </div>
                                </div>
                             </div>
                          </td>
