@@ -150,44 +150,29 @@ export default function Contacts({ roleAccess }) {
   }, []);
 
   // Intelligence Filter Engine (V2)
+  // Intelligence Filter Engine (V3) - Simplified for Maximum Visibility
   const filteredContacts = contacts.filter(contact => {
     // 1. Search Term (Phone or Name)
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase();
+    if (searchTerm && searchTerm.trim() !== '') {
+      const q = searchTerm.toLowerCase().trim();
       const matchName = contact.name?.toLowerCase().includes(q);
       const matchPhone = contact.phone?.toLowerCase().includes(q);
       if (!matchName && !matchPhone) return false;
     }
 
-    // 2. Status Filter
-    if (filters.status !== 'ALL' && contact.status !== filters.status) return false;
+    // 2. Only filter if NOT "ALL"
+    if (filters.status && filters.status !== 'ALL' && contact.status !== filters.status) return false;
+    if (filters.stage && filters.stage !== 'ALL' && contact.pipelineStage !== filters.stage) return false;
+    if (filters.agent && filters.agent !== 'ALL' && String(contact.assignedAgent) !== String(filters.agent)) return false;
+    if (filters.heat && filters.heat !== 'ALL' && contact.heatLevel !== filters.heat) return false;
 
-    // 3. Stage Filter
-    if (filters.stage !== 'ALL' && contact.pipelineStage !== filters.stage) return false;
-
-    // 4. Agent Filter
-    if (filters.agent !== 'ALL' && contact.assignedAgent !== filters.agent) return false;
-
-    // 5. Heat Level Filter
-    if (filters.heat !== 'ALL' && contact.heatLevel !== filters.heat) return false;
-
-    // 6. Score Range
-    if ((contact.score || 0) < filters.minScore || (contact.score || 0) > filters.maxScore) return false;
-
-    // 7. Date Range (Optional addition for completeness)
-    if (filters.startDate) {
-        const start = new Date(filters.startDate);
-        const contactDate = new Date(contact.createdAt);
-        if (contactDate < start) return false;
-    }
-    if (filters.endDate) {
-        const end = new Date(filters.endDate);
-        const contactDate = new Date(contact.createdAt);
-        if (contactDate > end) return false;
-    }
+    // 3. Score Range (Only if non-default)
+    if (filters.minScore > 0 && (contact.score || 0) < filters.minScore) return false;
+    if (filters.maxScore < 100 && (contact.score || 0) > filters.maxScore) return false;
 
     return true;
   });
+
 
 
      const activeFilterCount = Object.entries(filters).filter(([key, val]) => {
