@@ -5,7 +5,7 @@ import {
   Search, Plus, X, Mail, MapPin, Phone, Users, 
   Clock, Activity, Target, Tag, Save, Filter, 
   Briefcase, Building2, Download, MoreVertical, 
-  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones, ChevronDown, User, RefreshCw, Sparkles, Edit3
+  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones, ChevronDown, UserCircle, RefreshCw, Sparkles, Edit3
 } from 'lucide-react';
 
 export default function Contacts({ roleAccess }) {
@@ -808,7 +808,7 @@ export default function Contacts({ roleAccess }) {
                      <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8">
                         <div className="flex items-center justify-between">
                            <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Profile Identity</h3>
-                           <User size={16} className="text-slate-300" />
+                           <UserCircle size={16} className="text-slate-300" />
                         </div>
                         
                         <div className="grid grid-cols-1 gap-6">
