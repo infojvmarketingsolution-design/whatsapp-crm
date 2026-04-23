@@ -61,6 +61,7 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
     { id: 'agents', name: 'Agents', icon: UserPlus, path: '/agents' },
     { id: 'web-widgets', name: 'Web Widget', icon: Globe, path: '/widget' },
     { id: 'api', name: 'API', icon: Code, path: '/api' },
+    { id: 'team-performance', name: 'Team Performance', icon: KanbanSquare, path: '/team-performance' },
     { id: 'settings', name: 'Settings', icon: Settings, path: '/settings' },
   ];
 
@@ -76,7 +77,10 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
     }
 
     // Fallback if settings not yet loaded or role not found
-    if (userRole === 'ADMIN') return true;
+    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') return true;
+    if (userRole === 'BUSINESS_HEAD') {
+       return ['dashboard', 'chat', 'contacts', 'team-performance', 'settings'].includes(item.id);
+    }
     return false;
   });
 

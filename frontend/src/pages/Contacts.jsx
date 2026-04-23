@@ -124,6 +124,14 @@ export default function Contacts({ roleAccess }) {
   useEffect(() => {
     fetchContacts();
     fetchAgents();
+
+    // Check if we are auditing a specific teammate
+    const auditId = sessionStorage.getItem('audit_target_agent');
+    if (auditId) {
+      setFilters(prev => ({ ...prev, agent: auditId }));
+      sessionStorage.removeItem('audit_target_agent');
+      toast.success("Monitoring Teammate Leads", { icon: '🔍' });
+    }
   }, []);
 
   // Filter Engine

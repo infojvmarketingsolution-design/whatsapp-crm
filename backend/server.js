@@ -33,6 +33,7 @@ const settingsRoutes = require('./src/routes/settings.routes');
 const planRoutes = require('./src/routes/plan.routes');
 const adminSettingsRoutes = require('./src/routes/adminSettings.routes');
 const sessionRoutes = require('./src/routes/session.routes');
+const statsRoutes = require('./src/routes/stats.routes');
 const maintenanceMiddleware = require('./src/middleware/maintenance');
 
 
@@ -194,6 +195,7 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/plans', planRoutes);
 app.use('/api/admin/settings', adminSettingsRoutes);
 app.use('/api/sessions', sessionRoutes);
+app.use('/api/stats', statsRoutes);
 
 // Main Media Route (Matches generated URLs /uploads/...)
 // Try multiple paths to find the uploads folder on various server environments
