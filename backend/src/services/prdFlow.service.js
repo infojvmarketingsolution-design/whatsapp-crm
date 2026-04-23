@@ -13,11 +13,13 @@ class PRDFlowService {
     this.DEFAULT_PRD_FLOW_STEPS = [
       { id: 'greeting', type: 'messageNode', data: { msgType: 'IMAGE', text: 'Hello 👋 Welcome to JV Group!', mediaUrl: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' } },
       { id: 'ask_name', type: 'messageNode', data: { msgType: 'QUESTION', text: 'Great! May I know your name?', variableName: 'name' } },
+      { id: 'profession', type: 'messageNode', data: { msgType: 'QUESTION', text: '{{name}}, what is your current profession? 💼', variableName: 'profession' } },
       { id: 'qualification', type: 'messageNode', data: { msgType: 'LIST_MESSAGE', text: '{{name}}, please select your last qualification 👇', variableName: 'qualification', listOptions: ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation complete', 'Master complete', 'phD complete'] } },
       { id: 'program', type: 'messageNode', data: { msgType: 'LIST_MESSAGE', text: 'Great {{name}}! Please select your preferred program:', variableName: 'program' } },
+      { id: 'budget', type: 'messageNode', data: { msgType: 'INTERACTIVE', text: '{{name}}, what is your estimated budget for the course? 💰', variableName: 'budget', buttons: ['Under 50k', '50k - 1 Lakh', 'Above 1 Lakh'] } },
       { id: 'careerGoal', type: 'messageNode', data: { msgType: 'QUESTION', text: '{{name}}, what is your long-term career goal? 🎯', variableName: 'careerGoal' } },
       { id: 'call_time', type: 'messageNode', data: { msgType: 'INTERACTIVE', text: '{{name}}, what is your preferred time for a call? 📞', variableName: 'time', buttons: ['Morning', 'Afternoon', 'Evening'] } },
-      { id: 'thank_you', type: 'messageNode', data: { msgType: 'TEXT', text: 'Thank you {{name}} 🙌\n🎓 Qual: {{qualification}}\n📘 Prog: {{program}}\n🎯 Goal: {{careerGoal}}\n⏰ Time: {{time}}' } }
+      { id: 'thank_you', type: 'messageNode', data: { msgType: 'TEXT', text: 'Thank you {{name}} 🙌\n🎓 Qual: {{qualification}}\n💼 Job: {{profession}}\n📘 Prog: {{program}}\n💰 Budget: {{budget}}\n⏰ Time: {{time}}' } }
     ];
     this.activeProcesses = new Set();
   }
@@ -187,7 +189,12 @@ class PRDFlowService {
            else {
               // General variable capture
               const dbUpdates = { [`flowVariables.${varName}`]: val };
-              if (varName === 'time') {
+              
+              if (varName === 'profession') {
+                 dbUpdates.profession = val;
+              } else if (varName === 'budget') {
+                 dbUpdates.budget = val;
+              } else if (varName === 'time') {
                  dbUpdates.preferredCallTime = val;
                  
                  // AUTO ASSIGNMENT LOGIC for AI Bot Leads
