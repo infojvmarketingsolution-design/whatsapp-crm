@@ -327,22 +327,51 @@ export default function Contacts({ roleAccess }) {
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
+      
+      // Clean payload: Remove internal Mongo fields to prevent update errors
+      const cleanPayload = { ...updates };
+      delete cleanPayload._id;
+      delete cleanPayload.__v;
+      delete cleanPayload.createdAt;
+      delete cleanPayload.updatedAt;
+
       const res = await fetch(`/api/chat/action`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contactId, action: 'update_contact', payload: updates })
+        body: JSON.stringify({ contactId, action: 'update_contact', payload: cleanPayload })
       });
+      
       if (res.ok) {
         const data = await res.json();
+        // Immediately sync the state with the fresh data from the server
         setSelectedContact(data.contact);
-        setEditedContact(data.contact);
+        setEditedContact({
+           ...data.contact,
+           secondaryPhone: data.contact.secondaryPhone || '',
+           altMobile: data.contact.altMobile || '',
+           houseNo: data.contact.houseNo || '',
+           societyName: data.contact.societyName || '',
+           streetAddress: data.contact.streetAddress || '',
+           city: data.contact.city || '',
+           state: data.contact.state || '',
+           pincode: data.contact.pincode || '',
+           qualification: data.contact.qualification || '',
+           selectedProgram: data.contact.selectedProgram || '',
+           visitStatus: data.contact.visitStatus || 'Not Done',
+           visitType: data.contact.visitType || '',
+           assignedCounsellor: data.contact.assignedCounsellor || ''
+        });
+        
         setShowSaveFab(false);
         fetchContacts();
-        toast.success("Profile Updated Successfully");
+        toast.success("Profile Synchronized Successfully");
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        toast.error(errData.message || "Server rejected the update");
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Failed to save changes");
+      console.error("[Sync Error]:", err);
+      toast.error("Network sync failed");
     } finally {
       setIsUpdatingContact(false);
     }
