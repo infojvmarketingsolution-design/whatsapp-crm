@@ -317,7 +317,8 @@ export default function Inbox({ roleAccess }) {
       const { contactId, contact } = data;
       setContacts(prev => {
          const showAssignedOnly = roleData?.permissions?.includes('chat_show_assigned_only');
-         const isAssignedToMe = contact.assignedAgent?.toString() === user._id?.toString();
+         const isAssignedToMe = (contact.assignedAgent?.toString() === user._id?.toString()) || 
+                               (contact.assignedCounsellor?.toString() === user._id?.toString());
          
          // If restricted to assigned leads and lead is no longer assigned to me, remove from list
          if (showAssignedOnly && !isAssignedToMe && !isSuper) {

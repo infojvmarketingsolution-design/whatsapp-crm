@@ -204,7 +204,7 @@ class PRDFlowService {
                     selectedProgram: contact.flowVariables.program, 
                     status: 'QUALIFIED',
                     assignedAgent: assignedAgentId,
-                    leadSource: 'whatsapp_ai_bot'
+                    leadSource: 'Official Lead'
                  });
 
                  // 🔔 NOTIFICATION ALERT

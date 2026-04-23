@@ -13,14 +13,15 @@ echo [STEP 1] Building React Frontend...
 cd /d "%~dp0"
 echo Running from: %cd%
 
-if not exist "./frontend" (
-    echo [ERROR] Could not find the 'frontend' directory!
-    echo Looked in: %cd%
-    dir /B
-    pause
-    exit /b 1
-)
-cd "./frontend"
+if exist "frontend" goto :start_build
+echo [ERROR] Could not find the 'frontend' directory!
+echo Looked in: %cd%
+dir /B
+pause
+exit /b 1
+
+:start_build
+cd "frontend"
 call npm install
 call npm run build
 if %errorlevel% neq 0 (

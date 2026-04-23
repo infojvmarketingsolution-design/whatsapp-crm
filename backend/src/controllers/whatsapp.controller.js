@@ -245,7 +245,7 @@ const handleIncomingMessage = async (req, res) => {
              flowVariables: {},
              lastProcessedMessageId: msgId,
              assignedAgent: assignedAgentId,
-             leadSource: 'whatsapp_direct'
+             leadSource: 'Official Lead'
            });
            
            if (assignedAgentId) {

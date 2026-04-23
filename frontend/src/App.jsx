@@ -415,7 +415,7 @@ function Dashboard() {
       )}
 
 
-      {!isAdminOrSuperAdmin && userRole !== 'TELECALLER' && userRole !== 'BUSINESS_HEAD' && (
+      {!isAdminOrSuperAdmin && userRole !== 'TELECALLER' && userRole !== 'MANAGER_COUNSELLOUR' && userRole !== 'BUSINESS_HEAD' && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 mt-6">
            <LeadAnalysisCard title="Lead Status Report" data={analysisData.statusStats} type="status" />
            <LeadAnalysisCard title="Lead Source Report" data={analysisData.sourceStats} type="source" />

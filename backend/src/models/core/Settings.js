@@ -129,7 +129,15 @@ const SettingsSchema = new mongoose.Schema({
       },
       'TELECALLER': { name: 'Telecaller', allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts'] },
       'MANAGER_COUNSELLOUR': { name: 'Manager/Counsellour', allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts', 'campaigns'] },
-      'AGENT': { name: 'Standard Agent', allAccess: false, permissions: ['dashboard', 'tasks', 'chat', 'contacts'] }
+      'AGENT': { name: 'Standard Agent', allAccess: false, permissions: ['dashboard', 'tasks', 'chat', 'contacts'] },
+      'BUSINESS_HEAD': { 
+        name: 'Business Head', 
+        allAccess: true, 
+        permissions: [
+          'dashboard', 'tasks', 'pipeline', 'chat', 'contacts', 'campaigns', 'ai-chatbot', 'flows', 'templates', 'agents', 'web-widgets', 'api', 'settings',
+          'workspace', 'whatsapp', 'crm', 'users'
+        ] 
+      }
     })
   }
 }, { timestamps: true });

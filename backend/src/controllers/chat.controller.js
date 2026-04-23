@@ -13,8 +13,20 @@ const createContact = async (req, res) => {
   try {
     const Contact = req.tenantDb.model('Contact', ContactSchema);
     const newContact = await Contact.create({ ...req.body, status: req.body.status || 'NEW LEAD' });
+    
+    // Notify clients about the new lead
+    req.app.get('io')?.to(req.tenantId).emit('new_message', { 
+       contact: newContact.toObject(),
+       content: 'New Lead Established',
+       direction: 'INBOUND',
+       type: 'text'
+    });
+
     res.status(201).json(newContact);
   } catch (error) {
+    if (error.code === 11000) {
+       return res.status(400).json({ message: 'A profile with this phone number already exists in the workspace.' });
+    }
     res.status(500).json({ message: error.message });
   }
 };
@@ -80,6 +92,7 @@ const getContacts = async (req, res) => {
           timeline: 1,
           createdAt: 1,
           assignedAgent: { $toString: '$assignedAgent' },
+          assignedCounsellor: { $toString: '$assignedCounsellor' },
           pipelineStage: 1,
           estimatedValue: 1,
           selectedProgram: 1,
@@ -102,7 +115,6 @@ const getContacts = async (req, res) => {
           collectionAmount: 1,
           pendingCollectionAmount: 1,
           isClosed: 1,
-          assignedCounsellor: 1,
           meetingType: 1,
           meetingRemark: 1
         }
@@ -442,6 +454,13 @@ const performBulkContactAction = async (req, res) => {
           }
         }
       );
+
+      // Emit socket updates for real-time visibility
+      const updatedContacts = await ContactModel.find({ _id: { $in: contactIds } });
+      updatedContacts.forEach(c => {
+         req.app.get("io")?.to(req.tenantId).emit("contact_updated", { contactId: c._id, contact: c.toObject() });
+      });
+
       return res.json({ success: true, message: `${contactIds.length} leads transferred to ${agentName}` });
     } else if (action === 'transfer_counsellor') {
       const counsellorId = typeof payload === 'string' ? payload : (payload.counsellorId || payload);
@@ -464,6 +483,13 @@ const performBulkContactAction = async (req, res) => {
           }
         }
       );
+
+      // Emit socket updates
+      const updatedCounsellorContacts = await ContactModel.find({ _id: { $in: contactIds } });
+      updatedCounsellorContacts.forEach(c => {
+         req.app.get("io")?.to(req.tenantId).emit("contact_updated", { contactId: c._id, contact: c.toObject() });
+      });
+
       return res.json({ success: true, message: `${contactIds.length} leads assigned to counsellor ${counsellorName}` });
     } else if (action === 'update_stage' || action === 'pipelineStage') {
        const stage = typeof payload === 'string' ? payload : (payload.stage || payload);
@@ -506,7 +532,10 @@ const getMessages = async (req, res) => {
 
     if (roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
        const contact = await Contact.findById(req.params.contactId);
-       if (contact && contact.assignedAgent?.toString() !== req.user._id.toString()) {
+       const isAssigned = (contact.assignedAgent?.toString() === req.user._id.toString()) || 
+                          (contact.assignedCounsellor?.toString() === req.user._id.toString());
+       
+       if (contact && !isAssigned) {
           return res.status(403).json({ message: 'Access denied: This lead is not assigned to you.' });
        }
     }
@@ -684,8 +713,8 @@ const getDashboardStats = async (req, res) => {
     const baseFilter = {};
     if (roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
        baseFilter.$or = [
-         { assignedAgent: req.user._id.toString() },
-         { assignedCounsellor: req.user._id.toString() }
+         { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
+         { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) }
        ];
     }
 

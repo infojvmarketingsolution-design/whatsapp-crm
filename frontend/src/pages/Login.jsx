@@ -121,9 +121,10 @@ export default function Login() {
       apiNumber: apiNumber
     }));
 
-    toast.success('Authentication successful!');
+    const toastId = toast.success('Authentication successful!');
     
     setTimeout(() => {
+      toast.dismiss(toastId);
       if (data.role === 'SUPER_ADMIN') navigate('/admin/dashboard');
       else navigate('/dashboard');
     }, 800);
@@ -137,7 +138,6 @@ export default function Login() {
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center p-4 selection:bg-teal-100 relative overflow-hidden">
-      <Toaster position="top-right" />
       
       {/* Background Decor */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-teal-200/20 rounded-full blur-[120px] animate-pulse" />

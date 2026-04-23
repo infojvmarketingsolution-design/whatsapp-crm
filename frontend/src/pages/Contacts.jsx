@@ -137,7 +137,7 @@ export default function Contacts({ roleAccess }) {
     const matchesStatus = filters.status === 'ALL' || c.status === filters.status;
     const matchesHeat = filters.heat === 'ALL' || c.heatLevel === filters.heat;
     const matchesStage = filters.stage === 'ALL' || c.pipelineStage === filters.stage;
-    const matchesAgent = filters.agent === 'ALL' || c.assignedAgent === filters.agent;
+    const matchesAgent = filters.agent === 'ALL' || c.assignedAgent === filters.agent || c.assignedCounsellor === filters.agent;
     const matchesSource = filters.source === 'ALL' || c.leadSource === filters.source;
     const matchesScore = (c.score || 0) >= filters.minScore && (c.score || 0) <= filters.maxScore;
     const matchesValue = (c.estimatedValue || 0) >= filters.minValue;
@@ -356,13 +356,22 @@ export default function Contacts({ roleAccess }) {
       const res = await fetch('/api/chat/contacts', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newLeadName, phone: newLeadPhone, source: 'Manual Entry' })
+        body: JSON.stringify({ 
+          name: newLeadName, 
+          phone: newLeadPhone, 
+          source: 'Manual Entry',
+          assignedAgent: user._id // Auto-assign to creator so they can see it immediately
+        })
       });
       if (res.ok) {
+        toast.success('Lead established successfully');
         setShowAddModal(false);
         setNewLeadName('');
         setNewLeadPhone('');
         fetchContacts();
+      } else {
+        const errorData = await res.json();
+        toast.error(errorData.message || 'Failed to establish profile');
       }
     } catch (err) {
       console.error(err);
@@ -712,7 +721,7 @@ export default function Contacts({ roleAccess }) {
 
               <div className="flex-1 flex overflow-hidden bg-white">
                  <div className="w-[380px] bg-slate-50/50 border-r border-gray-100 overflow-y-auto custom-scrollbar p-6 space-y-8">
-                    {/* SECTION 1: AI CHATBOT DATA (Moved to top based on user request) */}
+                    {/* SECTION 1: AI CHATBOT DATA */}
                     <section className="space-y-4">
                        <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center">
                           <CheckCircle2 size={14} className="mr-2 text-gray-400" /> AI Chatbot Captures
@@ -831,17 +840,17 @@ export default function Contacts({ roleAccess }) {
                                 <input type="number" value={editedContact.estimatedValue || 0} onChange={e=>handleFieldChange('estimatedValue', e.target.value)} className="bg-transparent text-2xl font-black text-white outline-none w-full placeholder-slate-700" />
                              </div>
                           </div>
-                                                    <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-sm">
-                             <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Origination Source</label>
-                             <div className="relative">
-                                 <Globe size={14} className="absolute left-3 top-2.5 text-blue-500" />
-                                 <select value={editedContact.leadSource || 'Manual Entry'} onChange={e=>handleFieldChange('leadSource', e.target.value)} className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none cursor-pointer">
-                                    {['Manual Entry', 'Meta Ads', 'Google Ads', 'Referral', 'Email Campaign', 'WhatsApp Blast'].map(s => <option key={s} value={s}>{s}</option>)}
-                                 </select>
-                             </div>
-                          </div>
+                          <div className="bg-white p-4 border border-gray-100 rounded-xl shadow-sm">
+                              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Origination Source</label>
+                              <div className="relative">
+                                  <Globe size={14} className="absolute left-3 top-2.5 text-blue-500" />
+                                  <select value={editedContact.leadSource || 'Manual Entry'} onChange={e=>handleFieldChange('leadSource', e.target.value)} className="w-full bg-gray-50 border border-gray-100 text-sm font-semibold text-gray-800 rounded-lg pl-9 pr-3 py-2 outline-none cursor-pointer">
+                                     {['Official Lead', 'Manual Entry', 'Meta Ads', 'Google Ads', 'Referral', 'Email Campaign', 'WhatsApp Blast'].map(s => <option key={s} value={s}>{s}</option>)}
+                                  </select>
+                              </div>
+                           </div>
 
-                          {/* SECTION 4: ASSIGNMENT & OWNERSHIP */}
+                           {/* SECTION 4: ASSIGNMENT & OWNERSHIP */}
                            <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm space-y-5">
                               <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center">
                                  <ShieldCheck size={14} className="mr-2 text-blue-600" /> Assignment & Ownership
@@ -864,9 +873,9 @@ export default function Contacts({ roleAccess }) {
                               </div>
 
                               <div>
-
+                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Expert Advisor (Counsellor)</label>
                                  <div className="relative">
-
+                                     <Briefcase size={14} className="absolute left-3 top-2.5 text-blue-400" />
                                      <select 
                                        value={editedContact.assignedCounsellor || ''} 
                                        onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} 
@@ -959,7 +968,7 @@ export default function Contacts({ roleAccess }) {
                                <div>
                                   <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 mt-1">Created At</p>
                                   <p className="text-xs font-bold text-gray-700">{formatDateTime(selectedContact.createdAt)}</p>
-                               </div>
+                                </div>
                            </div>
                            <div className="p-5 bg-white rounded-xl shadow-sm border border-gray-100 flex items-center space-x-4">
                                <div className="w-10 h-10 rounded-lg bg-gray-50 text-gray-400 flex items-center justify-center"><History size={18} /></div>
@@ -1137,56 +1146,65 @@ export default function Contacts({ roleAccess }) {
          </div>
        )}
 
-      {/* CENTERED BULK ASSIGN POPUP */}
+      {/* CENTERED BULK ACTION CONSOLE */}
       {selectedIds.size > 0 && (
-         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedIds(new Set())}>
-            <div className="bg-white p-10 rounded-[2.5rem] shadow-3xl flex flex-col items-center space-y-8 animate-pop-in border border-white/50 w-[400px]" onClick={e => e.stopPropagation()}>
-               <div className="w-16 h-16 bg-teal-500 text-white rounded-2xl flex items-center justify-center shadow-glow mb-2">
-                  <Users size={32} />
+         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setSelectedIds(new Set())}>
+            <div className="bg-white p-10 rounded-[3rem] shadow-3xl flex flex-col items-center space-y-8 animate-pop-in border border-white/50 w-[440px] relative overflow-hidden" onClick={e => e.stopPropagation()}>
+               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+               
+               <div className="w-20 h-20 bg-teal-500 text-white rounded-[2rem] flex items-center justify-center shadow-glow mb-2 transform -rotate-6">
+                  <Users size={40} />
                </div>
                
                <div className="text-center">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-500 mb-2">{selectedIds.size} Leads Selected</p>
-                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">Bulk Manual Assign</h2>
+                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-600 mb-2">{selectedIds.size} Profiles Selected</p>
+                  <h2 className="text-3xl font-black text-slate-900 tracking-tight">Bulk Command</h2>
                </div>
-
-               <div className="w-full space-y-4">
-                  <div className="space-y-2">
-                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Manual Lead Assign</label>
-                     <div className="relative">
+               
+               <div className="w-full space-y-6">
+                  <div className="space-y-3">
+                     <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Lead Assignment Control</label>
+                     <div className="relative group">
+                        <Users size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
                         <select 
                            value={bulkTargetAgent} 
                            onChange={(e) => setBulkTargetAgent(e.target.value)} 
-                           className="w-full bg-gray-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500/50 text-sm font-bold text-slate-800 appearance-none cursor-pointer"
+                           className="w-full bg-slate-50 border border-slate-100 rounded-2xl pl-12 pr-10 py-4 outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500/50 text-sm font-bold text-slate-800 appearance-none cursor-pointer transition-all shadow-inner"
                         >
-                           <option value="" className="text-slate-900">Choose Agent...</option>
-                           <option value="unassign" className="text-slate-900 font-bold text-red-600">-- Unassign Leads --</option>
-                           {agents.map(a => <option key={a._id} value={a._id} className="text-slate-900">{a.name}</option>)}
+                           <option value="">Select Target Agent...</option>
+                           <optgroup label="Core Team">
+                              {agents.map(a => <option key={a._id} value={a._id}>{a.name} ({a.role})</option>)}
+                           </optgroup>
                         </select>
-                        <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                        <ChevronDown size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                      </div>
                   </div>
 
-                  <button 
-                     disabled={!bulkTargetAgent || isBulkUpdating} 
-                     onClick={() => {
-                        if (bulkTargetAgent === "unassign") {
-                           handleBulkAction("transfer_leads", ""); 
-                        } else {
-                           handleBulkAction("transfer_leads", bulkTargetAgent);
-                        }
-                     }} 
-                     className="w-full py-5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl shadow-xl hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50 disabled:translate-y-0"
-                  >
-                     {isBulkUpdating ? "Processing..." : "Confirm Assignment"}
-                  </button>
-
-                  <button 
-                     onClick={() => setSelectedIds(new Set())} 
-                     className="w-full py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-all"
-                  >
-                     Cancel Selection
-                  </button>
+                  <div className="grid grid-cols-1 gap-4">
+                     <button 
+                        disabled={!bulkTargetAgent || isBulkUpdating} 
+                        onClick={() => handleBulkAction("transfer_leads", bulkTargetAgent)} 
+                        className="w-full py-5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.4em] rounded-2xl shadow-xl hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50 disabled:translate-y-0"
+                     >
+                        {isBulkUpdating ? "Executing..." : "Manual Assign"}
+                     </button>
+                     
+                     <div className="flex items-center space-x-4">
+                        <button 
+                           disabled={isBulkUpdating}
+                           onClick={() => handleBulkAction("transfer_leads", "")}
+                           className="flex-1 py-4 bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-red-100 transition-all active:scale-95"
+                        >
+                           Bulk Unassign
+                        </button>
+                        <button 
+                           onClick={() => setSelectedIds(new Set())} 
+                           className="flex-1 py-4 bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-100 transition-all active:scale-95"
+                        >
+                           Dismiss
+                        </button>
+                     </div>
+                  </div>
                </div>
             </div>
          </div>
