@@ -141,17 +141,7 @@ export default function Contacts({ roleAccess }) {
   }, []);
 
   // Intelligence Filter Engine (V2)
-    const filteredContacts = contacts.filter(c => {
-    const matchesSearch = !searchTerm || (
-      (c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (c.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
-      (c.phone || '').includes(searchTerm)
-    );
-    // EMERGENCY BYPASS: Ensuring lead visibility
-    const matchesCore = matchesSearch && (filters.status === 'ALL' || c.status === filters.status) && (filters.stage === 'ALL' || c.pipelineStage === filters.stage);
-    return !c.isArchived && matchesCore;
-  });
+      const filteredContacts = contacts; // FORCED VISIBILITY BYPASS
 
      const activeFilterCount = Object.entries(filters).filter(([key, val]) => {
       // Exclude default values from the "Active Filter" count
