@@ -1137,47 +1137,58 @@ export default function Contacts({ roleAccess }) {
          </div>
        )}
 
-      {/* MINIMAL BULK ASSIGN BAR */}
+      {/* CENTERED BULK ASSIGN POPUP */}
       {selectedIds.size > 0 && (
-         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[999] bg-slate-900/95 text-white rounded-3xl px-10 py-5 shadow-3xl flex items-center space-x-12 animate-slide-up border border-white/10 backdrop-blur-md">
-            <div className="flex flex-col border-r border-white/10 pr-10">
-               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-400 mb-1">{selectedIds.size} Selected</p>
-               <p className="text-[11px] font-black uppercase tracking-widest">Bulk Actions</p>
-            </div>
+         <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedIds(new Set())}>
+            <div className="bg-white p-10 rounded-[2.5rem] shadow-3xl flex flex-col items-center space-y-8 animate-pop-in border border-white/50 w-[400px]" onClick={e => e.stopPropagation()}>
+               <div className="w-16 h-16 bg-teal-500 text-white rounded-2xl flex items-center justify-center shadow-glow mb-2">
+                  <Users size={32} />
+               </div>
+               
+               <div className="text-center">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-500 mb-2">{selectedIds.size} Leads Selected</p>
+                  <h2 className="text-2xl font-black text-slate-900 tracking-tight">Bulk Manual Assign</h2>
+               </div>
 
-            <div className="flex items-center space-x-6">
-               <div className="flex flex-col space-y-1">
-                  <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Manual Lead Assign</label>
-                  <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10">
-                     <select 
-                        value={bulkTargetAgent} 
-                        onChange={(e) => setBulkTargetAgent(e.target.value)} 
-                        className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[180px]"
-                     >
-                        <option value="" className="text-slate-900">Choose Agent...</option>
-                        <option value="unassign" className="text-slate-900 font-bold text-red-600">-- Unassign Leads --</option>
-                        {agents.map(a => <option key={a._id} value={a._id} className="text-slate-900">{a.name}</option>)}
-                     </select>
-                     <button 
-                        disabled={!bulkTargetAgent || isBulkUpdating} 
-                        onClick={() => {
-                           if (bulkTargetAgent === "unassign") {
-                              handleBulkAction("transfer_leads", ""); 
-                           } else {
-                              handleBulkAction("transfer_leads", bulkTargetAgent);
-                           }
-                        }} 
-                        className="bg-teal-500 hover:bg-teal-600 disabled:bg-slate-700 p-2.5 rounded-xl transition-all shadow-lg active:scale-95 text-white"
-                     >
-                        <ArrowUpRight size={18} />
-                     </button>
+               <div className="w-full space-y-4">
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Manual Lead Assign</label>
+                     <div className="relative">
+                        <select 
+                           value={bulkTargetAgent} 
+                           onChange={(e) => setBulkTargetAgent(e.target.value)} 
+                           className="w-full bg-gray-50 border border-slate-100 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500/50 text-sm font-bold text-slate-800 appearance-none cursor-pointer"
+                        >
+                           <option value="" className="text-slate-900">Choose Agent...</option>
+                           <option value="unassign" className="text-slate-900 font-bold text-red-600">-- Unassign Leads --</option>
+                           {agents.map(a => <option key={a._id} value={a._id} className="text-slate-900">{a.name}</option>)}
+                        </select>
+                        <ChevronDown size={16} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                     </div>
                   </div>
+
+                  <button 
+                     disabled={!bulkTargetAgent || isBulkUpdating} 
+                     onClick={() => {
+                        if (bulkTargetAgent === "unassign") {
+                           handleBulkAction("transfer_leads", ""); 
+                        } else {
+                           handleBulkAction("transfer_leads", bulkTargetAgent);
+                        }
+                     }} 
+                     className="w-full py-5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl shadow-xl hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50 disabled:translate-y-0"
+                  >
+                     {isBulkUpdating ? "Processing..." : "Confirm Assignment"}
+                  </button>
+
+                  <button 
+                     onClick={() => setSelectedIds(new Set())} 
+                     className="w-full py-4 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hover:text-slate-600 transition-all"
+                  >
+                     Cancel Selection
+                  </button>
                </div>
             </div>
-
-            <button onClick={() => setSelectedIds(new Set())} className="ml-6 p-4 hover:bg-white/10 text-white/20 hover:text-white rounded-2xl transition-all">
-               <X size={24} />
-            </button>
          </div>
       )}
     </div>
