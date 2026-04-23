@@ -48,7 +48,7 @@ const getContacts = async (req, res) => {
 
     
     // BUSINESS_HEAD, ADMIN, and SUPER_ADMIN always see everything
-    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole.toUpperCase());
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
     
     // Base match for active leads
     const matchStage = { isArchived: { $ne: true } };
@@ -64,14 +64,14 @@ const getContacts = async (req, res) => {
 
       ];
     }
-    console.log(`[Diagnostics] getContacts | User: ${req.user.email} | Role: ${userRole} | Normalized: ${normalizedRole} | HighLevel: ${isHighLevel} | Match:`, JSON.stringify(matchStage));
+    // Removed logging for production stability
 
     if (status) matchStage.status = status;
 
     if (qualification) matchStage.qualification = qualification;
 
     const totalMatching = await Contact.countDocuments(matchStage);
-    console.log(`[Diagnostics] getContacts | User: ${req.user.email} | Role: ${userRole} | MatchStage:`, JSON.stringify(matchStage), `| Total Matching: ${totalMatching}`);
+    // Removed logging for production stability
 
     const pipeline = [
 
