@@ -562,7 +562,7 @@ export default function Contacts({ roleAccess }) {
       <div className="p-8 flex-1 flex flex-col max-w-7xl mx-auto w-full">
           <div className="flex flex-col space-y-6 mb-8">
               <div className="flex justify-between items-center">
-                  <h2 className="text-2xl font-black text-slate-800 tracking-tight">Contact Workspace</h2>
+                  <div className="flex flex-col"><h2 className="text-2xl font-black text-slate-800 tracking-tight">Contact Workspace</h2><div className="flex items-center space-x-2 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Server: {contacts.length} Leads | Filtered: {filteredContacts.length} Visible</p></div></div>
                   {canSearch && (
                      <div className="flex items-center space-x-3">
                         <div className="relative">
