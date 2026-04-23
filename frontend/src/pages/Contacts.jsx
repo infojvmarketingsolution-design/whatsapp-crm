@@ -773,146 +773,139 @@ export default function Contacts({ roleAccess }) {
                </div>
 
                <div className="flex-1 flex overflow-hidden">
-                  {/* LEFT PANEL: SIMPLE DATA FACT SHEET */}
-                  <div className="w-[380px] bg-slate-50/50 border-r border-slate-100 overflow-y-auto custom-scrollbar p-8 space-y-8">
+                  {/* LEFT PANEL: STRUCTURED STEP-BY-STEP FLOW */}
+                  <div className="w-[420px] bg-slate-50/50 border-r border-slate-100 overflow-y-auto custom-scrollbar p-8 space-y-12">
                      
+                     {/* STEP 1: BASIC INFORMATION */}
                      <div className="space-y-6">
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Operational Data</h3>
-                        <div className="space-y-4">
+                        <div className="flex items-center space-x-3">
+                           <div className="w-6 h-6 rounded-full bg-slate-800 text-white text-[10px] flex items-center justify-center font-bold">1</div>
+                           <h3 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest">Basic Information</h3>
+                        </div>
+                        
+                        <div className="space-y-4 pl-9">
                            <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Current Status</label>
-                              <select 
-                                 value={editedContact.status || 'NEW LEAD'} 
-                                 onChange={e=>handleFieldChange('status', e.target.value)}
-                                 className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-700 rounded outline-none focus:border-slate-400 transition-all cursor-pointer"
-                              >
-                                 {['NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
-                              </select>
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">Full Name</label>
+                              <input value={editedContact.firstName || editedContact.name || ''} onChange={e=>handleFieldChange('firstName', e.target.value)} placeholder="Full Name" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
                            </div>
-                        </div>
-                     </div>
 
-                     <div className="space-y-6">
-                        <div className="flex items-center justify-between">
-                           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identity Details</h3>
-                           {!editedContact.secondaryPhone && (
-                              <button 
-                                 onClick={() => handleFieldChange('secondaryPhone', ' ')}
-                                 className="text-[10px] font-bold text-slate-800 flex items-center hover:bg-slate-100 px-2 py-1 rounded transition-all"
-                              >
-                                 <Plus size={12} className="mr-1" /> Add Number
-                              </button>
-                           )}
-                        </div>
-                        <div className="space-y-4">
                            <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Primary WhatsApp (Locked)</label>
-                              <div className="w-full bg-slate-50 border border-slate-100 py-2.5 px-3 text-sm font-medium text-slate-400 rounded flex items-center">
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">WhatsApp Profile (Locked)</label>
+                              <div className="w-full bg-slate-100/50 border border-slate-100 py-2.5 px-3 text-sm font-medium text-slate-400 rounded flex items-center">
                                  <Phone size={12} className="mr-2 opacity-40" /> {editedContact.phone}
                               </div>
                            </div>
-                           {editedContact.secondaryPhone !== undefined && (
+
+                           <div className="space-y-3">
+                              <div className="flex items-center justify-between">
+                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Alternative Numbers</label>
+                                 {!editedContact.secondaryPhone && (
+                                    <button onClick={() => handleFieldChange('secondaryPhone', ' ')} className="text-[9px] font-bold text-slate-800 flex items-center hover:bg-slate-100 px-2 py-1 rounded transition-all">
+                                       <Plus size={10} className="mr-1" /> Add
+                                    </button>
+                                 )}
+                              </div>
+                              {editedContact.secondaryPhone !== undefined && (
+                                 <input value={editedContact.secondaryPhone || ''} onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} placeholder="Secondary WhatsApp" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 animate-fade-in" />
+                              )}
+                              <input value={editedContact.altMobile || ''} onChange={e=>handleFieldChange('altMobile', e.target.value)} placeholder="Alternative Mobile Number" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400" />
+                           </div>
+
+                           <div className="space-y-4 pt-2">
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">Detailed Address</label>
+                              <div className="grid grid-cols-2 gap-3">
+                                 <input value={editedContact.houseNo || ''} onChange={e=>handleFieldChange('houseNo', e.target.value)} placeholder="House No" className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
+                                 <input value={editedContact.societyName || ''} onChange={e=>handleFieldChange('societyName', e.target.value)} placeholder="Society Name" className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
+                              </div>
+                              <input value={editedContact.streetAddress || ''} onChange={e=>handleFieldChange('streetAddress', e.target.value)} placeholder="Street Address" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
+                              <div className="grid grid-cols-2 gap-3">
+                                 <select value={editedContact.city || ''} onChange={e=>handleFieldChange('city', e.target.value)} className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-700 rounded outline-none">
+                                    <option value="">Choose City</option>
+                                    {['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Mumbai', 'Pune', 'Bangalore', 'Delhi'].map(c => <option key={c} value={c}>{c}</option>)}
+                                 </select>
+                                 <select value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-700 rounded outline-none">
+                                    <option value="">Choose State</option>
+                                    {['Gujarat', 'Maharashtra', 'Karnataka', 'Rajasthan', 'Madhya Pradesh', 'Delhi'].map(s => <option key={s} value={s}>{s}</option>)}
+                                 </select>
+                              </div>
+                              <div className="grid grid-cols-2 gap-3">
+                                 <div className="w-full bg-slate-50 border border-slate-100 py-2 px-3 text-xs font-bold text-slate-400 rounded">India</div>
+                                 <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* STEP 2: QUALIFICATION */}
+                     <div className="space-y-6">
+                        <div className="flex items-center space-x-3">
+                           <div className="w-6 h-6 rounded-full bg-slate-800 text-white text-[10px] flex items-center justify-center font-bold">2</div>
+                           <h3 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest">Qualification</h3>
+                        </div>
+                        
+                        <div className="space-y-4 pl-9">
+                           <div className="space-y-1.5">
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">Last Qualification</label>
+                              <input value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="e.g. 12th, Graduate" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
+                           </div>
+                           <div className="space-y-1.5">
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">Interested Program</label>
+                              <input value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} placeholder="Target Course" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* STEP 3: VISIT & ADMISSION */}
+                     <div className="space-y-6 pb-10">
+                        <div className="flex items-center space-x-3">
+                           <div className="w-6 h-6 rounded-full bg-slate-800 text-white text-[10px] flex items-center justify-center font-bold">3</div>
+                           <h3 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest text-red-600">Visit & Admission</h3>
+                        </div>
+                        
+                        <div className="space-y-6 pl-9">
+                           {/* VISIT TYPE */}
+                           <div className="space-y-1.5">
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">Visit Type</label>
+                              <div className="grid grid-cols-2 gap-2">
+                                 {['University Visit', 'Office Visit'].map(v => (
+                                    <button key={v} onClick={() => handleFieldChange('visitType', v)} className={`py-2 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitType === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100'}`}>{v}</button>
+                                 ))}
+                              </div>
+                           </div>
+
+                           {/* VISIT STATUS */}
+                           <div className="space-y-1.5">
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">Visit Status</label>
+                              <div className="grid grid-cols-2 gap-2">
+                                 {['Not Done', 'Done'].map(v => (
+                                    <button key={v} onClick={() => handleFieldChange('visitStatus', v)} className={`py-2 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitStatus === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100'}`}>{v}</button>
+                                 ))}
+                              </div>
+                           </div>
+
+                           {/* COUNSELLOR */}
+                           {editedContact.visitStatus === 'Done' && (
                               <div className="space-y-1.5 animate-fade-in">
-                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Secondary WhatsApp</label>
-                                 <input value={editedContact.secondaryPhone || ''} onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} placeholder="Enter 2nd number" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
+                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Handled By Counsellor</label>
+                                 <select value={editedContact.assignedCounsellor || ''} onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-700 rounded outline-none">
+                                    <option value="">Select Counsellor...</option>
+                                    {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                                 </select>
                               </div>
                            )}
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Surname / Last Name</label>
-                              <input value={editedContact.lastName || ''} onChange={e=>handleFieldChange('lastName', e.target.value)} placeholder="Enter last name" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
-                           </div>
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Postal Address</label>
-                              <textarea value={editedContact.address || ''} onChange={e=>handleFieldChange('address', e.target.value)} placeholder="Full residence details..." className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 resize-none" rows={3} />
-                           </div>
-                        </div>
-                     </div>
 
-                     <div className="space-y-6">
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-red-500">Admission Management</h3>
-                        
-                        {/* VISIT STATUS */}
-                        <div className="space-y-1.5">
-                           <label className="text-[9px] font-bold text-slate-400 uppercase">University / Office Visit</label>
-                           <div className="grid grid-cols-2 gap-2">
-                              {['Not Done', 'Done'].map(v => (
-                                 <button 
-                                    key={v}
-                                    onClick={() => handleFieldChange('visitStatus', v)}
-                                    className={`py-2 rounded text-[10px] font-bold uppercase border transition-all ${editedContact.visitStatus === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}
-                                 >
-                                    {v}
-                                 </button>
-                              ))}
-                           </div>
-                        </div>
-
-                        {/* COUNSELLOR SELECTION (Visible if Visit is Done) */}
-                        {editedContact.visitStatus === 'Done' && (
-                           <div className="space-y-1.5 animate-fade-in">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Providing Counsellor</label>
-                              <select 
-                                 value={editedContact.assignedCounsellor || ''} 
-                                 onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)}
-                                 className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-700 rounded outline-none focus:border-slate-400 transition-all cursor-pointer"
-                              >
-                                 <option value="">Select Counsellor...</option>
-                                 {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
-                              </select>
-                           </div>
-                        )}
-
-                        {/* ADMISSION STATUS */}
-                        <div className="space-y-1.5">
-                           <label className="text-[9px] font-bold text-slate-400 uppercase">Admission Verdict</label>
-                           <div className="grid grid-cols-3 gap-2">
-                              {[
-                                 { id: 'PENDING', label: 'Pending', color: 'slate' },
-                                 { id: 'CLOSED_WON', label: 'Completed', color: 'green' },
-                                 { id: 'CLOSED_LOST', label: 'Cancelled', color: 'red' }
-                              ].map(s => (
-                                 <button 
-                                    key={s.id}
-                                    onClick={() => handleFieldChange('status', s.id)}
-                                    className={`py-3 rounded text-[9px] font-bold uppercase transition-all border ${editedContact.status === s.id ? `bg-${s.color}-600 text-white border-${s.color}-600` : `bg-white text-${s.color}-600 border-${s.color}-100 hover:bg-${s.color}-50`}`}
-                                 >
-                                    {s.label}
-                                 </button>
-                              ))}
-                           </div>
-                        </div>
-
-                        {editedContact.status === 'CLOSED_WON' && <p className="text-[9px] font-bold text-green-600 text-center animate-pulse uppercase">Admission Successfully Completed!</p>}
-                        {editedContact.status === 'CLOSED_LOST' && <p className="text-[9px] font-bold text-red-600 text-center uppercase">Admission Cancelled / Lead Closed</p>}
-                     </div>
-
-                     <div className="space-y-6 pb-10">
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Academic & Ownership</h3>
-                        <div className="space-y-4">
-                           <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-1.5">
-                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Telecaller</label>
-                                 <select value={editedContact.assignedAgent || ''} onChange={e=>handleFieldChange('assignedAgent', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded outline-none">
-                                    <option value="">Unassigned</option>
-                                    {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
-                                 </select>
+                           {/* ADMISSION STATUS */}
+                           <div className="space-y-1.5 pt-4">
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">Final Admission Verdict</label>
+                              <div className="grid grid-cols-3 gap-2">
+                                 {[
+                                    { id: 'PENDING', label: 'Pending', color: 'slate' },
+                                    { id: 'CLOSED_WON', label: 'Done', color: 'green' },
+                                    { id: 'CLOSED_LOST', label: 'Cancell', color: 'red' }
+                                 ].map(s => (
+                                    <button key={s.id} onClick={() => handleFieldChange('status', s.id)} className={`py-3 rounded text-[8px] font-bold uppercase transition-all border ${editedContact.status === s.id ? `bg-${s.color}-600 text-white border-${s.color}-600` : `bg-white text-${s.color}-600 border-${s.color}-100 hover:bg-${s.color}-50`}`}>{s.label}</button>
+                                 ))}
                               </div>
-                              <div className="space-y-1.5">
-                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Counsellor</label>
-                                 <select value={editedContact.assignedCounsellor || ''} onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded outline-none">
-                                    <option value="">Unassigned</option>
-                                    {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
-                                 </select>
-                              </div>
-                           </div>
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Qualification</label>
-                              <input value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded" />
-                           </div>
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Target Course</label>
-                              <input value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded" />
-                           </div>
                         </div>
                      </div>
                   </div>
