@@ -744,7 +744,23 @@ export default function Contacts({ roleAccess }) {
                      
                      {/* SECTION 1: IDENTITY & COMMUNICATION */}
                      <div className="space-y-6">
+                                             <div className="space-y-6">
                         <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
+                           <TrendingUp size={14} className="mr-2" /> Lifecycle Status
+                        </h3>
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lead Status</label>
+                           <select 
+                              value={editedContact.status || 'NEW LEAD'} 
+                              onChange={e=>handleFieldChange('status', e.target.value)}
+                              className="w-full bg-transparent border-b border-slate-100 py-1.5 text-sm font-bold text-slate-800 outline-none cursor-pointer"
+                           >
+                              {['NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
+                           </select>
+                        </div>
+                     </div>
+
+<h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
                            <Users size={14} className="mr-2" /> Identity & Contact
                         </h3>
                         <div className="grid grid-cols-1 gap-5">
