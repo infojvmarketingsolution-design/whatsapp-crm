@@ -13,7 +13,7 @@ const getTeamStats = async (req, res) => {
     const teamMembers = await User.find({ 
       tenantId: req.tenantId,
       status: 'ACTIVE',
-      role: { $in: ['TELECALLER', 'MANAGER_COUNSELLOUR', 'AGENT', 'BUSINESS_HEAD'] }
+      role: { $in: ['TELECALLER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR', 'AGENT', 'BUSINESS_HEAD', 'BUSINESS HEAD'] }
     }).select('name role email phoneNumber isAvailableForAutoAssign');
 
     // 2. Aggregate stats for each member
