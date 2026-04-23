@@ -50,6 +50,7 @@ const ContactSchema = new mongoose.Schema({
   firstName: { type: String },
   lastName: { type: String },
   secondaryPhone: { type: String },
+  altMobile: { type: String },
   statusUpdatedAt: { type: Date, default: Date.now },
   interests: [{ type: String }],
   leadConsiderDate: { type: Date },
@@ -58,14 +59,19 @@ const ContactSchema = new mongoose.Schema({
   leadSource: { type: String, default: 'Manual Entry' },
   nextFollowUp: { type: Date },
   // Counselling & Admission Tracking
-  visitStatus: { type: String, enum: ['Not Visited', 'Visited'], default: 'Not Visited' },
+  visitStatus: { type: String, default: 'Not Done' }, // 'Done', 'Not Done'
+  visitType: { type: String }, // 'University Visit', 'Campus Visit'
   admissionStatus: { type: String, enum: ['None', 'Pending', 'Admitted', 'Cancelled'], default: 'None' },
+  houseNo: { type: String },
+  societyName: { type: String },
+  streetAddress: { type: String },
+  city: { type: String },
   collectionAmount: { type: Number, default: 0 },
   pendingCollectionAmount: { type: Number, default: 0 },
   isClosed: { type: Boolean, default: false },
   isArchived: { type: Boolean, default: false },
   assignedCounsellor: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  meetingType: { type: String }, // e.g. 'Office Visit', 'Campus Visit'
+  meetingType: { type: String }, 
   meetingRemark: { type: String }
 }, { timestamps: true });
 
