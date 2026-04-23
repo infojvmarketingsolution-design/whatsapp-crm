@@ -1277,9 +1277,9 @@ export default function Contacts({ roleAccess }) {
                         </button>
                      </div>
                   </div>
-                </div>
-             </div>
-          </div>
+               </div>
+            </div>
+         </div>
        )}
     </div>
   );
