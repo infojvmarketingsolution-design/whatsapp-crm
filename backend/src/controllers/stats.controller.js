@@ -18,16 +18,49 @@ const getTeamStats = async (req, res) => {
 
     // 2. Aggregate stats for each member
     const stats = await Promise.all(teamMembers.map(async (member) => {
-      const memberIdStr = member._id.toString();
-      
-      // Count Leads
-      const leadCount = await Contact.countDocuments({
-        $or: [
-          { assignedAgent: member._id },
-          { assignedCounsellor: member._id }
-        ],
+      // Expanded Metrics
+      const newLeads = await Contact.countDocuments({
+        $or: [{ assignedAgent: member._id }, { assignedCounsellor: member._id }],
+        status: 'NEW LEAD',
         isArchived: { $ne: true }
       });
+
+      const openLeads = await Contact.countDocuments({
+        $or: [{ assignedAgent: member._id }, { assignedCounsellor: member._id }],
+        status: { $nin: ['CLOSED_WON', 'CLOSED_LOST'] },
+        isArchived: { $ne: true }
+      });
+
+      const closedLeads = await Contact.countDocuments({
+        $or: [{ assignedAgent: member._id }, { assignedCounsellor: member._id }],
+        status: { $in: ['CLOSED_WON', 'CLOSED_LOST'] },
+        isArchived: { $ne: true }
+      });
+
+      const admissions = await Contact.countDocuments({
+        $or: [{ assignedAgent: member._id }, { assignedCounsellor: member._id }],
+        admissionStatus: 'Admitted',
+        isArchived: { $ne: true }
+      });
+
+      const pendingAdmissions = await Contact.countDocuments({
+        $or: [{ assignedAgent: member._id }, { assignedCounsellor: member._id }],
+        admissionStatus: 'Pending',
+        isArchived: { $ne: true }
+      });
+
+      const collections = await Contact.aggregate([
+        { 
+          $match: { 
+            $or: [{ assignedAgent: member._id }, { assignedCounsellor: member._id }],
+            isArchived: { $ne: true }
+          } 
+        },
+        { $group: { _id: null, total: { $sum: "$collectionAmount" }, pending: { $sum: "$pendingCollectionAmount" } } }
+      ]);
+
+      const collectionTotal = collections.length > 0 ? collections[0].total : 0;
+      const collectionPending = collections.length > 0 ? collections[0].pending : 0;
 
       // Count Tasks
       const contactsWithTasks = await Contact.find({
@@ -40,11 +73,13 @@ const getTeamStats = async (req, res) => {
 
       let totalTasks = 0;
       let completedTasks = 0;
+      let pendingTasks = 0;
 
       contactsWithTasks.forEach(c => {
         c.tasks.forEach(t => {
           totalTasks++;
           if (t.status === 'COMPLETED') completedTasks++;
+          if (t.status === 'PENDING' || t.status === 'IN_PROGRESS') pendingTasks++;
         });
       });
 
@@ -67,8 +102,16 @@ const getTeamStats = async (req, res) => {
         phone: member.phoneNumber,
         isAvailable: member.isAvailableForAutoAssign,
         leadCount,
+        newLeads,
+        openLeads,
+        closedLeads,
+        admissions,
+        pendingAdmissions,
+        collectionTotal,
+        collectionPending,
         totalTasks,
         completedTasks,
+        pendingTasks,
         taskEfficiency: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
         statusBreakdown: statusBreakdown.reduce((acc, curr) => {
           acc[curr._id] = curr.count;
