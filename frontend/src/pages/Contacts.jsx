@@ -185,7 +185,8 @@ export default function Contacts({ roleAccess }) {
     // Advanced filters are only applied if they are NOT set to "ALL"
     const passesAdvanced = matchesSource && matchesProgram && matchesQual && matchesDate && matchesTime;
 
-    return isVisible && passesAdvanced;
+        // Final verification
+    return isVisible && matchesSource && matchesProgram && matchesQual && matchesDate;
   });
 
      const activeFilterCount = Object.entries(filters).filter(([key, val]) => {
