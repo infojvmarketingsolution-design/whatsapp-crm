@@ -908,6 +908,7 @@ export default function Contacts({ roleAccess }) {
                </div>
             </div>
          </div>
+      )}
 
       {/* ADVANCED FILTER PRO CONSOLE (SIDEBAR) */}
       {showFilters && (
