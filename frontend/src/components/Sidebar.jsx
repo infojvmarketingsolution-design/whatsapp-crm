@@ -50,12 +50,12 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
   };
 
   const allMenuItems = [
-    { id: 'team-performance', name: 'Team Performance', icon: Shield, path: '/team-performance' },
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'tasks', name: 'Tasks', icon: CheckSquare, path: '/tasks' },
     { id: 'pipeline', name: 'Pipeline', icon: KanbanSquare, path: '/pipeline' },
     { id: 'chat', name: 'Chat', icon: MessageSquare, path: '/inbox' },
     { id: 'contacts', name: 'Contacts', icon: Users, path: '/contacts' },
+    { id: 'team-performance', name: 'Team Performance', icon: Shield, path: '/team-performance' },
     { id: 'campaigns', name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
     { id: 'ai-chatbot', name: 'AI Chatbot', icon: Bot, path: '/ai-chatbot' },
     { id: 'flows', name: 'Flows', icon: Bot, path: '/flows' },
