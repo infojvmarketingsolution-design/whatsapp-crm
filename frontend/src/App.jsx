@@ -242,7 +242,7 @@ function Dashboard() {
     }
   };
 
-  const userRole = (activeUser.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(' ', '_');
+  const userRole = (activeUser?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
   const isAdminOrSuperAdmin = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
   
   React.useEffect(() => {
@@ -751,7 +751,7 @@ function AppLayout() {
   const [roleAccess, setRoleAccess] = React.useState(null);
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userRole = (user.role || 'AGENT').toUpperCase().replace(' ', '_');
+  const userRole = (user?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
   const isAdminPath = location.pathname.startsWith('/admin');
 
   const handleLogout = async () => {

@@ -27,9 +27,9 @@ export default function Contacts({ roleAccess }) {
 
   // Role Permissions Logic
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userRole = (user.role || localStorage.getItem('role') || 'AGENT').toUpperCase();
+  const userRole = (user?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
   const roleData = roleAccess?.[userRole];
-  const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
+  const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'OWNER', 'MANAGER_COUNSELLOUR'].includes(userRole);
 
 
   const rolePermissions = roleData?.permissions || [];

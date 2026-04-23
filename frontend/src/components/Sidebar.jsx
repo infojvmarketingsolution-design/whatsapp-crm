@@ -68,7 +68,7 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
 
   const menuItems = allMenuItems.filter(item => {
     // FORCE: Always show Team Performance to Business Head
-    if ((userRole === 'BUSINESS_HEAD' || userRole === 'BUSINESS HEAD') && item.id === 'team-performance') return true;
+    if (userRole === 'BUSINESS_HEAD' && item.id === 'team-performance') return true;
 
     // Check granular permissions from settings
     if (roleAccess && roleAccess[userRole]) {
