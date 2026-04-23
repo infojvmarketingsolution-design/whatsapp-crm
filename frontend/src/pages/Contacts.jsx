@@ -90,23 +90,40 @@ export default function Contacts({ roleAccess }) {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
       if (!token) return;
-      const res = await fetch('/api/chat/contacts', {
+      
+      // Cache-busting: Added timestamp to ensure we always get fresh data
+      const res = await fetch(`/api/chat/contacts?t=${Date.now()}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
+      
       if (res.ok) {
          const data = await res.json();
-         console.log('[Diagnostics] fetchContacts | Count:', data.length, '| Sample:', data[0]);
          setContacts(data);
-         if (data.length === 0) {
-            toast.success("Connection Active: No leads found for current view", { icon: 'ℹ️' });
-         }
          
          if (selectedContact) {
             const updated = data.find(c => c._id === selectedContact._id);
             if (updated) {
                setSelectedContact(updated);
-               setEditedContact(updated);
-               setShowSaveFab(false); 
+               // Do NOT reset editedContact if the user is currently editing, 
+               // but do it if we just finished a save.
+               if (!showSaveFab) {
+                  setEditedContact({
+                     ...updated,
+                     secondaryPhone: updated.secondaryPhone || '',
+                     altMobile: updated.altMobile || '',
+                     houseNo: updated.houseNo || '',
+                     societyName: updated.societyName || '',
+                     streetAddress: updated.streetAddress || '',
+                     city: updated.city || '',
+                     state: updated.state || '',
+                     pincode: updated.pincode || '',
+                     qualification: updated.qualification || '',
+                     selectedProgram: updated.selectedProgram || '',
+                     visitStatus: updated.visitStatus || 'Not Done',
+                     visitType: updated.visitType || '',
+                     assignedCounsellor: updated.assignedCounsellor || ''
+                  });
+               }
             }
          }
       } else {
@@ -340,30 +357,33 @@ export default function Contacts({ roleAccess }) {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ contactId, action: 'update_contact', payload: cleanPayload })
       });
-      
-      if (res.ok) {
+       if (res.ok) {
         const data = await res.json();
-        // Immediately sync the state with the fresh data from the server
-        setSelectedContact(data.contact);
+        const freshContact = data.contact;
+
+        // 1. Instantly update the main list state to reflect changes without waiting for re-fetch
+        setContacts(prev => prev.map(c => c._id === contactId ? freshContact : c));
+
+        // 2. Sync the detailed view state
+        setSelectedContact(freshContact);
         setEditedContact({
-           ...data.contact,
-           secondaryPhone: data.contact.secondaryPhone || '',
-           altMobile: data.contact.altMobile || '',
-           houseNo: data.contact.houseNo || '',
-           societyName: data.contact.societyName || '',
-           streetAddress: data.contact.streetAddress || '',
-           city: data.contact.city || '',
-           state: data.contact.state || '',
-           pincode: data.contact.pincode || '',
-           qualification: data.contact.qualification || '',
-           selectedProgram: data.contact.selectedProgram || '',
-           visitStatus: data.contact.visitStatus || 'Not Done',
-           visitType: data.contact.visitType || '',
-           assignedCounsellor: data.contact.assignedCounsellor || ''
+           ...freshContact,
+           secondaryPhone: freshContact.secondaryPhone || '',
+           altMobile: freshContact.altMobile || '',
+           houseNo: freshContact.houseNo || '',
+           societyName: freshContact.societyName || '',
+           streetAddress: freshContact.streetAddress || '',
+           city: freshContact.city || '',
+           state: freshContact.state || '',
+           pincode: freshContact.pincode || '',
+           qualification: freshContact.qualification || '',
+           selectedProgram: freshContact.selectedProgram || '',
+           visitStatus: freshContact.visitStatus || 'Not Done',
+           visitType: freshContact.visitType || '',
+           assignedCounsellor: freshContact.assignedCounsellor || ''
         });
         
         setShowSaveFab(false);
-        fetchContacts();
         toast.success("Profile Synchronized Successfully");
       } else {
         const errData = await res.json().catch(() => ({}));
