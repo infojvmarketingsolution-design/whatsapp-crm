@@ -507,24 +507,26 @@ export default function Contacts({ roleAccess }) {
   };
 
   const handleFieldChange = (field, value) => {
-     setEditedContact(prev => {
-        let updates = { ...prev, [field]: value };
-        
-        // AUTOMATIC PIPELINE MAPPING
-        if (field === 'admissionStatus') {
-           if (value === 'Admitted') {
-              updates.pipelineStage = 'Won';
-              updates.status = 'CLOSED_WON';
-           } else if (value === 'Cancelled') {
-              updates.pipelineStage = 'Lost';
-              updates.status = 'CLOSED_LOST';
-           }
-        }
-        
-        return updates;
-     });
-     setShowSaveFab(true);
-  };
+      setEditedContact(prev => {
+         let updates = { ...prev, [field]: value };
+         
+         // AUTOMATIC STATUS & STAGE SYNC
+         if (field === 'status') {
+            if (value === 'CLOSED_WON') {
+               updates.pipelineStage = 'Won';
+               updates.isClosed = true;
+            } else if (value === 'CLOSED_LOST') {
+               updates.pipelineStage = 'Lost';
+               updates.isClosed = true;
+            } else if (value === 'PENDING') {
+               updates.status = 'INTERESTED'; // Map pending back to an active status if needed
+            }
+         }
+         
+         return updates;
+      });
+      setShowSaveFab(true);
+   };
 
   const formatDateTime = (dateStr) => {
      if (!dateStr) return 'N/A';
@@ -760,16 +762,29 @@ export default function Contacts({ roleAccess }) {
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-3">
-                        <button 
-                          onClick={() => updateContactDetail(selectedContact._id, editedContact)}
-                          disabled={!showSaveFab || isUpdatingContact}
-                          className="px-8 py-3 bg-slate-800 text-white rounded-lg text-[11px] font-bold uppercase tracking-widest shadow-sm hover:bg-slate-900 transition-all disabled:opacity-30"
-                        >
-                           {isUpdatingContact ? 'Syncing...' : 'Save Changes'}
-                        </button>
-                        <button onClick={() => setShowProfile(false)} className="p-2.5 text-slate-300 hover:text-slate-800 transition-all"><X size={20} /></button>
-                    </div>
+                    <div className="flex items-center space-x-4">
+                     <button 
+                        onClick={() => {
+                           console.log("[Diagnostics] Saving Contact:", selectedContact._id, editedContact);
+                           updateContactDetail(selectedContact._id, editedContact);
+                        }}
+                        disabled={isUpdatingContact}
+                        className={`px-8 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-widest shadow-sm transition-all flex items-center ${
+                           showSaveFab 
+                           ? 'bg-slate-800 text-white hover:bg-black' 
+                           : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                        }`}
+                     >
+                        {isUpdatingContact ? (
+                           <><RefreshCw size={12} className="mr-2 animate-spin" /> Syncing...</>
+                        ) : (
+                           <><Save size={12} className="mr-2" /> Save Changes</>
+                        )}
+                     </button>
+                     <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                        <X size={20} />
+                     </button>
+                  </div>
                </div>
 
                <div className="flex-1 flex overflow-hidden">

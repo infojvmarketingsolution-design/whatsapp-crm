@@ -207,6 +207,12 @@ const performContactAction = async (req, res) => {
         // Counselling & Admission fields
         if (payload.visitStatus !== undefined) contact.visitStatus = payload.visitStatus;
         if (payload.admissionStatus !== undefined) contact.admissionStatus = payload.admissionStatus;
+        if (payload.houseNo !== undefined) contact.houseNo = payload.houseNo;
+        if (payload.societyName !== undefined) contact.societyName = payload.societyName;
+        if (payload.streetAddress !== undefined) contact.streetAddress = payload.streetAddress;
+        if (payload.city !== undefined) contact.city = payload.city;
+        if (payload.altMobile !== undefined) contact.altMobile = payload.altMobile;
+        if (payload.visitType !== undefined) contact.visitType = payload.visitType;
         if (payload.collectionAmount !== undefined) contact.collectionAmount = Number(payload.collectionAmount) || 0;
         if (payload.pendingCollectionAmount !== undefined) contact.pendingCollectionAmount = Number(payload.pendingCollectionAmount) || 0;
         if (payload.isClosed !== undefined) contact.isClosed = Boolean(payload.isClosed);
