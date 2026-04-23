@@ -261,11 +261,15 @@ const handleIncomingMessage = async (req, res) => {
            });
         } else {
           // 🔥 SAVE MESSAGE ID (ANTI DUPLICATE) & UPDATE TIMESTAMP
+                    // 🔥 RESTORE VISIBILITY: If they message us, they are NOT archived anymore
           await Contact.updateOne(
             { phone: from },
             { 
               lastProcessedMessageId: msgId,
-              lastMessageAt: new Date()
+              lastMessageAt: new Date(),
+              isArchived: false,
+              isClosed: false,
+              status: "NEW LEAD"
             }
           );
         }
