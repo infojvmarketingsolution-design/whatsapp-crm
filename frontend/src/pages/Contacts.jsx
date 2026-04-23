@@ -140,7 +140,7 @@ export default function Contacts({ roleAccess }) {
     }
   }, []);
 
-  // Filter Engine
+  // Intelligence Filter Engine (V2)
   const filteredContacts = contacts.filter(c => {
     const matchesSearch = !searchTerm || (
       (c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
@@ -150,32 +150,36 @@ export default function Contacts({ roleAccess }) {
     );
     
     const matchesStatus = filters.status === 'ALL' || c.status === filters.status;
-    const matchesHeat = filters.heat === 'ALL' || c.heatLevel === filters.heat;
     const matchesStage = filters.stage === 'ALL' || c.pipelineStage === filters.stage;
     const matchesAgent = filters.agent === 'ALL' || c.assignedAgent === filters.agent || c.assignedCounsellor === filters.agent;
     const matchesSource = filters.source === 'ALL' || c.leadSource === filters.source;
-    const matchesScore = (c.score || 0) >= filters.minScore && (c.score || 0) <= filters.maxScore;
-    const matchesValue = (c.estimatedValue || 0) >= filters.minValue;
-    const matchesUnread = !filters.hasUnread || (c.lastMessageAt && new Date(c.lastMessageAt) > new Date(c.lastReadAt || 0));
-    const matchesTasks = !filters.hasTasks || (c.tasks && c.tasks.some(t => t.status === 'PENDING'));
+    const matchesProgram = filters.program === 'ALL' || (c.selectedProgram && c.selectedProgram.toLowerCase().includes(filters.program.toLowerCase()));
+    const matchesQual = filters.qualification === 'ALL' || (c.qualification && c.qualification.toLowerCase().includes(filters.qualification.toLowerCase()));
+    const matchesScore = (c.score || 0) >= filters.minScore;
     
-    // Date Range logic
+    // Advanced Timeline Logic
+    const createdAt = new Date(c.createdAt);
     let matchesDate = true;
-    if (filters.dateRange !== 'ALL') {
-       const now = new Date();
-       const createdAt = new Date(c.createdAt);
-       if (filters.dateRange === 'TODAY') {
-          matchesDate = createdAt.toDateString() === now.toDateString();
-       } else if (filters.dateRange === 'WEEK') {
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          matchesDate = createdAt >= weekAgo;
-       } else if (filters.dateRange === 'MONTH') {
-          const monthAgo = new Date(now.setMonth(now.getMonth() - 1));
-          matchesDate = createdAt >= monthAgo;
-       }
+    
+    if (filters.startDate) {
+       const start = new Date(filters.startDate);
+       start.setHours(0,0,0,0);
+       matchesDate = matchesDate && createdAt >= start;
     }
+    if (filters.endDate) {
+       const end = new Date(filters.endDate);
+       end.setHours(23,59,59,999);
+       matchesDate = matchesDate && createdAt <= end;
+    }
+    if (filters.month !== 'ALL') {
+       matchesDate = matchesDate && createdAt.getMonth() === parseInt(filters.month);
+    }
+    
+    // Time Logic (HH:mm)
+    const leadTimeStr = createdAt.getHours().toString().padStart(2, '0') + ':' + createdAt.getMinutes().toString().padStart(2, '0');
+    const matchesTime = leadTimeStr >= filters.startTime && leadTimeStr <= filters.endTime;
 
-    return !c.isArchived && matchesSearch && matchesStatus && matchesHeat && matchesStage && matchesAgent && matchesSource && matchesScore && matchesValue && matchesUnread && matchesTasks && matchesDate;
+    return !c.isArchived && matchesSearch && matchesStatus && matchesStage && matchesAgent && matchesSource && matchesProgram && matchesQual && matchesScore && matchesDate && matchesTime;
   });
 
      const activeFilterCount = Object.entries(filters).filter(([key, val]) => {
