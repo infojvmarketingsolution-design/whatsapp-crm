@@ -499,7 +499,7 @@ export default function Contacts({ roleAccess }) {
 
   const handleRowClick = (contact) => {
      setSelectedContact(contact);
-     setEditedContact(contact);
+     setEditedContact({ ...contact, secondaryPhone: contact.secondaryPhone || "", altMobile: contact.altMobile || "", houseNo: contact.houseNo || "", societyName: contact.societyName || "", streetAddress: contact.streetAddress || "", city: contact.city || "", state: contact.state || "", pincode: contact.pincode || "", qualification: contact.qualification || "", selectedProgram: contact.selectedProgram || "", visitStatus: contact.visitStatus || "Not Done", visitType: contact.visitType || "", assignedCounsellor: contact.assignedCounsellor || "" });
      setShowProfile(true);
      fetchRecentMessages(contact._id);
      setShowSaveFab(false);
@@ -814,16 +814,38 @@ export default function Contacts({ roleAccess }) {
                            <div className="space-y-3">
                               <div className="flex items-center justify-between">
                                  <label className="text-[9px] font-bold text-slate-400 uppercase">Alternative Numbers</label>
-                                 {!editedContact.secondaryPhone && (
-                                    <button onClick={() => handleFieldChange('secondaryPhone', ' ')} className="text-[9px] font-bold text-slate-800 flex items-center hover:bg-slate-100 px-2 py-1 rounded transition-all">
-                                       <Plus size={10} className="mr-1" /> Add
+                                 {(!editedContact.secondaryPhone || editedContact.secondaryPhone.trim() === '') && (
+                                    <button 
+                                       onClick={() => handleFieldChange('secondaryPhone', ' ')} 
+                                       className="text-[9px] font-bold text-slate-800 flex items-center hover:bg-slate-100 px-2 py-1 rounded transition-all"
+                                    >
+                                       <Plus size={10} className="mr-1" /> Add WhatsApp
                                     </button>
                                  )}
                               </div>
-                              {editedContact.secondaryPhone !== undefined && (
-                                 <input value={editedContact.secondaryPhone || ''} onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} placeholder="Secondary WhatsApp" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 animate-fade-in" />
+                              
+                              {/* Always show if it has content or was just added */}
+                              {(editedContact.secondaryPhone && editedContact.secondaryPhone.trim() !== '') && (
+                                 <div className="space-y-1.5 animate-fade-in">
+                                    <label className="text-[8px] font-bold text-slate-400 uppercase ml-1">Secondary WhatsApp</label>
+                                    <input 
+                                       value={editedContact.secondaryPhone} 
+                                       onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} 
+                                       placeholder="Secondary WhatsApp Number" 
+                                       className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400" 
+                                    />
+                                 </div>
                               )}
-                              <input value={editedContact.altMobile || ''} onChange={e=>handleFieldChange('altMobile', e.target.value)} placeholder="Alternative Mobile Number" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400" />
+
+                              <div className="space-y-1.5">
+                                 <label className="text-[8px] font-bold text-slate-400 uppercase ml-1">Alternative Mobile</label>
+                                 <input 
+                                    value={editedContact.altMobile || ''} 
+                                    onChange={e=>handleFieldChange('altMobile', e.target.value)} 
+                                    placeholder="Alternative Mobile Number" 
+                                    className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400" 
+                                 />
+                              </div>
                            </div>
 
                            <div className="space-y-4 pt-2">
