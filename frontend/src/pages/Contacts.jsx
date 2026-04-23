@@ -680,12 +680,12 @@ export default function Contacts({ roleAccess }) {
       </div>
 
       {showProfile && selectedContact && editedContact && (
-        <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/40 animate-fade-in" onClick={() => setShowProfile(false)}>
+         <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/40 animate-fade-in" onClick={() => setShowProfile(false)}>
             <div 
               className="w-[1000px] h-full bg-[#fcfcfd] shadow-2xl flex flex-col animate-slide-left relative"
               onClick={(e) => e.stopPropagation()}
             >
-               {/* CRM HEADER: IDENTITY & PIPELINE STATUS */}
+               {/* PRO CRM HEADER */}
                <div className="bg-white border-b border-slate-200 px-10 py-6 flex items-center justify-between shrink-0">
                    <div className="flex items-center space-x-6">
                        <div className="w-16 h-16 rounded-2xl bg-teal-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
@@ -811,7 +811,7 @@ export default function Contacts({ roleAccess }) {
                                        onClick={() => handleFieldChange('visitStatus', status)}
                                        className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${
                                           editedContact.visitStatus === status 
-                                          ? 'bg-teal-600 text-white shadow-lg shadow-teal-500/20' 
+                                          ? 'bg-teal-600 text-white shadow-lg' 
                                           : 'bg-slate-50 text-slate-300 hover:bg-slate-100'
                                        }`}
                                     >
@@ -950,70 +950,7 @@ export default function Contacts({ roleAccess }) {
          </div>
       )}
 
-                        {activeTab === 'chatlog' && (
-                           <div className="space-y-6">
-                              {recentMessages.length === 0 ? (
-                                 <div className="p-20 text-center text-slate-300 text-sm font-bold uppercase tracking-widest">No messages yet</div>
-                              ) : recentMessages.map((msg, idx) => (
-                                 <div key={idx} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
-                                    <div className={`p-4 px-6 rounded-2xl text-sm font-bold max-w-[80%] ${msg.direction === 'OUTBOUND' ? 'bg-teal-600 text-white' : 'bg-slate-100 text-slate-700'}`}>
-                                       {msg.content}
-                                       <div className={`mt-2 text-[9px] font-bold uppercase ${msg.direction === 'OUTBOUND' ? 'text-white/60' : 'text-slate-400'}`}>{formatDateTime(msg.createdAt)}</div>
-                                    </div>
-                                 </div>
-                              ))}
-                           </div>
-                        )}
-
-                        {activeTab === 'internalnotes' && (
-                           <div className="space-y-8">
-                              <div className="space-y-4">
-                                 <textarea 
-                                   value={noteInput} 
-                                   onChange={e=>setNoteInput(e.target.value)} 
-                                   placeholder="Add an internal note..." 
-                                   className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-6 text-sm font-bold text-slate-700 outline-none" 
-                                   rows={4} 
-                                 />
-                                 <div className="flex justify-end">
-                                    <button 
-                                      onClick={()=>addInternalNote(selectedContact._id)} 
-                                      disabled={isAddingNote || !noteInput.trim()} 
-                                      className="px-8 py-3 bg-teal-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-teal-700 transition-all shadow-md shadow-teal-500/10"
-                                    >
-                                       Save Note
-                                    </button>
-                                 </div>
-                              </div>
-                              <div className="space-y-6">
-                                 {(selectedContact.notes || []).slice().reverse().map((note, idx) => (
-                                    <div key={idx} className="p-6 border border-slate-100 rounded-2xl space-y-4 bg-slate-50/30">
-                                       <p className="text-[14px] font-bold text-slate-700 leading-relaxed italic">"{note.content}"</p>
-                                       <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                                          <div className="flex items-center space-x-2">
-                                             <div className="w-6 h-6 rounded bg-teal-100 flex items-center justify-center text-teal-600">{note.createdBy?.charAt(0).toUpperCase()}</div>
-                                             <span>{note.createdBy}</span>
-                                          </div>
-                                          <span>{formatDateTime(note.createdAt)}</span>
-                                       </div>
-                                    </div>
-                                 ))}
-                              </div>
-                           </div>
-                        )}
-                     </div>
-                  </div>
-               </div>
-
-               <div className="px-10 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-                  <div className="flex items-center"><ShieldCheck size={12} className="mr-2 text-teal-600" /> Professional Lead Hub</div>
-                  <span>WapiPulse v1.2.5 • Official Record</span>
-               </div>
-            </div>
-         </div>
-      )}
-
-      {/* ADVANCED FILTER PRO CONSOLE (SIDEBAR) */}
+      /* ADVANCED FILTER PRO CONSOLE (SIDEBAR) */}
       {showFilters && (
         <div className="fixed inset-0 z-[200] flex justify-end bg-slate-900/40 backdrop-blur-[4px] animate-fade-in" onClick={() => setShowFilters(false)}>
             <div 
