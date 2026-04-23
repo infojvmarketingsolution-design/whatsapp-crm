@@ -29,7 +29,7 @@ export default function Contacts({ roleAccess }) {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user.role || localStorage.getItem('role') || 'AGENT').toUpperCase();
   const roleData = roleAccess?.[userRole];
-  const isSuper = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
+  const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD'].includes(userRole);
 
   const rolePermissions = roleData?.permissions || [];
   const canImport = isSuper || roleData?.allAccess || rolePermissions.includes('contacts_import');

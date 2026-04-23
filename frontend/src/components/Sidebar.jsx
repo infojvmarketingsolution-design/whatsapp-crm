@@ -81,10 +81,7 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
     }
 
     // Fallback if settings not yet loaded or role not found
-    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN') return true;
-    if (userRole === 'BUSINESS_HEAD') {
-       return ['dashboard', 'chat', 'contacts', 'team-performance', 'settings'].includes(item.id);
-    }
+    if (userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || userRole === 'BUSINESS_HEAD') return true;
     return false;
   });
 
