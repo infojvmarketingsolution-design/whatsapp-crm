@@ -5,7 +5,7 @@ import {
   Search, Plus, X, Mail, MapPin, Phone, Users, 
   Clock, Activity, Target, Tag, Save, Filter, 
   Briefcase, Building2, Download, MoreVertical, 
-  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones
+  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones, ChevronDown
 } from 'lucide-react';
 
 export default function Contacts({ roleAccess }) {
