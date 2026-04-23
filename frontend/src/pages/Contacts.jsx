@@ -369,15 +369,16 @@ export default function Contacts({ roleAccess }) {
     }
   };
 
-  const handleBulkAction = async (action, value) => {
-    if (selectedIds.size === 0) return;
+  const handleBulkAction = async (action, value, specificIds = null) => {
+    const idsToProcess = specificIds || Array.from(selectedIds);
+    if (idsToProcess.length === 0) return;
     setIsBulkUpdating(true);
     toast.loading(`Processing ${selectedIds.size} contacts...`, { id: 'bulk' });
     
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const ids = Array.from(selectedIds);
+      const ids = idsToProcess;
       
       // Intelligent action mapping for batch backend
       const actionMap = {
@@ -567,6 +568,7 @@ export default function Contacts({ roleAccess }) {
                            />
                         </th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Profile Identity</th>
+                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Owner</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Current Phase</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Lead Health</th>
                         <th className="py-5 px-8 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Actions</th>
@@ -582,6 +584,21 @@ export default function Contacts({ roleAccess }) {
                                onChange={() => toggleSelect(c._id)}
                                className="rounded border-gray-300 text-[var(--theme-bg)] focus:ring-[var(--theme-bg)] cursor-pointer"
                              />
+                          </td>
+                          <td className="py-5 px-6 border-b border-gray-50" onClick={(e) => e.stopPropagation()}>
+                             <div className="flex items-center">
+                                <Users size={12} className="mr-2 text-gray-400" />
+                                <select 
+                                   value={c.assignedAgent || ''} 
+                                   onChange={(e) => {
+                                      handleBulkAction("transfer_leads", e.target.value, [c._id]);
+                                   }}
+                                   className="bg-transparent text-[11px] font-bold text-slate-600 outline-none cursor-pointer border-none p-0 focus:ring-0 max-w-[120px] overflow-hidden text-ellipsis"
+                                >
+                                   <option value="">Unassigned</option>
+                                   {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                                </select>
+                             </div>
                           </td>
                           <td className="py-5 px-6 border-b border-gray-50" onClick={() => handleRowClick(c)}>
                              <div className="flex items-center space-x-4">
@@ -831,7 +848,7 @@ export default function Contacts({ roleAccess }) {
                               </h3>
                               
                               <div>
-                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Sales Rep (Telecaller)</label>
+                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Manual Lead Assign</label>
                                  <div className="relative">
                                      <Users size={14} className="absolute left-3 top-2.5 text-gray-400" />
                                      <select 
@@ -847,9 +864,9 @@ export default function Contacts({ roleAccess }) {
                               </div>
 
                               <div>
-                                 <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block mb-2">Enquiry Expert (Counsellor)</label>
+
                                  <div className="relative">
-                                     <Headphones size={14} className="absolute left-3 top-2.5 text-gray-400" />
+
                                      <select 
                                        value={editedContact.assignedCounsellor || ''} 
                                        onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} 
@@ -1136,7 +1153,7 @@ export default function Contacts({ roleAccess }) {
             <div className="flex items-center space-x-6">
                {/* TRANSFER AGENT */}
                <div className="flex flex-col space-y-1">
-                  <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Assign Agent</label>
+                  <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Manual Lead Assign</label>
                   <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10">
                      <select value={bulkTargetAgent} onChange={(e) => setBulkTargetAgent(e.target.value)} className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[160px]">
                         <option value="" className="text-slate-900">Choose Agent...</option>
@@ -1144,20 +1161,6 @@ export default function Contacts({ roleAccess }) {
                      </select>
                      <button disabled={!bulkTargetAgent || isBulkUpdating} onClick={() => handleBulkAction("transfer_leads", bulkTargetAgent)} className="bg-teal-500 hover:bg-teal-600 disabled:bg-slate-700 p-2.5 rounded-xl transition-all shadow-lg active:scale-95 text-white">
                         <ArrowUpRight size={18} />
-                     </button>
-                  </div>
-               </div>
-
-               {/* TRANSFER COUNSELLOR */}
-               <div className="flex flex-col space-y-1">
-                  <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Assign Counsellor</label>
-                  <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10">
-                     <select value={bulkTargetCounsellor} onChange={(e) => setBulkTargetCounsellor(e.target.value)} className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[160px]">
-                        <option value="" className="text-slate-900">Choose Expert...</option>
-                        {agents.map(a => (<option key={a._id} value={a._id} className="text-slate-900">{a.name}</option>))}
-                     </select>
-                     <button disabled={!bulkTargetCounsellor || isBulkUpdating} onClick={() => handleBulkAction("transfer_counsellor", bulkTargetCounsellor)} className="bg-blue-500 hover:bg-blue-600 disabled:bg-slate-700 p-2.5 rounded-xl transition-all shadow-lg active:scale-95 text-white">
-                        <Headphones size={18} />
                      </button>
                   </div>
                </div>
