@@ -204,7 +204,25 @@ const performContactAction = async (req, res) => {
         if (payload.selectedProgram !== undefined) contact.selectedProgram = payload.selectedProgram;
         if (payload.preferredCallTime !== undefined) contact.preferredCallTime = payload.preferredCallTime;
 
-        if (payload.assignedAgent !== undefined) {
+        if (payload.assignedCounsellor !== undefined) {
+            const newCounsellor = payload.assignedCounsellor && payload.assignedCounsellor !== "" ? payload.assignedCounsellor : null;
+            if (newCounsellor?.toString() !== contact.assignedCounsellor?.toString()) {
+               contact.assignedCounsellor = newCounsellor;
+               let agentName = 'Unassigned';
+               if (newCounsellor) {
+                  const agent = await User.findById(newCounsellor);
+                  agentName = agent ? agent.name : 'Unknown';
+               }
+               contact.timeline.push({ 
+                  eventType: 'COUNSELLOR_ASSIGNED', 
+                  description: newCounsellor ? `Assigned to Counsellor: ${agentName}` : 'Counsellor unassigned', 
+                  timestamp: new Date() 
+               });
+               contact.markModified('assignedCounsellor');
+            }
+         }
+
+         if (payload.assignedAgent !== undefined) {
            // ENFORCE PERMISSIONS
            const settings = await Settings.findOne({ tenantId: req.tenantId });
            const userRole = (req.user?.role || 'AGENT').toUpperCase();
