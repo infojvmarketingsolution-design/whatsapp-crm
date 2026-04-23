@@ -863,16 +863,6 @@ export default function Contacts({ roleAccess }) {
                         </div>
                         
                         <div className="space-y-6 pl-9">
-                           {/* VISIT TYPE */}
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Visit Type</label>
-                              <div className="grid grid-cols-2 gap-2">
-                                 {['University Visit', 'Office Visit'].map(v => (
-                                    <button key={v} onClick={() => handleFieldChange('visitType', v)} className={`py-2 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitType === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100'}`}>{v}</button>
-                                 ))}
-                              </div>
-                           </div>
-
                            {/* VISIT STATUS */}
                            <div className="space-y-1.5">
                               <label className="text-[9px] font-bold text-slate-400 uppercase">Visit Status</label>
@@ -883,11 +873,23 @@ export default function Contacts({ roleAccess }) {
                               </div>
                            </div>
 
-                           {/* COUNSELLOR */}
+                           {/* VISIT TYPE (Visible if Visit is Done) */}
                            {editedContact.visitStatus === 'Done' && (
                               <div className="space-y-1.5 animate-fade-in">
+                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Type of Visit</label>
+                                 <div className="grid grid-cols-2 gap-2">
+                                    {['University Visit', 'Campus Visit'].map(v => (
+                                       <button key={v} onClick={() => handleFieldChange('visitType', v)} className={`py-2 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitType === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100'}`}>{v}</button>
+                                    ))}
+                                 </div>
+                              </div>
+                           )}
+
+                           {/* COUNSELLOR (Visible if University/Campus Visit is Selected) */}
+                           {editedContact.visitStatus === 'Done' && (editedContact.visitType === 'University Visit' || editedContact.visitType === 'Campus Visit') && (
+                              <div className="space-y-1.5 animate-fade-in">
                                  <label className="text-[9px] font-bold text-slate-400 uppercase">Handled By Counsellor</label>
-                                 <select value={editedContact.assignedCounsellor || ''} onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-700 rounded outline-none">
+                                 <select value={editedContact.assignedCounsellor || ''} onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-700 rounded outline-none focus:border-slate-400 transition-all cursor-pointer">
                                     <option value="">Select Counsellor...</option>
                                     {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
                                  </select>
@@ -906,6 +908,7 @@ export default function Contacts({ roleAccess }) {
                                     <button key={s.id} onClick={() => handleFieldChange('status', s.id)} className={`py-3 rounded text-[8px] font-bold uppercase transition-all border ${editedContact.status === s.id ? `bg-${s.color}-600 text-white border-${s.color}-600` : `bg-white text-${s.color}-600 border-${s.color}-100 hover:bg-${s.color}-50`}`}>{s.label}</button>
                                  ))}
                               </div>
+                           </div>
                         </div>
                      </div>
                   </div>
