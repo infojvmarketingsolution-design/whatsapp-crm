@@ -179,7 +179,13 @@ export default function Contacts({ roleAccess }) {
     const leadTimeStr = createdAt.getHours().toString().padStart(2, '0') + ':' + createdAt.getMinutes().toString().padStart(2, '0');
     const matchesTime = leadTimeStr >= filters.startTime && leadTimeStr <= filters.endTime;
 
-    return !c.isArchived && matchesSearch && matchesStatus && matchesStage && matchesAgent && matchesSource && matchesProgram && matchesQual && matchesScore && matchesDate && matchesTime;
+        // Debugging leads
+    const isVisible = !c.isArchived && matchesSearch && matchesStatus && matchesStage && matchesAgent;
+    
+    // Advanced filters are only applied if they are NOT set to "ALL"
+    const passesAdvanced = matchesSource && matchesProgram && matchesQual && matchesDate && matchesTime;
+
+    return isVisible && passesAdvanced;
   });
 
      const activeFilterCount = Object.entries(filters).filter(([key, val]) => {
