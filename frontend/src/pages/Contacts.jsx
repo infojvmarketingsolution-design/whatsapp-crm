@@ -730,182 +730,177 @@ export default function Contacts({ roleAccess }) {
       </div>
 
       {showProfile && selectedContact && editedContact && (
-         <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/40 animate-fade-in" onClick={() => setShowProfile(false)}>
+         <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowProfile(false)}>
             <div 
-              className="w-[1000px] h-full bg-[#fcfcfd] shadow-2xl flex flex-col animate-slide-left relative"
+              className="w-[1050px] h-full bg-white shadow-2xl flex flex-col animate-slide-left relative"
               onClick={(e) => e.stopPropagation()}
             >
-               {/* PRO CRM HEADER */}
-               <div className="bg-white border-b border-slate-200 px-10 py-6 flex items-center justify-between shrink-0">
-                   <div className="flex items-center space-x-6">
-                       <div className="w-16 h-16 rounded-2xl bg-teal-600 flex items-center justify-center text-2xl font-bold text-white shadow-lg">
-                          {editedContact.firstName ? editedContact.firstName.charAt(0) : (selectedContact.name?.charAt(0) || 'U')}
-                       </div>
-                       <div>
-                          <div className="flex items-center space-x-3">
-                             <h2 className="text-2xl font-black text-slate-900 tracking-tight">
-                                {editedContact.firstName || editedContact.name || 'Lead'} {editedContact.lastName || ''}
-                             </h2>
-                             <select 
-                                value={editedContact.pipelineStage || 'Discovery'} 
-                                onChange={e=>handleFieldChange('pipelineStage', e.target.value)}
-                                className="px-3 py-1 bg-teal-50 text-teal-700 rounded-lg text-[9px] font-black uppercase tracking-widest border border-teal-100 outline-none cursor-pointer"
-                             >
-                                {PIPELINE_STAGES.map(stage => <option key={stage} value={stage}>{stage}</option>)}
-                             </select>
-                          </div>
-                          <div className="flex items-center space-x-6 mt-1 text-slate-500 text-[11px] font-bold">
-                             <span className="flex items-center"><Phone size={12} className="mr-2 text-teal-600" /> {editedContact.phone}</span>
-                             <span className="flex items-center text-slate-300 font-medium">Ref: {selectedContact._id.toUpperCase()}</span>
-                          </div>
-                       </div>
-                   </div>
+               {/* ELITE PROFILE HEADER */}
+               <div className="bg-white border-b border-slate-100 px-12 py-8 flex items-center justify-between shrink-0">
+                    <div className="flex items-center space-x-8">
+                        <div className="w-20 h-20 rounded-[2rem] bg-teal-600 flex items-center justify-center text-3xl font-black text-white shadow-xl rotate-3">
+                           {editedContact.firstName ? editedContact.firstName.charAt(0) : (selectedContact.name?.charAt(0) || 'U')}
+                        </div>
+                        <div>
+                           <div className="flex items-center space-x-4">
+                              <h2 className="text-3xl font-black text-slate-900 tracking-tight">
+                                 {editedContact.firstName || editedContact.name || 'Lead'} {editedContact.lastName || ''}
+                              </h2>
+                              <div className="px-4 py-1.5 bg-teal-50 text-teal-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-teal-100">
+                                 {editedContact.pipelineStage || 'Discovery'}
+                              </div>
+                           </div>
+                           <div className="flex items-center space-x-8 mt-2 text-slate-400 text-[12px] font-bold">
+                              <span className="flex items-center"><Phone size={14} className="mr-2 text-teal-500" /> {editedContact.phone}</span>
+                              <span className="flex items-center"><Hash size={14} className="mr-2 text-slate-200" /> {selectedContact._id.slice(-6).toUpperCase()}</span>
+                           </div>
+                        </div>
+                    </div>
 
-                   <div className="flex items-center space-x-3">
-                       <button 
-                         onClick={() => updateContactDetail(selectedContact._id, editedContact)}
-                         disabled={!showSaveFab || isUpdatingContact}
-                         className="px-8 py-3 bg-teal-600 text-white rounded-xl text-[11px] font-bold uppercase tracking-widest shadow-lg shadow-teal-500/20 hover:bg-teal-700 transition-all disabled:opacity-50"
-                       >
-                          {isUpdatingContact ? 'Syncing...' : 'Update Record'}
-                       </button>
-                       <button onClick={() => setShowProfile(false)} className="p-2 text-slate-400 hover:text-slate-900 transition-colors"><X size={24} /></button>
-                   </div>
+                    <div className="flex items-center space-x-4">
+                        <button 
+                          onClick={() => updateContactDetail(selectedContact._id, editedContact)}
+                          disabled={!showSaveFab || isUpdatingContact}
+                          className="px-10 py-4 bg-teal-600 text-white rounded-2xl text-[12px] font-black uppercase tracking-widest shadow-xl shadow-teal-500/20 hover:bg-teal-700 transition-all disabled:opacity-30 disabled:grayscale"
+                        >
+                           {isUpdatingContact ? 'Syncing...' : 'Update Record'}
+                        </button>
+                        <button onClick={() => setShowProfile(false)} className="p-3 bg-slate-50 text-slate-300 hover:text-slate-900 rounded-2xl transition-all hover:bg-slate-100"><X size={24} /></button>
+                    </div>
                </div>
 
                <div className="flex-1 flex overflow-hidden">
-                  {/* LEFT PANEL: DATA LIST */}
-                  <div className="w-[380px] bg-white border-r border-slate-200 overflow-y-auto custom-scrollbar p-10 space-y-12">
+                  {/* LEFT PANEL: DATA FACT SHEET */}
+                  <div className="w-[420px] bg-[#f8fafc] overflow-y-auto custom-scrollbar p-10 space-y-10">
                      
-                     {/* SECTION 0: LEAD LIFECYCLE */}
-                     <div className="space-y-6">
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
-                           <TrendingUp size={14} className="mr-2 text-teal-600" /> Lifecycle Status
-                        </h3>
+                     {/* DATA CARD: LIFECYCLE */}
+                     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-6">
+                        <div className="flex items-center justify-between">
+                           <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Operational Pulse</h3>
+                           <Activity size={16} className="text-teal-500" />
+                        </div>
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lead Status</label>
+                           <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Lead Status</label>
                            <select 
                               value={editedContact.status || 'NEW LEAD'} 
                               onChange={e=>handleFieldChange('status', e.target.value)}
-                              className="w-full bg-teal-50/30 border-b border-teal-100 py-2 px-3 text-sm font-bold text-teal-800 rounded-lg outline-none cursor-pointer hover:bg-teal-50 transition-all"
+                              className="w-full bg-slate-50 border-none py-4 px-5 text-sm font-black text-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer"
                            >
                               {['NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
                            </select>
                         </div>
-                     </div>
-
-                     {/* SECTION 1: IDENTITY & COMMUNICATION */}
-                     <div className="space-y-6">
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
-                           <Users size={14} className="mr-2" /> Identity & Contact
-                        </h3>
-                        <div className="grid grid-cols-1 gap-5">
-                            <div className="space-y-1.5">
-                               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lead Surname</label>
-                               <input value={editedContact.lastName || ''} onChange={e=>handleFieldChange('lastName', e.target.value)} placeholder="Enter Surname" className="w-full bg-slate-50/50 border-b border-slate-100 py-1.5 text-sm font-bold text-slate-800 outline-none focus:border-teal-500" />
-                            </div>
-
-                            <div className="space-y-1.5">
-                               <div className="flex items-center justify-between">
-                                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Primary WhatsApp</label>
-                                  <button 
-                                    onClick={() => document.getElementById('secondary-phone-input')?.focus()}
-                                    className="p-1 bg-teal-50 text-teal-600 rounded hover:bg-teal-600 hover:text-white transition-all shadow-sm"
-                                    title="Add Secondary Number"
-                                  >
-                                     <Plus size={12} strokeWidth={3} />
-                                  </button>
-                               </div>
-                               <div className="flex items-center space-x-3 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                  <Phone size={14} className="text-teal-600" />
-                                  <span className="text-sm font-bold text-slate-400">{editedContact.phone}</span>
-                                  <div className="ml-auto text-[8px] font-black text-slate-300 uppercase tracking-tighter">Read Only</div>
-                               </div>
-                            </div>
-
-                            <div className="space-y-1.5 animate-fade-in">
-                               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Secondary WhatsApp</label>
-                               <input 
-                                 id="secondary-phone-input"
-                                 value={editedContact.secondaryPhone || ''} 
-                                 onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} 
-                                 placeholder="+ Add Alternative Mobile" 
-                                 className="w-full bg-slate-50/50 border-b border-slate-100 py-1.5 text-sm font-bold text-slate-800 outline-none focus:border-teal-500" 
-                               />
-                            </div>
-
-                            <div className="space-y-1.5">
-                               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lead Address</label>
-                               <textarea value={editedContact.address || ''} onChange={e=>handleFieldChange('address', e.target.value)} placeholder="Residential Address" className="w-full bg-slate-50/50 border-b border-slate-100 py-1.5 text-sm font-bold text-slate-800 outline-none focus:border-teal-500 resize-none" rows={2} />
-                            </div>
-                        </div>
-                     </div>
-                  {/* SECTION 2: EDUCATION & INTEREST */}
-                     <div className="space-y-6">
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
-                           <Target size={14} className="mr-2" /> Program & Education
-                        </h3>
-                        <div className="grid grid-cols-1 gap-5">
-                            <div className="space-y-1.5">
-                               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last Qualification</label>
-                               <input value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="Highest Degree" className="w-full bg-slate-50/50 border-b border-slate-100 py-1.5 text-sm font-bold text-slate-800 outline-none focus:border-teal-500" />
-                            </div>
-                            <div className="space-y-1.5">
-                               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Interested Program</label>
-                               <input value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} placeholder="Target Course" className="w-full bg-slate-50/50 border-b border-slate-100 py-1.5 text-sm font-bold text-slate-800 outline-none focus:border-teal-500" />
-                            </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Pipeline Phase</label>
+                           <select 
+                              value={editedContact.pipelineStage || 'Discovery'} 
+                              onChange={e=>handleFieldChange('pipelineStage', e.target.value)}
+                              className="w-full bg-slate-50 border-none py-4 px-5 text-sm font-black text-slate-700 rounded-2xl outline-none focus:ring-2 focus:ring-teal-500/20 transition-all cursor-pointer"
+                           >
+                              {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                           </select>
                         </div>
                      </div>
 
-                     {/* SECTION 3: ASSIGNMENT CONTROL */}
-                     <div className="space-y-6">
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
-                           <Headphones size={14} className="mr-2" /> Team Ownership
-                        </h3>
-                        <div className="grid grid-cols-1 gap-5">
-                            <div className="space-y-1.5">
-                               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assigned Telecaller</label>
-                               <select 
-                                 value={editedContact.assignedAgent || ''} 
-                                 onChange={e=>handleFieldChange('assignedAgent', e.target.value)}
-                                 className="w-full bg-transparent border-b border-slate-100 py-1.5 text-sm font-bold text-slate-800 outline-none cursor-pointer"
-                               >
-                                  <option value="">No Telecaller Assigned</option>
-                                  {agents.map(a => <option key={a._id} value={a._id}>{a.name} ({a.role})</option>)}
-                               </select>
-                            </div>
-                            <div className="space-y-1.5">
-                               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assigned Counsellor</label>
-                               <select 
-                                 value={editedContact.assignedCounsellor || ''} 
-                                 onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)}
-                                 className="w-full bg-transparent border-b border-slate-100 py-1.5 text-sm font-bold text-slate-800 outline-none cursor-pointer"
-                               >
-                                  <option value="">No Counsellor Assigned</option>
-                                  {agents.map(a => <option key={a._id} value={a._id}>{a.name} ({a.role})</option>)}
-                               </select>
-                            </div>
+                     {/* DATA CARD: IDENTITY */}
+                     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8">
+                        <div className="flex items-center justify-between">
+                           <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Profile Identity</h3>
+                           <User size={16} className="text-slate-300" />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 gap-6">
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Lead Surname</label>
+                              <input value={editedContact.lastName || ''} onChange={e=>handleFieldChange('lastName', e.target.value)} placeholder="Last Name" className="w-full bg-white border-b-2 border-slate-50 py-2 text-base font-bold text-slate-800 outline-none focus:border-teal-500 transition-all" />
+                           </div>
+
+                           <div className="space-y-4">
+                              <div className="flex items-center justify-between">
+                                 <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Contact Repository</label>
+                                 <button onClick={() => document.getElementById('sec-phone')?.focus()} className="text-[9px] font-black text-teal-600 uppercase tracking-widest">+ Add Channel</button>
+                              </div>
+                              <div className="space-y-3">
+                                 <div className="flex items-center space-x-4 bg-teal-50/50 p-4 rounded-2xl border border-teal-100/50">
+                                    <div className="p-2 bg-teal-600 text-white rounded-lg"><Phone size={14} /></div>
+                                    <div>
+                                       <p className="text-[9px] font-black text-teal-600 uppercase tracking-widest mb-0.5">Primary WhatsApp</p>
+                                       <p className="text-sm font-black text-slate-700">{editedContact.phone}</p>
+                                    </div>
+                                 </div>
+                                 <div className="flex items-center space-x-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                                    <div className="p-2 bg-slate-200 text-slate-500 rounded-lg"><Plus size={14} /></div>
+                                    <div className="flex-1">
+                                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Secondary WhatsApp</p>
+                                       <input id="sec-phone" value={editedContact.secondaryPhone || ''} onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} placeholder="Add Number..." className="w-full bg-transparent border-none p-0 text-sm font-black text-slate-700 outline-none placeholder:text-slate-300" />
+                                    </div>
+                                 </div>
+                              </div>
+                           </div>
+
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Lead Address</label>
+                              <textarea value={editedContact.address || ''} onChange={e=>handleFieldChange('address', e.target.value)} placeholder="Full Address..." className="w-full bg-white border-b-2 border-slate-50 py-2 text-sm font-bold text-slate-800 outline-none focus:border-teal-500 resize-none" rows={2} />
+                           </div>
                         </div>
                      </div>
 
-                     {/* SECTION 4: UNIVERSITY VISIT & ADMISSION */}
-                     <div className="space-y-6">
-                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
-                           <Landmark size={14} className="mr-2" /> Admission Pipeline
-                        </h3>
+                     {/* DATA CARD: ACADEMICS */}
+                     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8">
+                        <div className="flex items-center justify-between">
+                           <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Academic Brief</h3>
+                           <Target size={16} className="text-slate-300" />
+                        </div>
+                        <div className="space-y-6">
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Last Qualification</label>
+                              <input value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} className="w-full bg-white border-b-2 border-slate-50 py-2 text-sm font-bold text-slate-800 outline-none focus:border-teal-500" />
+                           </div>
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Target Program</label>
+                              <input value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} className="w-full bg-white border-b-2 border-slate-50 py-2 text-sm font-bold text-slate-800 outline-none focus:border-teal-500" />
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* DATA CARD: OWNERSHIP */}
+                     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8">
+                        <div className="flex items-center justify-between">
+                           <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Team Ownership</h3>
+                           <Users size={16} className="text-slate-300" />
+                        </div>
+                        <div className="space-y-6">
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Assigned Telecaller</label>
+                              <select value={editedContact.assignedAgent || ''} onChange={e=>handleFieldChange('assignedAgent', e.target.value)} className="w-full bg-slate-50 border-none py-3 px-4 text-sm font-black text-slate-700 rounded-xl outline-none">
+                                 <option value="">No Assignment</option>
+                                 {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                              </select>
+                           </div>
+                           <div className="space-y-1.5">
+                              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Assigned Counsellor</label>
+                              <select value={editedContact.assignedCounsellor || ''} onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} className="w-full bg-slate-50 border-none py-3 px-4 text-sm font-black text-slate-700 rounded-xl outline-none">
+                                 <option value="">No Assignment</option>
+                                 {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                              </select>
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* DATA CARD: ADMISSION PIPELINE */}
+                     <div className="bg-white p-8 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-8">
+                        <div className="flex items-center justify-between">
+                           <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Admission Pipeline</h3>
+                           <Landmark size={16} className="text-teal-600" />
+                        </div>
                         <div className="space-y-6">
                            <div className="space-y-3">
-                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">University Visit Done?</label>
-                              <div className="flex space-x-2">
+                              <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Campus Visit Status</label>
+                              <div className="grid grid-cols-2 gap-3">
                                  {['Not Visited', 'Visited'].map(status => (
                                     <button 
                                        key={status}
                                        onClick={() => handleFieldChange('visitStatus', status)}
-                                       className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all ${
-                                          editedContact.visitStatus === status 
-                                          ? 'bg-teal-600 text-white shadow-lg' 
-                                          : 'bg-slate-50 text-slate-300 hover:bg-slate-100'
-                                       }`}
+                                       className={`py-3 rounded-2xl text-[10px] font-black uppercase transition-all ${editedContact.visitStatus === status ? 'bg-teal-600 text-white shadow-lg' : 'bg-slate-50 text-slate-300 hover:bg-slate-100'}`}
                                     >
                                        {status}
                                     </button>
@@ -916,28 +911,22 @@ export default function Contacts({ roleAccess }) {
                            {editedContact.visitStatus === 'Visited' && (
                               <div className="space-y-6 animate-fade-in">
                                  <div className="space-y-1.5">
-                                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Admission Status</label>
-                                    <select 
-                                       value={editedContact.admissionStatus || 'None'} 
-                                       onChange={e=>handleFieldChange('admissionStatus', e.target.value)}
-                                       className="w-full bg-transparent border-b border-slate-100 py-1.5 text-sm font-bold text-slate-800 outline-none"
-                                    >
-                                       <option value="None">Select Status</option>
-                                       <option value="Pending">Admission Pending</option>
+                                    <label className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Admission Verdict</label>
+                                    <select value={editedContact.admissionStatus || 'None'} onChange={e=>handleFieldChange('admissionStatus', e.target.value)} className="w-full bg-slate-50 border-none py-3 px-4 text-sm font-black text-slate-700 rounded-xl outline-none">
+                                       <option value="None">Verdict Pending</option>
                                        <option value="Admitted">Admission Done</option>
                                        <option value="Cancelled">Admission Cancelled</option>
                                     </select>
                                  </div>
-
                                  {editedContact.admissionStatus === 'Admitted' && (
                                     <div className="grid grid-cols-2 gap-4 animate-fade-in">
                                        <div className="space-y-1.5">
-                                          <label className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">Collection Fee</label>
-                                          <input type="number" value={editedContact.collectionAmount || 0} onChange={e=>handleFieldChange('collectionAmount', e.target.value)} className="w-full bg-teal-50/50 border-b border-teal-200 py-1.5 text-sm font-bold text-slate-800 outline-none" />
+                                          <label className="text-[10px] font-bold text-teal-600 uppercase tracking-widest">Collected</label>
+                                          <input type="number" value={editedContact.collectionAmount || 0} onChange={e=>handleFieldChange('collectionAmount', e.target.value)} className="w-full bg-teal-50 border-b-2 border-teal-100 py-2 text-sm font-black text-teal-700 outline-none" />
                                        </div>
                                        <div className="space-y-1.5">
-                                          <label className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Pending Fee</label>
-                                          <input type="number" value={editedContact.pendingCollectionAmount || 0} onChange={e=>handleFieldChange('pendingCollectionAmount', e.target.value)} className="w-full bg-orange-50/50 border-b border-orange-200 py-1.5 text-sm font-bold text-slate-800 outline-none" />
+                                          <label className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Pending</label>
+                                          <input type="number" value={editedContact.pendingCollectionAmount || 0} onChange={e=>handleFieldChange('pendingCollectionAmount', e.target.value)} className="w-full bg-orange-50 border-b-2 border-orange-100 py-2 text-sm font-black text-orange-700 outline-none" />
                                        </div>
                                     </div>
                                  )}
@@ -948,6 +937,7 @@ export default function Contacts({ roleAccess }) {
                   </div>
 
                   {/* RIGHT PANEL: INTERACTION HUB */}
+{/* RIGHT PANEL: INTERACTION HUB */}
                   <div className="flex-1 flex flex-col bg-white overflow-hidden">
                      <div className="px-10 flex space-x-10 border-b border-slate-200 bg-white shrink-0">
                         {['Timeline', 'Chat history', 'Strategic Notes'].map(tab => {
