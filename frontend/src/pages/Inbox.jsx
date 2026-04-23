@@ -7,7 +7,8 @@ export default function Inbox({ roleAccess }) {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user.role || 'AGENT').toUpperCase();
   const roleData = roleAccess?.[userRole];
-  const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD'].includes(userRole);
+  const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD'].includes(userRole);
+
 
   const rolePermissions = roleData?.permissions || [];
   const canAssignLead = isSuper || roleData?.allAccess || rolePermissions.includes('chat_assign_lead');

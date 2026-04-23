@@ -40,7 +40,12 @@ const getContacts = async (req, res) => {
     // Check Permissions for Assigned-Only Restriction
     const settings = await Settings.findOne({ tenantId: req.tenantId });
     const userRole = (req.user?.role || 'AGENT').toUpperCase();
-    const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
+    // Role Normalization for lookup (Underscore preferred for Map keys)
+    const normalizedRole = userRole.toUpperCase().replace(/\s/g, '_');
+    const roleAccess = settings?.roleAccess instanceof Map ? 
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole.toUpperCase())) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole.toUpperCase()]);
+
     
     // BUSINESS_HEAD, ADMIN, and SUPER_ADMIN always see everything
     const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER'].includes(userRole.toUpperCase());
@@ -52,10 +57,17 @@ const getContacts = async (req, res) => {
     if (!isHighLevel && roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
       matchStage.$or = [
         { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
-        { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) }
+        { assignedAgent: String(req.user._id) },
+
+        { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) },
+        { assignedCounsellor: String(req.user._id) }
+
       ];
     }
+    console.log(`[Diagnostics] getContacts | User: ${req.user.email} | Role: ${userRole} | HighLevel: ${isHighLevel} | Match:`, JSON.stringify(matchStage));
+
     if (status) matchStage.status = status;
+
     if (qualification) matchStage.qualification = qualification;
 
     const pipeline = [

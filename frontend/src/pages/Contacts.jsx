@@ -29,7 +29,8 @@ export default function Contacts({ roleAccess }) {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user.role || localStorage.getItem('role') || 'AGENT').toUpperCase();
   const roleData = roleAccess?.[userRole];
-  const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD'].includes(userRole);
+  const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD'].includes(userRole);
+
 
   const rolePermissions = roleData?.permissions || [];
   const canImport = isSuper || roleData?.allAccess || rolePermissions.includes('contacts_import');
@@ -95,6 +96,10 @@ export default function Contacts({ roleAccess }) {
       if (res.ok) {
          const data = await res.json();
          setContacts(data);
+         if (data.length === 0) {
+            toast.success("Connection Active: No leads found for current view", { icon: 'ℹ️' });
+         }
+         
          if (selectedContact) {
             const updated = data.find(c => c._id === selectedContact._id);
             if (updated) {
@@ -103,7 +108,11 @@ export default function Contacts({ roleAccess }) {
                setShowSaveFab(false); 
             }
          }
+      } else {
+         const errData = await res.json().catch(() => ({}));
+         toast.error(errData.message || "Failed to fetch leads from server");
       }
+
     } catch (err) {
       console.error(err);
     } finally {
@@ -141,7 +150,45 @@ export default function Contacts({ roleAccess }) {
   }, []);
 
   // Intelligence Filter Engine (V2)
-      const filteredContacts = contacts; // FORCED VISIBILITY BYPASS
+  const filteredContacts = contacts.filter(contact => {
+    // 1. Search Term (Phone or Name)
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      const matchName = contact.name?.toLowerCase().includes(q);
+      const matchPhone = contact.phone?.toLowerCase().includes(q);
+      if (!matchName && !matchPhone) return false;
+    }
+
+    // 2. Status Filter
+    if (filters.status !== 'ALL' && contact.status !== filters.status) return false;
+
+    // 3. Stage Filter
+    if (filters.stage !== 'ALL' && contact.pipelineStage !== filters.stage) return false;
+
+    // 4. Agent Filter
+    if (filters.agent !== 'ALL' && contact.assignedAgent !== filters.agent) return false;
+
+    // 5. Heat Level Filter
+    if (filters.heat !== 'ALL' && contact.heatLevel !== filters.heat) return false;
+
+    // 6. Score Range
+    if ((contact.score || 0) < filters.minScore || (contact.score || 0) > filters.maxScore) return false;
+
+    // 7. Date Range (Optional addition for completeness)
+    if (filters.startDate) {
+        const start = new Date(filters.startDate);
+        const contactDate = new Date(contact.createdAt);
+        if (contactDate < start) return false;
+    }
+    if (filters.endDate) {
+        const end = new Date(filters.endDate);
+        const contactDate = new Date(contact.createdAt);
+        if (contactDate > end) return false;
+    }
+
+    return true;
+  });
+
 
      const activeFilterCount = Object.entries(filters).filter(([key, val]) => {
       // Exclude default values from the "Active Filter" count
