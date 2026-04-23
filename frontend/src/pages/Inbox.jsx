@@ -1392,10 +1392,7 @@ export default function Inbox({ roleAccess }) {
             </div>
          </div>
 
-         <div className="px-6 py-2">
-            <h3 className="text-xs font-bold text-gray-400 mb-2.5 tracking-wider uppercase">Campaigns</h3>
-            <p className="text-[var(--theme-text)] font-bold text-sm tracking-wide hover:underline cursor-pointer inline-block">Republic_Day_Sale</p>
-         </div>
+
 
          <div className="px-6 py-5 border-t border-gray-50 mt-2">
             <div className="flex justify-between items-center mb-3">
