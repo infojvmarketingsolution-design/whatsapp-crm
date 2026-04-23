@@ -163,11 +163,11 @@ const performContactAction = async (req, res) => {
      } else if (action === 'generate_brief') {
           const Message = req.tenantDb.model('Message', MessageSchema);
           const messages = await Message.find({ contactId }).sort({ createdAt: 1 });
-         const brief = await AIService.generateStrategicBrief(messages, contact);
-         if (!brief) return res.status(400).json({ message: 'AI Brief generation failed' });
-         
-         return res.json({ brief });
-      } else if (action === 'update_contact') {
+          const brief = await AIService.generateStrategicBrief(messages, contact);
+          if (!brief) return res.status(400).json({ message: 'AI Brief generation failed' });
+          
+          return res.json({ brief });
+       } else if (action === 'update_contact') {
         if (payload.name !== undefined) contact.name = payload.name;
         if (payload.email !== undefined) contact.email = payload.email;
         if (payload.address !== undefined) contact.address = payload.address;
