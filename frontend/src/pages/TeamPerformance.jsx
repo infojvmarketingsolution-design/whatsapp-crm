@@ -70,77 +70,96 @@ export default function TeamPerformance() {
 
   return (
     <div className="flex-1 overflow-y-auto bg-[#f8fafc] p-8 custom-scrollbar">
+      <style>{`
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+        @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
+        .shadow-premium { box-shadow: 0 4px 30px rgb(0,0,0,0.06); }
+        .shadow-glow { box-shadow: 0 0 20px rgba(20, 184, 166, 0.2); }
+      `}</style>
+
       {/* HEADER SECTION */}
       <div className="max-w-[1400px] mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <div className="flex items-center space-x-3 mb-2">
-              <div className="p-2.5 bg-slate-900 text-white rounded-xl shadow-lg">
-                <Users size={24} />
-              </div>
-              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Team Performance Hub</h1>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-premium">
+          <div className="flex items-center space-x-4">
+            <div className="w-14 h-14 bg-teal-50 rounded-2xl flex items-center justify-center border border-teal-100 shadow-premium">
+              <Users size={28} className="text-teal-600" />
             </div>
-            <p className="text-slate-400 font-bold text-sm lowercase tracking-tight flex items-center">
-              <Shield size={14} className="mr-2 text-teal-500" /> Administrative oversight for team leads & task conversion.
-            </p>
+            <div>
+              <h1 className="text-2xl font-black text-slate-800 tracking-tight">Team Performance Hub</h1>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 flex items-center">
+                <Shield size={12} className="mr-1.5 text-teal-500" /> Administrative oversight for team leads & conversion
+              </p>
+            </div>
           </div>
 
           <div className="flex items-center space-x-3">
              <div className="relative group">
-                <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-slate-900 transition-colors" />
+                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
                 <input 
                   type="text" 
                   placeholder="Search teammate..." 
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="bg-white border border-slate-200 rounded-2xl pl-12 pr-6 py-3.5 outline-none focus:ring-4 focus:ring-slate-900/5 focus:border-slate-300 text-sm font-bold text-slate-800 w-64 shadow-sm transition-all"
+                  className="bg-slate-50 border border-slate-100 rounded-xl pl-12 pr-6 py-3 outline-none focus:bg-white focus:ring-4 focus:ring-teal-50 focus:border-teal-200 text-xs font-bold text-slate-700 w-64 shadow-sm transition-all"
                 />
              </div>
-             <button onClick={fetchTeamStats} className="p-4 bg-white border border-slate-200 rounded-2xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all shadow-sm">
-                <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+             <button onClick={fetchTeamStats} className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-all shadow-sm active:scale-95">
+                <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
              </button>
-             <div className="flex bg-white border border-slate-200 rounded-2xl p-1.5 shadow-sm">
-                <button onClick={() => setViewMode('grid')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}><LayoutGrid size={18} /></button>
-                <button onClick={() => setViewMode('list')} className={`p-2.5 rounded-xl transition-all ${viewMode === 'list' ? 'bg-slate-900 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}><List size={18} /></button>
+             <div className="flex bg-slate-100 p-1 rounded-xl shadow-sm border border-slate-200">
+                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}><LayoutGrid size={16} /></button>
+                <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}><List size={16} /></button>
              </div>
           </div>
         </div>
 
         {/* TOP LEVEL STATS CARDS */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700"></div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Network Reach</p>
-              <div className="flex items-end space-x-3">
-                 <h3 className="text-4xl font-black text-slate-900 leading-none">{totalLeads}</h3>
-                 <span className="text-[13px] font-bold text-blue-500 bg-blue-50 px-3 py-1 rounded-lg mb-1 tracking-tighter flex items-center">Total Active Leads</span>
+           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700"></div>
+              <div className="flex flex-col">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Network Reach</p>
+                <div className="flex items-center space-x-3">
+                   <h3 className="text-3xl font-black text-slate-800 leading-none">{totalLeads}</h3>
+                   <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg tracking-tight">Active Leads</span>
+                </div>
               </div>
            </div>
 
-           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-teal-500/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700"></div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Operational Pulse</p>
-              <div className="flex items-end space-x-3">
-                 <h3 className="text-4xl font-black text-slate-900 leading-none">{avgEfficiency}%</h3>
-                 <span className="text-[13px] font-bold text-teal-600 bg-teal-50 px-3 py-1 rounded-lg mb-1 tracking-tighter">Avg Task Efficiency</span>
+           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-teal-500/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700"></div>
+              <div className="flex flex-col">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Operational Pulse</p>
+                <div className="flex items-center space-x-3">
+                   <h3 className="text-3xl font-black text-slate-800 leading-none">{avgEfficiency}%</h3>
+                   <span className="text-[10px] font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded-lg tracking-tight">Avg Efficacy</span>
+                </div>
               </div>
            </div>
 
-           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-orange-500/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700"></div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Workforce Active</p>
-              <div className="flex items-end space-x-3">
-                 <h3 className="text-4xl font-black text-slate-900 leading-none">{teamStats.filter(m => m.isAvailable).length}</h3>
-                 <span className="text-[13px] font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-lg mb-1 tracking-tighter">Available Agents</span>
+           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700"></div>
+              <div className="flex flex-col">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Workforce Active</p>
+                <div className="flex items-center space-x-3">
+                   <h3 className="text-3xl font-black text-slate-800 leading-none">{teamStats.filter(m => m.isAvailable).length}</h3>
+                   <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg tracking-tight">Available</span>
+                </div>
               </div>
            </div>
 
-           <div className="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700"></div>
-              <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest mb-4">Team Composition</p>
-              <div className="flex items-end space-x-3">
-                 <h3 className="text-4xl font-black text-slate-900 leading-none">{teamStats.length}</h3>
-                 <span className="text-[13px] font-bold text-purple-600 bg-purple-50 px-3 py-1 rounded-lg mb-1 tracking-tighter">Verified Teammates</span>
+           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700"></div>
+              <div className="flex flex-col">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Team Composition</p>
+                <div className="flex items-center space-x-3">
+                   <h3 className="text-3xl font-black text-slate-800 leading-none">{teamStats.length}</h3>
+                   <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded-lg tracking-tight">Verified Staff</span>
+                </div>
               </div>
            </div>
         </div>
@@ -152,124 +171,124 @@ export default function TeamPerformance() {
              <p className="text-slate-400 font-bold text-sm tracking-tighter">Synchronizing Team Performance Metrics...</p>
           </div>
         ) : filteredTeam.length === 0 ? (
-          <div className="py-20 bg-white rounded-[3rem] border border-dashed border-slate-200 flex flex-col items-center justify-center">
+          <div className="py-20 bg-white rounded-3xl border border-dashed border-slate-200 flex flex-col items-center justify-center">
              <AlertCircle size={48} className="text-slate-200 mb-4" />
-             <h3 className="text-xl font-black text-slate-900">No Teammates Found</h3>
-             <p className="text-slate-400 font-bold text-sm mt-2">Adjust your search parameters or invite new staff.</p>
+             <h3 className="text-xl font-black text-slate-800">No Teammates Found</h3>
+             <p className="text-slate-400 font-bold text-xs mt-2 uppercase tracking-widest">Adjust search or invite staff.</p>
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
             {filteredTeam.map((member, idx) => (
-               <div key={member._id} className="bg-white rounded-[3rem] border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
-                  <div className="p-8">
-                     <div className="flex items-start justify-between mb-8">
-                        <div className="flex items-center space-x-5">
-                           <div className="w-16 h-16 rounded-[1.5rem] bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center font-black text-xl group-hover:bg-slate-900 group-hover:text-white transition-all">
+               <div key={member._id} className="bg-white rounded-3xl border border-slate-200 shadow-premium hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 overflow-hidden group animate-fade-in" style={{ animationDelay: `${idx * 50}ms` }}>
+                  <div className="p-6">
+                     <div className="flex items-start justify-between mb-6">
+                        <div className="flex items-center space-x-4">
+                           <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center font-black text-xl group-hover:bg-teal-600 group-hover:text-white group-hover:border-teal-500 transition-all shadow-sm">
                               {member.name.charAt(0)}
                            </div>
                            <div>
-                              <h4 className="text-lg font-black text-slate-900 tracking-tight leading-tight mb-1">{member.name}</h4>
-                              <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-lg ${
-                                member.role === 'BUSINESS_HEAD' ? 'bg-indigo-100 text-indigo-700' :
-                                member.role === 'MANAGER_COUNSELLOUR' ? 'bg-orange-100 text-orange-700' :
-                                'bg-teal-100 text-teal-700'
+                              <h4 className="text-base font-black text-slate-800 tracking-tight leading-tight mb-1">{member.name}</h4>
+                              <div className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg inline-block ${
+                                member.role === 'BUSINESS_HEAD' ? 'bg-indigo-50 text-indigo-600' :
+                                member.role === 'MANAGER_COUNSELLOUR' ? 'bg-orange-50 text-orange-600' :
+                                'bg-teal-50 text-teal-600'
                               }`}>
                                 {member.role.replace('_', ' ')}
-                              </span>
+                              </div>
                            </div>
                         </div>
-                        <div className={`w-3 h-3 rounded-full shadow-glow ${member.isAvailable ? 'bg-teal-500' : 'bg-slate-200'}`} />
+                        <div className={`w-2.5 h-2.5 rounded-full shadow-glow ${member.isAvailable ? 'bg-teal-500' : 'bg-slate-200'}`} />
                      </div>
 
-                     <div className="grid grid-cols-2 gap-4 mb-8">
-                        <div className="bg-slate-50 p-5 rounded-3xl">
-                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Assigned Leads</p>
-                           <p className="text-2xl font-black text-slate-900">{member.leadCount}</p>
+                     <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Assigned Leads</p>
+                           <p className="text-xl font-black text-slate-800">{member.leadCount}</p>
                         </div>
-                        <div className="bg-slate-50 p-5 rounded-3xl">
-                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 leading-none">Task Efficacy</p>
-                           <div className="flex items-end space-x-2">
-                             <p className="text-2xl font-black text-slate-900">{member.taskEfficiency}%</p>
-                             <TrendingUp size={16} className="text-teal-500 mb-1.5" />
+                        <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                           <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1 leading-none">Task Efficacy</p>
+                           <div className="flex items-center space-x-1.5">
+                             <p className="text-xl font-black text-slate-800">{member.taskEfficiency}%</p>
+                             <TrendingUp size={14} className="text-teal-500" />
                            </div>
                         </div>
                      </div>
 
-                     <div className="space-y-4">
-                        <div className="flex items-center justify-between text-[11px] font-black text-slate-400 uppercase tracking-widest px-2">
+                     <div className="space-y-3">
+                        <div className="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
                            <span>Task Velocity</span>
-                           <span>{member.completedTasks} / {member.totalTasks}</span>
+                           <span className="text-slate-800">{member.completedTasks} / {member.totalTasks}</span>
                         </div>
-                        <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden shadow-inner">
-                           <div className="h-full bg-slate-900 rounded-full shadow-glow transition-all duration-1000" style={{ width: `${member.taskEfficiency}%` }}></div>
+                        <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                           <div className="h-full bg-slate-800 rounded-full shadow-glow transition-all duration-1000" style={{ width: `${member.taskEfficiency}%` }}></div>
                         </div>
                      </div>
                   </div>
 
-                  <div className="px-8 py-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
+                  <div className="px-6 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
                      <div className="flex -space-x-2">
                         {Object.entries(member.statusBreakdown || {}).slice(0, 3).map(([status, count]) => (
-                           <div key={status} className="w-8 h-8 rounded-full bg-white border-2 border-slate-50 flex items-center justify-center text-[10px] font-black text-slate-800 shadow-sm" title={`${status}: ${count}`}>
+                           <div key={status} className="w-8 h-8 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center text-[9px] font-black text-slate-700 shadow-sm" title={`${status}: ${count}`}>
                               {count}
                            </div>
                         ))}
                      </div>
                      <button 
                        onClick={() => handleMonitorUser(member)}
-                       className="px-6 py-3 bg-white border border-slate-200 text-slate-900 text-[10px] font-black uppercase tracking-widest rounded-2xl shadow-sm hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all flex items-center"
+                       className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-sm hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all flex items-center active:scale-95"
                      >
-                        Audit Leads <ArrowUpRight size={14} className="ml-2" />
+                        Audit Leads <ArrowUpRight size={14} className="ml-1.5" />
                      </button>
                   </div>
                </div>
             ))}
           </div>
         ) : (
-          <div className="bg-white rounded-[3rem] border border-slate-100 shadow-sm overflow-hidden">
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-premium overflow-hidden">
              <table className="w-full">
                 <thead>
-                   <tr className="bg-slate-50/50">
-                      <th className="py-6 px-10 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Teammate Identity</th>
-                      <th className="py-6 px-8 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Performance</th>
-                      <th className="py-6 px-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Leads</th>
-                      <th className="py-6 px-8 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Task Volume</th>
-                      <th className="py-6 px-10 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
+                   <tr className="bg-slate-50/50 border-b border-slate-100">
+                      <th className="py-5 px-8 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Teammate Identity</th>
+                      <th className="py-5 px-6 text-left text-[10px] font-black text-slate-400 uppercase tracking-widest">Performance</th>
+                      <th className="py-5 px-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Leads</th>
+                      <th className="py-5 px-6 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">Task Volume</th>
+                      <th className="py-5 px-8 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest">Actions</th>
                    </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
                    {filteredTeam.map(member => (
-                      <tr key={member._id} className="hover:bg-slate-50/30 transition-colors group">
-                         <td className="py-6 px-10">
-                            <div className="flex items-center space-x-5">
-                               <div className="w-12 h-12 rounded-2xl bg-slate-50 text-slate-400 flex items-center justify-center font-black text-base group-hover:bg-slate-900 group-hover:text-white transition-colors">
+                      <tr key={member._id} className="hover:bg-teal-50/20 transition-colors group">
+                         <td className="py-5 px-8">
+                            <div className="flex items-center space-x-4">
+                               <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center font-black text-sm group-hover:bg-teal-600 group-hover:text-white transition-all shadow-sm">
                                   {member.name.charAt(0)}
                                </div>
                                <div>
-                                  <p className="text-[13px] font-black text-slate-900 tracking-tight leading-tight mb-1">{member.name}</p>
-                                  <p className="text-[10px] font-bold text-slate-400 lowercase">{member.email}</p>
+                                  <p className="text-[13px] font-black text-slate-800 tracking-tight leading-tight mb-0.5">{member.name}</p>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{member.email}</p>
                                </div>
                             </div>
                          </td>
-                         <td className="py-6 px-8">
+                         <td className="py-5 px-6">
                             <div className="flex items-center space-x-3">
-                               <div className="w-24 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                                  <div className="h-full bg-teal-500" style={{ width: `${member.taskEfficiency}%` }}></div>
+                               <div className="w-20 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                                  <div className="h-full bg-teal-500 shadow-glow" style={{ width: `${member.taskEfficiency}%` }}></div>
                                </div>
                                <span className="text-[11px] font-black text-slate-700">{member.taskEfficiency}%</span>
                             </div>
                          </td>
-                         <td className="py-6 px-8 text-center">
-                            <span className="text-[13px] font-black text-slate-900">{member.leadCount}</span>
+                         <td className="py-5 px-6 text-center">
+                            <span className="text-[13px] font-black text-slate-800">{member.leadCount}</span>
                          </td>
-                         <td className="py-6 px-8 text-center">
-                            <span className="text-[13px] font-black text-slate-900">{member.completedTasks} <span className="text-slate-300 mx-1">/</span> {member.totalTasks}</span>
+                         <td className="py-5 px-6 text-center">
+                            <span className="text-[13px] font-black text-slate-800">{member.completedTasks} <span className="text-slate-300 mx-1">/</span> {member.totalTasks}</span>
                          </td>
-                         <td className="py-6 px-10 text-right">
+                         <td className="py-5 px-8 text-right">
                             <button 
                               onClick={() => handleMonitorUser(member)}
-                              className="p-3 bg-white border border-slate-100 text-slate-400 hover:text-slate-900 hover:shadow-md rounded-xl transition-all"
+                              className="p-2.5 bg-white border border-slate-200 text-slate-400 hover:text-teal-600 hover:border-teal-200 hover:shadow-md rounded-xl transition-all active:scale-90"
                             >
-                               <ArrowUpRight size={18} />
+                               <ArrowUpRight size={16} />
                             </button>
                          </td>
                       </tr>
