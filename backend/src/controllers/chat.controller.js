@@ -1,3 +1,4 @@
+const AIService = require('../services/ai.service');
 const ContactSchema = require('../models/tenant/Contact');
 const MessageSchema = require('../models/tenant/Message');
 const Settings = require('../models/core/Settings');
@@ -159,7 +160,13 @@ const performContactAction = async (req, res) => {
     } else if (action === 'update_status') {
         contact.status = payload.status;
         contact.timeline.push({ eventType: 'STATUS_UPDATED', description: `Status updated to ${payload.status}`, timestamp: new Date() });
-     } else if (action === 'update_contact') {
+     } else if (action === 'generate_brief') {
+         const messages = await Message.find({ contactId }).sort({ createdAt: 1 });
+         const brief = await AIService.generateStrategicBrief(messages, contact);
+         if (!brief) return res.status(400).json({ message: 'AI Brief generation failed' });
+         
+         return res.json({ brief });
+      } else if (action === 'update_contact') {
         if (payload.name !== undefined) contact.name = payload.name;
         if (payload.email !== undefined) contact.email = payload.email;
         if (payload.address !== undefined) contact.address = payload.address;
