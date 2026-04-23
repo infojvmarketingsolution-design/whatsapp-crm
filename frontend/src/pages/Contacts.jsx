@@ -469,7 +469,22 @@ export default function Contacts({ roleAccess }) {
   };
 
   const handleFieldChange = (field, value) => {
-     setEditedContact(prev => ({ ...prev, [field]: value }));
+     setEditedContact(prev => {
+        let updates = { ...prev, [field]: value };
+        
+        // AUTOMATIC PIPELINE MAPPING
+        if (field === 'admissionStatus') {
+           if (value === 'Admitted') {
+              updates.pipelineStage = 'Won';
+              updates.status = 'CLOSED_WON';
+           } else if (value === 'Cancelled') {
+              updates.pipelineStage = 'Lost';
+              updates.status = 'CLOSED_LOST';
+           }
+        }
+        
+        return updates;
+     });
      setShowSaveFab(true);
   };
 
