@@ -157,6 +157,7 @@ const performContactAction = async (req, res) => {
     const { action, payload } = req.body;
     
     let ContactModel;
+    let contact;
     
     // FORCE SCHEMA REFRESH: Ensures new fields (altMobile, houseNo, closeReason) are recognized
     if (req.tenantDb.models.Contact) {
