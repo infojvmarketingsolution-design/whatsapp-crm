@@ -189,10 +189,8 @@ class AIService {
 
     return { score, heatLevel };
   }
-}
 
-module.exports = new AIService()
-  /**
+/**
    * Generates a comprehensive Strategic Brief for a contact.
    * Includes behavior analysis (response speed) and fact extraction.
    */
@@ -256,3 +254,6 @@ module.exports = new AIService()
   }
 
 }
+}
+
+module.exports = new AIService();
