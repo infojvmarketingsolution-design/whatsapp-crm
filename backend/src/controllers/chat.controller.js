@@ -161,7 +161,8 @@ const performContactAction = async (req, res) => {
         contact.status = payload.status;
         contact.timeline.push({ eventType: 'STATUS_UPDATED', description: `Status updated to ${payload.status}`, timestamp: new Date() });
      } else if (action === 'generate_brief') {
-         const messages = await Message.find({ contactId }).sort({ createdAt: 1 });
+          const Message = req.tenantDb.model('Message', MessageSchema);
+          const messages = await Message.find({ contactId }).sort({ createdAt: 1 });
          const brief = await AIService.generateStrategicBrief(messages, contact);
          if (!brief) return res.status(400).json({ message: 'AI Brief generation failed' });
          
