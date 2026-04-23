@@ -1140,12 +1140,7 @@ export default function Contacts({ roleAccess }) {
       {/* UNIFIED BULK ACTIONS BAR */}
       {selectedIds.size > 0 && (
          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[999] bg-slate-900/95 text-white rounded-[2.5rem] px-8 py-5 shadow-3xl flex items-center space-x-10 animate-slide-up border border-white/10 backdrop-blur-md">
-            <div className="flex items-center space-x-4 pr-10 border-r border-white/10 mr-6">
-               <div className="flex flex-col">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-teal-400 mb-1">{selectedIds.size} Leads Selected</p>
-                  <p className="text-[11px] font-black uppercase tracking-widest">{isBulkUpdating ? "Executing Command..." : "Batch Action"}</p>
-               </div>
-            </div>
+
 
             <div className="flex items-center space-x-6">
                {/* TRANSFER AGENT */}
