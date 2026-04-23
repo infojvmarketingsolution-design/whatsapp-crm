@@ -52,7 +52,8 @@ import {
   Plus, 
   CheckCircle,
   ArrowRight,
-  Activity
+  Activity,
+  RefreshCw
 } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add", onClick, isClickable }) {
