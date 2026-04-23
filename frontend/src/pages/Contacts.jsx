@@ -789,35 +789,67 @@ export default function Contacts({ roleAccess }) {
                                  {['NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
                               </select>
                            </div>
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Sales Phase</label>
-                              <select 
-                                 value={editedContact.pipelineStage || 'Discovery'} 
-                                 onChange={e=>handleFieldChange('pipelineStage', e.target.value)}
-                                 className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-700 rounded outline-none focus:border-slate-400 transition-all cursor-pointer"
-                              >
-                                 {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
-                              </select>
-                           </div>
                         </div>
                      </div>
 
                      <div className="space-y-6">
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identity Details</h3>
+                        <div className="flex items-center justify-between">
+                           <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Identity Details</h3>
+                           {!editedContact.secondaryPhone && (
+                              <button 
+                                 onClick={() => handleFieldChange('secondaryPhone', ' ')}
+                                 className="text-[10px] font-bold text-slate-800 flex items-center hover:bg-slate-100 px-2 py-1 rounded transition-all"
+                              >
+                                 <Plus size={12} className="mr-1" /> Add Number
+                              </button>
+                           )}
+                        </div>
                         <div className="space-y-4">
+                           <div className="space-y-1.5">
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">Primary WhatsApp (Locked)</label>
+                              <div className="w-full bg-slate-50 border border-slate-100 py-2.5 px-3 text-sm font-medium text-slate-400 rounded flex items-center">
+                                 <Phone size={12} className="mr-2 opacity-40" /> {editedContact.phone}
+                              </div>
+                           </div>
+                           {editedContact.secondaryPhone !== undefined && (
+                              <div className="space-y-1.5 animate-fade-in">
+                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Secondary WhatsApp</label>
+                                 <input value={editedContact.secondaryPhone || ''} onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} placeholder="Enter 2nd number" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
+                              </div>
+                           )}
                            <div className="space-y-1.5">
                               <label className="text-[9px] font-bold text-slate-400 uppercase">Surname / Last Name</label>
                               <input value={editedContact.lastName || ''} onChange={e=>handleFieldChange('lastName', e.target.value)} placeholder="Enter last name" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
-                           </div>
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Secondary Phone</label>
-                              <input value={editedContact.secondaryPhone || ''} onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} placeholder="Additional contact..." className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
                            </div>
                            <div className="space-y-1.5">
                               <label className="text-[9px] font-bold text-slate-400 uppercase">Postal Address</label>
                               <textarea value={editedContact.address || ''} onChange={e=>handleFieldChange('address', e.target.value)} placeholder="Full residence details..." className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 resize-none" rows={3} />
                            </div>
                         </div>
+                     </div>
+
+                     <div className="space-y-6">
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-red-500">Admission Verdict</h3>
+                        <div className="grid grid-cols-2 gap-3">
+                           <button 
+                              onClick={() => handleFieldChange('status', 'CLOSED_WON')}
+                              className={`py-3 rounded text-[10px] font-bold uppercase transition-all border ${editedContact.status === 'CLOSED_WON' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-green-600 border-green-100 hover:bg-green-50'}`}
+                           >
+                              Admission Done
+                           </button>
+                           <button 
+                              onClick={() => handleFieldChange('status', 'CLOSED_LOST')}
+                              className={`py-3 rounded text-[10px] font-bold uppercase transition-all border ${editedContact.status === 'CLOSED_LOST' ? 'bg-red-600 text-white border-red-600' : 'bg-white text-red-600 border-red-100 hover:bg-red-50'}`}
+                           >
+                              Admission Cancelled
+                           </button>
+                        </div>
+                        {editedContact.status === 'CLOSED_WON' && (
+                           <p className="text-[10px] font-bold text-green-600 text-center animate-bounce uppercase">Lead added to Admissions Successfully!</p>
+                        )}
+                        {editedContact.status === 'CLOSED_LOST' && (
+                           <p className="text-[10px] font-bold text-red-600 text-center uppercase">Lead Closed / Cancelled</p>
+                        )}
                      </div>
 
                      <div className="space-y-6 pb-10">
