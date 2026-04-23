@@ -29,7 +29,7 @@ export default function Contacts({ roleAccess }) {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user.role || localStorage.getItem('role') || 'AGENT').toUpperCase();
   const roleData = roleAccess?.[userRole];
-  const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD'].includes(userRole);
+  const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
 
 
   const rolePermissions = roleData?.permissions || [];
@@ -95,6 +95,7 @@ export default function Contacts({ roleAccess }) {
       });
       if (res.ok) {
          const data = await res.json();
+         console.log('[Diagnostics] fetchContacts | Count:', data.length, '| Sample:', data[0]);
          setContacts(data);
          if (data.length === 0) {
             toast.success("Connection Active: No leads found for current view", { icon: 'ℹ️' });
@@ -163,7 +164,12 @@ export default function Contacts({ roleAccess }) {
     // 2. Only filter if NOT "ALL"
     if (filters.status && filters.status !== 'ALL' && contact.status !== filters.status) return false;
     if (filters.stage && filters.stage !== 'ALL' && contact.pipelineStage !== filters.stage) return false;
-    if (filters.agent && filters.agent !== 'ALL' && String(contact.assignedAgent) !== String(filters.agent)) return false;
+    if (filters.agent && filters.agent !== 'ALL') {
+      const contactAgent = String(contact.assignedAgent || '').toLowerCase();
+      const filterAgent = String(filters.agent || '').toLowerCase();
+      if (contactAgent !== filterAgent) return false;
+    }
+
     if (filters.heat && filters.heat !== 'ALL' && contact.heatLevel !== filters.heat) return false;
 
     // 3. Score Range (Only if non-default)

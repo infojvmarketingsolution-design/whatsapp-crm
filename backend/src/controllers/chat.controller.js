@@ -48,7 +48,7 @@ const getContacts = async (req, res) => {
 
     
     // BUSINESS_HEAD, ADMIN, and SUPER_ADMIN always see everything
-    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER'].includes(userRole.toUpperCase());
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole.toUpperCase());
     
     // Base match for active leads
     const matchStage = { isArchived: { $ne: true } };
@@ -64,7 +64,7 @@ const getContacts = async (req, res) => {
 
       ];
     }
-    console.log(`[Diagnostics] getContacts | User: ${req.user.email} | Role: ${userRole} | HighLevel: ${isHighLevel} | Match:`, JSON.stringify(matchStage));
+    console.log(`[Diagnostics] getContacts | User: ${req.user.email} | Role: ${userRole} | Normalized: ${normalizedRole} | HighLevel: ${isHighLevel} | Match:`, JSON.stringify(matchStage));
 
     if (status) matchStage.status = status;
 
@@ -251,7 +251,7 @@ const performContactAction = async (req, res) => {
            const settings = await Settings.findOne({ tenantId: req.tenantId });
            const userRole = (req.user?.role || 'AGENT').toUpperCase();
            const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
-           const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD'].includes(userRole);
+           const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
            
            const rolePermissions = roleAccess?.permissions || [];
            const canAssignLead = isSuper || roleAccess?.allAccess || rolePermissions.includes('chat_assign_lead');
@@ -575,7 +575,7 @@ const getMessages = async (req, res) => {
     const userRole = (req.user?.role || 'AGENT').toUpperCase();
     const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
 
-    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD'].includes(userRole);
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
 
     if (!isHighLevel && roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
        const contact = await Contact.findById(req.params.contactId);
@@ -757,9 +757,9 @@ const getDashboardStats = async (req, res) => {
     const userRole = (req.user?.role || 'AGENT').toUpperCase();
     const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
 
-    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD'].includes(userRole);
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
 
-    const baseFilter = {};
+    const baseFilter = { isArchived: { $ne: true } };
     if (!isHighLevel && roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
        baseFilter.$or = [
          { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
