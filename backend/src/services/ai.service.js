@@ -206,7 +206,6 @@ class AIService {
         const current = messages[i];
         const previous = messages[i-1];
         
-        // If agent sent a message and user replied next
         if (previous.direction === 'OUTBOUND' && current.direction === 'INBOUND') {
           const delay = new Date(current.createdAt) - new Date(previous.createdAt);
           totalDelay += delay;
@@ -223,7 +222,6 @@ class AIService {
         else velocity = "🔴 Delayed (Slow)";
       }
 
-      // 2. Prepare AI Context
       const historyStr = messages.slice(-20).map(m => `${m.direction}: ${m.content}`).join("\n");
       const systemPrompt = `
         You are a Strategic Lead Analyst. Analyze the conversation and provide a brief in JSON format.
@@ -250,11 +248,8 @@ class AIService {
     } catch (err) {
       console.error('[AI Service] Strategic Brief Error:', err.message);
       return null;
+    }
   }
 }
-  }
-}
-
-module.exports = new AIService();
 
 module.exports = new AIService();
