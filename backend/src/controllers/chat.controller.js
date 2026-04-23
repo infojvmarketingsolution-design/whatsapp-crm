@@ -70,7 +70,11 @@ const getContacts = async (req, res) => {
 
     if (qualification) matchStage.qualification = qualification;
 
+    const totalMatching = await Contact.countDocuments(matchStage);
+    console.log(`[Diagnostics] getContacts | User: ${req.user.email} | Role: ${userRole} | MatchStage:`, JSON.stringify(matchStage), `| Total Matching: ${totalMatching}`);
+
     const pipeline = [
+
       { $match: matchStage },
       {
         $lookup: {

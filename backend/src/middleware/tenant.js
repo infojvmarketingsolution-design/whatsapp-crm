@@ -18,9 +18,11 @@ const tenantMiddleware = async (req, res, next) => {
       }
     }
 
-    if (!tenantIdStr) {
-      return res.status(401).json({ error: 'Tenant identifier not provided.' });
+    if (!tenantIdStr || tenantIdStr === 'null' || tenantIdStr === 'undefined') {
+      console.warn(`[TenantMiddleware] Invalid tenantId rejected: "${tenantIdStr}" | URL: ${req.url}`);
+      return res.status(401).json({ error: 'Valid Tenant ID is required.' });
     }
+
 
     // Connect to tenant DB and attach to request
     req.tenantDb = getTenantConnection(tenantIdStr);
