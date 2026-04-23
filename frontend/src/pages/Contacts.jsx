@@ -742,9 +742,8 @@ export default function Contacts({ roleAccess }) {
                   {/* LEFT PANEL: DATA LIST */}
                   <div className="w-[380px] bg-white border-r border-slate-200 overflow-y-auto custom-scrollbar p-10 space-y-12">
                      
-                     {/* SECTION 1: IDENTITY & COMMUNICATION */}
+                     {/* SECTION 0: LEAD LIFECYCLE */}
                      <div className="space-y-6">
-                                             <div className="space-y-6">
                         <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
                            <TrendingUp size={14} className="mr-2" /> Lifecycle Status
                         </h3>
@@ -760,7 +759,9 @@ export default function Contacts({ roleAccess }) {
                         </div>
                      </div>
 
-<h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
+                     {/* SECTION 1: IDENTITY & COMMUNICATION */}
+                     <div className="space-y-6">
+                        <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
                            <Users size={14} className="mr-2" /> Identity & Contact
                         </h3>
                         <div className="grid grid-cols-1 gap-5">
