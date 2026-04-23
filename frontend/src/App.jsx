@@ -50,45 +50,50 @@ import {
   Clock, 
   X, 
   Plus, 
-  CheckCircle 
+  CheckCircle,
+  ArrowRight
 } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add", onClick, isClickable }) {
   return (
     <div 
       onClick={isClickable ? onClick : undefined}
-      className={`bg-crm-card p-5 rounded-lg shadow-sm border border-crm-border flex flex-col transition-all duration-300 group relative ${isClickable ? 'cursor-pointer hover:shadow-premium hover:border-blue-300 hover:-translate-y-1' : 'hover:shadow-soft'}`}
+      className={`bg-white p-7 rounded-[2rem] border border-slate-100 shadow-sm flex flex-col transition-all duration-500 group relative overflow-hidden ${isClickable ? 'cursor-pointer hover:shadow-2xl hover:border-slate-200 hover:-translate-y-1.5' : 'hover:shadow-md'}`}
     >
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase">{title}</h3>
+      <div className="absolute top-0 right-0 w-24 h-24 bg-slate-50 rounded-full -mr-12 -mt-12 group-hover:scale-150 transition-transform duration-700 opacity-50"></div>
+      
+      <div className="flex justify-between items-start mb-6 relative z-10">
+        <h3 className="text-[10px] font-black text-slate-400 tracking-[0.15em] uppercase">{title}</h3>
         <div className="flex items-center space-x-2">
            {onAction && (
              <button 
                onClick={(e) => { e.stopPropagation(); onAction(); }}
-               className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black uppercase flex items-center shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white"
+               className="opacity-0 group-hover:opacity-100 transition-all bg-slate-900 text-white px-3 py-1.5 rounded-xl text-[10px] font-black uppercase flex items-center shadow-lg transform hover:scale-105"
              >
-               <Plus size={10} className="mr-1" /> {actionLabel}
+               <Plus size={10} className="mr-1.5" /> {actionLabel}
              </button>
            )}
            {Icon && (
-             <div className={`p-2 rounded-full text-white ${isClickable ? 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-glow' : 'bg-blue-500'}`}>
-                <Icon size={16} />
+             <div className={`p-3 rounded-2xl transition-all duration-500 ${isClickable ? 'bg-slate-900 text-white shadow-xl group-hover:bg-blue-600' : 'bg-slate-50 text-slate-400 group-hover:bg-slate-100'}`}>
+                <Icon size={18} />
              </div>
            )}
         </div>
       </div>
-      <div className="mb-2">
+      
+      <div className="mb-2 relative z-10">
         {greenBadge ? (
-          <span className="px-3 py-1 bg-brand-light text-white text-xs font-medium rounded-md">{greenBadge}</span>
+          <span className="px-4 py-1.5 bg-teal-500 text-white text-[11px] font-black uppercase tracking-wider rounded-xl shadow-glow">{greenBadge}</span>
         ) : (
-          <span className="text-xl font-bold text-gray-800">{value}</span>
+          <span className="text-3xl font-black text-slate-900 tracking-tight leading-none">{value}</span>
         )}
       </div>
-      <div className="flex justify-between items-end">
-        <p className="text-xs text-gray-500 font-medium">{subtext}</p>
+      
+      <div className="flex justify-between items-end mt-4 relative z-10">
+        <p className="text-[12px] font-bold text-slate-400 tracking-tight">{subtext}</p>
         {isClickable && (
-          <div className="text-[10px] text-blue-500 font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
-            Details →
+          <div className="w-8 h-8 rounded-full bg-slate-50 text-slate-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 transform group-hover:translate-x-1">
+             <ArrowRight size={14} />
           </div>
         )}
       </div>
@@ -289,30 +294,33 @@ function Dashboard() {
         </div>
       </div>
 
-      <h2 className="text-2xl font-bold text-gray-800 mb-6">Welcome back, <span className="capitalize">{userName}</span> 👋</h2>
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6 animate-fade-in">
+        <div>
+           <div className="flex items-center space-x-3 mb-2">
+              <div className="p-2 bg-slate-900 text-white rounded-xl shadow-lg">
+                 <Activity size={20} />
+              </div>
+              <h1 className="text-3xl font-black text-slate-900 tracking-tight">Main Dashboard</h1>
+           </div>
+           <p className="text-slate-400 font-bold text-sm tracking-tight flex items-center">
+              Welcome back, <span className="text-slate-900 mx-1 capitalize">{userName}</span>. Here is your operational pulse.
+           </p>
+        </div>
 
-      <div className="flex flex-wrap items-center gap-4 mb-8">
-        {isAdminOrSuperAdmin && (
-          <button onClick={() => navigate('/campaigns')} className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-soft">
-             <Send size={14} className="text-brand-light" />
-             <span>Send campaign</span>
-          </button>
-        )}
-        {isAdminOrSuperAdmin && (
-          <>
-            <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-4 py-2 border border-blue-200 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors shadow-soft">
-               <MessageCircle size={14} />
-               <span>Create quick reply</span>
-            </button>
-            <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-4 py-2 border border-[var(--theme-border)]/30 rounded-md text-sm font-medium text-[var(--theme-text)] bg-brand-light/10 hover:bg-brand-light/20 transition-colors shadow-soft">
-               <FileText size={14} />
-               <span>Create template</span>
-            </button>
-          </>
-        )}
-        <div className="flex-1 flex justify-end">
-           <button onClick={refreshData} disabled={loading} className="px-6 py-2 bg-blue-500 text-white rounded-md text-sm font-bold hover:bg-blue-600 transition-colors shadow-premium hover:shadow-glow hover:-translate-y-0.5 transform disabled:opacity-50 disabled:cursor-not-allowed">
-             {loading ? 'Refreshing...' : 'Refresh Data'}
+        <div className="flex items-center space-x-3">
+           {isAdminOrSuperAdmin && (
+             <div className="flex bg-white border border-slate-100 rounded-2xl p-1.5 shadow-sm">
+                <button onClick={() => navigate('/templates')} className="p-2.5 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all" title="Manage Templates"><FileText size={18} /></button>
+                <button onClick={() => navigate('/campaigns')} className="p-2.5 rounded-xl text-slate-400 hover:text-slate-900 hover:bg-slate-50 transition-all" title="New Campaign"><Megaphone size={18} /></button>
+             </div>
+           )}
+           <button 
+             onClick={refreshData} 
+             disabled={loading} 
+             className="px-6 py-3.5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-800 transition-all shadow-xl hover:-translate-y-0.5 transform disabled:opacity-50 flex items-center"
+           >
+             <RefreshCw size={14} className={`mr-2.5 ${loading ? 'animate-spin' : ''}`} />
+             {loading ? 'Syncing...' : 'Refresh Pulse'}
            </button>
         </div>
       </div>
@@ -320,19 +328,19 @@ function Dashboard() {
       {isAdminOrSuperAdmin && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <div className="bg-crm-card p-5 rounded-lg shadow-soft border-l-4 border-[var(--theme-border)] flex flex-col justify-center lg:col-span-2">
-             <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-3">WhatsApp Business API Status</h3>
+             <h3 className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mb-4">WhatsApp Business API Status</h3>
              <div>
                <span className="px-3 py-1 bg-brand-light text-white text-xs font-bold rounded-md shadow-glow">CONNECTED</span>
              </div>
           </div>
           <div className="bg-crm-card p-5 rounded-lg shadow-soft flex flex-col justify-center border border-crm-border">
-             <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-3">Quality Rating</h3>
+             <h3 className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mb-4">Quality Rating</h3>
              <div>
                <span className="px-3 py-1 bg-brand-light text-white text-xs font-medium rounded-md">High</span>
              </div>
           </div>
           <div className="bg-crm-card p-5 rounded-lg shadow-soft flex flex-col justify-center relative overflow-hidden border border-crm-border">
-             <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-1">WABA Phone Number</h3>
+             <h3 className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mb-4">WABA Phone Number</h3>
              <span className="text-md font-bold text-gray-800">{wabaConfig?.phoneNumber || 'Not Connected'}</span>
              <p className="text-[10px] text-gray-400 mt-1 uppercase font-bold tracking-wide">WhatsApp Display Name</p>
              <p className="text-sm font-bold text-[var(--theme-text)]">{wabaConfig?.wabaName || 'Not Connected'}</p>
@@ -378,7 +386,7 @@ function Dashboard() {
 
       {userRole === 'MANAGER_COUNSELLOUR' && (
         <div className="animate-fade-in-up">
-           <h3 className="text-xs font-black text-slate-400 tracking-widest uppercase mb-4">Counsellor Progress Tracking</h3>
+           <h3 className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mb-6">Counsellor Progress Tracking</h3>
            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <DashboardCard title="New Leads" value={loading ? "..." : stats.newLeads} subtext="Pending Initial Contact" icon={PlusCircle} />
               <DashboardCard title="Open Leads" value={loading ? "..." : stats.openLeads} subtext="Active in Pipeline" icon={MessageCircle} />
@@ -394,7 +402,7 @@ function Dashboard() {
 
       {userRole === 'BUSINESS_HEAD' && (
         <div className="animate-fade-in-up mt-6">
-           <h3 className="text-xs font-black text-slate-400 tracking-widest uppercase mb-4">Business Head Overview</h3>
+           <h3 className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase mb-6">Business Head Overview</h3>
            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
               <DashboardCard title="New Leads" value={loading ? "..." : stats.newLeads} subtext="Pending Initial Contact" icon={PlusCircle} />
               <DashboardCard title="Open Leads" value={loading ? "..." : stats.openLeads} subtext="Active in Pipeline" icon={MessageCircle} />
@@ -427,7 +435,7 @@ function Dashboard() {
         <div className="mt-8 animate-fade-in-up">
            <div className="flex items-center space-x-2 mb-6">
               <div className="w-1.5 h-6 bg-blue-600 rounded-full"></div>
-              <h3 className="text-sm font-black text-slate-700 tracking-widest uppercase">Lead & Revenue Performance</h3>
+              <h3 className="text-[10px] font-black text-slate-400 tracking-[0.2em] uppercase">Lead & Revenue Performance</h3>
               <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold animate-pulse">Live Stats</span>
            </div>
            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
