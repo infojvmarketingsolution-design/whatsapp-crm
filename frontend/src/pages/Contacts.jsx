@@ -906,7 +906,6 @@ export default function Contacts({ roleAccess }) {
                                     <button key={s.id} onClick={() => handleFieldChange('status', s.id)} className={`py-3 rounded text-[8px] font-bold uppercase transition-all border ${editedContact.status === s.id ? `bg-${s.color}-600 text-white border-${s.color}-600` : `bg-white text-${s.color}-600 border-${s.color}-100 hover:bg-${s.color}-50`}`}>{s.label}</button>
                                  ))}
                               </div>
-                           </div>
                         </div>
                      </div>
                   </div>
@@ -1276,11 +1275,12 @@ export default function Contacts({ roleAccess }) {
                         >
                            Dismiss
                         </button>
-                      </div>
-                   </div>
-                </div>
-             </div>
-       )}
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      )}
     </div>
   );
 }
