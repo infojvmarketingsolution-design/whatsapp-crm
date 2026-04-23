@@ -1137,51 +1137,7 @@ export default function Contacts({ roleAccess }) {
          </div>
        )}
 
-      {/* UNIFIED BULK ACTIONS BAR */}
-      {selectedIds.size > 0 && (
-         <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[999] bg-slate-900/95 text-white rounded-[2.5rem] px-8 py-5 shadow-3xl flex items-center space-x-10 animate-slide-up border border-white/10 backdrop-blur-md">
 
-
-            <div className="flex items-center space-x-6">
-               {/* TRANSFER AGENT */}
-               <div className="flex flex-col space-y-1">
-                  <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Manual Lead Assign</label>
-                  <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10">
-                     <select value={bulkTargetAgent} onChange={(e) => setBulkTargetAgent(e.target.value)} className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[160px]">
-                        <option value="" className="text-slate-900">Choose Agent...</option>
-                        {agents.map(a => <option key={a._id} value={a._id} className="text-slate-900">{a.name}</option>)}
-                     </select>
-                     <button disabled={!bulkTargetAgent || isBulkUpdating} onClick={() => handleBulkAction("transfer_leads", bulkTargetAgent)} className="bg-teal-500 hover:bg-teal-600 disabled:bg-slate-700 p-2.5 rounded-xl transition-all shadow-lg active:scale-95 text-white">
-                        <ArrowUpRight size={18} />
-                     </button>
-                  </div>
-               </div>
-
-               {/* STAGE COMMAND */}
-               <div className="flex flex-col space-y-1">
-                  <label className="text-[9px] font-black text-white/40 uppercase tracking-widest ml-1">Move Stage</label>
-                  <div className="flex items-center bg-white/5 rounded-2xl p-1 border border-white/10">
-                     <select onChange={(e) => handleBulkAction("update_stage", e.target.value)} className="bg-transparent text-[11px] font-bold px-4 py-2 outline-none cursor-pointer text-white min-w-[130px]" defaultValue="">
-                        <option value="" disabled className="text-slate-900">Pipeline Stage...</option>
-                        {PIPELINE_STAGES.map(s => <option key={s} value={s} className="text-slate-900">{s}</option>)}
-                     </select>
-                  </div>
-               </div>
-
-               <div className="w-[1px] h-10 bg-white/10 mx-2"></div>
-
-               <div className="flex items-center space-x-3">
-                  <button onClick={handleExportCSV} className="p-4 hover:bg-white/10 rounded-2xl transition-all text-white/60 hover:text-white" title="Export Set"><Download size={20} /></button>
-                  <button onClick={() => handleBulkAction("archive_leads", true)} className="p-4 hover:bg-orange-500/20 text-orange-400 rounded-2xl transition-all" title="Archive Leads"><ShieldCheck size={20}/></button>
-                  <button onClick={() => { if(window.confirm(`Delete ${selectedIds.size} leads permanently?`)) handleBulkAction("hard_delete_leads", {}); }} className="p-4 hover:bg-red-500/20 text-red-400 rounded-2xl transition-all font-bold text-lg"><MoreVertical size={20} /></button>
-               </div>
-            </div>
-            
-            <button onClick={() => setSelectedIds(new Set())} className="ml-6 p-4 hover:bg-white/10 text-white/20 hover:text-white rounded-2xl transition-all border border-transparent hover:border-white/10">
-               <X size={24} />
-            </button>
-         </div>
-      )}
     </div>
   );
 }
