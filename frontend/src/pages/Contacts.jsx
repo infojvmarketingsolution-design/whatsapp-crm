@@ -121,7 +121,8 @@ export default function Contacts({ roleAccess }) {
                      selectedProgram: updated.selectedProgram || '',
                      visitStatus: updated.visitStatus || 'Not Done',
                      visitType: updated.visitType || '',
-                     assignedCounsellor: updated.assignedCounsellor || ''
+                     assignedCounsellor: updated.assignedCounsellor || '',
+                     closeReason: updated.closeReason || ''
                   });
                }
             }
@@ -380,7 +381,8 @@ export default function Contacts({ roleAccess }) {
            selectedProgram: freshContact.selectedProgram || '',
            visitStatus: freshContact.visitStatus || 'Not Done',
            visitType: freshContact.visitType || '',
-           assignedCounsellor: freshContact.assignedCounsellor || ''
+           assignedCounsellor: freshContact.assignedCounsellor || '',
+           closeReason: freshContact.closeReason || ''
         });
         
         setShowSaveFab(false);
@@ -984,14 +986,48 @@ export default function Contacts({ roleAccess }) {
 
                                  <div className="space-y-1.5">
                                     <label className="text-[9px] font-bold text-slate-400 uppercase">Admission Verdict</label>
-                                    <div className="grid grid-cols-3 gap-2">
-                                       {[
-                                          { id: 'CLOSED_WON', label: 'Done', color: 'green' },
-                                          { id: 'PENDING', label: 'Pending', color: 'slate' },
-                                          { id: 'CLOSED_LOST', label: 'Canceled', color: 'red' }
-                                       ].map(s => (
-                                          <button key={s.id} onClick={() => handleFieldChange('status', s.id)} className={`py-3 rounded text-[8px] font-bold uppercase transition-all border ${editedContact.status === s.id ? `bg-${s.color}-600 text-white border-${s.color}-600` : `bg-white text-${s.color}-600 border-${s.color}-100 hover:bg-${s.color}-50`}`}>{s.label}</button>
-                                       ))}
+                                    <div className="flex flex-col gap-2">
+                                       {/* ADMISSION VERDICT */}
+                                       <div className="flex bg-slate-50 p-1 rounded-lg border border-slate-200">
+                                          {[
+                                             { id: 'CLOSED_WON', label: 'Done', color: 'green' },
+                                             { id: 'PENDING', label: 'Pending', color: 'slate' },
+                                             { id: 'CLOSED_LOST', label: 'Canceled', color: 'red' }
+                                          ].map(s => (
+                                             <button 
+                                                key={s.id}
+                                                onClick={() => handleFieldChange('status', s.id)}
+                                                className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-widest rounded transition-all ${
+                                                   editedContact.status === s.id 
+                                                   ? `bg-${s.color === 'green' ? 'emerald-500' : s.color === 'red' ? 'red-500' : 'slate-800'} text-white shadow-sm` 
+                                                   : 'text-slate-400 hover:text-slate-600'
+                                                }`}
+                                             >
+                                                {s.label}
+                                             </button>
+                                          ))}
+                                       </div>
+
+                                       {/* CLOSE REASON - SHOW ONLY IF CANCELED */}
+                                       {editedContact.status === 'CLOSED_LOST' && (
+                                          <div className="animate-fade-in space-y-2 mt-2">
+                                             <label className="text-[9px] font-bold text-red-500 uppercase tracking-widest">Why was this Admission Canceled?</label>
+                                             <select 
+                                                value={editedContact.closeReason || ''} 
+                                                onChange={e => handleFieldChange('closeReason', e.target.value)}
+                                                className="w-full bg-white border border-red-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-red-400"
+                                             >
+                                                <option value="">-- Choose Reason --</option>
+                                                <option value="Admission Done">Admission Done Elsewhere</option>
+                                                <option value="Not Interested">Not Interested</option>
+                                                <option value="Fees Too High">Fees Too High</option>
+                                                <option value="Distance Issue">Distance Issue</option>
+                                                <option value="Course Not Available">Course Not Available</option>
+                                                <option value="Family Issues">Family Issues</option>
+                                                <option value="Other">Other Reason</option>
+                                             </select>
+                                          </div>
+                                       )}
                                     </div>
                                  </div>
                               </div>

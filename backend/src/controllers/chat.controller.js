@@ -156,8 +156,14 @@ const performContactAction = async (req, res) => {
     const contactId = req.params.contactId || req.body.contactId;
     const { action, payload } = req.body;
     
-    let contact;
-    let ContactModel = req.tenantDb.model('Contact', ContactSchema);
+    let ContactModel;
+    
+    // FORCE SCHEMA REFRESH: Ensures new fields (altMobile, houseNo, closeReason) are recognized
+    if (req.tenantDb.models.Contact) {
+       ContactModel = req.tenantDb.models.Contact;
+    } else {
+       ContactModel = req.tenantDb.model('Contact', ContactSchema);
+    }
     
     contact = await ContactModel.findById(contactId);
     if (!contact) return res.status(404).json({ error: 'Contact not found' });
@@ -216,6 +222,7 @@ const performContactAction = async (req, res) => {
         if (payload.collectionAmount !== undefined) contact.collectionAmount = Number(payload.collectionAmount) || 0;
         if (payload.pendingCollectionAmount !== undefined) contact.pendingCollectionAmount = Number(payload.pendingCollectionAmount) || 0;
         if (payload.isClosed !== undefined) contact.isClosed = Boolean(payload.isClosed);
+        if (payload.closeReason !== undefined) contact.closeReason = payload.closeReason;
         
         // Sync name field for display consistency across the app
         if (payload.firstName !== undefined || payload.lastName !== undefined) {
