@@ -141,52 +141,16 @@ export default function Contacts({ roleAccess }) {
   }, []);
 
   // Intelligence Filter Engine (V2)
-  const filteredContacts = contacts.filter(c => {
+    const filteredContacts = contacts.filter(c => {
     const matchesSearch = !searchTerm || (
       (c.firstName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
       (c.lastName || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
       (c.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || 
       (c.phone || '').includes(searchTerm)
     );
-    
-    const matchesStatus = filters.status === 'ALL' || c.status === filters.status;
-    const matchesStage = filters.stage === 'ALL' || c.pipelineStage === filters.stage;
-    const matchesAgent = filters.agent === 'ALL' || c.assignedAgent === filters.agent || c.assignedCounsellor === filters.agent;
-    const matchesSource = filters.source === 'ALL' || c.leadSource === filters.source;
-    const matchesProgram = filters.program === 'ALL' || (c.selectedProgram && c.selectedProgram.toLowerCase().includes(filters.program.toLowerCase()));
-    const matchesQual = filters.qualification === 'ALL' || (c.qualification && c.qualification.toLowerCase().includes(filters.qualification.toLowerCase()));
-    const matchesScore = (c.score || 0) >= filters.minScore;
-    
-    // Advanced Timeline Logic
-    const createdAt = new Date(c.createdAt);
-    let matchesDate = true;
-    
-    if (filters.startDate) {
-       const start = new Date(filters.startDate);
-       start.setHours(0,0,0,0);
-       matchesDate = matchesDate && createdAt >= start;
-    }
-    if (filters.endDate) {
-       const end = new Date(filters.endDate);
-       end.setHours(23,59,59,999);
-       matchesDate = matchesDate && createdAt <= end;
-    }
-    if (filters.month !== 'ALL') {
-       matchesDate = matchesDate && createdAt.getMonth() === parseInt(filters.month);
-    }
-    
-    // Time Logic (HH:mm)
-    const leadTimeStr = createdAt.getHours().toString().padStart(2, '0') + ':' + createdAt.getMinutes().toString().padStart(2, '0');
-    const matchesTime = leadTimeStr >= filters.startTime && leadTimeStr <= filters.endTime;
-
-        // Debugging leads
-    const isVisible = !c.isArchived && matchesSearch && matchesStatus && matchesStage && matchesAgent;
-    
-    // Advanced filters are only applied if they are NOT set to "ALL"
-    const passesAdvanced = matchesSource && matchesProgram && matchesQual && matchesDate && matchesTime;
-
-        // Final verification
-    return isVisible && matchesSource && matchesProgram && matchesQual && matchesDate;
+    // EMERGENCY BYPASS: Ensuring lead visibility
+    const matchesCore = matchesSearch && (filters.status === 'ALL' || c.status === filters.status) && (filters.stage === 'ALL' || c.pipelineStage === filters.stage);
+    return !c.isArchived && matchesCore;
   });
 
      const activeFilterCount = Object.entries(filters).filter(([key, val]) => {
