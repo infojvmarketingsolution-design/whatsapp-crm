@@ -16,6 +16,7 @@ export default function Contacts({ roleAccess }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newLeadName, setNewLeadName] = useState('');
   const [newLeadPhone, setNewLeadPhone] = useState('');
+  const [isSavingLead, setIsSavingLead] = useState(false);
   
   // Profile Detail States
   const [selectedContact, setSelectedContact] = useState(null);
@@ -349,34 +350,58 @@ export default function Contacts({ roleAccess }) {
   };
 
   const handleAddContact = async (e) => {
-    e.preventDefault();
-    try {
-      const token = localStorage.getItem('token');
-      const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch('/api/chat/contacts', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name: newLeadName, 
-          phone: newLeadPhone, 
-          source: 'Manual Entry',
-          assignedAgent: user._id // Auto-assign to creator so they can see it immediately
-        })
-      });
-      if (res.ok) {
-        toast.success('Lead established successfully');
-        setShowAddModal(false);
-        setNewLeadName('');
-        setNewLeadPhone('');
-        fetchContacts();
-      } else {
-        const errorData = await res.json();
-        toast.error(errorData.message || 'Failed to establish profile');
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+     e.preventDefault();
+     if (!newLeadName.trim() || !newLeadPhone.trim()) {
+        return toast.error("Name and Phone are required");
+     }
+
+     setIsSavingLead(true);
+     try {
+       const token = localStorage.getItem('token');
+       const tenantId = localStorage.getItem('tenantId');
+       
+       if (!user._id) {
+         toast.error("User session expired. Please re-login.");
+         return;
+       }
+
+       // Prepare Payload - Auto-assign based on role
+       const payload = { 
+         name: newLeadName, 
+         phone: newLeadPhone, 
+         source: 'Manual Entry'
+       };
+
+       if (userRole === 'MANAGER_COUNSELLOUR') {
+         payload.assignedCounsellor = user._id;
+       } else {
+         payload.assignedAgent = user._id;
+       }
+
+       const res = await fetch('/api/chat/contacts', {
+         method: 'POST',
+         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+         body: JSON.stringify(payload)
+       });
+
+       const data = await res.json();
+
+       if (res.ok) {
+         toast.success('Lead established successfully');
+         setShowAddModal(false);
+         setNewLeadName('');
+         setNewLeadPhone('');
+         fetchContacts();
+       } else {
+         toast.error(data.message || 'Failed to establish profile');
+       }
+     } catch (err) {
+       console.error("Create Lead Error:", err);
+       toast.error("Network error. Please check your connection.");
+     } finally {
+       setIsSavingLead(false);
+     }
+   };
 
   const handleBulkAction = async (action, value, specificIds = null) => {
     const idsToProcess = specificIds || Array.from(selectedIds);
@@ -1140,7 +1165,13 @@ export default function Contacts({ roleAccess }) {
                      <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Communication Hub</label>
                      <input type="tel" value={newLeadPhone} onChange={e=>setNewLeadPhone(e.target.value)} required className="w-full bg-[#f9fafb] border border-slate-100 rounded-[2rem] px-7 py-5 outline-none focus:ring-4 focus:ring-[var(--theme-border)]/10 focus:border-[var(--theme-border)]/50 text-base font-bold text-slate-800 transition-all shadow-sm" placeholder="+91 XXX XXX XXXX" />
                   </div>
-                  <button type="submit" className="w-full py-6 bg-slate-900 text-white text-[12px] font-black uppercase tracking-[0.4em] rounded-[2rem] shadow-3xl hover:-translate-y-2 active:scale-95 transition-all mt-4">Establish Profile</button>
+                  <button 
+                      type="submit" 
+                      disabled={isSavingLead}
+                      className="w-full py-6 bg-slate-900 text-white text-[12px] font-black uppercase tracking-[0.4em] rounded-[2rem] shadow-3xl hover:-translate-y-2 active:scale-95 transition-all mt-4 disabled:opacity-50"
+                   >
+                      {isSavingLead ? "Initializing Profile..." : "Establish Profile"}
+                   </button>
                </form>
             </div>
          </div>
