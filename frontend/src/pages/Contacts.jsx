@@ -1007,138 +1007,115 @@ export default function Contacts({ roleAccess }) {
          </div>
       )}
 
-      /* ADVANCED FILTER PRO CONSOLE (SIDEBAR) */}
+      /* PRO CRM FILTER HUB */ }
       {showFilters && (
-        <div className="fixed inset-0 z-[200] flex justify-end bg-slate-900/40 backdrop-blur-[4px] animate-fade-in" onClick={() => setShowFilters(false)}>
-            <div 
-              className="w-[480px] h-full bg-white shadow-3xl flex flex-col animate-slide-up relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-               <div className="p-8 border-b border-gray-100 flex items-center justify-between bg-slate-50/50">
-                  <div className="flex items-center space-x-4">
-                     <div className="p-3 bg-teal-500 text-white rounded-2xl shadow-glow">
-                        <Filter size={20} />
-                     </div>
-                     <div>
-                        <h2 className="text-xl font-black text-slate-800 tracking-tight">Filter Console</h2>
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Data Mining & Precision Hunting</p>
-                     </div>
+         <div className="fixed inset-0 z-[200] flex justify-end items-stretch bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowFilters(false)}>
+            <div className="w-[480px] bg-white shadow-2xl flex flex-col animate-slide-left h-full" onClick={e=>e.stopPropagation()}>
+               <div className="p-8 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+                  <div>
+                     <h2 className="text-xl font-black text-slate-800 tracking-tight">Filter Workspace</h2>
+                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">Refine lead visibility</p>
                   </div>
-                  <button onClick={() => setShowFilters(false)} className="p-3 hover:bg-gray-100 rounded-2xl text-gray-400 transition-all"><X size={24} /></button>
+                  <button onClick={() => setShowFilters(false)} className="p-2 text-slate-400 hover:text-slate-800 transition-all"><X size={24} /></button>
                </div>
 
-               <div className="flex-1 overflow-y-auto custom-scrollbar p-8 space-y-10">
-                  {/* DATA PULSE SECTION */}
+               <div className="flex-1 overflow-y-auto p-10 space-y-12 custom-scrollbar bg-[#fcfcfd]">
+                  
+                  {/* CATEGORY: STATUS & STAGE */}
                   <div className="space-y-6">
-                     <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.25em] flex items-center">
-                        <Activity size={14} className="mr-2" /> Data Pulsing
+                     <h3 className="text-[11px] font-black text-teal-600 uppercase tracking-widest border-b border-teal-50 pb-3 flex items-center">
+                        <Activity size={14} className="mr-2" /> Operational Status
                      </h3>
-                     <div className="grid grid-cols-2 gap-4">
-                        <button 
-                          onClick={() => setFilters({...filters, hasUnread: !filters.hasUnread})}
-                          className={`p-5 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center space-y-3 ${filters.hasUnread ? 'bg-teal-50 border-teal-500 shadow-inner' : 'bg-white border-gray-50'}`}
-                        >
-                           <Mail className={filters.hasUnread ? 'text-teal-600' : 'text-gray-300'} />
-                           <span className={`text-[10px] font-black uppercase tracking-widest ${filters.hasUnread ? 'text-teal-700' : 'text-slate-400'}`}>Unread Only</span>
-                        </button>
-                        <button 
-                          onClick={() => setFilters({...filters, hasTasks: !filters.hasTasks})}
-                          className={`p-5 rounded-[2rem] border-2 transition-all flex flex-col items-center justify-center space-y-3 ${filters.hasTasks ? 'bg-orange-50 border-orange-500 shadow-inner' : 'bg-white border-gray-50'}`}
-                        >
-                           <Bell className={filters.hasTasks ? 'text-orange-600' : 'text-gray-300'} />
-                           <span className={`text-[10px] font-black uppercase tracking-widest ${filters.hasTasks ? 'text-orange-700' : 'text-slate-400'}`}>With Tasks</span>
-                        </button>
+                     <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lead Stage</label>
+                           <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50 focus:border-teal-400 transition-all">
+                              <option value="ALL">All Stages</option>
+                              {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                           </select>
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lifecycle Status</label>
+                           <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50 focus:border-teal-400 transition-all">
+                              <option value="ALL">All Statuses</option>
+                              {['NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
+                           </select>
+                        </div>
                      </div>
                   </div>
 
-                  {/* ATTRIBUTE FILTERS */}
+                  {/* CATEGORY: OWNERSHIP & SOURCE */}
                   <div className="space-y-6">
-                     <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.25em] flex items-center">
-                        <Target size={14} className="mr-2" /> Lead Attributes
+                     <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
+                        <Users size={14} className="mr-2" /> Ownership & Origin
                      </h3>
-                     
-                     <div className="space-y-4">
-                        <div className="p-4 bg-slate-50 rounded-3xl border border-gray-50">
-                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">origination Source</label>
-                           <select value={filters.source} onChange={e=>setFilters({...filters, source: e.target.value})} className="w-full bg-white border-none text-[11px] font-black text-slate-700 py-3 px-4 rounded-2xl outline-none shadow-sm capitalize">
-                              <option value="ALL">ANY SOURCE</option>
+                     <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assigned Agent</label>
+                           <select value={filters.agent} onChange={e=>setFilters({...filters, agent: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50 focus:border-teal-400 transition-all">
+                              <option value="ALL">Any Member</option>
+                              {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                           </select>
+                        </div>
+                        <div className="space-y-1.5">
+                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Source Origin</label>
+                           <select value={filters.source} onChange={e=>setFilters({...filters, source: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50 focus:border-teal-400 transition-all">
+                              <option value="ALL">Any Source</option>
                               {['Manual Entry', 'Meta Ads', 'Google Ads', 'Referral', 'Email Campaign', 'WhatsApp Blast'].map(s => <option key={s} value={s}>{s}</option>)}
                            </select>
                         </div>
-
-                        <div className="p-4 bg-slate-50 rounded-3xl border border-gray-50">
-                           <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Registration Period</label>
-                           <select value={filters.dateRange} onChange={e=>setFilters({...filters, dateRange: e.target.value})} className="w-full bg-white border-none text-[11px] font-black text-slate-700 py-3 px-4 rounded-2xl outline-none shadow-sm">
-                              <option value="ALL">COMPREHENSIVE HISTORY</option>
-                              <option value="TODAY">INITIALIZED TODAY</option>
-                              <option value="WEEK">PAST 7 DAYS</option>
-                              <option value="MONTH">PAST 30 DAYS</option>
-                           </select>
-                        </div>
                      </div>
                   </div>
 
-                  {/* VALUE & QUALITY RANGES */}
+                  {/* CATEGORY: QUALITY METRICS */}
                   <div className="space-y-6">
-                     <h3 className="text-[11px] font-black text-slate-300 uppercase tracking-[0.25em] flex items-center">
-                        <TrendingUp size={14} className="mr-2" /> Value & Quality
+                     <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
+                        <Target size={14} className="mr-2" /> Quality Metrics
                      </h3>
-                     
-                     <div className="space-y-8 p-6 bg-slate-900 rounded-[2.5rem] shadow-xl text-white">
+                     <div className="bg-white p-8 rounded-2xl border border-slate-100 shadow-sm space-y-8">
                         <div>
                            <div className="flex justify-between items-center mb-4">
-                              <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">MIN Lead Score</label>
-                              <span className="text-xl font-black text-teal-400">{filters.minScore}%</span>
+                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Min Lead Score</label>
+                              <span className="text-lg font-black text-teal-600">{filters.minScore}%</span>
                            </div>
                            <input 
-                             type="range" min="0" max="100" 
-                             value={filters.minScore} 
-                             onChange={e=>setFilters({...filters, minScore: parseInt(e.target.value)})}
-                             className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-teal-500"
+                              type="range" min="0" max="100" 
+                              value={filters.minScore} 
+                              onChange={e=>setFilters({...filters, minScore: parseInt(e.target.value)})} 
+                              className="w-full accent-teal-600 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer"
                            />
                         </div>
-
                         <div>
                            <div className="flex justify-between items-center mb-4">
-                              <label className="text-[9px] font-black text-white/40 uppercase tracking-widest">MIN Deal Value</label>
-                              <span className="text-xl font-black text-teal-400">₹ {(filters.minValue / 1000).toFixed(0)}K +</span>
+                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Min Value (₹)</label>
+                              <span className="text-lg font-black text-teal-600">₹ {(filters.minValue / 1000).toFixed(0)}K+</span>
                            </div>
                            <input 
-                             type="range" min="0" max="200000" step="5000" 
-                             value={filters.minValue} 
-                             onChange={e=>setFilters({...filters, minValue: parseInt(e.target.value)})}
-                             className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer accent-teal-500"
+                              type="range" min="0" max="200000" step="5000"
+                              value={filters.minValue} 
+                              onChange={e=>setFilters({...filters, minValue: parseInt(e.target.value)})} 
+                              className="w-full accent-teal-600 h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer"
                            />
                         </div>
                      </div>
                   </div>
+
                </div>
 
-               <div className="p-8 border-t border-gray-100 bg-slate-50/50 space-y-4">
-                  <div className="flex items-center justify-between text-xs">
-                     <span className="font-bold text-slate-400 uppercase tracking-tighter">Matches Found:</span>
-                     <span className="font-black text-slate-800 bg-white px-3 py-1 rounded-lg border border-gray-100 shadow-sm">{filteredContacts.length} Profiles</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                     <button 
-                       onClick={() => {
-                          setFilters({ status: 'ALL', heat: 'ALL', stage: 'ALL', agent: 'ALL', source: 'ALL', minScore: 0, maxScore: 100, minValue: 0, hasUnread: false, hasTasks: false, dateRange: 'ALL' });
-                          toast.success("Filters Cleared");
-                       }}
-                       className="py-4 bg-white border border-gray-200 text-slate-600 text-[11px] font-black uppercase tracking-widest rounded-2xl hover:bg-gray-50 transition-all"
-                     >
-                        Reset All
-                     </button>
-                     <button 
-                       onClick={() => setShowFilters(false)}
-                       className="py-4 bg-slate-900 text-white text-[11px] font-black uppercase tracking-widest rounded-2xl shadow-xl hover:-translate-y-1 transition-all"
-                     >
-                        Apply Profile
-                     </button>
-                  </div>
+               <div className="p-8 border-t border-slate-100 bg-white grid grid-cols-2 gap-4 shrink-0">
+                  <button 
+                     onClick={() => {
+                        setFilters({ status: 'ALL', heat: 'ALL', stage: 'ALL', agent: 'ALL', source: 'ALL', minScore: 0, maxScore: 100, minValue: 0, hasUnread: false, hasTasks: false, dateRange: 'ALL' });
+                        toast.success("Filters Reset");
+                     }}
+                     className="py-4 border border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all"
+                  >
+                     Reset All
+                  </button>
+                  <button onClick={() => setShowFilters(false)} className="py-4 bg-teal-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 hover:bg-teal-700 transition-all">Apply Filter</button>
                </div>
             </div>
-        </div>
+         </div>
       )}
 
       {showAddModal && (
