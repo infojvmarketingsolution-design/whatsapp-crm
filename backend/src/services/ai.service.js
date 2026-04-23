@@ -252,5 +252,7 @@ class AIService {
       return null;
   }
 }
+  }
+}
 
 module.exports = new AIService();
