@@ -854,7 +854,7 @@ export default function Contacts({ roleAccess }) {
                            </div>
                         </div>
                      </div>
-
+                     
                      {/* STEP 3: VISIT & ADMISSION */}
                      <div className="space-y-6 pb-10">
                         <div className="flex items-center space-x-3">
@@ -863,52 +863,53 @@ export default function Contacts({ roleAccess }) {
                         </div>
                         
                         <div className="space-y-6 pl-9">
-                           {/* VISIT STATUS */}
+                           {/* VISIT STATUS (FIRST) */}
                            <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Visit Status</label>
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">Visit Conducted?</label>
                               <div className="grid grid-cols-2 gap-2">
                                  {['Not Done', 'Done'].map(v => (
-                                    <button key={v} onClick={() => handleFieldChange('visitStatus', v)} className={`py-2 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitStatus === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100'}`}>{v}</button>
+                                    <button key={v} onClick={() => handleFieldChange('visitStatus', v)} className={`py-2.5 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitStatus === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}>{v}</button>
                                  ))}
                               </div>
                            </div>
 
-                           {/* VISIT TYPE (Visible if Visit is Done) */}
+                           {/* VISIT TYPE (VISIBLE IF DONE) */}
                            {editedContact.visitStatus === 'Done' && (
                               <div className="space-y-1.5 animate-fade-in">
-                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Type of Visit</label>
+                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Select Visit Type</label>
                                  <div className="grid grid-cols-2 gap-2">
                                     {['University Visit', 'Campus Visit'].map(v => (
-                                       <button key={v} onClick={() => handleFieldChange('visitType', v)} className={`py-2 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitType === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100'}`}>{v}</button>
+                                       <button key={v} onClick={() => handleFieldChange('visitType', v)} className={`py-2.5 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitType === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}>{v}</button>
                                     ))}
                                  </div>
                               </div>
                            )}
 
-                           {/* COUNSELLOR (Visible if University/Campus Visit is Selected) */}
-                           {editedContact.visitStatus === 'Done' && (editedContact.visitType === 'University Visit' || editedContact.visitType === 'Campus Visit') && (
-                              <div className="space-y-1.5 animate-fade-in">
-                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Handled By Counsellor</label>
-                                 <select value={editedContact.assignedCounsellor || ''} onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-700 rounded outline-none focus:border-slate-400 transition-all cursor-pointer">
-                                    <option value="">Select Counsellor...</option>
-                                    {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
-                                 </select>
+                           {/* COUNSELLOR & ADMISSION (VISIBLE IF TYPE SELECTED) */}
+                           {editedContact.visitStatus === 'Done' && editedContact.visitType && (
+                              <div className="space-y-6 animate-fade-in pt-2">
+                                 <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Handled By Counsellor</label>
+                                    <select value={editedContact.assignedCounsellor || ''} onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded outline-none focus:border-slate-400">
+                                       <option value="">Select Counsellor...</option>
+                                       {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                                    </select>
+                                 </div>
+
+                                 <div className="space-y-1.5">
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Admission Verdict</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                       {[
+                                          { id: 'CLOSED_WON', label: 'Done', color: 'green' },
+                                          { id: 'PENDING', label: 'Pending', color: 'slate' },
+                                          { id: 'CLOSED_LOST', label: 'Canceled', color: 'red' }
+                                       ].map(s => (
+                                          <button key={s.id} onClick={() => handleFieldChange('status', s.id)} className={`py-3 rounded text-[8px] font-bold uppercase transition-all border ${editedContact.status === s.id ? `bg-${s.color}-600 text-white border-${s.color}-600` : `bg-white text-${s.color}-600 border-${s.color}-100 hover:bg-${s.color}-50`}`}>{s.label}</button>
+                                       ))}
+                                    </div>
+                                 </div>
                               </div>
                            )}
-
-                           {/* ADMISSION STATUS */}
-                           <div className="space-y-1.5 pt-4">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Final Admission Verdict</label>
-                              <div className="grid grid-cols-3 gap-2">
-                                 {[
-                                    { id: 'PENDING', label: 'Pending', color: 'slate' },
-                                    { id: 'CLOSED_WON', label: 'Done', color: 'green' },
-                                    { id: 'CLOSED_LOST', label: 'Cancell', color: 'red' }
-                                 ].map(s => (
-                                    <button key={s.id} onClick={() => handleFieldChange('status', s.id)} className={`py-3 rounded text-[8px] font-bold uppercase transition-all border ${editedContact.status === s.id ? `bg-${s.color}-600 text-white border-${s.color}-600` : `bg-white text-${s.color}-600 border-${s.color}-100 hover:bg-${s.color}-50`}`}>{s.label}</button>
-                                 ))}
-                              </div>
-                           </div>
                         </div>
                      </div>
                   </div>
