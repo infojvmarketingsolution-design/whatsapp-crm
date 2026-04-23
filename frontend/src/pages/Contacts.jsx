@@ -1279,6 +1279,7 @@ export default function Contacts({ roleAccess }) {
                       </div>
                    </div>
                 </div>
+             </div>
        )}
     </div>
   );
