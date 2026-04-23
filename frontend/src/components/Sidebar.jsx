@@ -14,6 +14,7 @@ import {
   LogOut,
   KanbanSquare,
   CheckSquare,
+  Shield,
   Menu
 } from 'lucide-react';
 
@@ -49,6 +50,7 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
   };
 
   const allMenuItems = [
+    { id: 'team-performance', name: 'Team Performance', icon: Shield, path: '/team-performance' },
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard, path: '/dashboard' },
     { id: 'tasks', name: 'Tasks', icon: CheckSquare, path: '/tasks' },
     { id: 'pipeline', name: 'Pipeline', icon: KanbanSquare, path: '/pipeline' },
@@ -61,11 +63,13 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
     { id: 'agents', name: 'Agents', icon: UserPlus, path: '/agents' },
     { id: 'web-widgets', name: 'Web Widget', icon: Globe, path: '/widget' },
     { id: 'api', name: 'API', icon: Code, path: '/api' },
-    { id: 'team-performance', name: 'Team Performance', icon: KanbanSquare, path: '/team-performance' },
     { id: 'settings', name: 'Settings', icon: Settings, path: '/settings' },
   ];
 
   const menuItems = allMenuItems.filter(item => {
+    // FORCE: Always show Team Performance to Business Head
+    if ((userRole === 'BUSINESS_HEAD' || userRole === 'BUSINESS HEAD') && item.id === 'team-performance') return true;
+
     // Check granular permissions from settings
     if (roleAccess && roleAccess[userRole]) {
        const roleData = roleAccess[userRole];
