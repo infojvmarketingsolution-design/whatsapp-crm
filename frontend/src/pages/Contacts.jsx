@@ -1073,7 +1073,7 @@ export default function Contacts({ roleAccess }) {
          </div>
       )}
 
-      /* PRO CRM FILTER HUB */ }
+
       {showFilters && (
          <div className="fixed inset-0 z-[200] flex justify-end items-stretch bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowFilters(false)}>
             <div className="w-[500px] bg-white shadow-2xl flex flex-col animate-slide-left h-full" onClick={e=>e.stopPropagation()}>
