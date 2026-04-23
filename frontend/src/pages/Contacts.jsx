@@ -829,27 +829,61 @@ export default function Contacts({ roleAccess }) {
                      </div>
 
                      <div className="space-y-6">
-                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-red-500">Admission Verdict</h3>
-                        <div className="grid grid-cols-2 gap-3">
-                           <button 
-                              onClick={() => handleFieldChange('status', 'CLOSED_WON')}
-                              className={`py-3 rounded text-[10px] font-bold uppercase transition-all border ${editedContact.status === 'CLOSED_WON' ? 'bg-green-600 text-white border-green-600' : 'bg-white text-green-600 border-green-100 hover:bg-green-50'}`}
-                           >
-                              Admission Done
-                           </button>
-                           <button 
-                              onClick={() => handleFieldChange('status', 'CLOSED_LOST')}
-                              className={`py-3 rounded text-[10px] font-bold uppercase transition-all border ${editedContact.status === 'CLOSED_LOST' ? 'bg-red-600 text-white border-red-600' : 'bg-white text-red-600 border-red-100 hover:bg-red-50'}`}
-                           >
-                              Admission Cancelled
-                           </button>
+                        <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-red-500">Admission Management</h3>
+                        
+                        {/* VISIT STATUS */}
+                        <div className="space-y-1.5">
+                           <label className="text-[9px] font-bold text-slate-400 uppercase">University / Office Visit</label>
+                           <div className="grid grid-cols-2 gap-2">
+                              {['Not Done', 'Done'].map(v => (
+                                 <button 
+                                    key={v}
+                                    onClick={() => handleFieldChange('visitStatus', v)}
+                                    className={`py-2 rounded text-[10px] font-bold uppercase border transition-all ${editedContact.visitStatus === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}
+                                 >
+                                    {v}
+                                 </button>
+                              ))}
+                           </div>
                         </div>
-                        {editedContact.status === 'CLOSED_WON' && (
-                           <p className="text-[10px] font-bold text-green-600 text-center animate-bounce uppercase">Lead added to Admissions Successfully!</p>
+
+                        {/* COUNSELLOR SELECTION (Visible if Visit is Done) */}
+                        {editedContact.visitStatus === 'Done' && (
+                           <div className="space-y-1.5 animate-fade-in">
+                              <label className="text-[9px] font-bold text-slate-400 uppercase">Providing Counsellor</label>
+                              <select 
+                                 value={editedContact.assignedCounsellor || ''} 
+                                 onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)}
+                                 className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-700 rounded outline-none focus:border-slate-400 transition-all cursor-pointer"
+                              >
+                                 <option value="">Select Counsellor...</option>
+                                 {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                              </select>
+                           </div>
                         )}
-                        {editedContact.status === 'CLOSED_LOST' && (
-                           <p className="text-[10px] font-bold text-red-600 text-center uppercase">Lead Closed / Cancelled</p>
-                        )}
+
+                        {/* ADMISSION STATUS */}
+                        <div className="space-y-1.5">
+                           <label className="text-[9px] font-bold text-slate-400 uppercase">Admission Verdict</label>
+                           <div className="grid grid-cols-3 gap-2">
+                              {[
+                                 { id: 'PENDING', label: 'Pending', color: 'slate' },
+                                 { id: 'CLOSED_WON', label: 'Completed', color: 'green' },
+                                 { id: 'CLOSED_LOST', label: 'Cancelled', color: 'red' }
+                              ].map(s => (
+                                 <button 
+                                    key={s.id}
+                                    onClick={() => handleFieldChange('status', s.id)}
+                                    className={`py-3 rounded text-[9px] font-bold uppercase transition-all border ${editedContact.status === s.id ? `bg-${s.color}-600 text-white border-${s.color}-600` : `bg-white text-${s.color}-600 border-${s.color}-100 hover:bg-${s.color}-50`}`}
+                                 >
+                                    {s.label}
+                                 </button>
+                              ))}
+                           </div>
+                        </div>
+
+                        {editedContact.status === 'CLOSED_WON' && <p className="text-[9px] font-bold text-green-600 text-center animate-pulse uppercase">Admission Successfully Completed!</p>}
+                        {editedContact.status === 'CLOSED_LOST' && <p className="text-[9px] font-bold text-red-600 text-center uppercase">Admission Cancelled / Lead Closed</p>}
                      </div>
 
                      <div className="space-y-6 pb-10">
