@@ -21,7 +21,7 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = React.useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userRole = (user.role || localStorage.getItem('role') || 'AGENT').toUpperCase();
+  const userRole = (user.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(' ', '_');
   const [isAvailable, setIsAvailable] = React.useState(localStorage.getItem('isAvailable') !== 'false');
 
   const toggleAvailability = async () => {

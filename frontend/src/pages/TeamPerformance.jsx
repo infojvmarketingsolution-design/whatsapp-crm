@@ -17,7 +17,7 @@ export default function TeamPerformance() {
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const userRole = (user.role || '').toUpperCase();
+  const userRole = (user.role || '').toUpperCase().replace(' ', '_');
 
   useEffect(() => {
     fetchTeamStats();
