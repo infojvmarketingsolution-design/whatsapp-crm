@@ -814,15 +814,35 @@ export default function Contacts({ roleAccess }) {
                     </div>
 
                     <div className="flex items-center space-x-4">
+                     <div className="flex flex-col items-end mr-2">
+                        <label className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Lead Status</label>
+                        <select 
+                           value={editedContact.status || 'NEW LEAD'} 
+                           onChange={e => handleFieldChange('status', e.target.value)}
+                           className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded border transition-all outline-none ${
+                              editedContact.status === 'CLOSED_WON' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
+                              editedContact.status === 'CLOSED_LOST' ? 'bg-red-50 border-red-200 text-red-600' :
+                              'bg-slate-50 border-slate-200 text-slate-600 focus:border-slate-400'
+                           }`}
+                        >
+                           <option value="NEW LEAD">New Lead</option>
+                           <option value="CONTACTED">Contacted</option>
+                           <option value="INTERESTED">Interested</option>
+                           <option value="FOLLOW_UP">Follow Up</option>
+                           <option value="CLOSED_WON">Admission Done</option>
+                           <option value="CLOSED_LOST">Admission Cancelled</option>
+                        </select>
+                     </div>
+
                      <button 
                         onClick={() => {
-                           console.log("[Diagnostics] Saving Contact:", selectedContact._id, editedContact);
+                           console.log("[Sync] Triggering Save for:", selectedContact._id);
                            updateContactDetail(selectedContact._id, editedContact);
                         }}
                         disabled={isUpdatingContact}
                         className={`px-8 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-widest shadow-sm transition-all flex items-center ${
                            showSaveFab 
-                           ? 'bg-slate-800 text-white hover:bg-black' 
+                           ? 'bg-slate-800 text-white hover:bg-black ring-4 ring-slate-800/10' 
                            : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                         }`}
                      >
