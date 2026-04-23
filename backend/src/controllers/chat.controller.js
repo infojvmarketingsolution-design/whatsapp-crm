@@ -43,7 +43,7 @@ const getContacts = async (req, res) => {
     const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
     
     // BUSINESS_HEAD, ADMIN, and SUPER_ADMIN always see everything
-    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD'].includes(userRole);
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER'].includes(userRole.toUpperCase());
     
     // Base match for active leads
     const matchStage = { isArchived: { $ne: true } };
