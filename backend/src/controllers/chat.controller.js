@@ -190,74 +190,37 @@ const performContactAction = async (req, res) => {
           
           return res.json({ brief });
        } else if (action === 'update_contact') {
-        if (payload.name !== undefined) contact.name = payload.name;
-        if (payload.email !== undefined) contact.email = payload.email;
-        if (payload.address !== undefined) contact.address = payload.address;
-        if (payload.pincode !== undefined) contact.pincode = payload.pincode;
-        if (payload.state !== undefined) contact.state = payload.state;
-        if (payload.qualification !== undefined) contact.qualification = payload.qualification;
-        // Status handled below with timeline event
-        if (payload.budget !== undefined) contact.budget = payload.budget;
-        if (payload.purchaseTimeline !== undefined) contact.purchaseTimeline = payload.purchaseTimeline;
-        if (payload.decisionMakerStatus !== undefined) contact.decisionMakerStatus = payload.decisionMakerStatus;
-        if (payload.heatLevel !== undefined) contact.heatLevel = payload.heatLevel;
-        if (payload.score !== undefined) contact.score = payload.score;
-        if (payload.profession !== undefined) contact.profession = payload.profession;
-        if (payload.companyName !== undefined) contact.companyName = payload.companyName;
-        if (payload.linkedinUrl !== undefined) contact.linkedinUrl = payload.linkedinUrl;
-        if (payload.interests !== undefined) contact.interests = payload.interests;
-        if (payload.leadConsiderDate !== undefined) contact.leadConsiderDate = payload.leadConsiderDate;
-        if (payload.firstName !== undefined) contact.firstName = payload.firstName;
-        if (payload.lastName !== undefined) contact.lastName = payload.lastName;
+          // 1. Specialized logic for Counsellor Assignment (Requires Timeline Event)
+          if (payload.assignedCounsellor !== undefined) {
+             const newCounsellor = payload.assignedCounsellor && payload.assignedCounsellor !== "" ? payload.assignedCounsellor : null;
+             if (newCounsellor?.toString() !== contact.assignedCounsellor?.toString()) {
+                let agentName = 'Unassigned';
+                if (newCounsellor) {
+                   const agent = await User.findById(newCounsellor);
+                   agentName = agent ? agent.name : 'Unknown';
+                }
+                contact.timeline.push({ 
+                   eventType: 'COUNSELLOR_ASSIGNED', 
+                   description: newCounsellor ? `Assigned to Counsellor: ${agentName}` : 'Counsellor unassigned', 
+                   timestamp: new Date() 
+                });
+             }
+          }
 
-        // Counselling & Admission fields
-        if (payload.visitStatus !== undefined) contact.visitStatus = payload.visitStatus;
-        if (payload.admissionStatus !== undefined) contact.admissionStatus = payload.admissionStatus;
-        if (payload.houseNo !== undefined) contact.houseNo = payload.houseNo;
-        if (payload.societyName !== undefined) contact.societyName = payload.societyName;
-        if (payload.streetAddress !== undefined) contact.streetAddress = payload.streetAddress;
-        if (payload.city !== undefined) contact.city = payload.city;
-        if (payload.altMobile !== undefined) contact.altMobile = payload.altMobile;
-        if (payload.visitType !== undefined) contact.visitType = payload.visitType;
-        if (payload.collectionAmount !== undefined) contact.collectionAmount = Number(payload.collectionAmount) || 0;
-        if (payload.pendingCollectionAmount !== undefined) contact.pendingCollectionAmount = Number(payload.pendingCollectionAmount) || 0;
-        if (payload.isClosed !== undefined) contact.isClosed = Boolean(payload.isClosed);
-        if (payload.closeReason !== undefined) contact.closeReason = payload.closeReason;
-        
-        // Sync name field for display consistency across the app
-        if (payload.firstName !== undefined || payload.lastName !== undefined) {
-           const newName = [contact.firstName, contact.lastName].filter(Boolean).join(' ');
-           if (newName) contact.name = newName;
-        }
+          // 2. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
+          const updatedContact = await ContactModel.findByIdAndUpdate(
+             contactId,
+             { $set: payload },
+             { new: true, runValidators: true }
+          );
+          
+          if (!updatedContact) return res.status(404).json({ error: 'Contact not found' });
+          
+          // 3. Final synchronization and save
+          await updatedContact.save();
 
-        if (payload.secondaryPhone !== undefined) contact.secondaryPhone = payload.secondaryPhone;
-        if (payload.pipelineStage !== undefined) {
-           contact.pipelineStage = payload.pipelineStage;
-           contact.timeline.push({ eventType: 'PIPELINE_MOVE', description: `Moved to ${payload.pipelineStage} stage`, timestamp: new Date() });
-        }
-        if (payload.estimatedValue !== undefined) contact.estimatedValue = Number(payload.estimatedValue) || 0;
-        if (payload.leadSource !== undefined) contact.leadSource = payload.leadSource;
-        if (payload.nextFollowUp !== undefined) contact.nextFollowUp = payload.nextFollowUp;
-        if (payload.selectedProgram !== undefined) contact.selectedProgram = payload.selectedProgram;
-        if (payload.preferredCallTime !== undefined) contact.preferredCallTime = payload.preferredCallTime;
-
-        if (payload.assignedCounsellor !== undefined) {
-            const newCounsellor = payload.assignedCounsellor && payload.assignedCounsellor !== "" ? payload.assignedCounsellor : null;
-            if (newCounsellor?.toString() !== contact.assignedCounsellor?.toString()) {
-               contact.assignedCounsellor = newCounsellor;
-               let agentName = 'Unassigned';
-               if (newCounsellor) {
-                  const agent = await User.findById(newCounsellor);
-                  agentName = agent ? agent.name : 'Unknown';
-               }
-               contact.timeline.push({ 
-                  eventType: 'COUNSELLOR_ASSIGNED', 
-                  description: newCounsellor ? `Assigned to Counsellor: ${agentName}` : 'Counsellor unassigned', 
-                  timestamp: new Date() 
-               });
-               contact.markModified('assignedCounsellor');
-            }
-         }
+          return res.json({ message: 'Contact updated', contact: updatedContact });
+       }
 
          if (payload.assignedAgent !== undefined) {
            // ENFORCE PERMISSIONS
