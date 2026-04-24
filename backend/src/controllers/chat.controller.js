@@ -156,14 +156,8 @@ const performContactAction = async (req, res) => {
     const contactId = req.params.contactId || req.body.contactId;
     const { action, payload } = req.body;
     
-    let ContactModel;
+    let ContactModel = req.tenantDb.model('Contact', ContactSchema);
     let contact;
-    
-    // CRITICAL: Delete the cached model to force Mongoose to recognize the NEW schema fields (altMobile, houseNo, etc.)
-    if (req.tenantDb.models.Contact) {
-       delete req.tenantDb.models.Contact;
-    }
-    ContactModel = req.tenantDb.model('Contact', ContactSchema);
     
     contact = await ContactModel.findById(contactId);
     if (!contact) return res.status(404).json({ error: 'Contact not found' });
