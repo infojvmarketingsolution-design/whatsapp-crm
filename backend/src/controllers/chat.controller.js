@@ -214,59 +214,7 @@ const performContactAction = async (req, res) => {
           await updatedContact.save();
 
           return res.json({ message: 'Contact updated', contact: updatedContact });
-       }
-
-         if (payload.assignedAgent !== undefined) {
-           // ENFORCE PERMISSIONS
-           const settings = await Settings.findOne({ tenantId: req.tenantId });
-           const userRole = (req.user?.role || 'AGENT').toUpperCase();
-           const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
-           const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
-           
-           const rolePermissions = roleAccess?.permissions || [];
-           const canAssignLead = isSuper || roleAccess?.allAccess || rolePermissions.includes('chat_assign_lead');
-           const assignSelfOnly = !isSuper && !roleAccess?.allAccess && rolePermissions.includes('chat_assign_self_only');
-
-           if (!canAssignLead && !assignSelfOnly) {
-              // Not allowed to assign at all - silently skip or error? 
-              // We'll skip to match frontend UI behavior where they shouldn't even see the dropdown.
-           } else {
-              const newAgent = payload.assignedAgent && payload.assignedAgent !== "" ? payload.assignedAgent : null;
-              
-              // If self-only, ensure they are only assigning to themselves (or unassigning if allowed, but usually self-only means only themselves)
-              if (assignSelfOnly && newAgent && newAgent.toString() !== req.user._id.toString()) {
-                 return res.status(0).json({ error: 'You can only assign leads to yourself.' });
-              }
-
-              if (newAgent?.toString() !== contact.assignedAgent?.toString()) {
-                 contact.assignedAgent = newAgent;
-                 
-                 let agentName = 'Unassigned';
-                 if (newAgent) {
-                    const agent = await User.findById(newAgent);
-                    agentName = agent ? agent.name : 'Unknown Agent';
-                 }
-                 
-                 contact.timeline.push({ 
-                    eventType: 'AGENT_ASSIGNED', 
-                    description: newAgent ? `Assigned to ${agentName}` : 'Lead unassigned', 
-                    timestamp: new Date() 
-                 });
-                 
-                 contact.markModified('assignedAgent');
-              }
-           }
-        }
-
-        if (payload.status !== undefined && payload.status !== contact.status) {
-           contact.status = payload.status;
-           contact.statusUpdatedAt = new Date();
-           contact.timeline.push({ eventType: 'STATUS_CHANGE', description: `Moved to ${payload.status}`, timestamp: new Date() });
-        }
-        
-        contact.timeline.push({ eventType: 'CONTACT_UPDATED', description: 'Contact details updated', timestamp: new Date() });
-        // Redundant save removed, will save at end of function
-    } else if (action === 'add_note') {
+        } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
        contact.notes.push(newNote);
