@@ -59,7 +59,14 @@ const authUser = async (req, res) => {
       if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
       const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
       const regexPattern = searchDigits.split('').join('[^0-9]*');
-      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': { $regex: new RegExp(regexPattern) } });
+      const regex = new RegExp(regexPattern);
+      const client = await Client.findOne({ 
+        $or: [
+          { 'whatsappConfig.phoneNumber': { $regex: regex } },
+          { 'mobileNumber': { $regex: regex } },
+          { 'phone': { $regex: regex } }
+        ]
+      });
       if (!client) return res.status(404).json({ message: 'Invalid API Number. Account not found.' });
       query.tenantId = client.tenantId;
     }
@@ -110,7 +117,14 @@ const requestOTP = async (req, res) => {
       if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
       const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
       const regexPattern = searchDigits.split('').join('[^0-9]*');
-      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': { $regex: new RegExp(regexPattern) } });
+      const regex = new RegExp(regexPattern);
+      const client = await Client.findOne({ 
+        $or: [
+          { 'whatsappConfig.phoneNumber': { $regex: regex } },
+          { 'mobileNumber': { $regex: regex } },
+          { 'phone': { $regex: regex } }
+        ]
+      });
       if (!client) return res.status(404).json({ message: 'Invalid API Number. Workspace not found.' });
       query.tenantId = client.tenantId;
     }
@@ -158,7 +172,14 @@ const verifyOTP = async (req, res) => {
       if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
       const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
       const regexPattern = searchDigits.split('').join('[^0-9]*');
-      const client = await Client.findOne({ 'whatsappConfig.phoneNumber': { $regex: new RegExp(regexPattern) } });
+      const regex = new RegExp(regexPattern);
+      const client = await Client.findOne({ 
+        $or: [
+          { 'whatsappConfig.phoneNumber': { $regex: regex } },
+          { 'mobileNumber': { $regex: regex } },
+          { 'phone': { $regex: regex } }
+        ]
+      });
       if (client) query.tenantId = client.tenantId;
     }
 
