@@ -58,7 +58,7 @@ const authUser = async (req, res) => {
       const cleanInput = apiNumber.replace(/[^\d]/g, '');
       if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
       const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
-      const regexPattern = searchDigits.split('').join('[\\s\\-()]*');
+      const regexPattern = searchDigits.split('').join('[^0-9]*');
       const client = await Client.findOne({ 'whatsappConfig.phoneNumber': { $regex: new RegExp(regexPattern) } });
       if (!client) return res.status(404).json({ message: 'Invalid API Number. Account not found.' });
       query.tenantId = client.tenantId;
@@ -109,7 +109,7 @@ const requestOTP = async (req, res) => {
       const cleanInput = apiNumber.replace(/[^\d]/g, '');
       if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
       const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
-      const regexPattern = searchDigits.split('').join('[\\s\\-()]*');
+      const regexPattern = searchDigits.split('').join('[^0-9]*');
       const client = await Client.findOne({ 'whatsappConfig.phoneNumber': { $regex: new RegExp(regexPattern) } });
       if (!client) return res.status(404).json({ message: 'Invalid API Number. Workspace not found.' });
       query.tenantId = client.tenantId;
@@ -157,7 +157,7 @@ const verifyOTP = async (req, res) => {
       const cleanInput = apiNumber.replace(/[^\d]/g, '');
       if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
       const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
-      const regexPattern = searchDigits.split('').join('[\\s\\-()]*');
+      const regexPattern = searchDigits.split('').join('[^0-9]*');
       const client = await Client.findOne({ 'whatsappConfig.phoneNumber': { $regex: new RegExp(regexPattern) } });
       if (client) query.tenantId = client.tenantId;
     }
