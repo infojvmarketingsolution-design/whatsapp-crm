@@ -159,12 +159,11 @@ const performContactAction = async (req, res) => {
     let ContactModel;
     let contact;
     
-    // FORCE SCHEMA REFRESH: Ensures new fields (altMobile, houseNo, closeReason) are recognized
+    // CRITICAL: Delete the cached model to force Mongoose to recognize the NEW schema fields (altMobile, houseNo, etc.)
     if (req.tenantDb.models.Contact) {
-       ContactModel = req.tenantDb.models.Contact;
-    } else {
-       ContactModel = req.tenantDb.model('Contact', ContactSchema);
+       delete req.tenantDb.models.Contact;
     }
+    ContactModel = req.tenantDb.model('Contact', ContactSchema);
     
     contact = await ContactModel.findById(contactId);
     if (!contact) return res.status(404).json({ error: 'Contact not found' });
