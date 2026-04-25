@@ -18,12 +18,20 @@ class WhatsAppService {
     };
   }
 
+  _sanitizePhone(phone) {
+    let sanitized = String(phone).replace(/\D/g, '');
+    if (sanitized.length === 10) {
+      sanitized = `91${sanitized}`;
+    }
+    return sanitized;
+  }
+
   async sendTextMessage(to, text) {
     return this.sendText(to, text);
   }
 
   async sendText(to, text) {
-    const sanitizedTo = String(to).replace(/\D/g, '');
+    const sanitizedTo = this._sanitizePhone(to);
     const payload = {
       messaging_product: 'whatsapp',
       to: sanitizedTo,
@@ -43,7 +51,7 @@ class WhatsAppService {
   }
 
   async sendTemplate(to, templateName, languageCode = 'en_US', components = []) {
-    const sanitizedTo = String(to).replace(/\D/g, '');
+    const sanitizedTo = this._sanitizePhone(to);
     const payload = {
       messaging_product: 'whatsapp',
       to: sanitizedTo,
@@ -115,7 +123,7 @@ class WhatsAppService {
   }
 
   async sendMedia(to, type, mediaId, caption = '', mediaUrl = null) {
-    const sanitizedTo = String(to).replace(/\D/g, '');
+    const sanitizedTo = this._sanitizePhone(to);
     const payload = {
       messaging_product: 'whatsapp',
       to: sanitizedTo,
@@ -142,7 +150,7 @@ class WhatsAppService {
   }
 
   async sendInteractiveButtonMessage(to, { header, body, footer, buttons }) {
-    const sanitizedTo = String(to).replace(/\D/g, '');
+    const sanitizedTo = this._sanitizePhone(to);
     const payload = {
       messaging_product: 'whatsapp',
       to: sanitizedTo,
@@ -217,7 +225,7 @@ class WhatsAppService {
   }
 
   async sendListMessage(to, { header, body, footer, buttonText, sections }) {
-    const sanitizedTo = String(to).replace(/\D/g, '');
+    const sanitizedTo = this._sanitizePhone(to);
     const payload = {
       messaging_product: 'whatsapp',
       to: sanitizedTo,
@@ -245,7 +253,7 @@ class WhatsAppService {
   }
 
   async sendCtaMessage(to, { type, body, title, value }) {
-    const sanitizedTo = String(to).replace(/\D/g, '');
+    const sanitizedTo = this._sanitizePhone(to);
     const payload = {
       messaging_product: 'whatsapp',
       to: sanitizedTo,
