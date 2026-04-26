@@ -226,6 +226,29 @@ const performContactAction = async (req, res) => {
             timestamp: new Date() 
           });
        }
+    } else if (action === 'reschedule_task') {
+       const task = contact.tasks.id(payload.taskId);
+       if (task) {
+          const oldDate = task.dueDate;
+          task.dueDate = new Date(payload.newDueDate);
+          contact.timeline.push({ 
+            eventType: 'TASK_RESCHEDULED', 
+            description: `Task "${task.title}" rescheduled from ${new Date(oldDate).toLocaleString()} to ${new Date(payload.newDueDate).toLocaleString()}`, 
+            timestamp: new Date() 
+          });
+       }
+    } else if (action === 'edit_task') {
+       const task = contact.tasks.id(payload.taskId);
+       if (task) {
+          task.title = payload.title || task.title;
+          task.dueDate = payload.dueDate ? new Date(payload.dueDate) : task.dueDate;
+          task.type = payload.type || task.type;
+          contact.timeline.push({ 
+            eventType: 'TASK_UPDATED', 
+            description: `Task updated: ${task.title}`, 
+            timestamp: new Date() 
+          });
+       }
     } else if (action === 'update_status') {
         contact.status = payload.status;
         contact.timeline.push({ eventType: 'STATUS_UPDATED', description: `Status updated to ${payload.status}`, timestamp: new Date() });
