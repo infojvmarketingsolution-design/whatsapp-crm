@@ -60,7 +60,7 @@ export default function Inbox({ roleAccess }) {
     'PENDING VISIT': 'PENDING VISIT',
     'PENDING_VISIT': 'PENDING VISIT'
   };
-  const [sidebarFilter, setSidebarFilter] = useState('ALL');
+  const [sidebarFilter, setSidebarFilter] = useState('NEW');
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -488,15 +488,15 @@ export default function Inbox({ roleAccess }) {
             />
           </div>
 
-          {/* Sidebar Quick Filters - Wrapped Grid (No Scroll) */}
-          <div className="flex flex-wrap gap-1.5 pb-1">
-            {['ALL', ...STATUSES].map(s => (
+          {/* Sidebar Quick Filters - Professional 3-Column Grid */}
+          <div className="grid grid-cols-3 gap-1.5 pb-1">
+            {STATUSES.map(s => (
                <button 
                   key={s} 
                   onClick={() => setSidebarFilter(s)}
-                  className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all border ${
+                  className={`px-1 py-1.5 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all border text-center ${
                     sidebarFilter === s 
-                    ? 'bg-[var(--theme-bg)] text-white border-[var(--theme-bg)] shadow-md' 
+                    ? 'bg-[var(--theme-bg)] text-white border-[var(--theme-bg)] shadow-sm' 
                     : 'bg-white text-gray-400 border-gray-100 hover:border-teal-200 hover:text-teal-600'
                   }`}
                >
