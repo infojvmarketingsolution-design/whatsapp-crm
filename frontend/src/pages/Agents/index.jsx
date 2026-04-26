@@ -48,7 +48,7 @@ export default function AgentsDashboard() {
   };
 
   const openEditModal = (agent) => {
-    setFormData({ ...agent, password: '', mpin: agent.mpin || '', phoneNumber: agent.phoneNumber || '' });
+    setFormData({ ...agent, password: '', mpin: '', phoneNumber: agent.phoneNumber || '' });
     setShowModal(true);
   };
 
@@ -59,10 +59,20 @@ export default function AgentsDashboard() {
       const tenantId = localStorage.getItem('tenantId');
       const isEdit = !!formData._id;
       const url = isEdit ? `/api/agents/${formData._id}` : `/api/agents`;
+      
+      // Only send mpin if it's a full 6-digit entry (to avoid accidental re-hashing or clearing)
+      const submitData = { ...formData };
+      if (isEdit && formData.mpin.length !== 6) {
+        delete submitData.mpin;
+      }
+      if (isEdit && !formData.password) {
+        delete submitData.password;
+      }
+
       const res = await fetch(url, {
         method: isEdit ? 'PUT' : 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submitData)
       });
       
       if (res.ok) {

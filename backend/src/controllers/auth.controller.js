@@ -107,8 +107,14 @@ const loginWithMpin = async (req, res) => {
   try {
     if (!phoneNumber) return res.status(400).json({ message: 'Phone number is required' });
     
-    // Find user by phone number
-    const user = await User.findOne({ phoneNumber });
+    // Normalize phone number for search (take last 10 digits for robust matching)
+    const cleanNumber = phoneNumber.replace(/[^\d]/g, '');
+    const searchDigits = cleanNumber.length > 10 ? cleanNumber.slice(-10) : cleanNumber;
+    const regexPattern = searchDigits.split('').join('[^0-9]*');
+    const regex = new RegExp(regexPattern);
+
+    // Find user by phone number using regex
+    const user = await User.findOne({ phoneNumber: { $regex: regex } });
 
     if (!user) {
       return res.status(404).json({ message: 'Account not found with this number' });
