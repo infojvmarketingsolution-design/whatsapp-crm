@@ -59,11 +59,10 @@ const getContacts = async (req, res) => {
     const matchStage = { isArchived: { $ne: true } };
     
     if (mustRestrict) {
+      const uid = String(req.user._id);
       matchStage.$or = [
-        { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
-        { assignedAgent: String(req.user._id) },
-        { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) },
-        { assignedCounsellor: String(req.user._id) }
+        { assignedAgent: uid },
+        { assignedCounsellor: uid }
       ];
     }
     // Removed logging for production stability
@@ -448,9 +447,7 @@ const performBulkContactAction = async (req, res) => {
        const visibleContacts = await ContactModel.find({
           _id: { $in: contactIds },
           $or: [
-             { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
              { assignedAgent: String(req.user._id) },
-             { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) },
              { assignedCounsellor: String(req.user._id) }
           ]
        }).select('_id');
@@ -792,11 +789,10 @@ const getDashboardStats = async (req, res) => {
     const mustRestrict = !isHighLevel && (!roleAccess || roleAccess.allAccess !== true);
 
     if (mustRestrict) {
+       const uid = String(req.user._id);
        baseFilter.$or = [
-         { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
-         { assignedAgent: String(req.user._id) },
-         { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) },
-         { assignedCounsellor: String(req.user._id) }
+         { assignedAgent: uid },
+         { assignedCounsellor: uid }
        ];
     }
 
@@ -1164,11 +1160,10 @@ const getLeadDetailsStats = async (req, res) => {
     let matchQuery = { isArchived: { $ne: true } };
 
     if (mustRestrict) {
+       const uid = String(req.user._id);
        matchQuery.$or = [
-          { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
-          { assignedAgent: String(req.user._id) },
-          { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) },
-          { assignedCounsellor: String(req.user._id) }
+          { assignedAgent: uid },
+          { assignedCounsellor: uid }
        ];
     }
 
