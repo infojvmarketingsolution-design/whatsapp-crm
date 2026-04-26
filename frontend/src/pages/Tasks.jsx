@@ -54,6 +54,7 @@ export default function Tasks() {
   // Edit Task State
   const [editingTask, setEditingTask] = useState(null);
   const [editTaskTitle, setEditTaskTitle] = useState('');
+  const [editTaskDescription, setEditTaskDescription] = useState('');
   const [editTaskDate, setEditTaskDate] = useState('');
   const [editTaskType, setEditTaskType] = useState('');
   const [reschedulingTask, setReschedulingTask] = useState(null);
@@ -1581,8 +1582,14 @@ export default function Tasks() {
                 <input type="text" value={editTaskTitle} onChange={e=>setEditTaskTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-indigo-500 outline-none" />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Due Date & Time</label>
-                <input type="datetime-local" value={editTaskDate} onChange={e=>setEditTaskDate(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-indigo-500 outline-none" />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Task Description</label>
+                <textarea 
+                  rows={4}
+                  value={editTaskDescription} 
+                  onChange={e=>setEditTaskDescription(e.target.value)} 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-indigo-500 outline-none resize-none"
+                  placeholder="Enter task details..."
+                />
               </div>
               <div className="pt-4 flex justify-end space-x-3">
                 <button onClick={() => setEditingTask(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50">Cancel</button>
