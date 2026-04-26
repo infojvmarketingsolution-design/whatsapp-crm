@@ -11,6 +11,8 @@ const UserSchema = new mongoose.Schema({
   isAvailableForAutoAssign: { type: Boolean, default: true },
   phoneNumber: { type: String },
   lastLeadAssignedAt: { type: Date },
+  dailyLeadCount: { type: Number, default: 0 },
+  lastLeadResetAt: { type: Date, default: Date.now },
   otp: {
     code: { type: String },
     expiresAt: { type: Date },
