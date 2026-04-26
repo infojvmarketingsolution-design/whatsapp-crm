@@ -63,6 +63,7 @@ export default function Tasks() {
   const [isRescheduling, setIsRescheduling] = useState(false);
   const [showCriticalOverduePopup, setShowCriticalOverduePopup] = useState(false);
   const [criticalSuspendAt, setCriticalSuspendAt] = useState(null);
+  const [cancellingTaskConfirm, setCancellingTaskConfirm] = useState(null);
 
   const PIPELINE_STAGES = ['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'];
   const STATUS_MAPPING = {
@@ -872,14 +873,14 @@ export default function Tasks() {
                                              Reschedule
                                           </button>
                                           <button 
-                                             onClick={() => { updateTaskStatus(t.contactId, t._id, 'cancel_task'); }}
-                                             className="w-full text-left px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center transition-colors"
-                                          >
-                                             <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3">
-                                                <AlertCircle size={16} />
-                                             </div>
-                                             Cancel Task
-                                          </button>
+                                              onClick={() => { setCancellingTaskConfirm(t); setActiveDropdown(null); }}
+                                              className="w-full text-left px-4 py-2.5 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center transition-colors"
+                                           >
+                                              <div className="w-8 h-8 rounded-lg bg-rose-50 text-rose-600 flex items-center justify-center mr-3">
+                                                 <AlertCircle size={16} />
+                                              </div>
+                                              Cancel Task
+                                           </button>
                                           <button 
                                              onClick={() => { rescheduleToToday(t.contactId, t._id); setActiveDropdown(null); }}
                                              className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
@@ -1568,7 +1569,45 @@ export default function Tasks() {
       )}
 
 
-      {/* Edit Task Modal */}
+      {/* Cancel Confirmation Modal */}
+      {cancellingTaskConfirm && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-md animate-fade-in" onClick={() => setCancellingTaskConfirm(null)}>
+          <div className="bg-white rounded-[2rem] w-[450px] overflow-hidden shadow-3xl animate-pop-in" onClick={e => e.stopPropagation()}>
+            <div className="p-8 text-center">
+              <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-bounce">
+                <AlertCircle size={40} />
+              </div>
+              <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight uppercase">Efficiency Warning!</h3>
+              <p className="text-slate-500 font-bold text-sm leading-relaxed px-4">
+                Are you absolutely sure you want to cancel this task? 
+                <br/><br/>
+                <span className="text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 inline-block mt-2">
+                  ⚠️ Your efficiency will drop by <span className="font-black underline">5%</span> if you cancel.
+                </span>
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-0 border-t border-slate-100">
+              <button 
+                onClick={() => setCancellingTaskConfirm(null)}
+                className="py-6 text-xs font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all border-r border-slate-100"
+              >
+                No, Keep Task
+              </button>
+              <button 
+                onClick={() => {
+                  updateTaskStatus(cancellingTaskConfirm.contactId, cancellingTaskConfirm._id, 'cancel_task');
+                  setCancellingTaskConfirm(null);
+                }}
+                className="py-6 text-xs font-black uppercase tracking-widest text-rose-600 hover:bg-rose-50 transition-all"
+              >
+                Yes, Cancel Task
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Follow-Up Modal */}
       {editingTask && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setEditingTask(null)}>
           <div className="bg-white rounded-3xl w-[400px] p-6 shadow-2xl animate-pop-in" onClick={e => e.stopPropagation()}>
