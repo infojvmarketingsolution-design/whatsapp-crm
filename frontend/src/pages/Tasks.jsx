@@ -57,7 +57,24 @@ export default function Tasks() {
   const [showCriticalOverduePopup, setShowCriticalOverduePopup] = useState(false);
   const [criticalSuspendAt, setCriticalSuspendAt] = useState(null);
 
-  const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing'];
+  const PIPELINE_STAGES = ['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'];
+  const STATUS_MAPPING = {
+    'NEW LEAD': 'NEW',
+    'NEW': 'NEW',
+    'CONTACTED': 'OPEN',
+    'INTERESTED': 'OPEN',
+    'FOLLOW UP': 'OPEN',
+    'FOLLOW_UP': 'OPEN',
+    'OPEN': 'OPEN',
+    'CLOSED_WON': 'ADMISSION',
+    'ADMISSION': 'ADMISSION',
+    'CLOSED_LOST': 'CLOSE',
+    'CLOSED': 'CLOSE',
+    'CLOSE': 'CLOSE',
+    'VISITED': 'VISITED',
+    'PENDING VISIT': 'PENDING VISIT',
+    'PENDING_VISIT': 'PENDING VISIT'
+  };
 
   useEffect(() => {
     fetchTasks();
@@ -105,13 +122,15 @@ export default function Tasks() {
         contacts.forEach(c => {
           if (c.tasks && c.tasks.length > 0) {
             c.tasks.forEach(t => {
-              allTasks.push({ 
-                 ...t, 
-                 contactName: c.name || c.phone, 
-                 contactId: c._id,
-                 phone: c.phone,
-                 assignedAgent: c.assignedAgent
-              });
+               allTasks.push({ 
+                  ...t, 
+                  contactName: c.name || c.phone, 
+                  contactId: c._id,
+                  phone: c.phone,
+                  assignedAgent: c.assignedAgent,
+                  assignedCounsellor: c.assignedCounsellor,
+                  contactStatus: c.status
+               });
             });
           }
         });
@@ -664,6 +683,27 @@ export default function Tasks() {
                                  <div className={`flex items-center text-[11px] font-bold ${isOverdue ? 'text-rose-500' : 'text-slate-400'}`}>
                                     <Calendar size={12} className="mr-1.5 opacity-60" />
                                     {new Date(t.dueDate).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                                 </div>
+
+                                 {/* Lead Owner Badge */}
+                                 {(t.assignedAgent || t.assignedCounsellor) && (
+                                    <div className="flex items-center px-2 py-0.5 bg-slate-50 text-[9px] font-bold text-slate-500 border border-slate-100 rounded-md">
+                                       <Briefcase size={10} className="mr-1 opacity-60" />
+                                       Owner: {agents.find(a => a._id === (t.assignedAgent || t.assignedCounsellor))?.name || 'Assigned'}
+                                    </div>
+                                 )}
+
+                                 {/* Lead Status Badge */}
+                                 <div className={`flex items-center px-2 py-0.5 text-[9px] font-black uppercase rounded-md border ${
+                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'NEW' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'OPEN' ? 'bg-teal-50 text-teal-600 border-teal-100' :
+                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'ADMISSION' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'CLOSE' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'VISITED' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'PENDING VISIT' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                                    'bg-slate-50 text-slate-500 border-slate-100'
+                                 }`}>
+                                    {STATUS_MAPPING[t.contactStatus?.toUpperCase()] || t.contactStatus?.replace('_', ' ') || 'OPEN'}
                                  </div>
                               </div>
                            </div>
