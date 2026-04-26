@@ -252,7 +252,16 @@ const performContactAction = async (req, res) => {
        }
     } else if (action === 'update_status') {
         contact.status = payload.status;
-        contact.timeline.push({ eventType: 'STATUS_UPDATED', description: `Status updated to ${payload.status}`, timestamp: new Date() });
+        if (payload.status === 'CLOSE') {
+          contact.isClosed = true;
+        } else {
+          contact.isClosed = false;
+        }
+        contact.timeline.push({ 
+          eventType: 'STATUS_CHANGE', 
+          description: `Status updated to ${payload.status}`, 
+          timestamp: new Date() 
+        });
      } else if (action === 'generate_brief') {
           const Message = req.tenantDb.model('Message', MessageSchema);
           const messages = await Message.find({ contactId }).sort({ createdAt: 1 });
