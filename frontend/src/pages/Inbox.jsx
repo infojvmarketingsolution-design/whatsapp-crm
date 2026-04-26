@@ -509,6 +509,11 @@ export default function Inbox({ roleAccess }) {
                       <h3 className={`text-sm font-bold truncate ${
                           activeChat && activeChat._id === c._id ? 'text-gray-900' : 'text-gray-800'
                         }`}>{c.name}</h3>
+                      {c.assignedAgentName && (
+                        <span className="text-[9px] font-black bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded border border-teal-100 flex-shrink-0">
+                          {c.assignedAgentName}
+                        </span>
+                      )}
                       {c.heatLevel === 'Hot' && <Flame size={14} className="text-red-500 animate-pulse fill-red-500/20" />}
                       {c.heatLevel === 'Warm' && <Flame size={13} className="text-orange-400 fill-orange-400/10" />}
                     </div>

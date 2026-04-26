@@ -145,6 +145,27 @@ const getContacts = async (req, res) => {
     ];
 
     const contacts = await Contact.aggregate(pipeline);
+
+    // Enrich with Agent/Counsellor names
+    const userIds = new Set();
+    contacts.forEach(c => {
+      if (c.assignedAgent) userIds.add(c.assignedAgent);
+      if (c.assignedCounsellor) userIds.add(c.assignedCounsellor);
+    });
+
+    if (userIds.size > 0) {
+      const users = await User.find({ _id: { $in: Array.from(userIds) } }).select('name');
+      const userMap = users.reduce((acc, u) => {
+        acc[u._id.toString()] = u.name;
+        return acc;
+      }, {});
+
+      contacts.forEach(c => {
+        c.assignedAgentName = userMap[c.assignedAgent] || null;
+        c.assignedCounsellorName = userMap[c.assignedCounsellor] || null;
+      });
+    }
+
     res.json(contacts);
   } catch (error) {
     res.status(500).json({ message: error.message });
