@@ -56,7 +56,9 @@ export default function Tasks() {
   const [editTaskTitle, setEditTaskTitle] = useState('');
   const [editTaskDate, setEditTaskDate] = useState('');
   const [editTaskType, setEditTaskType] = useState('');
-  const [isUpdatingTask, setIsUpdatingTask] = useState(false);
+  const [reschedulingTask, setReschedulingTask] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [isRescheduling, setIsRescheduling] = useState(false);
   const [showCriticalOverduePopup, setShowCriticalOverduePopup] = useState(false);
   const [criticalSuspendAt, setCriticalSuspendAt] = useState(null);
 
@@ -347,6 +349,41 @@ export default function Tasks() {
        setIsUpdatingTask(false);
      }
   };
+
+  const handleRescheduleSubmit = async () => {
+      if (!reschedulingTask || !rescheduleDate) return;
+      
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+
+      setIsRescheduling(true);
+      try {
+        const res = await fetch(`/api/chat/action`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+             contactId: reschedulingTask.contactId, 
+             action: 'reschedule_task', 
+             payload: { taskId: reschedulingTask._id, newDueDate: rescheduleDate } 
+          })
+        });
+
+        if (res.ok) {
+          toast.success("Task rescheduled successfully");
+          setReschedulingTask(null);
+          fetchTasks();
+        } else {
+          const errData = await res.json();
+          toast.error(errData.message || "Failed to reschedule task");
+        }
+      } catch (err) {
+        console.error(err);
+        toast.error("Network error while rescheduling");
+      } finally {
+        setIsRescheduling(false);
+      }
+  };
+
 
   const completeTask = async (contactId, taskId) => {
     try {
@@ -824,7 +861,11 @@ export default function Tasks() {
                                              Edit Task
                                           </button>
                                           <button 
-                                             onClick={() => { updateTaskStatus(t.contactId, t._id, 'in_progress_task'); }}
+                                             onClick={() => { 
+                                                setReschedulingTask(t);
+                                                setRescheduleDate(new Date(t.dueDate).toISOString().slice(0, 16));
+                                                setActiveDropdown(null);
+                                             }}
                                              className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
                                           >
                                              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
@@ -1553,7 +1594,44 @@ export default function Tasks() {
           </div>
         </div>
       )}
-
+      {/* Reschedule Task Modal */}
+      {reschedulingTask && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setReschedulingTask(null)}>
+          <div className="bg-white rounded-3xl w-[400px] p-8 shadow-2xl animate-pop-in" onClick={e => e.stopPropagation()}>
+            <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
+                <CalendarDays size={32} />
+            </div>
+            <h3 className="text-xl font-black text-slate-800 mb-2">Reschedule Task</h3>
+            <p className="text-sm font-bold text-slate-500 mb-6">Select a new date and time for this follow-up.</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">New Date & Time</label>
+                <input 
+                  type="datetime-local" 
+                  value={rescheduleDate} 
+                  onChange={e=>setRescheduleDate(e.target.value)} 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 text-sm font-bold focus:border-blue-500 focus:ring-4 focus:ring-blue-500/5 outline-none transition-all" 
+                />
+              </div>
+              
+              <div className="pt-4 flex flex-col space-y-3">
+                <button 
+                  onClick={handleRescheduleSubmit} 
+                  disabled={isRescheduling || !rescheduleDate} 
+                  className="w-full py-4 rounded-2xl text-sm font-black bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-600/20 disabled:opacity-50 transition-all flex items-center justify-center"
+                >
+                  {isRescheduling ? <RefreshCw size={18} className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
+                  {isRescheduling ? 'Updating...' : 'Confirm Reschedule'}
+                </button>
+                <button onClick={() => setReschedulingTask(null)} className="w-full py-4 rounded-2xl text-sm font-bold text-slate-500 hover:bg-slate-50 transition-colors">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Critical Overdue Popup */}
       {showCriticalOverduePopup && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-rose-900/80 backdrop-blur-md animate-fade-in">
