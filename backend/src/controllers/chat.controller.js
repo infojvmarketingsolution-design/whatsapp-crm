@@ -1138,8 +1138,71 @@ const getPendingTasksTeam = async (req, res) => {
        counsellorTasks
     });
 
+const getLeadDetailsStats = async (req, res) => {
+  try {
+    const { category } = req.query;
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+
+    // Visibility Filtering
+    const settings = await Settings.findOne({ tenantId: req.tenantId });
+    const userRole = (req.user?.role || 'AGENT').toUpperCase();
+    const normalizedRole = userRole.replace(/\s/g, '_');
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER'].includes(userRole);
+    
+    const roleAccess = settings?.roleAccess instanceof Map ? 
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
+
+    const mustRestrict = !isHighLevel && (!roleAccess || roleAccess.allAccess !== true);
+    
+    let matchQuery = { isArchived: { $ne: true } };
+
+    if (mustRestrict) {
+       matchQuery.$or = [
+          { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
+          { assignedAgent: String(req.user._id) },
+          { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) },
+          { assignedCounsellor: String(req.user._id) }
+       ];
+    }
+
+    switch (category) {
+      case 'new_leads':
+        matchQuery.status = { $in: ['NEW LEAD', 'NEW'] };
+        break;
+      case 'open_leads':
+        matchQuery.status = { $in: ['OPEN', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP'] };
+        break;
+      case 'closed_leads':
+        matchQuery.status = { $in: ['CLOSE', 'CLOSED', 'CLOSED_LOST'] };
+        break;
+      case 'visited':
+        matchQuery.status = 'VISITED';
+        break;
+      case 'pending_visit':
+        matchQuery.status = 'PENDING_VISIT';
+        break;
+      case 'admissions':
+        matchQuery.status = { $in: ['ADMISSION', 'CLOSED_WON'] };
+        break;
+      case 'collections':
+        matchQuery.collectionAmount = { $gt: 0 };
+        break;
+      case 'pending_collections':
+        matchQuery.pendingCollectionAmount = { $gt: 0 };
+        break;
+      default:
+        return res.status(400).json({ error: 'Invalid category' });
+    }
+
+    const contacts = await Contact.find(matchQuery)
+      .select('name phone status lastActivity')
+      .sort({ updatedAt: -1 })
+      .limit(200);
+
+    res.json(contacts);
   } catch (error) {
-    console.error(`[GET /stats/pending-tasks] FAILED:`, error.message);
+    console.error(`[GET /stats/lead-details] FAILED:`, error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -1157,6 +1220,7 @@ module.exports = {
   updateFcmToken,
   summarizeLead,
   getLeadAnalysis,
+  getLeadDetailsStats,
   getUserBreakdownStats,
   getPendingTasksTeam
 };

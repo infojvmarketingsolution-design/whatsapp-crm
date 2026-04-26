@@ -136,6 +136,7 @@ function Dashboard() {
   const [wabaConfig, setWabaConfig] = React.useState(null);
   const [showRefillModal, setShowRefillModal] = React.useState(false);
   const [breakdownModal, setBreakdownModal] = React.useState({ show: false, category: '', categoryName: '', data: [], loading: false });
+  const [leadDetailsModal, setLeadDetailsModal] = React.useState({ show: false, category: '', categoryName: '', data: [], loading: false });
   const [pendingTasksModal, setPendingTasksModal] = React.useState({ show: false, telecallerTasks: [], counsellorTasks: [], loading: false });
 
   const fetchPendingTasksTeam = async () => {
@@ -176,6 +177,24 @@ function Dashboard() {
     } catch (err) {
       console.error('Failed to fetch user breakdown', err);
       setBreakdownModal(prev => ({ ...prev, loading: false }));
+    }
+  };
+
+  const fetchLeadDetails = async (category, categoryName) => {
+    setLeadDetailsModal({ show: true, category, categoryName, data: [], loading: true });
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/chat/stats/lead-details?category=${category}`, {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setLeadDetailsModal(prev => ({ ...prev, data, loading: false }));
+      }
+    } catch (e) {
+      console.error('Failed to fetch lead details', e);
+      setLeadDetailsModal(prev => ({ ...prev, loading: false }));
     }
   };
   
@@ -369,14 +388,46 @@ function Dashboard() {
               <span className="text-[10px] bg-teal-100 text-teal-600 px-2 py-0.5 rounded-full font-bold animate-pulse">Live Stats</span>
            </div>
            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-              <DashboardCard title="NEW" value={loading ? "..." : stats.newLeads} subtext="Pending initial contact" icon={PlusCircle} />
-              <DashboardCard title="OPEN" value={loading ? "..." : stats.openLeads} subtext="Active in pipeline" icon={MessageCircle} />
-              <DashboardCard title="CLOSE" value={loading ? "..." : stats.closedLeads} subtext="Total Won/Lost" icon={X} />
-              <DashboardCard title="VISIT" value={loading ? "..." : stats.totalVisit} subtext="Leads who Visited" icon={Building2} />
-              <DashboardCard title="PENDING VISIT" value={loading ? "..." : stats.pendingVisit} subtext="Follow-up required" icon={History} />
-              <DashboardCard title="ADMISSION" value={loading ? "..." : stats.totalAdmission} subtext="Successfully enrolled" icon={CheckCircle} />
-              <DashboardCard title="COLLECTION" value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} subtext="Total fee received" icon={Wallet} />
-              <DashboardCard title="PENDING COLLECTION" value={loading ? "..." : `₹${stats.pendingCollection?.toLocaleString()}`} subtext="Outstanding balance" icon={Wallet} />
+              <DashboardCard 
+                isClickable={true}
+                onClick={() => fetchLeadDetails('new_leads', 'New Leads')}
+                title="NEW" value={loading ? "..." : stats.newLeads} subtext="Pending initial contact" icon={PlusCircle} 
+              />
+              <DashboardCard 
+                isClickable={true}
+                onClick={() => fetchLeadDetails('open_leads', 'Open Leads')}
+                title="OPEN" value={loading ? "..." : stats.openLeads} subtext="Active in pipeline" icon={MessageCircle} 
+              />
+              <DashboardCard 
+                isClickable={true}
+                onClick={() => fetchLeadDetails('closed_leads', 'Closed Leads')}
+                title="CLOSE" value={loading ? "..." : stats.closedLeads} subtext="Total Won/Lost" icon={X} 
+              />
+              <DashboardCard 
+                isClickable={true}
+                onClick={() => fetchLeadDetails('visited', 'Visited Leads')}
+                title="VISIT" value={loading ? "..." : stats.totalVisit} subtext="Leads who Visited" icon={Building2} 
+              />
+              <DashboardCard 
+                isClickable={true}
+                onClick={() => fetchLeadDetails('pending_visit', 'Pending Visit Leads')}
+                title="PENDING VISIT" value={loading ? "..." : stats.pendingVisit} subtext="Follow-up required" icon={History} 
+              />
+              <DashboardCard 
+                isClickable={true}
+                onClick={() => fetchLeadDetails('admissions', 'Admission Enrolled')}
+                title="ADMISSION" value={loading ? "..." : stats.totalAdmission} subtext="Successfully enrolled" icon={CheckCircle} 
+              />
+              <DashboardCard 
+                isClickable={true}
+                onClick={() => fetchLeadDetails('collections', 'Total Fee Collection')}
+                title="COLLECTION" value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} subtext="Total fee received" icon={Wallet} 
+              />
+              <DashboardCard 
+                isClickable={true}
+                onClick={() => fetchLeadDetails('pending_collections', 'Pending Fee Collection')}
+                title="PENDING COLLECTION" value={loading ? "..." : `₹${stats.pendingCollection?.toLocaleString()}`} subtext="Outstanding balance" icon={Wallet} 
+              />
            </div>
         </div>
       )}
@@ -651,6 +702,75 @@ function Dashboard() {
            </div>
         </div>
       )}
+       {/* Lead Details Modal */}
+       {leadDetailsModal.show && (
+         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/40 backdrop-blur-md animate-fade-in p-4" onClick={() => setLeadDetailsModal(prev => ({ ...prev, show: false }))}>
+            <div className="bg-white/95 backdrop-blur-2xl w-full max-w-2xl rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden animate-scale-in flex flex-col max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
+               <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-teal-50/50 to-blue-50/50 shrink-0">
+                  <div className="flex items-center space-x-4">
+                     <div className="p-3 bg-white shadow-sm border border-slate-100 rounded-2xl text-teal-600">
+                        {leadDetailsModal.category === 'new_leads' ? <PlusCircle size={24} /> :
+                         leadDetailsModal.category === 'open_leads' ? <MessageCircle size={24} /> :
+                         leadDetailsModal.category === 'closed_leads' ? <X size={24} /> :
+                         leadDetailsModal.category === 'visited' ? <Building2 size={24} /> :
+                         leadDetailsModal.category === 'pending_visit' ? <History size={24} /> :
+                         leadDetailsModal.category === 'admissions' ? <CheckCircle size={24} /> : <Wallet size={24} />}
+                     </div>
+                     <div>
+                        <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase leading-none">{leadDetailsModal.categoryName}</h2>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-2">Detailed Contact List</p>
+                     </div>
+                  </div>
+                  <button onClick={() => setLeadDetailsModal(prev => ({ ...prev, show: false }))} className="p-3 bg-white/50 text-slate-400 hover:text-rose-500 rounded-2xl transition-all shadow-sm">
+                     <X size={20} />
+                  </button>
+               </div>
+
+               <div className="flex-1 overflow-y-auto p-8 bg-slate-50/30 custom-scrollbar">
+                  {leadDetailsModal.loading ? (
+                    <div className="flex flex-col items-center justify-center py-20">
+                       <div className="w-12 h-12 border-4 border-teal-500/20 border-t-teal-600 rounded-full animate-spin mb-4"></div>
+                       <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Fetching contacts...</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                       {leadDetailsModal.data.length === 0 ? (
+                         <div className="text-center py-12">
+                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                               <Users size={32} />
+                            </div>
+                            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-relaxed">No contacts found in this<br/>category at the moment.</p>
+                         </div>
+                       ) : leadDetailsModal.data.map((lead, i) => (
+                         <div key={i} className="group flex items-center justify-between p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-teal-200 hover:-translate-y-0.5 transition-all duration-300">
+                            <div className="flex items-center space-x-4">
+                               <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-teal-600 font-black text-lg group-hover:bg-teal-50 group-hover:scale-110 transition-all">
+                                  {lead.name.charAt(0)}
+                               </div>
+                               <div>
+                                  <p className="text-sm font-black text-slate-800">{lead.name}</p>
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{lead.phone}</p>
+                               </div>
+                            </div>
+                            <div className="text-right">
+                               <span className="inline-block px-3 py-1 bg-teal-50 text-teal-600 text-[9px] font-black uppercase rounded-lg border border-teal-100">
+                                  {lead.status}
+                               </span>
+                            </div>
+                         </div>
+                       ))}
+                    </div>
+                  )}
+               </div>
+               
+               <div className="p-6 bg-white border-t border-slate-100 text-center shrink-0">
+                  <button onClick={() => setLeadDetailsModal(prev => ({ ...prev, show: false }))} className="px-10 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-premium">
+                     Close Details
+                  </button>
+               </div>
+            </div>
+         </div>
+       )}
     </>
   );
 }
