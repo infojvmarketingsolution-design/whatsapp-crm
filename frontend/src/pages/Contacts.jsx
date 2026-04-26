@@ -974,7 +974,7 @@ export default function Contacts({ roleAccess }) {
                               <label className="text-[9px] font-bold text-slate-400 uppercase">Visit Conducted?</label>
                               <div className="grid grid-cols-2 gap-2">
                                  {['Not Done', 'Done'].map(v => (
-                                    <button key={v} onClick={() => handleFieldChange('visitStatus', v)} className={`py-2.5 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitStatus === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}>{v}</button>
+                                    <button key={v} onClick={() => handleFieldChange('visitStatus', v)} className={`py-2.5 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitStatus === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}>{v === 'Done' ? 'follow up update' : v}</button>
                                  ))}
                               </div>
                            </div>
@@ -1008,7 +1008,7 @@ export default function Contacts({ roleAccess }) {
                                        {/* ADMISSION VERDICT */}
                                        <div className="flex bg-slate-50 p-1 rounded-lg border border-slate-200">
                                           {[
-                                             { id: 'CLOSED_WON', label: 'Done', color: 'green' },
+                                             { id: 'CLOSED_WON', label: 'follow up update', color: 'green' },
                                              { id: 'PENDING', label: 'Pending', color: 'slate' },
                                              { id: 'CLOSED_LOST', label: 'Canceled', color: 'red' }
                                           ].map(s => (
