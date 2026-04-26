@@ -43,6 +43,18 @@ export default function Inbox({ roleAccess }) {
   const [newTagName, setNewTagName] = useState('');
   const PREDEFINED_TAGS = ['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'];
   const STATUSES = ['NEW LEAD', 'OPEN', 'CLOSED', 'ADMISSION'];
+  const STATUS_MAPPING = {
+    'NEW LEAD': 'NEW LEAD',
+    'CONTACTED': 'OPEN',
+    'INTERESTED': 'OPEN',
+    'FOLLOW UP': 'OPEN',
+    'FOLLOW_UP': 'OPEN',
+    'OPEN': 'OPEN',
+    'CLOSED_WON': 'ADMISSION',
+    'ADMISSION': 'ADMISSION',
+    'CLOSED_LOST': 'CLOSED',
+    'CLOSED': 'CLOSED'
+  };
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -1314,7 +1326,7 @@ export default function Inbox({ roleAccess }) {
                     <span className="text-teal-800/70 font-bold tracking-wide">PIPELINE STATUS</span>
                     <div className="relative">
                       <button onClick={() => setShowStatusDropdown(!showStatusDropdown)} className="flex items-center space-x-1.5 bg-white px-2.5 py-1 rounded shadow-sm border border-teal-100 text-[var(--theme-text)] font-bold tracking-wide uppercase text-[10px] hover:bg-teal-50 transition">
-                         <span>{activeChat?.status?.replace('_', ' ') || 'NEW LEAD'}</span>
+                         <span>{STATUS_MAPPING[activeChat?.status?.toUpperCase()] || activeChat?.status?.replace('_', ' ') || 'NEW LEAD'}</span>
                          <ChevronDown size={12} />
                       </button>
                       {showStatusDropdown && (
