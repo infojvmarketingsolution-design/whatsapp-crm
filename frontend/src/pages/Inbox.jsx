@@ -488,16 +488,16 @@ export default function Inbox({ roleAccess }) {
             />
           </div>
 
-          {/* Sidebar Quick Filters */}
-          <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar pb-1">
+          {/* Sidebar Quick Filters - Wrapped Grid (No Scroll) */}
+          <div className="flex flex-wrap gap-1.5 pb-1">
             {['ALL', ...STATUSES].map(s => (
                <button 
                   key={s} 
                   onClick={() => setSidebarFilter(s)}
-                  className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+                  className={`px-2.5 py-1 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all border ${
                     sidebarFilter === s 
-                    ? 'bg-[var(--theme-bg)] text-white shadow-sm' 
-                    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                    ? 'bg-[var(--theme-bg)] text-white border-[var(--theme-bg)] shadow-md' 
+                    : 'bg-white text-gray-400 border-gray-100 hover:border-teal-200 hover:text-teal-600'
                   }`}
                >
                   {s}
