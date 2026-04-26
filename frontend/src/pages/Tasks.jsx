@@ -411,8 +411,11 @@ export default function Tasks() {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'reschedule_task', payload: { taskId, newDueDate: today } })
       });
-      if (res.ok) fetchTasks();
-    fetchAgents();
+      if (res.ok) {
+         fetchTasks();
+         toast.success("Task moved to Today");
+      }
+      fetchAgents();
     } catch (err) {
       console.error(err);
     }
