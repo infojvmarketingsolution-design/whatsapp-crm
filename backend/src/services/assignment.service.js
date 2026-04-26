@@ -1,4 +1,5 @@
 const User = require('../models/core/User');
+const Settings = require('../models/core/Settings');
 
 /**
  * Implements Round-Robin lead assignment for a specific tenant.
@@ -10,12 +11,12 @@ exports.getNextAgentForTenant = async (tenantId) => {
     todayStart.setHours(0, 0, 0, 0);
 
     // 1. Find all potentially active users for this tenant
+    // We include Admins/Owners in the query now because they might be limited by rules
     const [allAgents, settings] = await Promise.all([
       User.find({
         tenantId,
         status: 'ACTIVE',
-        isAvailableForAutoAssign: { $ne: false },
-        role: { $nin: ['ADMIN', 'SUPER_ADMIN', 'OWNER'] }
+        isAvailableForAutoAssign: { $ne: false }
       }),
       Settings.findOne({ tenantId })
     ]);
@@ -25,7 +26,7 @@ exports.getNextAgentForTenant = async (tenantId) => {
       return null;
     }
 
-    const rules = settings?.crm?.autoAssignmentRules || [];
+    const rules = settings?.autoAssignmentRules || settings?.crm?.autoAssignmentRules || [];
 
     // 2. Filter based on Role/User Specific Rules
     const eligibleList = allAgents.filter(agent => {
@@ -36,27 +37,28 @@ exports.getNextAgentForTenant = async (tenantId) => {
       const userRule = rules.find(r => r.type === 'USER' && r.targetId === userId);
       const roleRule = rules.find(r => r.type === 'ROLE' && r.targetId === role);
       
-      // Apply the most specific rule found
       const activeRule = userRule || roleRule;
+
+      // Reset daily count if it's a new day
+      const lastReset = new Date(agent.lastLeadResetAt || 0).getTime();
+      if (lastReset < todayStart.getTime()) {
+        agent.dailyLeadCount = 0;
+      }
       
-      // Dynamic Limit check
-      if (activeRule && activeRule.limitPerDay > 0) {
-        const lastReset = new Date(agent.lastLeadResetAt || 0).getTime();
-        if (lastReset < todayStart.getTime()) {
-          agent.dailyLeadCount = 0;
-          return true;
-        }
+      // Strict Limit enforcement
+      if (activeRule) {
+        // If limit is 0, they get nothing. If they already reached the limit, skip.
         return (agent.dailyLeadCount || 0) < activeRule.limitPerDay;
       }
 
       // Hardcoded Fallback for Business Head if no dynamic rule exists
       if (role === 'BUSINESS_HEAD') {
-        const lastReset = new Date(agent.lastLeadResetAt || 0).getTime();
-        if (lastReset < todayStart.getTime()) {
-          agent.dailyLeadCount = 0;
-          return true;
-        }
         return (agent.dailyLeadCount || 0) < 5;
+      }
+
+      // Admins/Owners get 0 by default unless a rule says otherwise
+      if (['ADMIN', 'SUPER_ADMIN', 'OWNER'].includes(role)) {
+        return false;
       }
       
       // TELECALLER, COUNSELLOR, AGENT: Unlimited by default
@@ -64,7 +66,7 @@ exports.getNextAgentForTenant = async (tenantId) => {
     });
 
     if (eligibleList.length === 0) {
-      console.log(`[AssignmentService] All agents for tenant ${tenantId} have reached their daily limits.`);
+      console.log(`[AssignmentService] All agents for tenant ${tenantId} have reached their daily limits or are ineligible.`);
       return null;
     }
 
@@ -83,10 +85,8 @@ exports.getNextAgentForTenant = async (tenantId) => {
 
     selectedAgent.lastLeadAssignedAt = new Date();
     
-    // Increment daily count for restricted roles
-    if (selectedRole === 'BUSINESS_HEAD') {
-      selectedAgent.dailyLeadCount = (selectedAgent.dailyLeadCount || 0) + 1;
-    }
+    // Increment daily count
+    selectedAgent.dailyLeadCount = (selectedAgent.dailyLeadCount || 0) + 1;
 
     await selectedAgent.save();
 
