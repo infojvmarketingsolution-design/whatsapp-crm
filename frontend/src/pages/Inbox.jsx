@@ -42,9 +42,10 @@ export default function Inbox({ roleAccess }) {
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const PREDEFINED_TAGS = ['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'];
-  const STATUSES = ['NEW LEAD', 'OPEN', 'CLOSED', 'ADMISSION'];
+  const STATUSES = ['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'];
   const STATUS_MAPPING = {
-    'NEW LEAD': 'NEW LEAD',
+    'NEW LEAD': 'NEW',
+    'NEW': 'NEW',
     'CONTACTED': 'OPEN',
     'INTERESTED': 'OPEN',
     'FOLLOW UP': 'OPEN',
@@ -52,8 +53,12 @@ export default function Inbox({ roleAccess }) {
     'OPEN': 'OPEN',
     'CLOSED_WON': 'ADMISSION',
     'ADMISSION': 'ADMISSION',
-    'CLOSED_LOST': 'CLOSED',
-    'CLOSED': 'CLOSED'
+    'CLOSED_LOST': 'CLOSE',
+    'CLOSED': 'CLOSE',
+    'CLOSE': 'CLOSE',
+    'VISITED': 'VISITED',
+    'PENDING VISIT': 'PENDING VISIT',
+    'PENDING_VISIT': 'PENDING VISIT'
   };
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -528,16 +533,15 @@ export default function Inbox({ roleAccess }) {
                       )}
                       {/* Status Badge */}
                       <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter flex-shrink-0 ${
-                        c.status === 'NEW LEAD' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                        c.status === 'OPEN' || c.status === 'CONTACTED' || c.status === 'INTERESTED' || c.status === 'FOLLOW_UP' ? 'bg-teal-50 text-teal-600 border-teal-100' :
+                        c.status === 'NEW' || c.status === 'NEW LEAD' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                        ['OPEN', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP'].includes(c.status) ? 'bg-teal-50 text-teal-600 border-teal-100' :
                         c.status === 'ADMISSION' || c.status === 'CLOSED_WON' || c.status === 'ADMITTED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                        c.status === 'CLOSED' || c.status === 'CLOSED_LOST' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                        c.status === 'CLOSE' || c.status === 'CLOSED' || c.status === 'CLOSED_LOST' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                        c.status === 'VISITED' ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                        c.status === 'PENDING VISIT' || c.status === 'PENDING_VISIT' ? 'bg-orange-50 text-orange-600 border-orange-100' :
                         'bg-slate-50 text-slate-600 border-slate-100'
                       }`}>
-                        {c.status === 'CLOSED_WON' ? 'ADMISSION' : 
-                         c.status === 'CLOSED_LOST' ? 'CLOSED' :
-                         ['CONTACTED', 'INTERESTED', 'FOLLOW_UP'].includes(c.status) ? 'OPEN' :
-                         (c.status?.replace('_', ' ') || 'OPEN')}
+                        {STATUS_MAPPING[c.status?.toUpperCase()] || c.status?.replace('_', ' ') || 'OPEN'}
                       </span>
                       {c.heatLevel === 'Hot' && <Flame size={14} className="text-red-500 animate-pulse fill-red-500/20" />}
                       {c.heatLevel === 'Warm' && <Flame size={13} className="text-orange-400 fill-orange-400/10" />}

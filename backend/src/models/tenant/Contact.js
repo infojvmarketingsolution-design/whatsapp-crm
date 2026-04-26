@@ -6,7 +6,7 @@ const ContactSchema = new mongoose.Schema({
   tags: [{ type: String }],
   optInStatus: { type: Boolean, default: true },
   assignedAgent: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  status: { type: String, enum: ['LEAD', 'NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST', 'OPEN', 'CLOSED', 'ADMISSION'], default: 'NEW LEAD' },
+  status: { type: String, enum: ['LEAD', 'NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST', 'OPEN', 'CLOSED', 'ADMISSION', 'VISITED', 'PENDING_VISIT'], default: 'NEW LEAD' },
   notes: [{ content: String, createdBy: String, createdAt: { type: Date, default: Date.now } }],
   timeline: [{ eventType: String, description: String, timestamp: { type: Date, default: Date.now } }],
   tasks: [{ 

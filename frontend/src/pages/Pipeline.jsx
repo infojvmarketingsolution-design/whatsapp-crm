@@ -1,16 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { MoreVertical, Search, Filter, Phone, MessageSquare, Plus, Flame, Snowflake, Zap, TrendingUp, DollarSign, Calendar, Clock, Edit3, X, Check } from 'lucide-react';
+import { MoreVertical, Search, Filter, Phone, MessageSquare, Plus, Flame, Snowflake, Zap, TrendingUp, DollarSign, Calendar, Clock, Edit3, X, Check, MapPin } from 'lucide-react';
 
 const STATUSES = [
-  { id: 'NEW LEAD', label: 'New Lead', color: 'bg-blue-100 text-blue-800 border-blue-200', icon: Zap },
+  { id: 'NEW', label: 'New', color: 'bg-blue-100 text-blue-800 border-blue-200', icon: Zap },
   { id: 'OPEN', label: 'Open', color: 'bg-teal-100 text-teal-800 border-teal-200', icon: MessageSquare },
-  { id: 'CLOSED', label: 'Closed', color: 'bg-rose-100 text-rose-800 border-rose-200', icon: X },
+  { id: 'PENDING VISIT', label: 'Pending Visit', color: 'bg-orange-100 text-orange-800 border-orange-200', icon: Clock },
+  { id: 'VISITED', label: 'Visited', color: 'bg-purple-100 text-purple-800 border-purple-200', icon: MapPin },
+  { id: 'CLOSE', label: 'Close', color: 'bg-rose-100 text-rose-800 border-rose-200', icon: X },
   { id: 'ADMISSION', label: 'Admission', color: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: Check },
 ];
 
 const STATUS_MAPPING = {
-  'NEW LEAD': 'NEW LEAD',
+  'NEW LEAD': 'NEW',
+  'NEW': 'NEW',
   'CONTACTED': 'OPEN',
   'INTERESTED': 'OPEN',
   'FOLLOW UP': 'OPEN',
@@ -18,8 +21,12 @@ const STATUS_MAPPING = {
   'OPEN': 'OPEN',
   'CLOSED_WON': 'ADMISSION',
   'ADMISSION': 'ADMISSION',
-  'CLOSED_LOST': 'CLOSED',
-  'CLOSED': 'CLOSED'
+  'CLOSED_LOST': 'CLOSE',
+  'CLOSED': 'CLOSE',
+  'CLOSE': 'CLOSE',
+  'VISITED': 'VISITED',
+  'PENDING VISIT': 'PENDING VISIT',
+  'PENDING_VISIT': 'PENDING VISIT'
 };
 
 export default function Pipeline() {

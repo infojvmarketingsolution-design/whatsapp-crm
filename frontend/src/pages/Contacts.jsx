@@ -83,7 +83,7 @@ export default function Contacts({ roleAccess }) {
 
   const fileInputRef = React.useRef(null);
 
-  const PIPELINE_STAGES = ['Discovery', 'Qualified', 'Proposal', 'Negotiation', 'Closing', 'Won', 'Lost'];
+  const PIPELINE_STAGES = ['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'];
 
   const fetchContacts = async () => {
     try {
@@ -563,14 +563,12 @@ export default function Contacts({ roleAccess }) {
          
          // AUTOMATIC STATUS & STAGE SYNC
          if (field === 'status') {
-            if (value === 'CLOSED_WON') {
-               updates.pipelineStage = 'Won';
+            if (value === 'ADMISSION' || value === 'CLOSED_WON') {
+               updates.pipelineStage = 'ADMISSION';
                updates.isClosed = true;
-            } else if (value === 'CLOSED_LOST') {
-               updates.pipelineStage = 'Lost';
+            } else if (value === 'CLOSE' || value === 'CLOSED_LOST') {
+               updates.pipelineStage = 'CLOSE';
                updates.isClosed = true;
-            } else if (value === 'PENDING') {
-               updates.status = 'INTERESTED'; // Map pending back to an active status if needed
             }
          }
          
@@ -670,7 +668,7 @@ export default function Contacts({ roleAccess }) {
                           
                           <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
                              <option value="ALL">Status ALL</option>
-                             {['NEW LEAD', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
+                             {['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'].map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
 
                           <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
