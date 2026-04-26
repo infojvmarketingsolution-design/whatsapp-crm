@@ -104,6 +104,8 @@ const logout = async (req, res) => {
 
 const loginWithMpin = async (req, res) => {
   const { phoneNumber, mpin } = req.body;
+  console.log('[LoginDebug] Input:', { phoneNumber, mpin: '******' });
+  
   try {
     if (!phoneNumber) return res.status(400).json({ message: 'Phone number is required' });
     
@@ -112,9 +114,11 @@ const loginWithMpin = async (req, res) => {
     const searchDigits = cleanNumber.length > 10 ? cleanNumber.slice(-10) : cleanNumber;
     const regexPattern = searchDigits.split('').join('[^0-9]*');
     const regex = new RegExp(regexPattern);
+    console.log('[LoginDebug] Regex:', regex.toString());
 
     // Find user by phone number using regex
     const user = await User.findOne({ phoneNumber: { $regex: regex } });
+    console.log('[LoginDebug] User Found:', user ? { _id: user._id, phoneNumber: user.phoneNumber, hasMpin: !!user.mpin } : 'NULL');
 
     if (!user) {
       return res.status(404).json({ message: 'Account not found with this number' });
@@ -125,6 +129,8 @@ const loginWithMpin = async (req, res) => {
     }
 
     const isMatch = await user.matchMpin(mpin);
+    console.log('[LoginDebug] MPIN Match:', isMatch);
+    
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid MPIN' });
     }
