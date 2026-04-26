@@ -305,6 +305,11 @@ function Dashboard() {
           <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
              <UserCircle size={24} />
           </div>
+          {stats.v && (
+            <div className="fixed bottom-4 right-4 px-3 py-1 bg-white/80 backdrop-blur border border-slate-200 rounded-full shadow-sm">
+              <p className="text-[10px] font-bold text-slate-400">Server v{stats.v}</p>
+            </div>
+          )}
         </div>
       </div>
 

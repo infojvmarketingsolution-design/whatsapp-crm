@@ -59,7 +59,7 @@ const getContacts = async (req, res) => {
     const matchStage = { isArchived: { $ne: true } };
     
     if (mustRestrict) {
-      const uid = String(req.user._id);
+      const uid = req.user._id;
       matchStage.$or = [
         { assignedAgent: uid },
         { assignedCounsellor: uid }
@@ -848,6 +848,7 @@ const getDashboardStats = async (req, res) => {
     };
     
     res.json({
+      v: "1.0.1",
       leads: totalContacts,
       activeChats,
       campaigns: totalCampaigns,
