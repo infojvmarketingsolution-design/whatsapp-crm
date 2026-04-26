@@ -488,30 +488,26 @@ export default function Inbox({ roleAccess }) {
             />
           </div>
 
-          {/* Sidebar Quick Filters - Premium Tab Bar */}
-          <div className="flex items-center justify-between px-1 border-b border-gray-50 bg-white">
+          {/* Sidebar Quick Filters - Proper Button Grid */}
+          <div className="grid grid-cols-3 gap-1.5 p-3 pt-0 border-b border-gray-50 bg-white">
             {[
-              { id: 'ALL', label: 'All' },
-              { id: 'NEW', label: 'New' },
-              { id: 'OPEN', label: 'Open' },
-              { id: 'CLOSE', label: 'Close' },
-              { id: 'VISITED', label: 'Visit' },
-              { id: 'PENDING VISIT', label: 'Pndg' },
-              { id: 'ADMISSION', label: 'Admit' }
-            ].map(tab => (
+              { id: 'ALL', label: 'ALL' },
+              { id: 'NEW', label: 'NEW' },
+              { id: 'OPEN', label: 'OPEN' },
+              { id: 'CLOSE', label: 'CLOSE' },
+              { id: 'VISITED', label: 'VISIT' },
+              { id: 'ADMISSION', label: 'ADMISSION' }
+            ].map(btn => (
                <button 
-                  key={tab.id} 
-                  onClick={() => setSidebarFilter(tab.id)}
-                  className={`py-3 px-1 text-[9px] font-black uppercase tracking-tighter transition-all relative shrink-0 ${
-                    sidebarFilter === tab.id 
-                    ? 'text-[var(--theme-bg)]' 
-                    : 'text-gray-400 hover:text-gray-600'
+                  key={btn.id} 
+                  onClick={() => setSidebarFilter(btn.id)}
+                  className={`py-2 px-1 rounded-xl text-[9px] font-black tracking-tighter transition-all border shadow-sm ${
+                    sidebarFilter === btn.id 
+                    ? 'bg-[var(--theme-bg)] text-white border-[var(--theme-bg)]' 
+                    : 'bg-white text-slate-500 border-slate-100 hover:border-teal-200 hover:bg-teal-50/30'
                   }`}
                >
-                  {tab.label}
-                  {sidebarFilter === tab.id && (
-                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--theme-bg)] rounded-t-full"></div>
-                  )}
+                  {btn.label}
                </button>
             ))}
           </div>
