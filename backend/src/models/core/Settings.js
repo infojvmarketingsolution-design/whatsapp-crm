@@ -100,12 +100,26 @@ const RoleAccessSchema = new mongoose.Schema({
   permissions: { type: [String], default: [] }
 }, { _id: false });
 
+const FirewallRuleSchema = new mongoose.Schema({
+  action: { type: String, enum: ['Accept', 'Drop', 'Reject'], default: 'Accept' },
+  protocol: { type: String, default: 'All' },
+  port: { type: String, default: '' },
+  source: { type: String, default: 'IP' },
+  sourceDetail: { type: String, default: '' }
+});
+
 const SettingsSchema = new mongoose.Schema({
   tenantId: { type: String, required: true, unique: true },
   workspace: { type: WorkspaceSettingsSchema, default: () => ({}) },
   whatsapp: { type: WhatsAppSettingsSchema, default: () => ({}) },
   crm: { type: CRMSettingsSchema, default: () => ({}) },
   automation: { type: AutomationSettingsSchema, default: () => ({}) },
+  security: {
+    autoBackup: { type: Boolean, default: true },
+    gdprConsentTracker: { type: Boolean, default: true },
+    dataRetention: { type: String, default: '365' },
+    firewallRules: { type: [FirewallRuleSchema], default: [] }
+  },
   notifications: {
     email: { type: Boolean, default: true },
     whatsapp: { type: Boolean, default: true },
@@ -127,9 +141,9 @@ const SettingsSchema = new mongoose.Schema({
           'workspace', 'whatsapp', 'crm', 'users', 'billing', 'integrations', 'automations', 'security', 'notifications', 'customization'
         ]
       },
-      'TELECALLER': { name: 'Telecaller', allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts'] },
+      'TELECALLER': { name: 'Telecaller', allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts', 'chat_show_assigned_only'] },
       'MANAGER_COUNSELLOUR': { name: 'Manager/Counsellour', allAccess: false, permissions: ['dashboard', 'tasks', 'pipeline', 'chat', 'contacts', 'campaigns'] },
-      'AGENT': { name: 'Standard Agent', allAccess: false, permissions: ['dashboard', 'tasks', 'chat', 'contacts'] },
+      'AGENT': { name: 'Standard Agent', allAccess: false, permissions: ['dashboard', 'tasks', 'chat', 'contacts', 'chat_show_assigned_only'] },
       'BUSINESS_HEAD': { 
         name: 'Business Head', 
         allAccess: true, 

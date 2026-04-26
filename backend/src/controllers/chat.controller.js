@@ -53,15 +53,19 @@ const getContacts = async (req, res) => {
     // Base match for active leads
     const matchStage = { isArchived: { $ne: true } };
     
-    // Apply "Show Assigned Only" filter if NOT high level and permission is present
-    if (!isHighLevel && roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
+    // Apply "Show Assigned Only" filter if NOT high level
+    // We enforce this if: 1. Permission is explicitly set OR 2. Role is AGENT/TELECALLER and doesn't have allAccess
+    const mustRestrict = !isHighLevel && (
+      (roleAccess && roleAccess.permissions.includes('chat_show_assigned_only')) ||
+      (!roleAccess || roleAccess.allAccess === false)
+    );
+
+    if (mustRestrict) {
       matchStage.$or = [
         { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
         { assignedAgent: String(req.user._id) },
-
         { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) },
         { assignedCounsellor: String(req.user._id) }
-
       ];
     }
     // Removed logging for production stability
@@ -161,6 +165,30 @@ const performContactAction = async (req, res) => {
     
     contact = await ContactModel.findById(contactId);
     if (!contact) return res.status(404).json({ error: 'Contact not found' });
+
+    // Security Check: Visibility Enforcement
+    const settings = await Settings.findOne({ tenantId: req.tenantId });
+    const userRole = (req.user?.role || 'AGENT').toUpperCase();
+    const normalizedRole = userRole.replace(/\s/g, '_');
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
+    
+    const roleAccess = settings?.roleAccess instanceof Map ? 
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
+
+    const mustRestrict = !isHighLevel && (
+      (roleAccess && roleAccess.permissions.includes('chat_show_assigned_only')) ||
+      (!roleAccess || roleAccess.allAccess === false)
+    );
+
+    if (mustRestrict) {
+       const isAssigned = (contact.assignedAgent?.toString() === req.user._id.toString()) || 
+                          (contact.assignedCounsellor?.toString() === req.user._id.toString());
+       
+       if (!isAssigned) {
+          return res.status(403).json({ message: 'Access denied: You can only perform actions on leads assigned to you.' });
+       }
+    }
 
     if (action === 'delete_task') {
        if (!contact.tasks) contact.tasks = [];
@@ -381,9 +409,41 @@ const performBulkContactAction = async (req, res) => {
     const ContactModel = req.tenantDb.model('Contact', ContactSchema);
     const MessageModel = req.tenantDb.model('Message', MessageSchema);
 
+    // Security Check: Filter contactIds by visibility
+    const settings = await Settings.findOne({ tenantId: req.tenantId });
+    const userRole = (req.user?.role || 'AGENT').toUpperCase();
+    const normalizedRole = userRole.replace(/\s/g, '_');
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
+    
+    const roleAccess = settings?.roleAccess instanceof Map ? 
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
+
+    const mustRestrict = !isHighLevel && (
+      (roleAccess && roleAccess.permissions.includes('chat_show_assigned_only')) ||
+      (!roleAccess || roleAccess.allAccess === false)
+    );
+
+    let finalContactIds = contactIds;
+    if (mustRestrict) {
+       const visibleContacts = await ContactModel.find({
+          _id: { $in: contactIds },
+          $or: [
+             { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
+             { assignedAgent: String(req.user._id) },
+             { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) },
+             { assignedCounsellor: String(req.user._id) }
+          ]
+       }).select('_id');
+       finalContactIds = visibleContacts.map(c => c._id);
+       if (finalContactIds.length === 0) {
+          return res.status(403).json({ message: 'Access denied: None of these leads are assigned to you.' });
+       }
+    }
+
     if (action === 'archive_leads') {
       await ContactModel.updateMany(
-        { _id: { $in: contactIds } },
+        { _id: { $in: finalContactIds } },
         { 
           $set: { isArchived: true },
           $push: { 
@@ -395,7 +455,7 @@ const performBulkContactAction = async (req, res) => {
           }
         }
       );
-      return res.json({ success: true, message: `${contactIds.length} leads archived` });
+      return res.json({ success: true, message: `${finalContactIds.length} leads archived` });
     } else if (action === 'transfer_leads' || action === 'assignedAgent') {
       const agentId = typeof payload === 'string' ? payload : (payload.agentId || payload);
       let agentName = 'Unassigned';
@@ -488,14 +548,22 @@ const getMessages = async (req, res) => {
     const Message = req.tenantDb.model('Message', MessageSchema);
     const Contact = req.tenantDb.model('Contact', ContactSchema);
 
-    // Security Check: Verify Assigned Agent permission
+    // Security Check: Visibility Enforcement
     const settings = await Settings.findOne({ tenantId: req.tenantId });
     const userRole = (req.user?.role || 'AGENT').toUpperCase();
-    const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
-
+    const normalizedRole = userRole.replace(/\s/g, '_');
     const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
+    
+    const roleAccess = settings?.roleAccess instanceof Map ? 
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
 
-    if (!isHighLevel && roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
+    const mustRestrict = !isHighLevel && (
+      (roleAccess && roleAccess.permissions.includes('chat_show_assigned_only')) ||
+      (!roleAccess || roleAccess.allAccess === false)
+    );
+
+    if (mustRestrict) {
        const contact = await Contact.findById(req.params.contactId);
        const isAssigned = (contact.assignedAgent?.toString() === req.user._id.toString()) || 
                           (contact.assignedCounsellor?.toString() === req.user._id.toString());
@@ -523,6 +591,30 @@ const sendMessage = async (req, res) => {
 
     const contact = await Contact.findById(contactId);
     if (!contact) return res.status(404).json({ error: 'Contact not found' });
+
+    // Security Check: Visibility Enforcement
+    const settings = await Settings.findOne({ tenantId: req.tenantId });
+    const userRole = (req.user?.role || 'AGENT').toUpperCase();
+    const normalizedRole = userRole.replace(/\s/g, '_');
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
+    
+    const roleAccess = settings?.roleAccess instanceof Map ? 
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
+
+    const mustRestrict = !isHighLevel && (
+      (roleAccess && roleAccess.permissions.includes('chat_show_assigned_only')) ||
+      (!roleAccess || roleAccess.allAccess === false)
+    );
+
+    if (mustRestrict) {
+       const isAssigned = (contact.assignedAgent?.toString() === req.user._id.toString()) || 
+                          (contact.assignedCounsellor?.toString() === req.user._id.toString());
+       
+       if (!isAssigned) {
+          return res.status(403).json({ message: 'Access denied: You can only send messages to leads assigned to you.' });
+       }
+    }
 
     // Handle Internal Team Note
     if (isInternal) {
@@ -805,6 +897,30 @@ const summarizeLead = async (req, res) => {
 
     const contact = await Contact.findById(contactId);
     if (!contact) return res.status(404).json({ error: 'Contact not found' });
+
+    // Security Check: Visibility Enforcement
+    const settings = await Settings.findOne({ tenantId: req.tenantId });
+    const userRole = (req.user?.role || 'AGENT').toUpperCase();
+    const normalizedRole = userRole.replace(/\s/g, '_');
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
+    
+    const roleAccess = settings?.roleAccess instanceof Map ? 
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
+
+    const mustRestrict = !isHighLevel && (
+      (roleAccess && roleAccess.permissions.includes('chat_show_assigned_only')) ||
+      (!roleAccess || roleAccess.allAccess === false)
+    );
+
+    if (mustRestrict) {
+       const isAssigned = (contact.assignedAgent?.toString() === req.user._id.toString()) || 
+                          (contact.assignedCounsellor?.toString() === req.user._id.toString());
+       
+       if (!isAssigned) {
+          return res.status(403).json({ message: 'Access denied: You can only summarize leads assigned to you.' });
+       }
+    }
 
     // Fetch last 50 messages for context
     const messages = await Message.find({ contactId }).sort({ timestamp: -1 }).limit(50);

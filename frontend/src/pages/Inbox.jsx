@@ -1335,7 +1335,7 @@ export default function Inbox({ roleAccess }) {
 
                     {/* Sales Rep (Telecaller) */}
                     <div>
-                       <label className="text-[9px] font-black text-teal-800/50 uppercase tracking-widest block mb-1.5 ml-1">Sales Rep (Telecaller)</label>
+                       <label className="text-[9px] font-black text-teal-800/50 uppercase tracking-widest block mb-1.5 ml-1">Lead Owner</label>
                        <div className="relative group">
                           <Users size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-400 group-focus-within:text-teal-600" />
                           <select 
@@ -1356,7 +1356,7 @@ export default function Inbox({ roleAccess }) {
 
                     {/* Expert Counselor (Counsellor) */}
                     <div>
-                       <label className="text-[9px] font-black text-teal-800/50 uppercase tracking-widest block mb-1.5 ml-1">Expert Advisor (Counsellor)</label>
+                       <label className="text-[9px] font-black text-teal-800/50 uppercase tracking-widest block mb-1.5 ml-1">Transfer Lead to</label>
                        <div className="relative group">
                           <Headphones size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600" />
                           <select 
@@ -1364,7 +1364,7 @@ export default function Inbox({ roleAccess }) {
                              onChange={(e) => handleAction('update_contact', { assignedCounsellor: e.target.value })}
                              className="w-full bg-white pl-9 pr-3 py-2 rounded-xl border border-teal-100 text-[10px] font-black tracking-wide uppercase outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm cursor-pointer hover:border-teal-200"
                           >
-                             <option value="">No Counselor Assigned</option>
+                             <option value="">Not Transferred</option>
                              {agents
                                .filter(a => a.role === 'MANAGER_COUNSELLOUR' || a.role === 'ADMIN')
                                .map(a => (

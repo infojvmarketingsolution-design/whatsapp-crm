@@ -997,9 +997,9 @@ export default function Contacts({ roleAccess }) {
                            {editedContact.visitStatus === 'Done' && editedContact.visitType && (
                               <div className="space-y-6 animate-fade-in pt-2">
                                  <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Handled By Counsellor</label>
+                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Transfer Lead to</label>
                                     <select value={editedContact.assignedCounsellor || ''} onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded outline-none focus:border-slate-400">
-                                       <option value="">Select Counsellor...</option>
+                                       <option value="">Select Target...</option>
                                        {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
                                     </select>
                                  </div>
@@ -1216,7 +1216,7 @@ export default function Contacts({ roleAccess }) {
                         <Users size={14} className="mr-2" /> Team Ownership
                      </h3>
                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assigned Agent / Counsellor</label>
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lead Owner / Transferred to</label>
                         <select value={filters.agent} onChange={e=>setFilters({...filters, agent: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50 focus:border-teal-400 transition-all">
                            <option value="ALL">All Team Members</option>
                            {agents.map(a => <option key={a._id} value={a._id}>{a.name} ({a.role})</option>)}

@@ -37,6 +37,12 @@ exports.getSettings = async (req, res) => {
               fallbackMessage: "I'm sorry, I didn't quite get that. Could you please rephrase?"
             }
           },
+          security: {
+            autoBackup: true,
+            gdprConsentTracker: true,
+            dataRetention: '365',
+            firewallRules: []
+          },
           notifications: { email: true, whatsapp: true, inApp: true },
           customization: { themeColor: '#10b981', customLogin: false }
        };
@@ -47,6 +53,7 @@ exports.getSettings = async (req, res) => {
            whatsapp: { ...defaultSettings.whatsapp, ...currentOfflineSettings.whatsapp },
            crm: { ...defaultSettings.crm, ...currentOfflineSettings.crm },
            automation: { ...defaultSettings.automation, ...currentOfflineSettings.automation },
+           security: { ...defaultSettings.security, ...currentOfflineSettings.security },
            notifications: { ...defaultSettings.notifications, ...currentOfflineSettings.notifications },
            customization: { ...defaultSettings.customization, ...currentOfflineSettings.customization }
        };
@@ -76,7 +83,7 @@ exports.updateSettings = async (req, res) => {
        return res.status(400).json({ error: 'Tenant ID required in request context' });
     }
 
-    const validCategories = ['workspace', 'whatsapp', 'crm', 'automation', 'notifications', 'customization', 'roleAccess'];
+    const validCategories = ['workspace', 'whatsapp', 'crm', 'automation', 'security', 'notifications', 'customization', 'roleAccess'];
     if (!validCategories.includes(category)) {
        return res.status(400).json({ error: 'Invalid settings category' });
     }
