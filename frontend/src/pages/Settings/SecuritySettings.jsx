@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Save, ShieldCheck, Database, Download, Trash2 } from 'lucide-react';
+import { Save, ShieldCheck, Database, Download, Trash2, Lock, Smartphone, Shield, Loader2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function SecuritySettings() {
   const [loading, setLoading] = useState(true);
@@ -19,6 +20,12 @@ export default function SecuritySettings() {
     source: 'IP',
     sourceDetail: ''
   });
+
+  const [profileData, setProfileData] = useState({
+    password: '',
+    mpin: ''
+  });
+  const [profileUpdating, setProfileUpdating] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -66,6 +73,40 @@ export default function SecuritySettings() {
       console.error('Failed to save', err);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    if (!profileData.password && !profileData.mpin) {
+      toast.error('Please enter a new password or MPIN');
+      return;
+    }
+    
+    setProfileUpdating(true);
+    try {
+      const token = localStorage.getItem('token');
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const res = await fetch(`/api/agents/${user._id}`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'Content-Type': 'application/json' 
+        },
+        body: JSON.stringify(profileData)
+      });
+      
+      if (res.ok) {
+        toast.success('Security credentials updated!');
+        setProfileData({ password: '', mpin: '' });
+      } else {
+        const err = await res.json();
+        toast.error(err.message || 'Update failed');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update credentials');
+    } finally {
+      setProfileUpdating(false);
     }
   };
 
@@ -291,6 +332,57 @@ export default function SecuritySettings() {
                <Save size={16} className="mr-2" />
             )}
             {success ? 'Saved Successfully!' : 'Save Security Rules'}
+          </button>
+        </div>
+      </div>
+
+      {/* Personal Account Security Section */}
+      <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+        <h2 className="text-lg font-bold text-gray-900 mb-2 flex items-center">
+          <Lock className="mr-2 text-blue-600" size={20} />
+          Personal Account Security
+        </h2>
+        <p className="text-xs text-gray-500 mb-6">Manage your private Master PIN and login credentials.</p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+           <div className="space-y-2">
+             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center">
+               <Shield className="w-3 h-3 mr-1.5 text-blue-500" /> New 6-Digit Master PIN (MPIN)
+             </label>
+             <input 
+               type="password" 
+               maxLength={6}
+               placeholder="••••••"
+               value={profileData.mpin}
+               onChange={e => setProfileData({...profileData, mpin: e.target.value.replace(/\D/g, '')})}
+               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold tracking-[0.5em] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+             />
+             <p className="text-[10px] text-slate-400 font-medium italic">Used for fast & secure WhatsApp authentication.</p>
+           </div>
+
+           <div className="space-y-2">
+             <label className="block text-xs font-black text-gray-400 uppercase tracking-widest ml-1 flex items-center">
+               <Lock className="w-3 h-3 mr-1.5 text-teal-500" /> New Account Password
+             </label>
+             <input 
+               type="password" 
+               placeholder="Leave blank to keep current"
+               value={profileData.password}
+               onChange={e => setProfileData({...profileData, password: e.target.value})}
+               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+             />
+             <p className="text-[10px] text-slate-400 font-medium italic">Update your primary dashboard password.</p>
+           </div>
+        </div>
+
+        <div className="mt-8 pt-5 border-t border-gray-100 flex justify-end">
+          <button 
+            onClick={handleUpdateProfile}
+            disabled={profileUpdating}
+            className="flex items-center px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-black shadow-md hover:-translate-y-0.5 transition-all disabled:opacity-50"
+          >
+            {profileUpdating ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save size={16} className="mr-2" />}
+            Update Credentials
           </button>
         </div>
       </div>

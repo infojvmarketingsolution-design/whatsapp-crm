@@ -6,7 +6,7 @@ export default function AgentsDashboard() {
   const [dynamicRoles, setDynamicRoles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '' });
+  const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '', mpin: '' });
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -43,12 +43,12 @@ export default function AgentsDashboard() {
   };
 
   const openCreateModal = () => {
-    setFormData({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '' });
+    setFormData({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '', mpin: '' });
     setShowModal(true);
   };
 
   const openEditModal = (agent) => {
-    setFormData({ ...agent, password: '', phoneNumber: agent.phoneNumber || '' });
+    setFormData({ ...agent, password: '', mpin: agent.mpin || '', phoneNumber: agent.phoneNumber || '' });
     setShowModal(true);
   };
 
@@ -66,7 +66,7 @@ export default function AgentsDashboard() {
       });
       
       if (res.ok) {
-        setFormData({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '' });
+        setFormData({ name: '', email: '', password: '', role: 'AGENT', phoneNumber: '', mpin: '' });
         setShowModal(false);
         fetchAgentsAndRoles();
       } else {
@@ -267,7 +267,7 @@ export default function AgentsDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">WhatsApp Number (For OTP Login)</label>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">WhatsApp Number</label>
                 <input 
                   type="tel" 
                   className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium text-gray-800"
@@ -275,7 +275,19 @@ export default function AgentsDashboard() {
                   value={formData.phoneNumber || ''}
                   onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})}
                 />
-                <p className="text-[10px] text-gray-400 mt-2 font-medium">Used to send WhatsApp OTP for secure, passwordless authentication.</p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase tracking-wide">6-Digit Master PIN (MPIN)</label>
+                <input 
+                  type="password" 
+                  maxLength={6}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-medium text-gray-800 tracking-[0.3em]"
+                  placeholder="••••••"
+                  value={formData.mpin || ''}
+                  onChange={(e) => setFormData({...formData, mpin: e.target.value.replace(/\D/g, '')})}
+                />
+                <p className="text-[10px] text-gray-400 mt-2 font-medium">This MPIN will be used for secure WhatsApp login.</p>
               </div>
 
               <div>

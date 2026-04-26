@@ -14,7 +14,7 @@ const getAgents = async (req, res) => {
 const createAgent = async (req, res) => {
   try {
     const tenantId = req.tenantId;
-    const { name, email, password, role, phoneNumber } = req.body;
+    const { name, email, password, role, phoneNumber, mpin } = req.body;
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User already exists' });
@@ -27,7 +27,8 @@ const createAgent = async (req, res) => {
       role: role || 'AGENT',
       tenantId,
       status: 'ACTIVE',
-      phoneNumber
+      phoneNumber,
+      mpin
     });
 
     res.status(201).json({
@@ -37,7 +38,8 @@ const createAgent = async (req, res) => {
       role: newAgent.role,
       status: newAgent.status,
       tenantId: newAgent.tenantId,
-      phoneNumber: newAgent.phoneNumber
+      phoneNumber: newAgent.phoneNumber,
+      mpin: newAgent.mpin
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -65,7 +67,7 @@ const updateAgentStatus = async (req, res) => {
 const updateAgent = async (req, res) => {
   try {
     const tenantId = req.tenantId;
-    const { name, email, password, role, phoneNumber } = req.body;
+    const { name, email, password, role, phoneNumber, mpin } = req.body;
     const agent = await User.findOne({ _id: req.params.id, tenantId, role: { $ne: 'SUPER_ADMIN' } });
     if (!agent) {
       return res.status(404).json({ message: 'Agent not found' });
@@ -76,6 +78,7 @@ const updateAgent = async (req, res) => {
     if (role) agent.role = role;
     if (password) agent.password = password;
     if (phoneNumber !== undefined) agent.phoneNumber = phoneNumber;
+    if (mpin !== undefined) agent.mpin = mpin;
 
     const updatedAgent = await agent.save();
 
@@ -86,7 +89,8 @@ const updateAgent = async (req, res) => {
       role: updatedAgent.role,
       status: updatedAgent.status,
       tenantId: updatedAgent.tenantId,
-      phoneNumber: updatedAgent.phoneNumber
+      phoneNumber: updatedAgent.phoneNumber,
+      mpin: updatedAgent.mpin
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
