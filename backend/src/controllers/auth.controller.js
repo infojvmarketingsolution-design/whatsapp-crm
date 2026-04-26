@@ -97,11 +97,73 @@ const authUser = async (req, res) => {
 
 const logout = async (req, res) => {
   try {
+    const user = await User.findById(req.user._id);
+    if (user) {
+      // Trigger Logout Alert via WhatsApp
+      await NotificationService.sendLogoutAlert(user);
+    }
+
     await UserSession.updateOne(
       { userId: req.user._id, status: 'ACTIVE' },
       { $set: { status: 'LOGGED_OUT', logoutAt: new Date() } }
     );
     res.json({ message: 'Logged out successfully' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const loginWithMpin = async (req, res) => {
+  const { phoneNumber, mpin, apiNumber } = req.body;
+  try {
+    let query = { phoneNumber };
+    
+    if (apiNumber) {
+      const cleanInput = apiNumber.replace(/[^\d]/g, '');
+      if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
+      const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
+      const regexPattern = searchDigits.split('').join('[^0-9]*');
+      const regex = new RegExp(regexPattern);
+      const client = await Client.findOne({ 
+        $or: [
+          { 'whatsappConfig.phoneNumber': { $regex: regex } },
+          { 'mobileNumber': { $regex: regex } },
+          { 'phone': { $regex: regex } }
+        ]
+      });
+      if (!client) return res.status(404).json({ message: 'Invalid API Number. Workspace not found.' });
+      query.tenantId = client.tenantId;
+    }
+
+    const user = await User.findOne(query);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Account not found with this number' });
+    }
+
+    if (user.status === 'SUSPENDED') {
+      return res.status(403).json({ message: 'Account suspended' });
+    }
+
+    const isMatch = await user.matchMpin(mpin);
+    if (!isMatch) {
+      return res.status(401).json({ message: 'Invalid MPIN' });
+    }
+
+    await createSession(user, req);
+
+    // Send Login Alert
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+    NotificationService.sendLoginAlert(user, ip);
+
+    res.json({
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      tenantId: user.tenantId,
+      token: generateToken(user._id),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -230,6 +292,7 @@ const registerSuperAdmin = async (req, res) => {
       email,
       password,
       phoneNumber,
+      mpin: req.body.mpin || '123456', // Default MPIN for new super admins
       role: 'SUPER_ADMIN'
     });
 
@@ -284,6 +347,7 @@ const registerTenant = async (req, res) => {
       email,
       password,
       phoneNumber: secondaryOtpNumber,
+      mpin: req.body.mpin || '123456', // User-defined or default MPIN
       role: 'ADMIN',
       tenantId
     });
@@ -325,6 +389,15 @@ const updateAvailability = async (req, res) => {
   }
 };
 
-module.exports = { authUser, logout, registerSuperAdmin, registerTenant, requestOTP, verifyOTP, updateAvailability };
+module.exports = { 
+  authUser, 
+  logout, 
+  registerSuperAdmin, 
+  registerTenant, 
+  requestOTP, 
+  verifyOTP, 
+  updateAvailability,
+  loginWithMpin
+};
 
 

@@ -199,6 +199,32 @@ class NotificationService {
       return false;
     }
   }
+
+  /**
+   * Send WhatsApp Login Alert
+   */
+  async sendLoginAlert(user, ip) {
+    try {
+      if (!user.phoneNumber) return;
+      const message = `🔔 *Security Alert: New Login*\n\nYour WapiPulse account was just logged into.\n\n*User:* ${user.name}\n*IP Address:* ${ip}\n*Time:* ${new Date().toLocaleString()}\n\nIf this wasn't you, please change your MPIN immediately.`;
+      return await this.sendWhatsApp(user.phoneNumber, message, user.tenantId);
+    } catch (err) {
+      console.error('❌ Login alert error:', err.message);
+    }
+  }
+
+  /**
+   * Send WhatsApp Logout Alert
+   */
+  async sendLogoutAlert(user) {
+    try {
+      if (!user.phoneNumber) return;
+      const message = `🚪 *Session Closed*\n\nYour WapiPulse session has been successfully logged out.\n\n*User:* ${user.name}\n*Time:* ${new Date().toLocaleString()}\n\nThank you for using WapiPulse CRM.`;
+      return await this.sendWhatsApp(user.phoneNumber, message, user.tenantId);
+    } catch (err) {
+      console.error('❌ Logout alert error:', err.message);
+    }
+  }
 }
 
 module.exports = new NotificationService();
