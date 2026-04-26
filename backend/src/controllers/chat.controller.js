@@ -760,15 +760,22 @@ const getDashboardStats = async (req, res) => {
     // Permission Check for Stats Filtering
     const settings = await Settings.findOne({ tenantId: req.tenantId });
     const userRole = (req.user?.role || 'AGENT').toUpperCase();
-    const roleAccess = settings?.roleAccess instanceof Map ? settings.roleAccess.get(userRole) : settings?.roleAccess?.[userRole];
+    const normalizedRole = userRole.replace(/\s/g, '_');
+    const roleAccess = settings?.roleAccess instanceof Map ? 
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
 
-    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER'].includes(userRole);
 
     const baseFilter = { isArchived: { $ne: true } };
-    if (!isHighLevel && roleAccess && !roleAccess.allAccess && roleAccess.permissions.includes('chat_show_assigned_only')) {
+    const mustRestrict = !isHighLevel && (!roleAccess || roleAccess.allAccess !== true);
+
+    if (mustRestrict) {
        baseFilter.$or = [
          { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
-         { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) }
+         { assignedAgent: String(req.user._id) },
+         { assignedCounsellor: new mongoose.Types.ObjectId(req.user._id) },
+         { assignedCounsellor: String(req.user._id) }
        ];
     }
 
