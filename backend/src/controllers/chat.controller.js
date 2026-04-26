@@ -540,6 +540,12 @@ const performBulkContactAction = async (req, res) => {
   }
 };
 
+const getMessages = async (req, res) => {
+  try {
+    console.log(`[GET /messages] Request received for contactId: ${req.params.contactId}`);
+    const Message = req.tenantDb.model('Message', MessageSchema);
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+
     // Security Check: Visibility Enforcement
     const settings = await Settings.findOne({ tenantId: req.tenantId });
     const userRole = (req.user?.role || 'AGENT').toUpperCase();
@@ -558,7 +564,7 @@ const performBulkContactAction = async (req, res) => {
                           (contact.assignedCounsellor?.toString() === req.user._id.toString());
        
        if (contact && !isAssigned) {
-          return res.status(403).json({ message: 'Access denied: This lead is not assigned to you.' });
+          return res.status(403).json({ message: 'Access denied to this contact messages' });
        }
     }
 
