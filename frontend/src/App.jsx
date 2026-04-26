@@ -354,72 +354,26 @@ function Dashboard() {
         {/* Core Metrics shown for everyone */}
         <DashboardCard title="Contacts" value={loading && stats.contacts === 0 ? "..." : stats.contacts} subtext={`${stats.contacts} Total contacts`} icon={Users} />
         <DashboardCard title="Open Chats" value={loading && stats.chats === 0 ? "..." : stats.chats} subtext={`${stats.chats} Active conversations`} icon={MessageCircle} />
-
-        {/* Telecaller Metrics - Priority display */}
-        {userRole === 'TELECALLER' && (
-           <>
-              <DashboardCard title="New Leads" value={loading ? "..." : stats.newLeads} subtext="Unattended Contacts" icon={PlusCircle} />
-              <DashboardCard title="Open Leads" value={loading ? "..." : stats.openLeads} subtext="Active Conversations" icon={MessageCircle} />
-              <DashboardCard title="Total Visited" value={loading ? "..." : stats.totalVisit} subtext="Leads who Visited" icon={Building2} />
-              <DashboardCard title="Pending Visited" value={loading ? "..." : stats.pendingVisit} subtext="Follow-up required" icon={History} />
-              <DashboardCard title="Total Admissions" value={loading ? "..." : stats.totalAdmission} subtext="Closed Enrolments" icon={CheckCircle} />
-              <DashboardCard title="Closed Leads" value={loading ? "..." : stats.closedLeads} subtext="Pipeline Finished" icon={X} />
-           </>
-        )}
-
-        {/* Standard Agent Metrics */}
-        {!isAdminOrSuperAdmin && userRole === 'AGENT' && (
-           <>
-              <DashboardCard title="Qualified" value={loading ? "..." : stats.qualifiedLeads} subtext="AI Qualified" icon={CheckCircle} />
-              <DashboardCard title="Priority" value={loading ? "..." : (stats.hotLeads + stats.warmLeads)} subtext="Hot & Warm Leads" icon={History} />
-           </>
-        )}
       </div>
 
-      {userRole === 'MANAGER_COUNSELLOUR' && (
-        <div className="animate-fade-in-up">
-           <h3 className="text-xs font-black text-slate-400 tracking-widest uppercase mb-4">Counsellor Progress Tracking</h3>
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <DashboardCard title="New Leads" value={loading ? "..." : stats.newLeads} subtext="Pending Initial Contact" icon={PlusCircle} />
-              <DashboardCard title="Open Leads" value={loading ? "..." : stats.openLeads} subtext="Active in Pipeline" icon={MessageCircle} />
-              <DashboardCard title="Total Visit" value={loading ? "..." : stats.totalVisit} subtext="Campus/Office Visits" icon={Building2} />
-              <DashboardCard title="Admission Closed" value={loading ? "..." : stats.totalAdmission} subtext="Successfully Enrolled" icon={CheckCircle} />
-              <DashboardCard title="Pending Admission" value={loading ? "..." : stats.pendingAdmission} subtext="Documentation Stage" icon={PlusCircle} />
-              <DashboardCard title="Lead Closed" value={loading ? "..." : stats.closedLeads} subtext="Won or Lost" icon={X} />
-              <DashboardCard title="Total Collection" value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} subtext="Total Fee Received" icon={Wallet} />
-              <DashboardCard title="Pending Collection" value={loading ? "..." : `₹${stats.pendingCollection?.toLocaleString()}`} subtext="Outstanding Balance" icon={Wallet} />
+      {/* Lead Lifecycle & Performance Section (Visible for all non-admin roles) */}
+      {!isAdminOrSuperAdmin && (
+        <div className="mt-8 animate-fade-in-up">
+           <div className="flex items-center space-x-2 mb-6">
+              <div className="w-1.5 h-6 bg-teal-600 rounded-full"></div>
+              <h3 className="text-sm font-black text-slate-700 tracking-widest uppercase">Lead Lifecycle & Revenue</h3>
+              <span className="text-[10px] bg-teal-100 text-teal-600 px-2 py-0.5 rounded-full font-bold animate-pulse">Live Stats</span>
            </div>
-        </div>
-      )}
-
-      {userRole === 'BUSINESS_HEAD' && (
-        <div className="animate-fade-in-up mt-6">
-           <h3 className="text-xs font-black text-slate-400 tracking-widest uppercase mb-4">Business Head Overview</h3>
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <DashboardCard title="New Leads" value={loading ? "..." : stats.newLeads} subtext="Pending Initial Contact" icon={PlusCircle} />
-              <DashboardCard title="Open Leads" value={loading ? "..." : stats.openLeads} subtext="Active in Pipeline" icon={MessageCircle} />
-              <DashboardCard title="Closed Leads" value={loading ? "..." : stats.closedLeads} subtext="Won or Lost" icon={X} />
-              <DashboardCard title="Admissions" value={loading ? "..." : stats.totalAdmission} subtext="Successfully Enrolled" icon={CheckCircle} />
-              <DashboardCard title="Pending Admission" value={loading ? "..." : stats.pendingAdmission} subtext="Documentation Stage" icon={History} />
-              <DashboardCard title="Total Collection" value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} subtext="Total Fee Received" icon={Wallet} />
-              <DashboardCard title="Pending Collection" value={loading ? "..." : `₹${stats.pendingCollection?.toLocaleString()}`} subtext="Outstanding Balance" icon={Wallet} />
-              <DashboardCard 
-                isClickable={true}
-                onClick={fetchPendingTasksTeam}
-                title="Pending Tasks" 
-                value={loading ? "..." : "View All"} 
-                subtext="Telecallers & Counsellors" 
-                icon={Clock} 
-              />
+           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <DashboardCard title="NEW" value={loading ? "..." : stats.newLeads} subtext="Pending initial contact" icon={PlusCircle} />
+              <DashboardCard title="OPEN" value={loading ? "..." : stats.openLeads} subtext="Active in pipeline" icon={MessageCircle} />
+              <DashboardCard title="CLOSE" value={loading ? "..." : stats.closedLeads} subtext="Total Won/Lost" icon={X} />
+              <DashboardCard title="VISIT" value={loading ? "..." : stats.totalVisit} subtext="Leads who Visited" icon={Building2} />
+              <DashboardCard title="PENDING VISIT" value={loading ? "..." : stats.pendingVisit} subtext="Follow-up required" icon={History} />
+              <DashboardCard title="ADMISSION" value={loading ? "..." : stats.totalAdmission} subtext="Successfully enrolled" icon={CheckCircle} />
+              <DashboardCard title="COLLECTION" value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} subtext="Total fee received" icon={Wallet} />
+              <DashboardCard title="PENDING COLLECTION" value={loading ? "..." : `₹${stats.pendingCollection?.toLocaleString()}`} subtext="Outstanding balance" icon={Wallet} />
            </div>
-        </div>
-      )}
-
-
-      {!isAdminOrSuperAdmin && userRole !== 'TELECALLER' && userRole !== 'MANAGER_COUNSELLOUR' && userRole !== 'BUSINESS_HEAD' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 mt-6">
-           <LeadAnalysisCard title="Lead Status Report" data={analysisData.statusStats} type="status" />
-           <LeadAnalysisCard title="Lead Source Report" data={analysisData.sourceStats} type="source" />
         </div>
       )}
 

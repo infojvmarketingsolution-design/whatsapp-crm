@@ -823,13 +823,12 @@ const getDashboardStats = async (req, res) => {
       { $match: { ...baseFilter } },
       { $group: {
         _id: null,
-        newLeads: { $sum: { $cond: [{ $eq: ["$status", "NEW LEAD"] }, 1, 0] } },
-        openLeads: { $sum: { $cond: [{ $and: [{ $ne: ["$isArchived", true] }, { $ne: ["$isClosed", true] }] }, 1, 0] } },
-        totalVisit: { $sum: { $cond: [{ $eq: ["$visitStatus", "Visited"] }, 1, 0] } },
-        pendingVisit: { $sum: { $cond: [{ $eq: ["$visitStatus", "Not Visited"] }, 1, 0] } },
-        totalAdmission: { $sum: { $cond: [{ $eq: ["$admissionStatus", "Admitted"] }, 1, 0] } },
-        pendingAdmission: { $sum: { $cond: [{ $eq: ["$admissionStatus", "Pending"] }, 1, 0] } },
-        closedLeads: { $sum: { $cond: [{ $eq: ["$isClosed", true] }, 1, 0] } },
+        newLeads: { $sum: { $cond: [{ $in: ["$status", ["NEW LEAD", "NEW"]] }, 1, 0] } },
+        openLeads: { $sum: { $cond: [{ $in: ["$status", ["OPEN", "CONTACTED", "INTERESTED", "FOLLOW_UP"]] }, 1, 0] } },
+        closedLeads: { $sum: { $cond: [{ $in: ["$status", ["CLOSE", "CLOSED", "CLOSED_LOST"]] }, 1, 0] } },
+        totalVisit: { $sum: { $cond: [{ $eq: ["$status", "VISITED"] }, 1, 0] } },
+        pendingVisit: { $sum: { $cond: [{ $eq: ["$status", "PENDING_VISIT"] }, 1, 0] } },
+        totalAdmission: { $sum: { $cond: [{ $in: ["$status", ["ADMISSION", "CLOSED_WON"]] }, 1, 0] } },
         totalCollection: { $sum: { $ifNull: ["$collectionAmount", 0] } },
         pendingCollection: { $sum: { $ifNull: ["$pendingCollectionAmount", 0] } }
       }}
@@ -850,10 +849,10 @@ const getDashboardStats = async (req, res) => {
       // Counselor specific
       newLeads: counselStats.newLeads,
       openLeads: counselStats.openLeads,
-      totalVisit: counselStats.totalVisit,
-      totalAdmission: counselStats.totalAdmission,
-      pendingAdmission: counselStats.pendingAdmission,
       closedLeads: counselStats.closedLeads,
+      totalVisit: counselStats.totalVisit,
+      pendingVisit: counselStats.pendingVisit,
+      totalAdmission: counselStats.totalAdmission,
       totalCollection: counselStats.totalCollection,
       pendingCollection: counselStats.pendingCollection
     });
