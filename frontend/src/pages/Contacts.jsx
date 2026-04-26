@@ -885,7 +885,7 @@ export default function Contacts({ roleAccess }) {
                                  <label className="text-[9px] font-bold text-slate-400 uppercase">Alternative Numbers</label>
                                  {(!editedContact.secondaryPhone || editedContact.secondaryPhone.trim() === '') && (
                                     <button 
-                                       onClick={() => handleFieldChange('secondaryPhone', ' ')} 
+                                       onClick={() => handleFieldChange('secondaryPhone', '+')} 
                                        className="text-[9px] font-bold text-slate-800 flex items-center hover:bg-slate-100 px-2 py-1 rounded transition-all"
                                     >
                                        <Plus size={10} className="mr-1" /> Add WhatsApp
@@ -894,7 +894,7 @@ export default function Contacts({ roleAccess }) {
                               </div>
                               
                               {/* Always show if it has content or was just added */}
-                              {(editedContact.secondaryPhone && editedContact.secondaryPhone.trim() !== '') && (
+                              {((editedContact.secondaryPhone && editedContact.secondaryPhone.length > 0) || (editedContact.altMobile && editedContact.altMobile.length > 0)) && (
                                  <div className="space-y-1.5 animate-fade-in">
                                     <label className="text-[8px] font-bold text-slate-400 uppercase ml-1">Secondary WhatsApp</label>
                                     <input 
