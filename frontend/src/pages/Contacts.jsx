@@ -1083,7 +1083,14 @@ export default function Contacts({ roleAccess }) {
                                     </div>
                                     <div className="pb-4">
                                        <div className="flex justify-between items-center">
-                                          <p className="text-sm font-medium text-slate-700">{event.description}</p>
+                                          <div className="flex flex-col">
+                                           <p className="text-sm font-medium text-slate-700">{event.description.split(' - ')[0]}</p>
+                                           {event.description?.includes(' - ') && (
+                                              <p className="text-[11px] text-slate-500 font-bold mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 italic leading-relaxed">
+                                                 {event.description.split(' - ').slice(1).join(' - ')}
+                                              </p>
+                                           )}
+                                        </div>
                                           <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider">{event.eventType}</span>
                                        </div>
                                        <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(event.timestamp)}</p>

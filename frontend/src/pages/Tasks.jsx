@@ -668,7 +668,12 @@ export default function Tasks() {
                               <div className="flex items-center space-x-3 mb-1">
                                  <div className="flex flex-col">
                                      <h3 className="text-sm font-black text-slate-800 tracking-tight">{t.title}</h3>
-                                     {t.description && <p className="text-[11px] text-slate-500 font-medium mt-0.5 line-clamp-2 max-w-md">{t.description}</p>}
+                                     {t.description && (
+                                        <div className="mt-1 flex items-start">
+                                           <div className="w-1 h-3 bg-teal-500/20 rounded-full mr-2 mt-0.5 shrink-0"></div>
+                                           <p className="text-[11px] text-slate-500 font-bold leading-tight italic">{t.description}</p>
+                                        </div>
+                                     )}
                                   </div>
                                  {isOverdue && <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-black uppercase rounded">Overdue</span>}
                                  {t.status === 'COMPLETED' && <span className="px-1.5 py-0.5 bg-teal-100 text-teal-600 text-[9px] font-black uppercase rounded">Completed</span>}

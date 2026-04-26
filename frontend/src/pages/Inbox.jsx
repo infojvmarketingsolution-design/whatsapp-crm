@@ -1534,7 +1534,14 @@ export default function Inbox({ roleAccess }) {
                  return (
                    <div key={idx} className="relative animate-fade-in">
                      <div className={`absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-[3px] border-white shadow-sm z-10 ${color}`}></div>
-                     <h4 className={`text-xs font-bold leading-tight ${textColor} pr-2`}>{event.description}</h4>
+                     <div className="flex flex-col">
+                        <h4 className={`text-xs font-bold leading-tight ${textColor} pr-2`}>{event.description.split(' - ')[0]}</h4>
+                        {event.description?.includes(' - ') && (
+                          <p className="text-[11px] text-gray-500 font-bold mt-1 bg-white/50 p-2 rounded-lg border border-gray-100 shadow-sm italic leading-relaxed">
+                            {event.description.split(' - ').slice(1).join(' - ')}
+                          </p>
+                        )}
+                      </div>
                      <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-wide">{new Date(event.timestamp).toLocaleString()}</p>
                    </div>
                  );
