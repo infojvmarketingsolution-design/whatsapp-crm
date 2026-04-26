@@ -1138,6 +1138,12 @@ const getPendingTasksTeam = async (req, res) => {
        counsellorTasks
     });
 
+  } catch (error) {
+    console.error(`[GET /stats/pending-tasks] FAILED:`, error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const getLeadDetailsStats = async (req, res) => {
   try {
     const { category } = req.query;
