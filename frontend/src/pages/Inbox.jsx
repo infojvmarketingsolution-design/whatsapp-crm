@@ -506,24 +506,6 @@ export default function Inbox({ roleAccess }) {
           </div>
         </div>
 
-        {/* Global header tab */}
-        <div className="bg-[var(--theme-bg)] text-white flex items-center px-4 py-2.5 text-[10px] font-bold tracking-wider justify-between">
-           <div className="flex space-x-4">
-             <span className="border-b-2 border-[var(--theme-border)] pb-1">ACTIVE ({contacts.length})</span>
-           </div>
-           <ChevronDown size={14} className="cursor-pointer" />
-        </div>
-
-        {/* Top small avatars representing active queues */}
-        <div className="bg-[var(--theme-bg)] px-4 py-2 flex items-center space-x-2.5 overflow-x-auto custom-scrollbar">
-           {contacts.slice(0,6).map((c, i) => (
-              <div key={i} className="relative shrink-0 cursor-pointer hover:-translate-y-0.5 transition-transform" onClick={() => setActiveChat(c)}>
-                <img src={getAvatarUrl(c.name)} className="w-7 h-7 rounded-full border border-teal-700/50" />
-                {i === 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-brand-light border-2 border-brand-dark rounded-full shadow-sm"></span>}
-              </div>
-           ))}
-        </div>
-
         {/* Contact Items */}
         <div className="flex-1 overflow-y-auto custom-scrollbar bg-[#fcfcfd]">
           {filteredContacts.length === 0 ? (
