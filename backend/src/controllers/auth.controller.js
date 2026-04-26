@@ -118,11 +118,15 @@ const loginWithMpin = async (req, res) => {
 
     // Find user by phone number using regex
     const user = await User.findOne({ phoneNumber: { $regex: regex } });
-    console.log('[LoginDebug] User Found:', user ? { _id: user._id, phoneNumber: user.phoneNumber, hasMpin: !!user.mpin } : 'NULL');
-
+    
     if (!user) {
+      console.log('[LoginDebug] User NOT found. Checking similar numbers...');
+      const others = await User.find({}).limit(10).select('phoneNumber name email');
+      console.log('[LoginDebug] Sample Users in DB:', others.map(u => ({ n: u.name, p: u.phoneNumber })));
       return res.status(404).json({ message: 'Account not found with this number' });
     }
+
+    console.log('[LoginDebug] User Found:', { _id: user._id, phoneNumber: user.phoneNumber, hasMpin: !!user.mpin });
 
     if (user.status === 'SUSPENDED') {
       return res.status(403).json({ message: 'Account suspended' });
