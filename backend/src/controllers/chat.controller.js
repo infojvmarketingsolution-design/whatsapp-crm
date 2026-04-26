@@ -240,7 +240,8 @@ const performContactAction = async (req, res) => {
     } else if (action === 'edit_task') {
        const task = contact.tasks.id(payload.taskId);
        if (task) {
-          task.title = payload.title || task.title;
+           task.title = payload.title || task.title;
+          task.description = payload.description !== undefined ? payload.description : task.description;
           task.dueDate = payload.dueDate ? new Date(payload.dueDate) : task.dueDate;
           task.type = payload.type || task.type;
           contact.timeline.push({ 
@@ -406,39 +407,9 @@ const performContactAction = async (req, res) => {
             contact.tasks[taskIndex].status = 'CANCELLED';
             contact.timeline.push({ eventType: 'TASK_CANCELLED', description: `Task cancelled: ${contact.tasks[taskIndex].title}`, timestamp: new Date() });
         }
-     } else if (action === 'delete_task') {
-        if (!contact.tasks) contact.tasks = [];
-        contact.tasks = (contact.tasks || []).filter(t => t._id.toString() !== payload.taskId);
-        contact.timeline.push({ eventType: 'TASK_DELETED', description: `Task deleted from console`, timestamp: new Date() });
-     } else if (action === 'reschedule_task') {
-       if (!contact.tasks) contact.tasks = [];
-       const taskIndex = contact.tasks.findIndex(t => t._id.toString() === payload.taskId);
-       if (taskIndex > -1) {
-           const oldDate = new Date(contact.tasks[taskIndex].dueDate).toLocaleString();
-           contact.tasks[taskIndex].dueDate = new Date(payload.newDueDate);
-           contact.timeline.push({ 
-             eventType: 'TASK_RESCHEDULED', 
-             description: `Task "${contact.tasks[taskIndex].title}" rescheduled from ${oldDate} to ${new Date(payload.newDueDate).toLocaleString()}`, 
-             timestamp: new Date() 
-           });
-       }
-    } else if (action === 'edit_task') {
-       if (!contact.tasks) contact.tasks = [];
-       const taskIndex = contact.tasks.findIndex(t => t._id.toString() === payload.taskId);
-       if (taskIndex > -1) {
-           const oldTitle = contact.tasks[taskIndex].title;
-           contact.tasks[taskIndex].title = payload.title || contact.tasks[taskIndex].title;
-           contact.tasks[taskIndex].dueDate = new Date(payload.dueDate || contact.tasks[taskIndex].dueDate);
-           if (payload.type) contact.tasks[taskIndex].type = payload.type;
-           contact.timeline.push({ 
-             eventType: 'TASK_EDITED', 
-             description: `Task edited from "${oldTitle}" to "${contact.tasks[taskIndex].title}"`, 
-             timestamp: new Date() 
-           });
-       }
-    } else {
-       return res.status(400).json({ error: 'Invalid action type' });
-    }
+     } else {
+        return res.status(400).json({ error: 'Invalid action type' });
+     }
 
     await contact.save();
     req.app.get("io")?.to(req.tenantId).emit("contact_updated", { contactId: contact._id, contact: contact.toObject() }); res.json({ success: true, contact: contact.toObject() });

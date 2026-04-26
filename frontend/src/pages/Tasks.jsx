@@ -856,7 +856,7 @@ export default function Tasks() {
                                              <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center mr-3">
                                                 <Edit3 size={16} />
                                              </div>
-                                             Edit Task
+                                             Edit Follow-Up
                                           </button>
                                           <button 
                                              onClick={() => { 
@@ -1572,11 +1572,37 @@ export default function Tasks() {
       {editingTask && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setEditingTask(null)}>
           <div className="bg-white rounded-3xl w-[400px] p-6 shadow-2xl animate-pop-in" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center"><Edit3 size={20} className="mr-2 text-indigo-600"/> Edit Task</h3>
+            <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center"><Edit3 size={20} className="mr-2 text-indigo-600"/> Edit Follow-Up</h3>
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Task Title</label>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Subject</label>
                 <input type="text" value={editTaskTitle} onChange={e=>setEditTaskTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-indigo-500 outline-none" />
+              </div>
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Follow-up Type</label>
+                <select 
+                  value={editTaskType} 
+                  onChange={e=>setEditTaskType(e.target.value)} 
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-indigo-500 outline-none"
+                >
+                  <option value="CALL">Call</option>
+                  <option value="MEETING">Meeting</option>
+                  <option value="FOLLOW_UP">Follow-up</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Date (Read Only)</label>
+                  <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500">
+                    {new Date(editTaskDate).toLocaleDateString()}
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Time (Read Only)</label>
+                  <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500">
+                    {new Date(editTaskDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Task Description</label>
