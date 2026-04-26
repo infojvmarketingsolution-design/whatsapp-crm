@@ -57,6 +57,7 @@ export default function Tasks() {
   const [editTaskDescription, setEditTaskDescription] = useState('');
   const [editTaskDate, setEditTaskDate] = useState('');
   const [editTaskType, setEditTaskType] = useState('');
+  const [isUpdatingTask, setIsUpdatingTask] = useState(false);
   const [reschedulingTask, setReschedulingTask] = useState(null);
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [isRescheduling, setIsRescheduling] = useState(false);
@@ -321,34 +322,29 @@ export default function Tasks() {
   };
 
   const saveEditedTask = async () => {
-     if (!editingTask) return;
-     setIsUpdatingTask(true);
-     try {
-       const token = localStorage.getItem('token');
-       const tenantId = localStorage.getItem('tenantId');
-       
-       // Temporarily creating a simplified action or we might need an actual endpoint.
-       // The instructions just said "Edit Task". I'll manually reschedule and re-title.
-       // Wait, we don't have an explicit 'edit_task' action in the backend. 
-       // If Edit Task requires changing title, I am adding a new 'edit_task' action to backend later.
-       const res = await fetch(`/api/chat/contacts/${editingTask.contactId}/action`, {
-         method: 'PUT',
-         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'edit_task', payload: { taskId: editingTask._id, title: editTaskTitle, description: editTaskDescription, dueDate: editTaskDate, type: editTaskType } })
-       });
-       if (res.ok) {
-         toast.success("Task updated");
-         setEditingTask(null);
-         fetchTasks();
-    fetchAgents();
-       } else {
-         toast.error("Failed to update task");
-       }
-     } catch (err) {
-       console.error(err);
-     } finally {
+    if (!editingTask || !editTaskTitle) return;
+    setIsUpdatingTask(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch(`/api/chat/contacts/${editingTask.contactId}/action`, {
+        method: 'PUT',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'edit_task', payload: { taskId: editingTask._id, title: editTaskTitle, description: editTaskDescription, dueDate: editTaskDate, type: editTaskType } })
+      });
+      if (res.ok) {
+        toast.success("Task updated");
+        setEditingTask(null);
+        fetchTasks();
+        fetchAgents();
+      } else {
+        toast.error("Failed to update task");
+      }
+    } catch (error) {
+       toast.error("An error occurred");
+    } finally {
        setIsUpdatingTask(false);
-     }
+    }
   };
 
   const handleRescheduleSubmit = async () => {
