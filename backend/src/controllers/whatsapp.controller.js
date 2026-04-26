@@ -45,6 +45,7 @@ const verifyWebhook = (req, res) => {
 const handleIncomingMessage = async (req, res) => {
   try {
     console.log("🔥 WEBHOOK HIT");
+    try { require('fs').appendFileSync(require('path').join(__dirname, '../../webhook_debug.log'), `[${new Date().toISOString()}] TRACE: Entering handleIncomingMessage\n`); } catch(e) {}
     
     // 🔍 DEBUG HOOK: Log raw body to verify reception
     try {
@@ -125,8 +126,11 @@ const handleIncomingMessage = async (req, res) => {
     }
 
     console.log(`✅ [Tenant: ${client.tenantId}] Client matched via ${resolutionMethod} (PhoneID: ${phoneNumberId})`);
+    try { require('fs').appendFileSync(require('path').join(__dirname, '../../webhook_debug.log'), `[${new Date().toISOString()}] TRACE: Client matched: ${client.tenantId}\n`); } catch(e) {}
 
     const tenantDb = getTenantConnection(client.tenantId);
+    try { require('fs').appendFileSync(require('path').join(__dirname, '../../webhook_debug.log'), `[${new Date().toISOString()}] TRACE: tenantDb readyState: ${tenantDb.readyState}\n`); } catch(e) {}
+
     const Contact = tenantDb.model('Contact', ContactSchema);
     const Message = tenantDb.model('Message', MessageSchema);
 
@@ -204,6 +208,8 @@ const handleIncomingMessage = async (req, res) => {
 
       // 🔒 1. Redis Concurrency Lock (Rule 3)
       const lockAcquired = await lockUser(from, 5);
+      try { require('fs').appendFileSync(require('path').join(__dirname, '../../webhook_debug.log'), `[${new Date().toISOString()}] TRACE: lockUser returned ${lockAcquired}\n`); } catch(e) {}
+
       if (!lockAcquired) {
         console.log(`[Webhook] 🔒 Lock Active: Skipping parallel hit for ${from}`);
         return res.status(200).send('EVENT_RECEIVED');
@@ -216,7 +222,9 @@ const handleIncomingMessage = async (req, res) => {
            tenantSettings = { crm: { duplicateDetection: true, autoAssignment: false } }; // Fallback
         }
 
+        try { require('fs').appendFileSync(require('path').join(__dirname, '../../webhook_debug.log'), `[${new Date().toISOString()}] TRACE: About to find contact for ${from} in tenantDb\n`); } catch(e) {}
         let contact = await Contact.findOne({ phone: from });
+
         
         // 🔒 2. Deduplication (Rule 2)
         if (contact && contact.lastProcessedMessageId === msgId) {
@@ -252,6 +260,7 @@ const handleIncomingMessage = async (req, res) => {
               console.log(`[Webhook] Auto-assigned new lead ${from} to agent ${assignedAgentId}`);
            }
            
+           try { require('fs').appendFileSync(require('path').join(__dirname, '../../webhook_debug.log'), `[${new Date().toISOString()}] TRACE: Contact created/checked: ${contact?._id}\n`); } catch(e) {}
            isNewContact = true;
 
            // 🔔 NOTIFICATION ALERT
@@ -333,6 +342,9 @@ const handleIncomingMessage = async (req, res) => {
       return; 
     } catch (innerErr) {
        console.error(`[Webhook Inner Error]`, innerErr);
+       try {
+          require('fs').appendFileSync(require('path').join(__dirname, '../../webhook_errors.log'), `[${new Date().toISOString()}] INNER ERROR: ${innerErr.message}\nStack: ${innerErr.stack}\n\n`);
+       } catch (e) {}
        await unlockUser(from);
        return res.status(200).send('EVENT_RECEIVED');
     }

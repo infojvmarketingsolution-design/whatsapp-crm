@@ -8,7 +8,7 @@ const connectionMap = new Map();
  */
 const connectCoreDB = async () => {
   try {
-    const coreUri = process.env.CORE_DB_URI || 'mongodb://localhost:27017/jv_cloud_crm_core';
+    const coreUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/jv_cloud_crm_core';
     const connection = await mongoose.connect(coreUri, {
       maxPoolSize: 10,
     });
@@ -32,15 +32,18 @@ const getTenantConnection = (tenantId) => {
   // Create a new connection for the tenant using the mongoose connection pooling
   const tenantUri = process.env.TENANT_DB_URI_PREFIX 
       ? `${process.env.TENANT_DB_URI_PREFIX}_${tenantId}` 
-      : `mongodb://localhost:27017/jv_tenant_${tenantId}`;
+      : `mongodb://127.0.0.1:27017/jv_tenant_${tenantId}`;
       
   const conn = mongoose.createConnection(tenantUri, {
     maxPoolSize: 10,
   });
 
   // PREVENT UNHANDLED ERROR CRASH WHEN MONGODB IS OFFLINE
-  conn.on('error', () => {
-     console.log(`⚠️ Tenant DB ${tenantId} connection error safely ignored.`);
+  conn.on('error', (err) => {
+     console.error(`❌ Tenant DB ${tenantId} connection error:`, err);
+  });
+  conn.on('connected', () => {
+     console.log(`✅ Tenant DB ${tenantId} connected successfully.`);
   });
 
   connectionMap.set(tenantId, conn);

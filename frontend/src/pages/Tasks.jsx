@@ -715,7 +715,7 @@ export default function Tasks() {
                                 onClick={() => { setCompletingTask(t); setActiveDropdown(null); }}
                                 className="h-9 px-4 bg-teal-600 text-white text-xs font-black rounded-xl hover:bg-teal-700 transition-all flex items-center shadow-md shadow-teal-600/10 active:scale-95"
                               >
-                                <Check size={14} className="mr-2" /> Done
+                                <Check size={14} className="mr-2" /> Follow Up update
                               </button>
                            )}
                            <div className="relative" ref={activeDropdown === t._id ? dropdownRef : null}>
