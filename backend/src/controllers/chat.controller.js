@@ -59,7 +59,7 @@ const getContacts = async (req, res) => {
     const matchStage = { isArchived: { $ne: true } };
     
     if (mustRestrict) {
-      const uid = req.user._id;
+      const uid = new mongoose.Types.ObjectId(req.user._id);
       matchStage.$or = [
         { assignedAgent: uid },
         { assignedCounsellor: uid }
@@ -789,10 +789,10 @@ const getDashboardStats = async (req, res) => {
     const mustRestrict = !isHighLevel && (!roleAccess || roleAccess.allAccess !== true);
 
     if (mustRestrict) {
-       const uid = req.user._id;
+       const uid = new mongoose.Types.ObjectId(req.user._id);
        baseFilter.$or = [
-         { assignedAgent: uid },
-         { assignedCounsellor: uid }
+          { assignedAgent: uid },
+          { assignedCounsellor: uid }
        ];
     }
 
@@ -848,7 +848,6 @@ const getDashboardStats = async (req, res) => {
     };
     
     res.json({
-      v: "1.0.1",
       leads: totalContacts,
       activeChats,
       campaigns: totalCampaigns,
@@ -1017,12 +1016,15 @@ const getUserBreakdownStats = async (req, res) => {
     switch (category) {
       case 'new_leads':
         matchQuery = { status: 'NEW LEAD' };
+        groupField = { $ifNull: ['$assignedAgent', '$assignedCounsellor'] };
         break;
       case 'open_leads':
         matchQuery = { isArchived: { $ne: true }, isClosed: { $ne: true } };
+        groupField = { $ifNull: ['$assignedAgent', '$assignedCounsellor'] };
         break;
       case 'closed_leads':
         matchQuery = { isClosed: true };
+        groupField = { $ifNull: ['$assignedAgent', '$assignedCounsellor'] };
         break;
       case 'admissions':
         matchQuery = { admissionStatus: 'Admitted' };
@@ -1175,7 +1177,7 @@ const getLeadDetailsStats = async (req, res) => {
     let matchQuery = { isArchived: { $ne: true } };
 
     if (mustRestrict) {
-       const uid = String(req.user._id);
+       const uid = new mongoose.Types.ObjectId(req.user._id);
        matchQuery.$or = [
           { assignedAgent: uid },
           { assignedCounsellor: uid }
