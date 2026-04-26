@@ -488,19 +488,30 @@ export default function Inbox({ roleAccess }) {
             />
           </div>
 
-          {/* Sidebar Quick Filters - Flexible Grid */}
-          <div className="flex flex-wrap gap-1 pb-1">
-            {['ALL', ...STATUSES].map(s => (
+          {/* Sidebar Quick Filters - Premium Tab Bar */}
+          <div className="flex items-center justify-between px-1 border-b border-gray-50 bg-white">
+            {[
+              { id: 'ALL', label: 'All' },
+              { id: 'NEW', label: 'New' },
+              { id: 'OPEN', label: 'Open' },
+              { id: 'CLOSE', label: 'Close' },
+              { id: 'VISITED', label: 'Visit' },
+              { id: 'PENDING VISIT', label: 'Pndg' },
+              { id: 'ADMISSION', label: 'Admit' }
+            ].map(tab => (
                <button 
-                  key={s} 
-                  onClick={() => setSidebarFilter(s)}
-                  className={`px-2 py-1.5 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all border text-center ${
-                    sidebarFilter === s 
-                    ? 'bg-[var(--theme-bg)] text-white border-[var(--theme-bg)] shadow-sm' 
-                    : 'bg-white text-gray-400 border-gray-100 hover:border-teal-200 hover:text-teal-600'
+                  key={tab.id} 
+                  onClick={() => setSidebarFilter(tab.id)}
+                  className={`py-3 px-1 text-[9px] font-black uppercase tracking-tighter transition-all relative shrink-0 ${
+                    sidebarFilter === tab.id 
+                    ? 'text-[var(--theme-bg)]' 
+                    : 'text-gray-400 hover:text-gray-600'
                   }`}
                >
-                  {s}
+                  {tab.label}
+                  {sidebarFilter === tab.id && (
+                    <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--theme-bg)] rounded-t-full"></div>
+                  )}
                </button>
             ))}
           </div>
