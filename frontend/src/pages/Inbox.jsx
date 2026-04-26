@@ -514,6 +514,16 @@ export default function Inbox({ roleAccess }) {
                           {c.assignedAgentName}
                         </span>
                       )}
+                      {/* Status Badge */}
+                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter flex-shrink-0 ${
+                        c.status === 'NEW LEAD' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                        c.status === 'FOLLOW_UP' ? 'bg-orange-50 text-orange-600 border-orange-100' :
+                        c.status === 'CLOSED_WON' || c.status === 'ADMITTED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                        c.status === 'CLOSED_LOST' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                        'bg-slate-50 text-slate-600 border-slate-100'
+                      }`}>
+                        {c.status?.replace('_', ' ') || 'OPEN'}
+                      </span>
                       {c.heatLevel === 'Hot' && <Flame size={14} className="text-red-500 animate-pulse fill-red-500/20" />}
                       {c.heatLevel === 'Warm' && <Flame size={13} className="text-orange-400 fill-orange-400/10" />}
                     </div>
@@ -526,9 +536,6 @@ export default function Inbox({ roleAccess }) {
                         }`}>
                           {c.score}
                         </span>
-                      )}
-                      {c.status === 'FOLLOW_UP' && (
-                        <span className="text-[8px] font-bold bg-orange-100 text-orange-600 px-1 py-0.5 rounded border border-orange-200 uppercase tracking-tighter mt-1">Waiting</span>
                       )}
                     </div>
                   </div>
