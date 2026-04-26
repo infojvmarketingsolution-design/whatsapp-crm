@@ -130,7 +130,7 @@ function LeadAnalysisCard({ title, data, type = 'status' }) {
 
 function Dashboard() {
   const navigate = useNavigate();
-  const [stats, setStats] = React.useState({ campaigns: 0, recentCampaign: '', templates: 0, contacts: 0, chats: 0 });
+  const [stats, setStats] = React.useState({ campaigns: 0, recentCampaign: '', templates: 0, contacts: 0, chats: 0, pendingTasks: 0 });
   const [analysisData, setAnalysisData] = React.useState({ statusStats: [], sourceStats: [] });
   const [loading, setLoading] = React.useState(true);
   const [wabaConfig, setWabaConfig] = React.useState(null);
@@ -423,10 +423,15 @@ function Dashboard() {
                 onClick={() => fetchLeadDetails('collections', 'Total Fee Collection')}
                 title="COLLECTION" value={loading ? "..." : `₹${stats.totalCollection?.toLocaleString()}`} subtext="Total fee received" icon={Wallet} 
               />
-              <DashboardCard 
+               <DashboardCard 
                 isClickable={true}
                 onClick={() => fetchLeadDetails('pending_collections', 'Pending Fee Collection')}
                 title="PENDING COLLECTION" value={loading ? "..." : `₹${stats.pendingCollection?.toLocaleString()}`} subtext="Outstanding balance" icon={Wallet} 
+              />
+              <DashboardCard 
+                isClickable={true}
+                onClick={() => navigate('/tasks')}
+                title="PENDING TASKS" value={loading ? "..." : stats.pendingTasks} subtext="Tasks to complete" icon={Clock} 
               />
            </div>
         </div>

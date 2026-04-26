@@ -789,7 +789,7 @@ const getDashboardStats = async (req, res) => {
     const mustRestrict = !isHighLevel && (!roleAccess || roleAccess.allAccess !== true);
 
     if (mustRestrict) {
-       const uid = String(req.user._id);
+       const uid = req.user._id;
        baseFilter.$or = [
          { assignedAgent: uid },
          { assignedCounsellor: uid }
@@ -814,7 +814,20 @@ const getDashboardStats = async (req, res) => {
     const hotLeads = await Contact.countDocuments({ ...baseFilter, heatLevel: 'Hot' });
     const warmLeads = await Contact.countDocuments({ ...baseFilter, heatLevel: 'Warm' });
 
-    // Counselling & Admission Stats (for Counsellor Dashboard)
+    // Pending Tasks Count for current user
+    let pendingTasks = 0;
+    const contactsWithTasks = await Contact.find({
+      ...baseFilter,
+      'tasks.0': { $exists: true }
+    }).select('tasks');
+    
+    contactsWithTasks.forEach(c => {
+      c.tasks.forEach(t => {
+        if (t.status === 'PENDING' || t.status === 'IN_PROGRESS') pendingTasks++;
+      });
+    });
+
+    // Counselling & Admission Stats (for Dashboard)
     const counselStatsArr = await Contact.aggregate([
       { $match: { ...baseFilter } },
       { $group: {
@@ -842,6 +855,7 @@ const getDashboardStats = async (req, res) => {
       waitingForAgent,
       hotLeads,
       warmLeads,
+      pendingTasks,
       // Counselor specific
       newLeads: counselStats.newLeads,
       openLeads: counselStats.openLeads,
