@@ -351,9 +351,13 @@ function Dashboard() {
           </>
         )}
         
-        {/* Core Metrics shown for everyone */}
-        <DashboardCard title="Contacts" value={loading && stats.contacts === 0 ? "..." : stats.contacts} subtext={`${stats.contacts} Total contacts`} icon={Users} />
-        <DashboardCard title="Open Chats" value={loading && stats.chats === 0 ? "..." : stats.chats} subtext={`${stats.chats} Active conversations`} icon={MessageCircle} />
+        {/* Core Metrics - ADMIN ONLY */}
+        {isAdminOrSuperAdmin && (
+          <>
+            <DashboardCard title="Contacts" value={loading && stats.contacts === 0 ? "..." : stats.contacts} subtext={`${stats.contacts} Total contacts`} icon={Users} />
+            <DashboardCard title="Open Chats" value={loading && stats.chats === 0 ? "..." : stats.chats} subtext={`${stats.chats} Active conversations`} icon={MessageCircle} />
+          </>
+        )}
       </div>
 
       {/* Lead Lifecycle & Performance Section (Visible for all non-admin roles) */}
