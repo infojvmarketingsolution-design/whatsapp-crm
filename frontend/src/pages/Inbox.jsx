@@ -60,7 +60,7 @@ export default function Inbox({ roleAccess }) {
     'PENDING VISIT': 'PENDING VISIT',
     'PENDING_VISIT': 'PENDING VISIT'
   };
-  const [sidebarFilter, setSidebarFilter] = useState('NEW');
+  const [sidebarFilter, setSidebarFilter] = useState('ALL');
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -488,13 +488,13 @@ export default function Inbox({ roleAccess }) {
             />
           </div>
 
-          {/* Sidebar Quick Filters - Professional 3-Column Grid */}
-          <div className="grid grid-cols-3 gap-1.5 pb-1">
-            {STATUSES.map(s => (
+          {/* Sidebar Quick Filters - Flexible Grid */}
+          <div className="flex flex-wrap gap-1 pb-1">
+            {['ALL', ...STATUSES].map(s => (
                <button 
                   key={s} 
                   onClick={() => setSidebarFilter(s)}
-                  className={`px-1 py-1.5 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all border text-center ${
+                  className={`px-2 py-1.5 rounded-md text-[8px] font-black uppercase tracking-tighter transition-all border text-center ${
                     sidebarFilter === s 
                     ? 'bg-[var(--theme-bg)] text-white border-[var(--theme-bg)] shadow-sm' 
                     : 'bg-white text-gray-400 border-gray-100 hover:border-teal-200 hover:text-teal-600'
@@ -504,6 +504,24 @@ export default function Inbox({ roleAccess }) {
                </button>
             ))}
           </div>
+        </div>
+
+        {/* Global header tab */}
+        <div className="bg-[var(--theme-bg)] text-white flex items-center px-4 py-2.5 text-[10px] font-bold tracking-wider justify-between">
+           <div className="flex space-x-4">
+             <span className="border-b-2 border-[var(--theme-border)] pb-1">ACTIVE ({contacts.length})</span>
+           </div>
+           <ChevronDown size={14} className="cursor-pointer" />
+        </div>
+
+        {/* Top small avatars representing active queues */}
+        <div className="bg-[var(--theme-bg)] px-4 py-2 flex items-center space-x-2.5 overflow-x-auto custom-scrollbar">
+           {contacts.slice(0,6).map((c, i) => (
+              <div key={i} className="relative shrink-0 cursor-pointer hover:-translate-y-0.5 transition-transform" onClick={() => setActiveChat(c)}>
+                <img src={getAvatarUrl(c.name)} className="w-7 h-7 rounded-full border border-teal-700/50" />
+                {i === 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-brand-light border-2 border-brand-dark rounded-full shadow-sm"></span>}
+              </div>
+           ))}
         </div>
 
         {/* Contact Items */}
