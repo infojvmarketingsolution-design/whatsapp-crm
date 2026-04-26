@@ -2,7 +2,7 @@ import React, { useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 
-const AUTO_LOGOUT_TIME = 5 * 60 * 1000; // 5 minutes
+const AUTO_LOGOUT_TIME = 30 * 60 * 1000; // 30 minutes
 
 export default function AutoLogout() {
   const navigate = useNavigate();
