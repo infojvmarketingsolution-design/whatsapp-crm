@@ -42,7 +42,7 @@ export default function Inbox({ roleAccess }) {
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const PREDEFINED_TAGS = ['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'];
-  const STATUSES = ['NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'];
+  const STATUSES = ['NEW LEAD', 'OPEN', 'CLOSED', 'ADMISSION'];
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -517,12 +517,15 @@ export default function Inbox({ roleAccess }) {
                       {/* Status Badge */}
                       <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter flex-shrink-0 ${
                         c.status === 'NEW LEAD' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                        c.status === 'FOLLOW_UP' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                        c.status === 'CLOSED_WON' || c.status === 'ADMITTED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                        c.status === 'CLOSED_LOST' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                        c.status === 'OPEN' || c.status === 'CONTACTED' || c.status === 'INTERESTED' || c.status === 'FOLLOW_UP' ? 'bg-teal-50 text-teal-600 border-teal-100' :
+                        c.status === 'ADMISSION' || c.status === 'CLOSED_WON' || c.status === 'ADMITTED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                        c.status === 'CLOSED' || c.status === 'CLOSED_LOST' ? 'bg-rose-50 text-rose-600 border-rose-100' :
                         'bg-slate-50 text-slate-600 border-slate-100'
                       }`}>
-                        {c.status?.replace('_', ' ') || 'OPEN'}
+                        {c.status === 'CLOSED_WON' ? 'ADMISSION' : 
+                         c.status === 'CLOSED_LOST' ? 'CLOSED' :
+                         ['CONTACTED', 'INTERESTED', 'FOLLOW_UP'].includes(c.status) ? 'OPEN' :
+                         (c.status?.replace('_', ' ') || 'OPEN')}
                       </span>
                       {c.heatLevel === 'Hot' && <Flame size={14} className="text-red-500 animate-pulse fill-red-500/20" />}
                       {c.heatLevel === 'Warm' && <Flame size={13} className="text-orange-400 fill-orange-400/10" />}

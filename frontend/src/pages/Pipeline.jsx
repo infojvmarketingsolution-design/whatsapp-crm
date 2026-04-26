@@ -4,12 +4,23 @@ import { MoreVertical, Search, Filter, Phone, MessageSquare, Plus, Flame, Snowfl
 
 const STATUSES = [
   { id: 'NEW LEAD', label: 'New Lead', color: 'bg-blue-100 text-blue-800 border-blue-200', icon: Zap },
-  { id: 'CONTACTED', label: 'Contacted', color: 'bg-purple-100 text-purple-800 border-purple-200', icon: MessageSquare },
-  { id: 'INTERESTED', label: 'Interested', color: 'bg-yellow-100 text-yellow-800 border-yellow-200', icon: TrendingUp },
-  { id: 'FOLLOW_UP', label: 'Follow Up', color: 'bg-orange-100 text-orange-800 border-orange-200', icon: Calendar },
-  { id: 'CLOSED_WON', label: 'Closed Won', color: 'bg-green-100 text-green-800 border-green-200', icon: Check },
-  { id: 'CLOSED_LOST', label: 'Closed Lost', color: 'bg-red-100 text-red-800 border-red-200', icon: X },
+  { id: 'OPEN', label: 'Open', color: 'bg-teal-100 text-teal-800 border-teal-200', icon: MessageSquare },
+  { id: 'CLOSED', label: 'Closed', color: 'bg-rose-100 text-rose-800 border-rose-200', icon: X },
+  { id: 'ADMISSION', label: 'Admission', color: 'bg-emerald-100 text-emerald-800 border-emerald-200', icon: Check },
 ];
+
+const STATUS_MAPPING = {
+  'NEW LEAD': 'NEW LEAD',
+  'CONTACTED': 'OPEN',
+  'INTERESTED': 'OPEN',
+  'FOLLOW UP': 'OPEN',
+  'FOLLOW_UP': 'OPEN',
+  'OPEN': 'OPEN',
+  'CLOSED_WON': 'ADMISSION',
+  'ADMISSION': 'ADMISSION',
+  'CLOSED_LOST': 'CLOSED',
+  'CLOSED': 'CLOSED'
+};
 
 export default function Pipeline() {
   const navigate = useNavigate();
@@ -200,7 +211,10 @@ export default function Pipeline() {
       <div className="flex-1 overflow-x-auto p-6 bg-[#fcfcfd] scrollbar-hide">
         <div className="flex space-x-6 h-full min-w-max pb-4">
           {STATUSES.map(stage => {
-            const columnContacts = contacts.filter(c => (c.status || 'NEW LEAD') === stage.id);
+            const columnContacts = contacts.filter(c => {
+              const status = (c.status || 'NEW LEAD').toUpperCase();
+              return (STATUS_MAPPING[status] || 'OPEN') === stage.id;
+            });
             const totalValue = columnContacts.reduce((sum, c) => sum + (c.estimatedValue || 0), 0);
             
             return (
