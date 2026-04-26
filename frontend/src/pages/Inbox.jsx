@@ -1379,6 +1379,8 @@ export default function Inbox({ roleAccess }) {
                                  key={s} 
                                  onClick={(e) => { 
                                     e.stopPropagation();
+                                    // Optimistic Update: Update UI instantly
+                                    setActiveChat(prev => ({ ...prev, status: s }));
                                     handleAction('update_status', { status: s }); 
                                     setShowStatusDropdown(false); 
                                  }}
