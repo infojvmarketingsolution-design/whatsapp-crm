@@ -10,37 +10,56 @@ exports.getNextAgentForTenant = async (tenantId) => {
     todayStart.setHours(0, 0, 0, 0);
 
     // 1. Find all potentially active users for this tenant
-    // Exclude actual ADMINS and SUPER_ADMINS from receiving leads
-    const allAgents = await User.find({
-      tenantId,
-      status: 'ACTIVE',
-      isAvailableForAutoAssign: { $ne: false },
-      role: { $nin: ['ADMIN', 'SUPER_ADMIN', 'OWNER'] }
-    });
+    const [allAgents, settings] = await Promise.all([
+      User.find({
+        tenantId,
+        status: 'ACTIVE',
+        isAvailableForAutoAssign: { $ne: false },
+        role: { $nin: ['ADMIN', 'SUPER_ADMIN', 'OWNER'] }
+      }),
+      Settings.findOne({ tenantId })
+    ]);
 
     if (!allAgents || allAgents.length === 0) {
       console.log(`[AssignmentService] No eligible agents found for tenant ${tenantId}`);
       return null;
     }
 
-    // 2. Filter based on Role-Specific Rules
+    const rules = settings?.crm?.autoAssignmentRules || [];
+
+    // 2. Filter based on Role/User Specific Rules
     const eligibleList = allAgents.filter(agent => {
       const role = (agent.role || 'AGENT').toUpperCase().replace(/\s/g, '_');
+      const userId = agent._id.toString();
+
+      // Find applicable rules (User rule takes priority)
+      const userRule = rules.find(r => r.type === 'USER' && r.targetId === userId);
+      const roleRule = rules.find(r => r.type === 'ROLE' && r.targetId === role);
       
-      // BUSINESS_HEAD Rule: Limit 5 leads per day
-      if (role === 'BUSINESS_HEAD') {
+      // Apply the most specific rule found
+      const activeRule = userRule || roleRule;
+      
+      // Dynamic Limit check
+      if (activeRule && activeRule.limitPerDay > 0) {
         const lastReset = new Date(agent.lastLeadResetAt || 0).getTime();
-        
-        // If the counter is from a previous day, treat it as reset
         if (lastReset < todayStart.getTime()) {
           agent.dailyLeadCount = 0;
           return true;
         }
-        
+        return (agent.dailyLeadCount || 0) < activeRule.limitPerDay;
+      }
+
+      // Hardcoded Fallback for Business Head if no dynamic rule exists
+      if (role === 'BUSINESS_HEAD') {
+        const lastReset = new Date(agent.lastLeadResetAt || 0).getTime();
+        if (lastReset < todayStart.getTime()) {
+          agent.dailyLeadCount = 0;
+          return true;
+        }
         return (agent.dailyLeadCount || 0) < 5;
       }
       
-      // TELECALLER, COUNSELLOR, AGENT: Unlimited
+      // TELECALLER, COUNSELLOR, AGENT: Unlimited by default
       return true;
     });
 

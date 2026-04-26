@@ -78,10 +78,18 @@ const WhatsAppSettingsSchema = new mongoose.Schema({
   optInHandling: { type: Boolean, default: false }
 });
 
+const AutoAssignmentRuleSchema = new mongoose.Schema({
+  type: { type: String, enum: ['ROLE', 'USER'], default: 'ROLE' },
+  targetId: { type: String, required: true }, // Role key or User ID
+  targetName: { type: String, default: '' },
+  limitPerDay: { type: Number, default: 0 }, // 0 means unlimited
+});
+
 const CRMSettingsSchema = new mongoose.Schema({
   defaultPipelineId: { type: String, default: null },
   duplicateDetection: { type: Boolean, default: true },
-  autoAssignment: { type: Boolean, default: false }
+  autoAssignment: { type: Boolean, default: false },
+  autoAssignmentRules: { type: [AutoAssignmentRuleSchema], default: [] }
 });
 
 const AutomationSettingsSchema = new mongoose.Schema({

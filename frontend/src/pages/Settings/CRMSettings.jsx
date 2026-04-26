@@ -15,12 +15,27 @@ export default function CRMSettings({ roleAccess }) {
   const [settings, setSettings] = useState({
     defaultPipelineId: '',
     duplicateDetection: true,
-    autoAssignment: false
+    autoAssignment: false,
+    autoAssignmentRules: []
   });
+  const [users, setUsers] = useState([]);
+  const [showRuleForm, setShowRuleForm] = useState(false);
+  const [newRule, setNewRule] = useState({ type: 'ROLE', targetId: '', targetName: '', limitPerDay: 5 });
 
   useEffect(() => {
     fetchSettings();
+    if (isSuper) fetchUsers();
   }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/stats/agents`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) setUsers(await res.json());
+    } catch (err) { console.error(err); }
+  };
 
   const fetchSettings = async () => {
     try {
@@ -32,7 +47,10 @@ export default function CRMSettings({ roleAccess }) {
       if (res.ok) {
         const data = await res.json();
         if (data.crm) {
-          setSettings(data.crm);
+          setSettings({
+            ...data.crm,
+            autoAssignmentRules: data.crm.autoAssignmentRules || []
+          });
         }
       }
     } catch (err) {
@@ -40,6 +58,31 @@ export default function CRMSettings({ roleAccess }) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const addRule = () => {
+    if (!newRule.targetId) return;
+    
+    let name = newRule.targetName;
+    if (newRule.type === 'ROLE') {
+       name = roleAccess[newRule.targetId]?.name || newRule.targetId;
+    } else {
+       name = users.find(u => u.userId === newRule.targetId)?.name || 'Unknown User';
+    }
+
+    const ruleToAdd = { ...newRule, targetName: name };
+    setSettings({
+      ...settings,
+      autoAssignmentRules: [...(settings.autoAssignmentRules || []), ruleToAdd]
+    });
+    setShowRuleForm(false);
+    setNewRule({ type: 'ROLE', targetId: '', targetName: '', limitPerDay: 5 });
+  };
+
+  const removeRule = (index) => {
+    const updated = [...settings.autoAssignmentRules];
+    updated.splice(index, 1);
+    setSettings({ ...settings, autoAssignmentRules: updated });
   };
 
   const handleSave = async () => {
@@ -116,6 +159,107 @@ export default function CRMSettings({ roleAccess }) {
           {!canEditAutoAssign && (
             <div className="text-[10px] text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100 flex items-center">
               <span className="font-bold mr-1 italic">RESTRICTED:</span> You do not have permission to change assignment rules.
+            </div>
+          )}
+
+          {/* Advanced Auto-Assignment Rules */}
+          {settings.autoAssignment && (
+            <div className="mt-6 p-5 bg-gray-50 border border-dashed border-gray-300 rounded-xl">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-gray-800">Advanced Assignment Rules</h3>
+                  <p className="text-[10px] text-gray-500">Set specific daily limits per Role or per User.</p>
+                </div>
+                <button 
+                  onClick={() => setShowRuleForm(true)}
+                  className="px-3 py-1 bg-teal-50 text-teal-600 border border-teal-200 rounded-md text-[10px] font-bold hover:bg-teal-100 transition"
+                >
+                  + Add Rule
+                </button>
+              </div>
+
+              {showRuleForm && (
+                <div className="mb-4 p-4 bg-white border border-gray-200 rounded-lg shadow-sm space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Type</label>
+                      <select 
+                        value={newRule.type}
+                        onChange={(e) => setNewRule({...newRule, type: e.target.value, targetId: ''})}
+                        className="w-full text-xs p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-teal-500 outline-none"
+                      >
+                        <option value="ROLE">Role Based</option>
+                        <option value="USER">User Based</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Target</label>
+                      <select 
+                        value={newRule.targetId}
+                        onChange={(e) => setNewRule({...newRule, targetId: e.target.value})}
+                        className="w-full text-xs p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-teal-500 outline-none"
+                      >
+                        <option value="">Select {newRule.type === 'ROLE' ? 'Role' : 'User'}...</option>
+                        {newRule.type === 'ROLE' ? (
+                          Object.entries(roleAccess || {}).map(([key, data]) => (
+                            <option key={key} value={key}>{data.name}</option>
+                          ))
+                        ) : (
+                          users.map(u => (
+                            <option key={u.userId} value={u.userId}>{u.name} ({u.role})</option>
+                          ))
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider block mb-1">Daily Limit (Leads per day)</label>
+                    <input 
+                      type="number"
+                      min="1"
+                      value={newRule.limitPerDay}
+                      onChange={(e) => setNewRule({...newRule, limitPerDay: parseInt(e.target.value)})}
+                      className="w-full text-xs p-2 border border-gray-200 rounded-md focus:ring-1 focus:ring-teal-500 outline-none"
+                    />
+                  </div>
+                  <div className="flex justify-end space-x-2 pt-2">
+                    <button onClick={() => setShowRuleForm(false)} className="px-3 py-1 text-[10px] text-gray-500 hover:bg-gray-100 rounded-md">Cancel</button>
+                    <button onClick={addRule} className="px-4 py-1 text-[10px] bg-teal-600 text-white rounded-md font-bold shadow-sm">Save Rule</button>
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                {(settings.autoAssignmentRules || []).length === 0 ? (
+                  <div className="text-center py-4 border border-dashed border-gray-200 rounded-lg text-gray-400 text-[10px]">
+                    No advanced rules set. Default logic applies.
+                  </div>
+                ) : (
+                  settings.autoAssignmentRules.map((rule, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-white border border-gray-100 rounded-lg shadow-sm">
+                      <div className="flex items-center">
+                        <div className={`w-2 h-2 rounded-full mr-3 ${rule.type === 'ROLE' ? 'bg-blue-400' : 'bg-purple-400'}`}></div>
+                        <div>
+                          <div className="text-xs font-bold text-gray-800">{rule.targetName}</div>
+                          <div className="text-[9px] text-gray-400 uppercase">{rule.type} Rule</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4">
+                        <div className="text-right">
+                          <div className="text-[10px] font-bold text-teal-600">{rule.limitPerDay} Leads</div>
+                          <div className="text-[8px] text-gray-400 uppercase">Per Day</div>
+                        </div>
+                        <button 
+                          onClick={() => removeRule(idx)}
+                          className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-md transition"
+                        >
+                          <GitMerge size={14} />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           )}
         </div>
