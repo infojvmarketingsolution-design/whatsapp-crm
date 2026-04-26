@@ -1377,7 +1377,11 @@ export default function Inbox({ roleAccess }) {
                             {STATUSES.map(s => (
                               <div 
                                  key={s} 
-                                 onClick={() => handleAction('update_status', { status: s })}
+                                 onClick={(e) => { 
+                                    e.stopPropagation();
+                                    handleAction('update_status', { status: s }); 
+                                    setShowStatusDropdown(false); 
+                                 }}
                                  className="px-3 py-2 text-[10px] uppercase font-bold text-gray-600 hover:bg-teal-50 hover:text-[var(--theme-text)] cursor-pointer transition"
                               >
                                 {s.replace('_', ' ')}
