@@ -41,25 +41,23 @@ const getContacts = async (req, res) => {
     const settings = await Settings.findOne({ tenantId: req.tenantId });
     const userRole = (req.user?.role || 'AGENT').toUpperCase();
     // Role Normalization for lookup (Underscore preferred for Map keys)
-    const normalizedRole = userRole.toUpperCase().replace(/\s/g, '_');
+    
+    // Strict High-Level check: Only actual owners/admins see everything
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER'].includes(userRole);
+    
+    // Normalization for settings lookup
+    const normalizedRole = userRole.replace(/\s/g, '_');
     const roleAccess = settings?.roleAccess instanceof Map ? 
-                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole.toUpperCase())) : 
-                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole.toUpperCase()]);
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
 
-    
-    // BUSINESS_HEAD, ADMIN, and SUPER_ADMIN always see everything
-    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
-    
+    // Apply "Show Assigned Only" filter if NOT high level
+    // We enforce this for everyone EXCEPT high-level roles, unless they have 'allAccess' explicitly set to true in settings
+    const mustRestrict = !isHighLevel && (!roleAccess || roleAccess.allAccess !== true);
+
     // Base match for active leads
     const matchStage = { isArchived: { $ne: true } };
     
-    // Apply "Show Assigned Only" filter if NOT high level
-    // We enforce this if: 1. Permission is explicitly set OR 2. Role is AGENT/TELECALLER and doesn't have allAccess
-    const mustRestrict = !isHighLevel && (
-      (roleAccess && roleAccess.permissions.includes('chat_show_assigned_only')) ||
-      (!roleAccess || roleAccess.allAccess === false)
-    );
-
     if (mustRestrict) {
       matchStage.$or = [
         { assignedAgent: new mongoose.Types.ObjectId(req.user._id) },
@@ -542,26 +540,17 @@ const performBulkContactAction = async (req, res) => {
   }
 };
 
-const getMessages = async (req, res) => {
-  try {
-    console.log(`[GET /messages] Request received for contactId: ${req.params.contactId}`);
-    const Message = req.tenantDb.model('Message', MessageSchema);
-    const Contact = req.tenantDb.model('Contact', ContactSchema);
-
     // Security Check: Visibility Enforcement
     const settings = await Settings.findOne({ tenantId: req.tenantId });
     const userRole = (req.user?.role || 'AGENT').toUpperCase();
     const normalizedRole = userRole.replace(/\s/g, '_');
-    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER', 'MANAGER_COUNSELLOUR', 'MANAGER COUNSELLOUR'].includes(userRole);
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER'].includes(userRole);
     
     const roleAccess = settings?.roleAccess instanceof Map ? 
                        (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
                        (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
 
-    const mustRestrict = !isHighLevel && (
-      (roleAccess && roleAccess.permissions.includes('chat_show_assigned_only')) ||
-      (!roleAccess || roleAccess.allAccess === false)
-    );
+    const mustRestrict = !isHighLevel && (!roleAccess || roleAccess.allAccess !== true);
 
     if (mustRestrict) {
        const contact = await Contact.findById(req.params.contactId);
