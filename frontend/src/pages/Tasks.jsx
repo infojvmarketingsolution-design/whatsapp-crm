@@ -535,7 +535,9 @@ export default function Tasks() {
   const cancelledCount = tasks.filter(t => t.status === 'CANCELLED').length;
   const completedCount = tasks.filter(t => t.status === 'COMPLETED').length;
   const totalCount = tasks.length;
-  const efficiency = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
+  const rawEfficiency = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+  const penalty = cancelledCount * 5;
+  const efficiency = Math.max(0, Math.round(rawEfficiency - penalty));
 
   // 48-hour alert for overdue tasks
   useEffect(() => {
