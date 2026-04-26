@@ -299,7 +299,7 @@ const performContactAction = async (req, res) => {
        contact.tasks.push({ 
          type: 'MEETING', title: `Meeting: ${payload.mode}`, dueDate: new Date(payload.dateTime), status: 'PENDING', description: payload.description || '', metadata: { location: payload.location }
        });
-       contact.timeline.push({ eventType: 'MEETING_SCHEDULED', description: `Scheduled ${payload.mode} Meeting for ${new Date(payload.dateTime).toLocaleString()}`, timestamp: new Date() });
+       contact.timeline.push({ eventType: 'MEETING_SCHEDULED', description: `Scheduled ${payload.mode} Meeting for ${new Date(payload.dateTime).toLocaleString()}${payload.description ? ` - ${payload.description}` : ''}`, timestamp: new Date() });
     } else if (action === 'add_followup') {
        if (!contact.tasks) contact.tasks = [];
        contact.tasks.push({
@@ -312,7 +312,7 @@ const performContactAction = async (req, res) => {
        });
        contact.timeline.push({ 
          eventType: 'FOLLOWUP_SET', 
-         description: `Follow-up: ${payload.title || 'Reminder'} set for ${new Date(payload.dateTime).toLocaleString()}`, 
+         description: `Follow-up: ${payload.title || 'Reminder'} set for ${new Date(payload.dateTime).toLocaleString()}${payload.description ? ` - ${payload.description}` : ''}`, 
          timestamp: new Date() 
        });
     } else if (action === 'archive_lead') {

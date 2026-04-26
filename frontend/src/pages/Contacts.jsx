@@ -827,7 +827,7 @@ export default function Contacts({ roleAccess }) {
                            <option value="CONTACTED">Contacted</option>
                            <option value="INTERESTED">Interested</option>
                            <option value="FOLLOW_UP">Follow Up</option>
-                           <option value="CLOSED_WON">Admission Done</option>
+                           <option value="CLOSED_WON">Admission follow up update</option>
                            <option value="CLOSED_LOST">Admission Cancelled</option>
                         </select>
                      </div>
@@ -1036,7 +1036,7 @@ export default function Contacts({ roleAccess }) {
                                                 className="w-full bg-white border border-red-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-red-400"
                                              >
                                                 <option value="">-- Choose Reason --</option>
-                                                <option value="Admission Done">Admission Done Elsewhere</option>
+                                                <option value="Admission Done">Admission follow up update Elsewhere</option>
                                                 <option value="Not Interested">Not Interested</option>
                                                 <option value="Fees Too High">Fees Too High</option>
                                                 <option value="Distance Issue">Distance Issue</option>

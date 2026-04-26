@@ -1154,6 +1154,10 @@ export default function Inbox({ roleAccess }) {
                   <div className="flex justify-end mt-2">
                      <button 
                        onClick={async () => {
+                           if (!followupDescription.trim()) {
+                               alert("Please add a description - This is required");
+                               return;
+                           }
                            let followupMsg = '';
                            const studentName = activeChat?.name || 'Student';
                            const counselorName = user?.name || 'Counselor';

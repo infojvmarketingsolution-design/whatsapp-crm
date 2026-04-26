@@ -666,7 +666,10 @@ export default function Tasks() {
 
                            <div>
                               <div className="flex items-center space-x-3 mb-1">
-                                 <h3 className="text-sm font-black text-slate-800 tracking-tight">{t.title}</h3>
+                                 <div className="flex flex-col">
+                                     <h3 className="text-sm font-black text-slate-800 tracking-tight">{t.title}</h3>
+                                     {t.description && <p className="text-[11px] text-slate-500 font-medium mt-0.5 line-clamp-2 max-w-md">{t.description}</p>}
+                                  </div>
                                  {isOverdue && <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-black uppercase rounded">Overdue</span>}
                                  {t.status === 'COMPLETED' && <span className="px-1.5 py-0.5 bg-teal-100 text-teal-600 text-[9px] font-black uppercase rounded">Completed</span>}
                                  {t.status === 'IN_PROGRESS' && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[9px] font-black uppercase rounded">Changing</span>}
@@ -1047,7 +1050,7 @@ export default function Tasks() {
                                 <option value="NEW">NEW LEAD</option>
                                 <option value="OPEN">OPEN RECORRD</option>
                                 <option value="PROGRESS">IN-PROGRESS</option>
-                                <option value="CLOSED">CLOSED WON</option>
+                                <option value="CLOSED">Admission follow up update</option>
                                 <option value="LOST">CLOSED LOST</option>
                              </select>
                           </div>
