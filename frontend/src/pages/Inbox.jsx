@@ -60,6 +60,7 @@ export default function Inbox({ roleAccess }) {
     'PENDING VISIT': 'PENDING VISIT',
     'PENDING_VISIT': 'PENDING VISIT'
   };
+  const [sidebarFilter, setSidebarFilter] = useState('ALL');
   const [activeChat, setActiveChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
@@ -449,13 +450,23 @@ export default function Inbox({ roleAccess }) {
      return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=114a43&color=fff&size=100&font-size=0.4&bold=true`;
   };
 
-  const filteredContacts = contacts
+   const filteredContacts = contacts
     .filter(c => {
-      if (!searchQuery) return true;
-      const q = searchQuery.toLowerCase();
-      const nameMatch = c.name?.toLowerCase().includes(q);
-      const phoneMatch = c.phone?.toLowerCase().includes(q);
-      return nameMatch || phoneMatch;
+      // 1. Search Query Filter
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const nameMatch = c.name?.toLowerCase().includes(q);
+        const phoneMatch = c.phone?.toLowerCase().includes(q);
+        if (!nameMatch && !phoneMatch) return false;
+      }
+      
+      // 2. Sidebar Quick Filter
+      if (sidebarFilter !== 'ALL') {
+         const mappedStatus = STATUS_MAPPING[c.status?.toUpperCase()] || c.status?.toUpperCase();
+         if (mappedStatus !== sidebarFilter) return false;
+      }
+
+      return true;
     })
     .sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0));
 
@@ -465,8 +476,8 @@ export default function Inbox({ roleAccess }) {
       {/* Contact List Panel (Left) */}
       <div className="w-[340px] border-r border-gray-100 flex flex-col bg-white shrink-0 z-10">
         
-        <div className="p-3 bg-white flex items-center border-b border-gray-50 h-16">
-          <div className="relative w-full">
+        <div className="p-3 bg-white flex flex-col border-b border-gray-50">
+          <div className="relative w-full mb-3">
             <Search className="absolute left-3 top-2.5 text-[var(--theme-bg)] opacity-70" size={16} />
             <input 
               type="text" 
@@ -475,6 +486,23 @@ export default function Inbox({ roleAccess }) {
               placeholder="Search name or mobile number" 
               className="w-full bg-gray-50 border-none rounded-lg py-2 pl-10 pr-4 text-xs font-medium outline-none text-gray-700 placeholder-gray-400"
             />
+          </div>
+
+          {/* Sidebar Quick Filters */}
+          <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar pb-1">
+            {['ALL', ...STATUSES].map(s => (
+               <button 
+                  key={s} 
+                  onClick={() => setSidebarFilter(s)}
+                  className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+                    sidebarFilter === s 
+                    ? 'bg-[var(--theme-bg)] text-white shadow-sm' 
+                    : 'bg-gray-100 text-gray-400 hover:bg-gray-200'
+                  }`}
+               >
+                  {s}
+               </button>
+            ))}
           </div>
         </div>
 
