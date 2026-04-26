@@ -64,6 +64,8 @@ export default function Tasks() {
   const [showCriticalOverduePopup, setShowCriticalOverduePopup] = useState(false);
   const [criticalSuspendAt, setCriticalSuspendAt] = useState(null);
   const [cancellingTaskConfirm, setCancellingTaskConfirm] = useState(null);
+  const [settingToTodayTask, setSettingToTodayTask] = useState(null);
+  const [todayTime, setTodayTime] = useState("09:00");
 
   const PIPELINE_STAGES = ['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'];
   const STATUS_MAPPING = {
@@ -887,7 +889,12 @@ export default function Tasks() {
                                               Cancel Task
                                            </button>
                                           <button 
-                                             onClick={() => { rescheduleToToday(t.contactId, t._id); setActiveDropdown(null); }}
+                                             onClick={() => { 
+                                                 setSettingToTodayTask(t);
+                                                 const now = new Date();
+                                                 setTodayTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+                                                 setActiveDropdown(null); 
+                                              }}
                                              className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"
                                           >
                                              <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mr-3">
@@ -1607,6 +1614,78 @@ export default function Tasks() {
               >
                 Yes, Cancel Task
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Set to Today Confirmation Modal */}
+      {settingToTodayTask && (
+        <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setSettingToTodayTask(null)}>
+          <div className="bg-white rounded-[2.5rem] w-[400px] p-8 shadow-3xl animate-pop-in" onClick={e => e.stopPropagation()}>
+            <div className="text-center mb-8">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Clock size={32} />
+              </div>
+              <h3 className="text-xl font-black text-slate-800">Move to Today</h3>
+              <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">
+                Original: {new Date(settingToTodayTask.dueDate).toLocaleDateString()}
+              </p>
+            </div>
+
+            <div className="space-y-6">
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Scheduled Date</label>
+                <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-500">
+                  {new Date().toLocaleDateString()} (Today)
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Select Time</label>
+                <input 
+                  type="time" 
+                  value={todayTime} 
+                  onChange={e => setTodayTime(e.target.value)}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold focus:border-blue-500 outline-none"
+                />
+              </div>
+
+              <div className="pt-4 grid grid-cols-2 gap-4">
+                <button 
+                  onClick={() => setSettingToTodayTask(null)}
+                  className="w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={async () => {
+                    const [hours, minutes] = todayTime.split(':');
+                    const targetDate = new Date();
+                    targetDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                    
+                    const token = localStorage.getItem('token');
+                    const tenantId = localStorage.getItem('tenantId');
+                    try {
+                      const res = await fetch(`/api/chat/contacts/${settingToTodayTask.contactId}/action`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'reschedule_task', payload: { taskId: settingToTodayTask._id, newDueDate: targetDate } })
+                      });
+                      if (res.ok) {
+                         toast.success("Task moved to Today");
+                         fetchTasks();
+                         setSettingToTodayTask(null);
+                      }
+                    } catch (e) {
+                      toast.error("Failed to move task");
+                    }
+                  }}
+                  className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200"
+                >
+                  Move Now
+                </button>
+              </div>
             </div>
           </div>
         </div>
