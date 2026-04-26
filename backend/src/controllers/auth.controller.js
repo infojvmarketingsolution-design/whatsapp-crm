@@ -50,35 +50,24 @@ const getSecondaryNumber = (orgName) => {
 };
 
 const authUser = async (req, res) => {
-  const { email, password, apiNumber } = req.body;
+  const { email, password } = req.body;
   try {
-    let query = { email };
-    
-    if (apiNumber) {
-      const cleanInput = apiNumber.replace(/[^\d]/g, '');
-      if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
-      const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
-      const regexPattern = searchDigits.split('').join('[^0-9]*');
-      const regex = new RegExp(regexPattern);
-      const client = await Client.findOne({ 
-        $or: [
-          { 'whatsappConfig.phoneNumber': { $regex: regex } },
-          { 'mobileNumber': { $regex: regex } },
-          { 'phone': { $regex: regex } }
-        ]
-      });
-      if (!client) return res.status(404).json({ message: 'Invalid API Number. Account not found.' });
-      query.tenantId = client.tenantId;
-    }
+    if (!email) return res.status(400).json({ message: 'Email is required' });
 
-    const user = await User.findOne(query);
-
-    if (user && user.status === 'SUSPENDED') {
-      return res.status(403).json({ message: 'Account suspended. Please contact your Administrator.' });
-    }
+    // Find user by email
+    const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
+      if (user.status === 'SUSPENDED') {
+        return res.status(403).json({ message: 'Account suspended' });
+      }
+
       await createSession(user, req);
+
+      // Send Login Alert
+      const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+      NotificationService.sendLoginAlert(user, ip);
+
       res.json({
         _id: user._id,
         name: user.name,
@@ -88,7 +77,7 @@ const authUser = async (req, res) => {
         token: generateToken(user._id),
       });
     } else {
-      res.status(401).json({ message: 'Invalid credentials or workspace combination' });
+      res.status(401).json({ message: 'Invalid email or password' });
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -114,28 +103,12 @@ const logout = async (req, res) => {
 };
 
 const loginWithMpin = async (req, res) => {
-  const { phoneNumber, mpin, apiNumber } = req.body;
+  const { phoneNumber, mpin } = req.body;
   try {
-    let query = { phoneNumber };
+    if (!phoneNumber) return res.status(400).json({ message: 'Phone number is required' });
     
-    if (apiNumber) {
-      const cleanInput = apiNumber.replace(/[^\d]/g, '');
-      if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
-      const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
-      const regexPattern = searchDigits.split('').join('[^0-9]*');
-      const regex = new RegExp(regexPattern);
-      const client = await Client.findOne({ 
-        $or: [
-          { 'whatsappConfig.phoneNumber': { $regex: regex } },
-          { 'mobileNumber': { $regex: regex } },
-          { 'phone': { $regex: regex } }
-        ]
-      });
-      if (!client) return res.status(404).json({ message: 'Invalid API Number. Workspace not found.' });
-      query.tenantId = client.tenantId;
-    }
-
-    const user = await User.findOne(query);
+    // Find user by phone number
+    const user = await User.findOne({ phoneNumber });
 
     if (!user) {
       return res.status(404).json({ message: 'Account not found with this number' });
@@ -170,27 +143,9 @@ const loginWithMpin = async (req, res) => {
 };
 
 const requestOTP = async (req, res) => {
-  const { identifier, method, apiNumber } = req.body; 
+  const { identifier, method } = req.body;
   try {
-    let query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
-
-    if (apiNumber) {
-      const cleanInput = apiNumber.replace(/[^\d]/g, '');
-      if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
-      const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
-      const regexPattern = searchDigits.split('').join('[^0-9]*');
-      const regex = new RegExp(regexPattern);
-      const client = await Client.findOne({ 
-        $or: [
-          { 'whatsappConfig.phoneNumber': { $regex: regex } },
-          { 'mobileNumber': { $regex: regex } },
-          { 'phone': { $regex: regex } }
-        ]
-      });
-      if (!client) return res.status(404).json({ message: 'Invalid API Number. Workspace not found.' });
-      query.tenantId = client.tenantId;
-    }
-
+    const query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
     const user = await User.findOne(query);
 
     if (!user) {
@@ -225,26 +180,9 @@ const requestOTP = async (req, res) => {
 };
 
 const verifyOTP = async (req, res) => {
-  const { identifier, code, apiNumber } = req.body;
+  const { identifier, code } = req.body;
   try {
-    let query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
-
-    if (apiNumber) {
-      const cleanInput = apiNumber.replace(/[^\d]/g, '');
-      if (!cleanInput) return res.status(400).json({ message: 'Invalid API Number format.' });
-      const searchDigits = cleanInput.length > 10 ? cleanInput.slice(-10) : cleanInput;
-      const regexPattern = searchDigits.split('').join('[^0-9]*');
-      const regex = new RegExp(regexPattern);
-      const client = await Client.findOne({ 
-        $or: [
-          { 'whatsappConfig.phoneNumber': { $regex: regex } },
-          { 'mobileNumber': { $regex: regex } },
-          { 'phone': { $regex: regex } }
-        ]
-      });
-      if (client) query.tenantId = client.tenantId;
-    }
-
+    const query = { $or: [{ email: identifier }, { phoneNumber: identifier }] };
     const user = await User.findOne(query);
 
     if (!user || !user.otp || !user.otp.code) {
