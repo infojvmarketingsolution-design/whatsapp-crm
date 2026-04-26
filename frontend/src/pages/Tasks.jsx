@@ -334,7 +334,7 @@ export default function Tasks() {
        const res = await fetch(`/api/chat/contacts/${editingTask.contactId}/action`, {
          method: 'PUT',
          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
-         body: JSON.stringify({ action: 'edit_task', payload: { taskId: editingTask._id, title: editTaskTitle, dueDate: editTaskDate, type: editTaskType } })
+          body: JSON.stringify({ action: 'edit_task', payload: { taskId: editingTask._id, title: editTaskTitle, description: editTaskDescription, dueDate: editTaskDate, type: editTaskType } })
        });
        if (res.ok) {
          toast.success("Task updated");
@@ -849,7 +849,8 @@ export default function Tasks() {
                                           <button 
                                              onClick={() => {
                                                 setEditingTask(t);
-                                                setEditTaskTitle(t.title);
+                                                 setEditTaskTitle(t.title);
+                                                 setEditTaskDescription(t.description || '');
                                                 setEditTaskDate(new Date(t.dueDate).toISOString().slice(0, 16));
                                                 setEditTaskType(t.type);
                                                 setActiveDropdown(null);
