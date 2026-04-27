@@ -1309,8 +1309,8 @@ export default function Inbox({ roleAccess }) {
                    <div className="flex justify-between items-center text-[10px]">
                       <span className="text-indigo-600 font-bold uppercase">Visit Status</span>
                       <select 
-                         value={activeChat?.visitStatus || 'Not Visited'} 
-                         onChange={(e) => handleAction('update_contact', { visitStatus: e.target.value })}
+                         value={activeChat?.visitStatus === 'Done' ? 'Visited' : 'Not Visited'} 
+                         onChange={(e) => handleAction('update_contact', { visitStatus: e.target.value === 'Visited' ? 'Done' : 'Not Done' })}
                          className="bg-white border border-indigo-100 rounded px-2 py-1 text-[10px] font-bold outline-none"
                       >
                          <option value="Not Visited">Not Visited</option>
@@ -1353,7 +1353,7 @@ export default function Inbox({ roleAccess }) {
                    <div className="flex items-center space-x-2 pt-1">
                       <input 
                          type="checkbox" 
-                         checked={activeChat?.isClosed || false} 
+                         checked={activeChat?.isClosed || activeChat?.status === 'CLOSED' || activeChat?.status === 'CLOSE'} 
                          onChange={(e) => handleAction('update_contact', { isClosed: e.target.checked })}
                          className="w-3 h-3 rounded text-indigo-600 border-indigo-300"
                       />
