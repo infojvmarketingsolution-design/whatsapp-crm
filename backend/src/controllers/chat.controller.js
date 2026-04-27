@@ -270,9 +270,10 @@ const performContactAction = async (req, res) => {
           
           return res.json({ brief });
         } else if (action === 'update_contact') {
-          // Sync Status with isClosed in the payload
+          // Force Status Sync directly on the contact object
           if (payload.isClosed === true) {
-             payload.status = 'CLOSE';
+             contact.status = 'CLOSE';
+             contact.isClosed = true;
              contact.timeline.push({ 
                 eventType: 'STATUS_CHANGE', 
                 description: 'Lead marked as CLOSED', 
@@ -280,13 +281,14 @@ const performContactAction = async (req, res) => {
              });
           } else if (payload.isClosed === false) {
              if (contact.status === 'CLOSE') {
-                payload.status = 'OPEN';
-                contact.timeline.push({ 
-                   eventType: 'STATUS_CHANGE', 
-                   description: 'Lead RE-OPENED', 
-                   timestamp: new Date() 
-                });
+                contact.status = 'OPEN';
              }
+             contact.isClosed = false;
+             contact.timeline.push({ 
+                eventType: 'STATUS_CHANGE', 
+                description: 'Lead RE-OPENED', 
+                timestamp: new Date() 
+             });
           }
 
           // 1. Specialized logic for Counsellor Assignment (Requires Timeline Event)
