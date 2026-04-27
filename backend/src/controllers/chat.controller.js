@@ -269,7 +269,7 @@ const performContactAction = async (req, res) => {
           if (!brief) return res.status(400).json({ message: 'AI Brief generation failed' });
           
           return res.json({ brief });
-       } else if (action === 'update_contact') {
+        } else if (action === 'update_contact') {
           // Sync Status with isClosed in the payload
           if (payload.isClosed === true) {
              payload.status = 'CLOSE';
@@ -306,19 +306,13 @@ const performContactAction = async (req, res) => {
              }
           }
 
-          // 2. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
-          const updatedContact = await ContactModel.findByIdAndUpdate(
-             contactId,
-             { $set: payload },
-             { new: true, runValidators: true }
-          );
-          
-          if (!updatedContact) return res.status(404).json({ error: 'Contact not found' });
+          // 2. Apply all other updates directly to the contact object
+          Object.assign(contact, payload);
           
           // 3. Final synchronization and save
-          await updatedContact.save();
+          await contact.save();
 
-          return res.json({ message: 'Contact updated', contact: updatedContact });
+          return res.json({ message: 'Contact updated', contact });
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
