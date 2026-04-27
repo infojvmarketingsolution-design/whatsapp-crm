@@ -1354,7 +1354,13 @@ export default function Inbox({ roleAccess }) {
                       <input 
                          type="checkbox" 
                          checked={activeChat?.isClosed || false} 
-                         onChange={(e) => handleAction('update_contact', { isClosed: e.target.checked })}
+                         onChange={(e) => {
+                             const checked = e.target.checked;
+                             const newStatus = checked ? 'CLOSE' : 'OPEN';
+                             setActiveChat(prev => ({ ...prev, isClosed: checked, status: newStatus }));
+                             setContacts(prev => prev.map(c => c._id === activeChat._id ? { ...c, isClosed: checked, status: newStatus } : c));
+                             handleAction('update_contact', { isClosed: checked });
+                          }}
                          className="w-3 h-3 rounded text-indigo-600 border-indigo-300"
                       />
                       <span className="text-[10px] font-bold text-indigo-800 uppercase">Mark as Closed</span>
