@@ -273,9 +273,19 @@ const performContactAction = async (req, res) => {
           // Sync Status with isClosed in the payload
           if (payload.isClosed === true) {
              payload.status = 'CLOSE';
+             contact.timeline.push({ 
+                eventType: 'STATUS_CHANGE', 
+                description: 'Lead marked as CLOSED', 
+                timestamp: new Date() 
+             });
           } else if (payload.isClosed === false) {
              if (contact.status === 'CLOSE') {
                 payload.status = 'OPEN';
+                contact.timeline.push({ 
+                   eventType: 'STATUS_CHANGE', 
+                   description: 'Lead RE-OPENED', 
+                   timestamp: new Date() 
+                });
              }
           }
 
