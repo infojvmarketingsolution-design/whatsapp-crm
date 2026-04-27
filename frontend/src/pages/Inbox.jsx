@@ -524,12 +524,7 @@ export default function Inbox({ roleAccess }) {
         {/* Top small avatars representing active queues */}
         <div className="bg-[var(--theme-bg)] px-4 py-2 flex items-center space-x-2.5 overflow-x-auto custom-scrollbar">
            {contacts.slice(0,6).map((c, i) => (
-              <div key={i} className="relative shrink-0 cursor-pointer hover:-translate-y-0.5 transition-transform" onClick={() => {
-                setActiveChat(c);
-                if (c.status === 'NEW' || c.status === 'NEW LEAD') {
-                   handleAction('update_status', { status: 'OPEN' });
-                }
-              }}>
+              <div key={i} className="relative shrink-0 cursor-pointer hover:-translate-y-0.5 transition-transform" onClick={() => setActiveChat(c)}>
                 <img src={getAvatarUrl(c.name)} className="w-7 h-7 rounded-full border border-teal-700/50" />
                 {i === 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-brand-light border-2 border-brand-dark rounded-full shadow-sm"></span>}
               </div>
@@ -544,12 +539,7 @@ export default function Inbox({ roleAccess }) {
             filteredContacts.map((c) => (
               <div 
                 key={c._id} 
-                onClick={() => {
-                  setActiveChat(c);
-                  if (c.status === 'NEW' || c.status === 'NEW LEAD') {
-                     handleAction('update_status', { status: 'OPEN' });
-                  }
-                }}
+                onClick={() => setActiveChat(c)}
                 className={`p-4 cursor-pointer flex items-center space-x-4 transition-colors relative border-b border-gray-50 ${
                   activeChat && activeChat._id === c._id 
                     ? 'bg-[#eef5fa] border-l-4 border-blue-500' 
@@ -1364,13 +1354,7 @@ export default function Inbox({ roleAccess }) {
                       <input 
                          type="checkbox" 
                          checked={activeChat?.isClosed || false} 
-                         onChange={(e) => {
-                             const checked = e.target.checked;
-                             const newStatus = checked ? 'CLOSE' : 'OPEN';
-                             setActiveChat(prev => ({ ...prev, isClosed: checked, status: newStatus }));
-                             setContacts(prev => prev.map(c => c._id === activeChat._id ? { ...c, isClosed: checked, status: newStatus } : c));
-                             handleAction('update_contact', { isClosed: checked });
-                          }}
+                         onChange={(e) => handleAction('update_contact', { isClosed: e.target.checked })}
                          className="w-3 h-3 rounded text-indigo-600 border-indigo-300"
                       />
                       <span className="text-[10px] font-bold text-indigo-800 uppercase">Mark as Closed</span>
@@ -1393,14 +1377,7 @@ export default function Inbox({ roleAccess }) {
                             {STATUSES.map(s => (
                               <div 
                                  key={s} 
-                                 onClick={(e) => { 
-                                    e.stopPropagation();
-                                    // Optimistic Update: Update UI instantly
-                                    const newIsClosed = s === 'CLOSE';
-                                    setActiveChat(prev => ({ ...prev, status: s, isClosed: newIsClosed }));
-                                    handleAction('update_status', { status: s }); 
-                                    setShowStatusDropdown(false); 
-                                 }}
+                                 onClick={() => handleAction('update_status', { status: s })}
                                  className="px-3 py-2 text-[10px] uppercase font-bold text-gray-600 hover:bg-teal-50 hover:text-[var(--theme-text)] cursor-pointer transition"
                               >
                                 {s.replace('_', ' ')}
