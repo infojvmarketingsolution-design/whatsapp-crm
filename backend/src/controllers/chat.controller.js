@@ -251,16 +251,24 @@ const performContactAction = async (req, res) => {
           });
        }
     } else if (action === 'update_status') {
-        contact.status = payload.status;
-        if (payload.status === 'CLOSE') {
-          contact.isClosed = true;
-        } else {
-          contact.isClosed = false;
+        let status = payload.status;
+        // Map frontend values to backend Enum values
+        if (status === 'CLOSE') status = 'CLOSED';
+        if (status === 'PENDING VISIT') status = 'PENDING_VISIT';
+        
+        contact.status = status;
+        
+        // Synchronize isClosed state
+        if (['CLOSED', 'CLOSED_LOST', 'CLOSED_WON', 'ADMISSION'].includes(status)) {
+            contact.isClosed = true;
+        } else if (['NEW', 'NEW LEAD', 'OPEN', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'VISITED', 'PENDING_VISIT'].includes(status)) {
+            contact.isClosed = false;
         }
+
         contact.timeline.push({ 
-          eventType: 'STATUS_CHANGE', 
-          description: `Status updated to ${payload.status}`, 
-          timestamp: new Date() 
+           eventType: 'STATUS_UPDATED', 
+           description: `Status updated to ${status}`, 
+           timestamp: new Date() 
         });
      } else if (action === 'generate_brief') {
           const Message = req.tenantDb.model('Message', MessageSchema);
@@ -269,31 +277,7 @@ const performContactAction = async (req, res) => {
           if (!brief) return res.status(400).json({ message: 'AI Brief generation failed' });
           
           return res.json({ brief });
-        } else if (action === 'update_contact') {
-          // Force Status Sync directly on the contact object
-          const forceClose = payload.isClosed === true || payload.isClosed === 'true';
-          const forceOpen = payload.isClosed === false || payload.isClosed === 'false';
-
-          if (forceClose) {
-             contact.status = 'CLOSE';
-             contact.isClosed = true;
-             contact.timeline.push({ 
-                eventType: 'STATUS_CHANGE', 
-                description: 'Lead marked as CLOSED', 
-                timestamp: new Date() 
-             });
-          } else if (forceOpen) {
-             if (contact.status === 'CLOSE') {
-                contact.status = 'OPEN';
-             }
-             contact.isClosed = false;
-             contact.timeline.push({ 
-                eventType: 'STATUS_CHANGE', 
-                description: 'Lead RE-OPENED', 
-                timestamp: new Date() 
-             });
-          }
-
+       } else if (action === 'update_contact') {
           // 1. Specialized logic for Counsellor Assignment (Requires Timeline Event)
           if (payload.assignedCounsellor !== undefined) {
              const newCounsellor = payload.assignedCounsellor && payload.assignedCounsellor !== "" ? payload.assignedCounsellor : null;
@@ -311,13 +295,28 @@ const performContactAction = async (req, res) => {
              }
           }
 
-          // 2. Apply all other updates directly to the contact object
-          Object.assign(contact, payload);
+          // 2. Synchronize Status with isClosed toggle
+          if (payload.isClosed !== undefined) {
+             if (payload.isClosed) {
+                payload.status = 'CLOSED';
+             } else if (contact.status === 'CLOSED' || contact.status === 'CLOSE') {
+                payload.status = 'OPEN';
+             }
+          }
+
+          // 3. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
+          const updatedContact = await ContactModel.findByIdAndUpdate(
+             contactId,
+             { $set: payload },
+             { new: true, runValidators: true }
+          );
+          
+          if (!updatedContact) return res.status(404).json({ error: 'Contact not found' });
           
           // 3. Final synchronization and save
-          await contact.save();
+          await updatedContact.save();
 
-          return res.json({ message: 'Contact updated', contact });
+          return res.json({ message: 'Contact updated', contact: updatedContact });
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
