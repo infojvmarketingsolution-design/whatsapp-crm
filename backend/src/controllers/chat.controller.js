@@ -271,7 +271,10 @@ const performContactAction = async (req, res) => {
           return res.json({ brief });
         } else if (action === 'update_contact') {
           // Force Status Sync directly on the contact object
-          if (payload.isClosed === true) {
+          const forceClose = payload.isClosed === true || payload.isClosed === 'true';
+          const forceOpen = payload.isClosed === false || payload.isClosed === 'false';
+
+          if (forceClose) {
              contact.status = 'CLOSE';
              contact.isClosed = true;
              contact.timeline.push({ 
@@ -279,7 +282,7 @@ const performContactAction = async (req, res) => {
                 description: 'Lead marked as CLOSED', 
                 timestamp: new Date() 
              });
-          } else if (payload.isClosed === false) {
+          } else if (forceOpen) {
              if (contact.status === 'CLOSE') {
                 contact.status = 'OPEN';
              }
