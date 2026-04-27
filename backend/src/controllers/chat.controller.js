@@ -270,6 +270,13 @@ const performContactAction = async (req, res) => {
           
           return res.json({ brief });
        } else if (action === 'update_contact') {
+          // Sync Status with isClosed in the payload
+          if (payload.isClosed === true) {
+             payload.status = 'CLOSE';
+          } else if (payload.isClosed === false && contact.status === 'CLOSE') {
+             payload.status = 'OPEN';
+          }
+
           // 1. Specialized logic for Counsellor Assignment (Requires Timeline Event)
           if (payload.assignedCounsellor !== undefined) {
              const newCounsellor = payload.assignedCounsellor && payload.assignedCounsellor !== "" ? payload.assignedCounsellor : null;
