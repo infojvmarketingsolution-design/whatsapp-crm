@@ -15,7 +15,8 @@ import {
   KanbanSquare,
   CheckSquare,
   Shield,
-  Menu
+  Menu,
+  Download
 } from 'lucide-react';
 
 export default function Sidebar({ whatsappConfig, roleAccess }) {
@@ -24,6 +25,26 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(' ', '_');
   const [isAvailable, setIsAvailable] = React.useState(localStorage.getItem('isAvailable') !== 'false');
+  const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+
+  React.useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null);
+      }
+    }
+  };
 
   const toggleAvailability = async () => {
     const newValue = !isAvailable;
@@ -161,6 +182,16 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
              <span className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAvailable ? 'translate-x-1.5' : '-translate-x-1.5'}`} />
           </button>
         </div>
+
+        {deferredPrompt && (
+          <button 
+            onClick={handleInstall} 
+            className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-green-400 hover:text-white hover:bg-green-700/50 transition-colors border-t border-teal-800/50`}
+          >
+            <Download size={20} />
+            {!collapsed && <span className="font-bold">Install App</span>}
+          </button>
+        )}
 
         <button onClick={handleLogout} className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-teal-200 hover:text-white hover:bg-teal-800/80 transition-colors`}>
           <LogOut size={20} />
