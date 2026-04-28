@@ -28,12 +28,17 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
   const [deferredPrompt, setDeferredPrompt] = React.useState(null);
 
   React.useEffect(() => {
+    console.log('[PWA Debug] Monitoring beforeinstallprompt event...');
     const handler = (e) => {
+      console.log('[PWA Debug] beforeinstallprompt event fired! App is installable.');
       e.preventDefault();
       setDeferredPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    return () => {
+      console.log('[PWA Debug] Cleanup Sidebar PWA listener');
+      window.removeEventListener('beforeinstallprompt', handler);
+    };
   }, []);
 
   const handleInstall = async () => {
