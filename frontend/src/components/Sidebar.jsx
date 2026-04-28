@@ -16,7 +16,9 @@ import {
   CheckSquare,
   Shield,
   Menu,
-  Download
+  Download,
+  Share,
+  Info
 } from 'lucide-react';
 
 export default function Sidebar({ whatsappConfig, roleAccess }) {
@@ -26,6 +28,11 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
   const userRole = (user.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(' ', '_');
   const [isAvailable, setIsAvailable] = React.useState(localStorage.getItem('isAvailable') !== 'false');
   const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+  const [showIosGuide, setShowIosGuide] = React.useState(false);
+
+  const isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  const shouldShowIosInstall = isIos && !isStandalone;
 
   React.useEffect(() => {
     console.log('[PWA Debug] Monitoring beforeinstallprompt event...');
@@ -196,6 +203,51 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
             <Download size={20} />
             {!collapsed && <span className="font-bold">Install App</span>}
           </button>
+        )}
+
+        {shouldShowIosInstall && (
+          <button 
+            onClick={() => setShowIosGuide(true)} 
+            className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-blue-400 hover:text-white hover:bg-blue-700/50 transition-colors border-t border-teal-800/50`}
+          >
+            <Info size={20} />
+            {!collapsed && <span className="font-bold">Install on iPhone</span>}
+          </button>
+        )}
+
+        {showIosGuide && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowIosGuide(false)}>
+            <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-slate-800 shadow-2xl animate-scale-in" onClick={e => e.stopPropagation()}>
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Share size={32} />
+                </div>
+                <h3 className="text-xl font-black uppercase tracking-tight">Install on iPhone</h3>
+              </div>
+              
+              <div className="space-y-6 text-sm font-medium text-slate-600">
+                <div className="flex items-start space-x-4">
+                  <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black shrink-0">1</div>
+                  <p>Tap the <span className="font-black text-blue-600">Share</span> button in Safari (box with arrow at the bottom).</p>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black shrink-0">2</div>
+                  <p>Scroll down and tap <span className="font-black text-blue-600">"Add to Home Screen"</span>.</p>
+                </div>
+                <div className="flex items-start space-x-4">
+                  <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black shrink-0">3</div>
+                  <p>The **WapiPulse** icon will appear on your iPhone home screen!</p>
+                </div>
+              </div>
+
+              <button 
+                onClick={() => setShowIosGuide(false)}
+                className="w-full mt-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all"
+              >
+                Got it!
+              </button>
+            </div>
+          </div>
         )}
 
         <button onClick={handleLogout} className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-teal-200 hover:text-white hover:bg-teal-800/80 transition-colors`}>
