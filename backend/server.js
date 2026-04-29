@@ -42,10 +42,36 @@ require('./src/workers/campaign.worker');
 const { startTaskSuspensionWorker } = require('./src/workers/task.worker');
 startTaskSuspensionWorker();
 
-app.use(maintenanceMiddleware);
+// --- STATIC FILES & UPLOADS (No DB required) ---
+const possibleUploadPaths = [
+  path.join(__dirname, 'public/uploads'),
+  path.join(__dirname, 'uploads'),
+  path.join(__dirname, '../public/uploads'),
+  path.join(process.cwd(), 'public/uploads'),
+  path.join(process.cwd(), 'uploads')
+];
 
+possibleUploadPaths.forEach(uPath => {
+  if (fs.existsSync(uPath)) {
+    console.log(`[Server] ✅ Serving static files from: ${uPath} via /uploads`);
+    app.use('/uploads', express.static(uPath, {
+      setHeaders: (res, path) => {
+        res.set('Access-Control-Allow-Origin', '*');
+        res.set('Cache-Control', 'public, max-age=31536000');
+      }
+    }));
+  }
+});
+
+app.use(express.static(path.join(__dirname, 'public')));
+
+// --- PUBLIC INFORMATIONAL ROUTES (No DB required) ---
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'JV CRM Backend is running' });
+  res.json({ 
+    status: 'ok', 
+    message: 'JV CRM Backend is running', 
+    dbConnected: mongoose.connection.readyState === 1 
+  });
 });
 
 app.get('/privacy-policy', (req, res) => {
@@ -78,7 +104,7 @@ app.get('/privacy-policy', (req, res) => {
         
         <h2>4. Data Security</h2>
         <p>We implement appropriate technical and organizational security measures designed to protect the security of any personal information we process.</p>
-
+ 
         <h2>5. Data Deletion and Retention</h2>
         <p>You have the right to request the deletion of your personal data. You can find specific instructions for data deletion at <a href="/data-deletion">/data-deletion</a>.</p>
         
@@ -91,7 +117,6 @@ app.get('/privacy-policy', (req, res) => {
   `);
 });
 
-// Data Deletion Instructions Route
 app.get('/data-deletion', (req, res) => {
   res.send(`
     <html>
@@ -182,6 +207,10 @@ app.get('/terms-of-service', (req, res) => {
   `);
 });
 
+// --- MAINTENANCE MIDDLEWARE ---
+app.use(maintenanceMiddleware);
+
+// --- API ROUTES ---
 app.use('/api/auth', authRoutes);
 app.use('/api/clients', clientRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
@@ -197,37 +226,12 @@ app.use('/api/admin/settings', adminSettingsRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/stats', statsRoutes);
 
-// Main Media Route (Matches generated URLs /uploads/...)
-// Try multiple paths to find the uploads folder on various server environments
-const possibleUploadPaths = [
-  path.join(__dirname, 'public/uploads'),
-  path.join(__dirname, 'uploads'),
-  path.join(__dirname, '../public/uploads'),
-  path.join(process.cwd(), 'public/uploads'),
-  path.join(process.cwd(), 'uploads')
-];
-
-possibleUploadPaths.forEach(uPath => {
-  if (fs.existsSync(uPath)) {
-    console.log(`[Server] ✅ Serving static files from: ${uPath} via /uploads`);
-    app.use('/uploads', express.static(uPath, {
-      setHeaders: (res, path) => {
-        res.set('Access-Control-Allow-Origin', '*');
-        res.set('Cache-Control', 'public, max-age=31536000');
-      }
-    }));
-  }
-});
-
-// Last resort: If still not caught, let the general static handler try /public
-app.use(express.static(path.join(__dirname, 'public')));
-
-
-// SPA Routing: Serve index.html for any request that doesn't match an API route
+// --- SPA ROUTING (Last resort) ---
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api')) return res.status(404).json({ error: "API Route Not Found" });
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);

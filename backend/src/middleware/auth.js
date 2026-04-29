@@ -4,6 +4,13 @@ const UserSession = require('../models/core/UserSession');
 const mongoose = require('mongoose');
 
 const protect = async (req, res, next) => {
+  // 1. SAFETY CHECK: If MongoDB is offline, don't attempt to query User as it will hang the request!
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({ 
+      error: 'Authentication server unavailable (DB Offline). Please try again soon.' 
+    });
+  }
+
   let token;
   if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
     try {

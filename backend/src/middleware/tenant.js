@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const { getTenantConnection } = require('../config/db');
 const Client = require('../models/core/Client');
 
@@ -6,6 +7,16 @@ const Client = require('../models/core/Client');
  */
 const tenantMiddleware = async (req, res, next) => {
   try {
+    // 1. SAFETY CHECK: If MongoDB is offline, return 503 or handle gracefully
+    if (mongoose.connection.readyState !== 1) {
+       // Allow health check or public routes even if tenant check would fail
+       if (req.path.startsWith('/api/health')) return next();
+       
+       return res.status(503).json({ 
+         error: 'Database is currently offline. Please try again in a few minutes.' 
+       });
+    }
+
     // Determine tenantId from header, token, or query parameter
     let tenantIdStr = req.headers['x-tenant-id'] || req.query.tenantId;
 
