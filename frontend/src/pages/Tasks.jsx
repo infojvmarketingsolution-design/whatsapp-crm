@@ -581,11 +581,20 @@ export default function Tasks() {
     
     // Status View Filter
     if (view === 'PENDING') {
-      if (!isPending || (isOverdue && !isDueToday)) return false;
+      if (!isPending) return false;
     }
     if (view === 'COMPLETED' && !isCompleted) return false;
-    if (view === 'OVERDUE' && (!isOverdue || isDueToday)) return false;
-    if (view === 'UPCOMING' && (!isPending || !(!isOverdue && !isDueToday))) return false;
+    if (view === 'OVERDUE') {
+       if (!isOverdue || isDueToday) return false;
+    }
+    if (view === 'TODAY') {
+       if (!isPending || !isDueToday) return false;
+    }
+    if (view === 'UPCOMING') {
+       const todayEnd = new Date();
+       todayEnd.setHours(23, 59, 59, 999);
+       if (!isPending || dueDate <= todayEnd) return false;
+    }
 
     // Type Filter
     if (filter !== 'ALL' && t.type !== filter) return false;
@@ -684,12 +693,12 @@ export default function Tasks() {
               </div>
               <p className="mt-3 font-bold text-slate-500 text-sm">Overdue</p>
            </div>
-           <div onClick={() => setView('PENDING')} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all ${view === 'PENDING' ? 'bg-teal-50 border-teal-200 shadow-md' : 'bg-white border-slate-100 hover:border-teal-100'}`}>
+           <div onClick={() => setView('TODAY')} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all ${view === 'TODAY' ? 'bg-teal-50 border-teal-200 shadow-md' : 'bg-white border-slate-100 hover:border-teal-100'}`}>
               <div className="flex justify-between items-start">
                  <div className="p-2 bg-teal-100 text-teal-600 rounded-xl">
                     <Clock size={20} />
                  </div>
-                 <span className={`text-2xl font-black ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-700'}`}>{todayCount}</span>
+                 <span className={`text-2xl font-black ${view === 'TODAY' ? 'text-teal-600' : 'text-slate-700'}`}>{todayCount}</span>
               </div>
               <p className="mt-3 font-bold text-slate-500 text-sm">Due Today</p>
            </div>
