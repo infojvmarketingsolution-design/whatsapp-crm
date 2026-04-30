@@ -819,7 +819,17 @@ export default function Inbox({ roleAccess }) {
 
       {/* Chat Profile Panel (Right) */}
       {activeChat && showProfile && (
-      <div className="w-[300px] bg-[#fdfdfd] flex flex-col shrink-0 z-20 overflow-y-auto custom-scrollbar shadow-[-5px_0_15px_rgba(0,0,0,0.01)] animate-fade-in">
+      <div className={`
+        ${showProfile ? 'flex' : 'hidden'} 
+        fixed inset-y-0 right-0 z-[100] w-full sm:w-[350px] bg-white border-l border-gray-100 shadow-2xl lg:shadow-none lg:relative lg:flex lg:z-20
+        flex-col overflow-y-auto custom-scrollbar animate-slide-in-right lg:animate-none
+      `}>
+        <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-30">
+          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Lead Profile</h3>
+          <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
+            <X size={20} className="text-slate-400" />
+          </button>
+        </div>
          
          <div className="p-8 pb-6 flex flex-col items-center justify-center border-b border-gray-50 text-center relative mt-2">
             <img src={getAvatarUrl(activeChat?.name)} className="w-24 h-24 rounded-full shadow-lg object-cover border-4 border-white mb-4" />

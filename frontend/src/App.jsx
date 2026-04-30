@@ -21,8 +21,11 @@ import WebWidget from './pages/WebWidget';
 import Settings from './pages/Settings';
 import AIChatbot from './pages/AIChatbot/AIChatbot';
 import AdminSidebar from './components/AdminSidebar';
+import Profile from './pages/Profile';
 import MobileNavbar from './components/MobileNavbar';
 import MobileHeader from './components/MobileHeader';
+import NotificationCenter from './components/NotificationCenter';
+import GlobalSearch from './components/GlobalSearch';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import ClientManagement from './pages/Admin/ClientManagement';
 import PlanManagement from './pages/Admin/PlanManagement';
@@ -836,6 +839,8 @@ function AppLayout() {
   const [roleAccess, setRoleAccess] = React.useState(null);
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
+  const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
+  const [isSearchOpen, setIsSearchOpen] = React.useState(false);
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
@@ -993,7 +998,18 @@ function AppLayout() {
       {!isAuthPage && <GlobalSuspensionTimer />}
       
       {/* Mobile Top Header */}
-      {!isAuthPage && isMobile && <MobileHeader />}
+      {!isAuthPage && isMobile && (
+        <MobileHeader 
+          onOpenNotifications={() => setIsNotificationsOpen(true)} 
+          onOpenSearch={() => setIsSearchOpen(true)}
+        />
+      )}
+
+      {/* Notifications Drawer */}
+      {!isAuthPage && <NotificationCenter isOpen={isNotificationsOpen} onClose={() => setIsNotificationsOpen(false)} />}
+      
+      {/* Global Search Overlay */}
+      {!isAuthPage && <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />}
 
       {/* Main Sidebar (Drawer on mobile) */}
       {!isAuthPage && (
@@ -1036,6 +1052,7 @@ function AppLayout() {
             <Route path="/ai-chatbot" element={<AIChatbot />} />
             <Route path="/team-performance" element={<TeamPerformance />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
 
             {/* Super Admin Routes */}
@@ -1055,7 +1072,7 @@ function AppLayout() {
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">System Online</span>
              </div>
              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-                Developed by J.V group | WapiPulse v1.2.5-STABLE
+                Developed by J.V group | WapiPulse v1.3.0-STABLE
              </p>
           </div>
         )}

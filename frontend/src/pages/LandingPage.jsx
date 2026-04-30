@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, ShieldCheck, CheckCircle2, Phone, Mail, MapPin, 
-  Send, Bot, BarChart3, Users, PlayCircle, Star, Triangle, Circle, Square, MessageCircle
+  Send, Bot, BarChart3, Users, PlayCircle, Star, Triangle, Circle, Square, MessageCircle, Menu, X
 } from 'lucide-react';
 
 const LandingPage = () => {
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
@@ -45,13 +46,39 @@ const LandingPage = () => {
                  </a>
               </div>
               <button onClick={handleLoginClick} className="hidden md:inline-flex items-center font-bold text-gray-700 hover:text-[#075E54] transition-colors">Login</button>
-              <button onClick={handleLoginClick} className="bg-[#25D366] hover:bg-[#1DA851] text-white font-bold py-3 px-6 rounded-lg shadow-[0_4px_14px_0_rgba(37,211,102,0.39)] hover:shadow-[0_6px_20px_rgba(37,211,102,0.23)] hover:-translate-y-0.5 transition-all flex items-center gap-2 text-[15px]">
-                New User? Apply <ArrowRight size={18} />
+              <button onClick={handleLoginClick} className="hidden sm:flex bg-[#25D366] hover:bg-[#1DA851] text-white font-bold py-3 px-6 rounded-lg shadow-[0_4px_14px_0_rgba(37,211,102,0.39)] hover:shadow-[0_6px_20px_rgba(37,211,102,0.23)] hover:-translate-y-0.5 transition-all items-center gap-2 text-[15px]">
+                Apply Now <ArrowRight size={18} />
+              </button>
+              
+              {/* Mobile Menu Button */}
+              <button 
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 text-gray-600 hover:text-[#25D366] transition-colors"
+              >
+                {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
 
           </div>
         </div>
+
+        {/* Mobile Navigation Menu */}
+        {isMobileMenuOpen && (
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="md:hidden bg-white border-b border-gray-100 py-4 px-4 space-y-4 shadow-lg"
+          >
+            <a href="#features" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-2 font-bold text-gray-600 hover:text-[#25D366]">Platform Features</a>
+            <a href="#broadcast" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-2 font-bold text-gray-600 hover:text-[#25D366]">Broadcast</a>
+            <a href="#automation" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-2 font-bold text-gray-600 hover:text-[#25D366]">Chatbot</a>
+            <a href="#pricing" onClick={() => setIsMobileMenuOpen(false)} className="block px-4 py-2 font-bold text-gray-600 hover:text-[#25D366]">Pricing</a>
+            <div className="pt-4 border-t border-gray-50 flex flex-col space-y-4">
+              <button onClick={handleLoginClick} className="w-full py-3 font-bold text-gray-700 border border-gray-200 rounded-xl">Login</button>
+              <button onClick={handleLoginClick} className="w-full py-3 bg-[#25D366] text-white font-bold rounded-xl shadow-lg shadow-green-500/20">Get Started</button>
+            </div>
+          </motion.div>
+        )}
       </nav>
 
       {/* 2. Transformative AiSensy Hero Section */}
