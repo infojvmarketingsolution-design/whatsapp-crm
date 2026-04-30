@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Plus, Edit2, Trash2, Shield, Circle, UserPlus, Search, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Plus, Edit2, Trash2, Shield, Circle, UserPlus, Search, CheckCircle, XCircle, Play, Pause } from 'lucide-react';
 
 export default function AgentsDashboard() {
   const [agents, setAgents] = useState([]);
@@ -130,110 +130,138 @@ export default function AgentsDashboard() {
   const filteredAgents = agents.filter(a => a.name.toLowerCase().includes(searchTerm.toLowerCase()) || a.email.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <div className="p-8 bg-crm-bg min-h-full animate-fade-in-up">
-      <div className="flex justify-between items-end mb-8">
+    <div className="p-4 sm:p-8 bg-crm-bg min-h-full animate-fade-in-up">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 sm:mb-10">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 flex items-center">
-            <Users className="mr-3 text-blue-600" /> Team Agents
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center">
+            <Users className="mr-3 text-blue-600" size={28} /> Team Agents
           </h1>
-          <p className="text-sm text-gray-500 mt-2 font-medium">Manage role-based access control and active team seats.</p>
+          <p className="text-[10px] sm:text-sm font-black text-slate-400 mt-1 uppercase tracking-widest leading-relaxed">Manage role-based access control and active team seats.</p>
         </div>
-        <button onClick={openCreateModal} className="flex items-center space-x-2 px-5 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold shadow-soft hover:bg-blue-700 transition-colors shadow-glow hover:-translate-y-0.5 transform">
+        <button onClick={openCreateModal} className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-glow hover:bg-blue-700 transition-all active:scale-95">
           <UserPlus size={18} /> <span>Provision Seat</span>
         </button>
       </div>
 
-      <div className="bg-crm-card rounded-2xl shadow-soft border border-crm-border mb-8 overflow-hidden">
-         <div className="p-4 border-b border-crm-border flex items-center justify-between bg-gray-50/50">
-            <div className="relative w-72">
-               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+      <div className="bg-white rounded-2xl sm:rounded-3xl shadow-premium border border-slate-100 mb-8 overflow-hidden">
+         <div className="p-4 sm:p-6 border-b border-slate-50 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-50/30">
+            <div className="relative w-full sm:w-72 group">
+               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={16} />
                <input 
                   type="text" 
-                  placeholder="Search agents by name or email..." 
-                  className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all"
+                  placeholder="Search agents..." 
+                  className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all bg-white"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                />
             </div>
-            <div className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-wider space-x-4">
-               <span className="flex items-center"><Circle size={10} className="fill-green-500 text-green-500 mr-1.5" /> ACTIVE SEATS: {agents.filter(a=>a.status==='ACTIVE').length}</span>
-               <span className="flex items-center"><Circle size={10} className="fill-yellow-500 text-yellow-500 mr-1.5" /> INACTIVE: {agents.filter(a=>a.status!=='ACTIVE').length}</span>
+            <div className="flex items-center gap-4 sm:gap-6 w-full sm:w-auto overflow-x-auto pb-2 sm:pb-0">
+               <span className="flex items-center text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap"><Circle size={10} className="fill-emerald-500 text-emerald-500 mr-2" /> ACTIVE: {agents.filter(a=>a.status==='ACTIVE').length}</span>
+               <span className="flex items-center text-[10px] font-black text-slate-500 uppercase tracking-widest whitespace-nowrap"><Circle size={10} className="fill-amber-500 text-amber-500 mr-2" /> INACTIVE: {agents.filter(a=>a.status!=='ACTIVE').length}</span>
             </div>
          </div>
          
-         <div className="overflow-x-auto">
+         {/* Desktop Table */}
+         <div className="hidden sm:block overflow-x-auto">
             <table className="w-full text-left">
-               <thead className="bg-gray-50 border-b border-gray-100">
+               <thead className="bg-slate-50 border-b border-slate-100">
                   <tr>
-                     <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Agent Details</th>
-                     <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Role Access</th>
-                     <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Status</th>
-                     <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Agent Details</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Role Access</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
+                     <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>
                   </tr>
                </thead>
-               <tbody className="divide-y divide-gray-50">
+               <tbody className="divide-y divide-slate-50">
                   {loading ? (
-                     <tr><td colSpan="4" className="px-6 py-12 text-center text-gray-400 font-medium">Fetching Agent Roster...</td></tr>
+                     <tr><td colSpan="4" className="px-6 py-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Fetching Agent Roster...</td></tr>
                   ) : filteredAgents.length === 0 ? (
-                     <tr><td colSpan="4" className="px-6 py-12 text-center text-gray-400 font-medium">No agents found globally.</td></tr>
+                     <tr><td colSpan="4" className="px-6 py-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No agents found globally.</td></tr>
                   ) : filteredAgents.map(agent => (
-                     <tr key={agent._id} className="hover:bg-gray-50/50 transition-colors group">
+                     <tr key={agent._id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-6 py-4">
                            <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold shadow-sm">
+                              <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black shadow-sm border border-blue-100">
                                  {agent.name.substring(0,2).toUpperCase()}
                               </div>
                               <div>
-                                 <p className="text-sm font-bold text-gray-900">{agent.name}</p>
-                                 <p className="text-xs text-gray-500">{agent.email}</p>
+                                 <p className="text-sm font-black text-slate-800 tracking-tight">{agent.name}</p>
+                                 <p className="text-[10px] font-bold text-slate-400">{agent.email}</p>
                               </div>
                            </div>
                         </td>
                         <td className="px-6 py-4">
-                           <div className="flex items-center space-x-1.5 px-3 py-1 bg-purple-50 text-purple-700 rounded-md w-fit border border-purple-100">
+                           <div className="flex items-center space-x-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 rounded-xl w-fit border border-indigo-100">
                               <Shield size={12} />
-                              <span className="text-[10px] font-bold tracking-widest">{dynamicRoles.find(r => r.id === agent.role)?.name || agent.role}</span>
+                              <span className="text-[10px] font-black uppercase tracking-widest">{dynamicRoles.find(r => r.id === agent.role)?.name || agent.role}</span>
                            </div>
                         </td>
                         <td className="px-6 py-4">
                            {agent.status === 'ACTIVE' ? (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-green-50 text-green-700 border border-green-200">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black bg-emerald-50 text-emerald-700 border border-emerald-200 tracking-widest">
                                  ACTIVE
                               </span>
                            ) : (
-                              <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-50 text-yellow-700 border border-yellow-200">
+                              <span className="inline-flex items-center px-3 py-1 rounded-full text-[9px] font-black bg-amber-50 text-amber-700 border border-amber-200 tracking-widest">
                                  SUSPENDED
                               </span>
                            )}
                         </td>
-                        <td className="px-6 py-4 text-right space-x-2">
-                           <button 
-                              onClick={() => openEditModal(agent)}
-                              className="text-xs font-bold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                           >
-                              <Edit2 size={14} className="inline mr-1"/> Edit
-                           </button>
-                           <button 
-                              onClick={() => handleToggleStatus(agent._id, agent.status)}
-                              className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
-                                agent.status === 'ACTIVE' 
-                                  ? 'border-yellow-200 text-yellow-600 hover:bg-yellow-50' 
-                                  : 'border-green-600 bg-green-600 text-white hover:bg-green-700 shadow-md shadow-green-200 ring-2 ring-green-100 ring-offset-1'
-                              }`}
-                           >
-                              {agent.status === 'ACTIVE' ? 'Suspend Seat' : 'Reactivate Account'}
-                           </button>
-                           <button 
-                              onClick={() => handleDelete(agent._id)}
-                              className="text-xs font-bold px-3 py-1.5 rounded-lg border border-red-100 text-red-600 hover:bg-red-50 transition-colors"
-                           >
-                              <Trash2 size={14} className="inline mr-1"/> Delete
-                           </button>
+                        <td className="px-6 py-4 text-right">
+                           <div className="flex justify-end gap-2">
+                             <button onClick={() => openEditModal(agent)} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all" title="Edit Agent"><Edit2 size={16}/></button>
+                             <button onClick={() => handleToggleStatus(agent._id, agent.status)} className={`p-2 rounded-xl transition-all ${agent.status === 'ACTIVE' ? 'text-slate-400 hover:text-amber-600 hover:bg-amber-50' : 'text-emerald-600 bg-emerald-50 hover:bg-emerald-100 shadow-sm'}`} title={agent.status === 'ACTIVE' ? 'Suspend Seat' : 'Reactivate'}>
+                                {agent.status === 'ACTIVE' ? <XCircle size={16}/> : <CheckCircle size={16}/>}
+                             </button>
+                             <button onClick={() => handleDelete(agent._id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Delete Agent"><Trash2 size={16}/></button>
+                           </div>
                         </td>
                      </tr>
                   ))}
                </tbody>
             </table>
+         </div>
+
+         {/* Mobile Card List */}
+         <div className="sm:hidden divide-y divide-slate-50">
+            {loading ? (
+               <div className="p-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest animate-pulse">Fetching Agent Roster...</div>
+            ) : filteredAgents.length === 0 ? (
+               <div className="p-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">No agents found.</div>
+            ) : filteredAgents.map(agent => (
+               <div key={agent._id} className="p-5 space-y-5 animate-fade-in">
+                  <div className="flex items-start justify-between">
+                     <div className="flex items-center space-x-4">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black shadow-sm border border-blue-100 text-lg">
+                           {agent.name.substring(0,2).toUpperCase()}
+                        </div>
+                        <div>
+                           <p className="text-base font-black text-slate-800 tracking-tight leading-none">{agent.name}</p>
+                           <p className="text-[10px] font-bold text-slate-400 mt-1">{agent.email}</p>
+                        </div>
+                     </div>
+                     {agent.status === 'ACTIVE' ? (
+                        <span className="px-2 py-1 bg-emerald-50 text-emerald-600 rounded-lg text-[8px] font-black uppercase tracking-widest border border-emerald-100">Active</span>
+                     ) : (
+                        <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded-lg text-[8px] font-black uppercase tracking-widest border border-amber-100">Suspended</span>
+                     )}
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                     <div className="flex items-center space-x-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-100">
+                        <Shield size={12} />
+                        <span className="text-[9px] font-black uppercase tracking-widest">{dynamicRoles.find(r => r.id === agent.role)?.name || agent.role}</span>
+                     </div>
+                     <div className="flex gap-2">
+                        <button onClick={() => openEditModal(agent)} className="p-3 bg-slate-100 text-slate-600 rounded-xl active:scale-90 transition-all"><Edit2 size={16}/></button>
+                        <button onClick={() => handleToggleStatus(agent._id, agent.status)} className={`p-3 rounded-xl active:scale-90 transition-all ${agent.status === 'ACTIVE' ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-600'}`}>
+                           {agent.status === 'ACTIVE' ? <Pause size={16} fill="currentColor"/> : <Play size={16} fill="currentColor"/>}
+                        </button>
+                        <button onClick={() => handleDelete(agent._id)} className="p-3 bg-red-50 text-red-600 rounded-xl active:scale-90 transition-all"><Trash2 size={16}/></button>
+                     </div>
+                  </div>
+               </div>
+            ))}
          </div>
       </div>
 
