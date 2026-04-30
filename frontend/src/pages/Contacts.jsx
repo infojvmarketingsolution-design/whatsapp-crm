@@ -912,7 +912,7 @@ export default function Contacts({ roleAccess }) {
 
                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                   {/* LEFT PANEL: STRUCTURED STEP-BY-STEP FLOW */}
-                  <div className="w-full lg:w-[420px] bg-slate-50/50 border-b lg:border-b-0 lg:border-r border-slate-100 overflow-y-auto custom-scrollbar p-resp space-y-12 shrink-0">
+                  <div className="flex-1 lg:w-[420px] bg-slate-50/50 border-b lg:border-b-0 lg:border-r border-slate-100 overflow-y-auto custom-scrollbar p-resp space-y-12 lg:shrink-0">
                      
                      {/* STEP 1: BASIC INFORMATION */}
                      <div className="space-y-6">
