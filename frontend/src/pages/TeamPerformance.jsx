@@ -83,82 +83,78 @@ export default function TeamPerformance() {
 
       {/* HEADER SECTION */}
       <div className="max-w-[1400px] mx-auto space-y-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-6 rounded-3xl border border-slate-200 shadow-premium">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-premium">
           <div className="flex items-center space-x-4">
-            <div className="w-14 h-14 bg-teal-50 rounded-2xl flex items-center justify-center border border-teal-100 shadow-premium">
-              <Users size={28} className="text-teal-600" />
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-teal-50 rounded-2xl flex items-center justify-center border border-teal-100 shadow-premium">
+              <Users size={24} className="text-teal-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-slate-800 tracking-tight">Team Performance Hub</h1>
-              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 flex items-center">
-                <Shield size={12} className="mr-1.5 text-teal-500" /> Administrative oversight for team leads & conversion
+              <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Team Hub</h1>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 flex items-center">
+                <Shield size={10} className="mr-1 text-teal-500" /> Oversight for conversion
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-3">
-             <div className="relative group">
-                <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
+          <div className="flex items-center space-x-2 sm:space-x-3 w-full md:w-auto">
+             <div className="relative group flex-1 md:flex-initial">
+                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-600 transition-colors" />
                 <input 
                   type="text" 
                   placeholder="Search teammate..." 
                   value={searchTerm}
                   onChange={e => setSearchTerm(e.target.value)}
-                  className="bg-slate-50 border border-slate-100 rounded-xl pl-12 pr-6 py-3 outline-none focus:bg-white focus:ring-4 focus:ring-teal-50 focus:border-teal-200 text-xs font-bold text-slate-700 w-64 shadow-sm transition-all"
+                  className="bg-slate-50 border border-slate-100 rounded-xl pl-10 pr-4 py-2.5 outline-none focus:bg-white focus:ring-4 focus:ring-teal-50 focus:border-teal-200 text-[11px] font-bold text-slate-700 w-full md:w-64 shadow-sm transition-all"
                 />
              </div>
-             <button onClick={fetchTeamStats} className="p-3 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-all shadow-sm active:scale-95">
-                <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+             <button onClick={fetchTeamStats} className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-400 hover:text-teal-600 hover:bg-teal-50 transition-all shadow-sm active:scale-95">
+                <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
              </button>
-             <div className="flex bg-slate-100 p-1 rounded-xl shadow-sm border border-slate-200">
-                <button onClick={() => setViewMode('grid')} className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}><LayoutGrid size={16} /></button>
-                <button onClick={() => setViewMode('list')} className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}><List size={16} /></button>
-             </div>
           </div>
         </div>
 
         {/* TOP LEVEL STATS CARDS */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700"></div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+           <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700"></div>
               <div className="flex flex-col">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Network Reach</p>
-                <div className="flex items-center space-x-3">
-                   <h3 className="text-3xl font-black text-slate-800 leading-none">{totalLeads}</h3>
-                   <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded-lg tracking-tight">Active Leads</span>
+                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">Network Reach</p>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                   <h3 className="text-xl sm:text-3xl font-black text-slate-800 leading-none">{totalLeads}</h3>
+                   <span className="text-[8px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded tracking-tight hidden sm:inline">Active Leads</span>
                 </div>
               </div>
            </div>
 
-           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-teal-500/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700"></div>
+           <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-teal-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700"></div>
               <div className="flex flex-col">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Operational Pulse</p>
-                <div className="flex items-center space-x-3">
-                   <h3 className="text-3xl font-black text-slate-800 leading-none">{avgEfficiency}%</h3>
-                   <span className="text-[10px] font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded-lg tracking-tight">Avg Efficacy</span>
+                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">Operational Pulse</p>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                   <h3 className="text-xl sm:text-3xl font-black text-slate-800 leading-none">{avgEfficiency}%</h3>
+                   <span className="text-[8px] font-bold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded tracking-tight hidden sm:inline">Avg Efficacy</span>
                 </div>
               </div>
            </div>
 
-           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700"></div>
+           <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-orange-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700"></div>
               <div className="flex flex-col">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Workforce Active</p>
-                <div className="flex items-center space-x-3">
-                   <h3 className="text-3xl font-black text-slate-800 leading-none">{teamStats.filter(m => m.isAvailable).length}</h3>
-                   <span className="text-[10px] font-bold text-orange-600 bg-orange-50 px-2 py-1 rounded-lg tracking-tight">Available</span>
+                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">Workforce Active</p>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                   <h3 className="text-xl sm:text-3xl font-black text-slate-800 leading-none">{teamStats.filter(m => m.isAvailable).length}</h3>
+                   <span className="text-[8px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded tracking-tight hidden sm:inline">Available</span>
                 </div>
               </div>
            </div>
 
-           <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/5 rounded-full -mr-10 -mt-10 group-hover:scale-150 transition-transform duration-700"></div>
+           <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
+              <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700"></div>
               <div className="flex flex-col">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Team Composition</p>
-                <div className="flex items-center space-x-3">
-                   <h3 className="text-3xl font-black text-slate-800 leading-none">{teamStats.length}</h3>
-                   <span className="text-[10px] font-bold text-purple-600 bg-purple-50 px-2 py-1 rounded-lg tracking-tight">Verified Staff</span>
+                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">Team Composition</p>
+                <div className="flex items-center space-x-2 sm:space-x-3">
+                   <h3 className="text-xl sm:text-3xl font-black text-slate-800 leading-none">{teamStats.length}</h3>
+                   <span className="text-[8px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded tracking-tight hidden sm:inline">Verified Staff</span>
                 </div>
               </div>
            </div>
