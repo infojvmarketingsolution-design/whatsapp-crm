@@ -625,70 +625,101 @@ export default function Tasks() {
       `}</style>
       
       {/* Header with Stats */}
-      <div className="px-4 sm:px-8 py-6 sm:py-8 bg-white border-b border-slate-100">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-premium">
-          <div className="flex items-center space-x-4 shrink-0">
-            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-teal-50 rounded-2xl flex items-center justify-center border border-teal-100">
-               <CheckSquare size={24} className="text-teal-600" />
-            </div>
-            <div>
-               <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Work Console</h1>
-               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Manage your sales activities and follow-ups</p>
-            </div>
-          </div>
-
-          <div className="flex items-center space-x-4 sm:space-x-8 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
-             <div className="flex items-center space-x-4 shrink-0">
-                <div className="flex flex-col items-end border-r border-slate-100 pr-4">
-                   <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Efficiency</span>
-                   <span className="text-sm font-black text-teal-600 leading-none">{efficiency}%</span>
-                </div>
-                <div className="flex flex-col items-end border-r border-slate-100 pr-4">
-                   <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Progress</span>
-                   <span className="text-sm font-black text-blue-500 leading-none">{inProgressCount}</span>
-                </div>
-                <div className="flex flex-col items-end">
-                   <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Cancelled</span>
-                   <span className="text-sm font-black text-slate-300 leading-none">{cancelledCount}</span>
-                </div>
-             </div>
-             
-             <div className="flex -space-x-2 shrink-0">
-                {[1,2,3].map(i => (
-                  <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden">
-                    <img src={`https://i.pravatar.cc/100?u=${i+10}`} alt="avatar" />
-                  </div>
-                ))}
-             </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 mt-4">
-           <div onClick={() => setView('OVERDUE')} className={`cursor-pointer p-2 sm:p-4 rounded-xl border transition-all ${view === 'OVERDUE' ? 'bg-rose-50 border-rose-200 shadow-sm' : 'bg-white border-slate-100'}`}>
-              <div className="flex flex-col items-center text-center">
-                 <div className="p-1.5 bg-rose-100 text-rose-600 rounded-lg mb-1">
-                    <AlertCircle size={14} />
+      <div className="px-4 sm:px-8 py-2 sm:py-6 bg-white border-b border-slate-100 sticky top-0 z-40">
+        <div className="max-w-[1400px] mx-auto">
+           {/* Mobile Unified Row */}
+           <div className="flex sm:hidden items-center justify-between gap-2">
+              <div className="flex items-center space-x-2">
+                 <div className="w-8 h-8 bg-teal-50 rounded-lg flex items-center justify-center border border-teal-100">
+                    <CheckSquare size={16} className="text-teal-600" />
                  </div>
-                 <span className={`text-base sm:text-2xl font-black ${view === 'OVERDUE' ? 'text-rose-600' : 'text-slate-700'}`}>{overdueCount}</span>
-                 <p className="font-bold text-slate-400 text-[8px] sm:text-xs uppercase tracking-tighter">Overdue</p>
+                 <div className="flex flex-col">
+                    <span className="text-[7px] font-black text-slate-400 uppercase leading-none">Pulse</span>
+                    <span className="text-[10px] font-black text-teal-600 leading-none">{efficiency}%</span>
+                 </div>
+              </div>
+              
+              <div className="flex items-center space-x-1 flex-1 justify-end">
+                 <div onClick={() => setView('OVERDUE')} className={`px-2 py-1.5 rounded-lg border flex flex-col items-center min-w-[50px] ${view === 'OVERDUE' ? 'bg-rose-50 border-rose-200' : 'bg-white border-slate-100'}`}>
+                    <span className={`text-[10px] font-black ${view === 'OVERDUE' ? 'text-rose-600' : 'text-slate-400'}`}>{overdueCount}</span>
+                    <span className="text-[6px] font-black uppercase text-slate-400 tracking-tighter">Overdue</span>
+                 </div>
+                 <div onClick={() => setView('PENDING')} className={`px-2 py-1.5 rounded-lg border flex flex-col items-center min-w-[50px] ${view === 'PENDING' ? 'bg-teal-50 border-teal-200' : 'bg-white border-slate-100'}`}>
+                    <span className={`text-[10px] font-black ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-400'}`}>{todayCount}</span>
+                    <span className="text-[6px] font-black uppercase text-slate-400 tracking-tighter">Today</span>
+                 </div>
+                 <div onClick={() => setView('UPCOMING')} className={`px-2 py-1.5 rounded-lg border flex flex-col items-center min-w-[50px] ${view === 'UPCOMING' ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-100'}`}>
+                    <span className={`text-[10px] font-black ${view === 'UPCOMING' ? 'text-blue-600' : 'text-slate-400'}`}>{upcomingCount}</span>
+                    <span className="text-[6px] font-black uppercase text-slate-400 tracking-tighter">Next</span>
+                 </div>
               </div>
            </div>
-           <div onClick={() => setView('PENDING')} className={`cursor-pointer p-2 sm:p-4 rounded-xl border transition-all ${view === 'PENDING' ? 'bg-teal-50 border-teal-200 shadow-sm' : 'bg-white border-slate-100'}`}>
-              <div className="flex flex-col items-center text-center">
-                 <div className="p-1.5 bg-teal-100 text-teal-600 rounded-lg mb-1">
-                    <Clock size={14} />
+
+           {/* Desktop Row */}
+           <div className="hidden sm:flex flex-col md:flex-row md:items-center justify-between gap-6 bg-white p-4 sm:p-6 rounded-3xl border border-slate-200 shadow-premium">
+              <div className="flex items-center space-x-4 shrink-0">
+                <div className="w-12 h-12 sm:w-14 sm:h-14 bg-teal-50 rounded-2xl flex items-center justify-center border border-teal-100">
+                   <CheckSquare size={24} className="text-teal-600" />
+                </div>
+                <div>
+                   <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Work Console</h1>
+                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Manage your sales activities and follow-ups</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4 sm:space-x-8 overflow-x-auto pb-2 sm:pb-0 no-scrollbar">
+                 <div className="flex items-center space-x-4 shrink-0">
+                    <div className="flex flex-col items-end border-r border-slate-100 pr-4">
+                       <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Efficiency</span>
+                       <span className="text-sm font-black text-teal-600 leading-none">{efficiency}%</span>
+                    </div>
+                    <div className="flex flex-col items-end border-r border-slate-100 pr-4">
+                       <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Progress</span>
+                       <span className="text-sm font-black text-blue-500 leading-none">{inProgressCount}</span>
+                    </div>
+                    <div className="flex flex-col items-end">
+                       <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Cancelled</span>
+                       <span className="text-sm font-black text-slate-300 leading-none">{cancelledCount}</span>
+                    </div>
                  </div>
-                 <span className={`text-base sm:text-2xl font-black ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-700'}`}>{todayCount}</span>
-                 <p className="font-bold text-slate-400 text-[8px] sm:text-xs uppercase tracking-tighter">Today</p>
+                 
+                 <div className="flex -space-x-2 shrink-0">
+                    {[1,2,3].map(i => (
+                      <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden">
+                        <img src={`https://i.pravatar.cc/100?u=${i+10}`} alt="avatar" />
+                      </div>
+                    ))}
+                 </div>
               </div>
            </div>
-           <div onClick={() => setView('UPCOMING')} className={`cursor-pointer p-2 sm:p-4 rounded-xl border transition-all ${view === 'UPCOMING' ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-white border-slate-100'}`}>
-              <div className="flex flex-col items-center text-center">
-                 <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg mb-1">
-                    <Calendar size={14} />
+
+           <div className="hidden sm:grid grid-cols-3 gap-2 sm:gap-4 mt-4">
+              <div onClick={() => setView('OVERDUE')} className={`cursor-pointer p-2 sm:p-4 rounded-xl border transition-all ${view === 'OVERDUE' ? 'bg-rose-50 border-rose-200 shadow-sm' : 'bg-white border-slate-100'}`}>
+                 <div className="flex flex-col items-center text-center">
+                    <div className="p-1.5 bg-rose-100 text-rose-600 rounded-lg mb-1">
+                       <AlertCircle size={14} />
+                    </div>
+                    <span className={`text-base sm:text-2xl font-black ${view === 'OVERDUE' ? 'text-rose-600' : 'text-slate-700'}`}>{overdueCount}</span>
+                    <p className="font-bold text-slate-400 text-[8px] sm:text-xs uppercase tracking-tighter">Overdue</p>
                  </div>
-                 <span className={`text-base sm:text-2xl font-black ${view === 'UPCOMING' ? 'text-blue-600' : 'text-slate-700'}`}>{upcomingCount}</span>
-                 <p className="font-bold text-slate-400 text-[8px] sm:text-xs uppercase tracking-tighter">Upcoming</p>
+              </div>
+              <div onClick={() => setView('PENDING')} className={`cursor-pointer p-2 sm:p-4 rounded-xl border transition-all ${view === 'PENDING' ? 'bg-teal-50 border-teal-200 shadow-sm' : 'bg-white border-slate-100'}`}>
+                 <div className="flex flex-col items-center text-center">
+                    <div className="p-1.5 bg-teal-100 text-teal-600 rounded-lg mb-1">
+                       <Clock size={14} />
+                    </div>
+                    <span className={`text-base sm:text-2xl font-black ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-700'}`}>{todayCount}</span>
+                    <p className="font-bold text-slate-400 text-[8px] sm:text-xs uppercase tracking-tighter">Today</p>
+                 </div>
+              </div>
+              <div onClick={() => setView('UPCOMING')} className={`cursor-pointer p-2 sm:p-4 rounded-xl border transition-all ${view === 'UPCOMING' ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-white border-slate-100'}`}>
+                 <div className="flex flex-col items-center text-center">
+                    <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg mb-1">
+                       <Calendar size={14} />
+                    </div>
+                    <span className={`text-base sm:text-2xl font-black ${view === 'UPCOMING' ? 'text-blue-600' : 'text-slate-700'}`}>{upcomingCount}</span>
+                    <p className="font-bold text-slate-400 text-[8px] sm:text-xs uppercase tracking-tighter">Upcoming</p>
+                 </div>
               </div>
            </div>
         </div>
