@@ -68,7 +68,7 @@ export default function Inbox({ roleAccess }) {
   const [isPrivateNote, setIsPrivateNote] = useState(false);
   const [aiSummary, setAiSummary] = useState(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
-  const [showProfile, setShowProfile] = useState(true);
+  const [showProfile, setShowProfile] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const fileInputRef = useRef(null);
   const emojiPickerRef = useRef(null);
@@ -385,14 +385,18 @@ export default function Inbox({ roleAccess }) {
 
               // RESTORE SESSION: Prioritize localStorage for persistence (PRD FR4)
               const storedId = localStorage.getItem('activeChatId');
+              const isMobile = window.innerWidth < 1024;
+
               if (storedId && storedId !== 'null' && storedId !== 'undefined') {
                 const found = mapped.find(c => c._id === storedId);
                 if (found) {
-                   setActiveChat(found);
-                } else if (!activeChatRef.current) {
+                   // Only auto-restore on desktop to keep list visible on mobile first load
+                   if (!isMobile) setActiveChat(found);
+                } else if (!activeChatRef.current && !isMobile) {
                    setActiveChat(mapped[0]); // Fallback if stored ID not found
                 }
-              } else if (!activeChatRef.current) {
+              } else if (!activeChatRef.current && !isMobile) {
+                // On desktop, default to first chat. On mobile, stay on list view (null).
                 setActiveChat(mapped[0]);
               }
            }
