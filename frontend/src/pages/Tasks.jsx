@@ -737,93 +737,71 @@ export default function Tasks() {
                const counsellor = t.metadata?.assignedCounsellor ? agents.find(a => a._id === t.metadata.assignedCounsellor) : null;
                
                return (
-                  <div key={t._id} className="group bg-white rounded-2xl border border-slate-200 p-5 flex flex-col hover:border-teal-200 hover:shadow-xl hover:shadow-teal-900/5 transition-all animate-fade-in relative hover:z-10">
-                     <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-5 text-left">
-                           <button 
-                             onClick={() => openContactProfile(t.contactId)}
-                             className="relative group/avatar"
-                           >
-                              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-sm font-black transition-all group-hover/avatar:scale-105 group-hover/avatar:shadow-lg ${
-                                t.type === 'CALL' ? 'bg-blue-50 text-blue-600' : 
-                                t.type === 'MEETING' ? 'bg-purple-50 text-purple-600' : 
-                                'bg-orange-50 text-orange-600'
-                              }`}>
-                                {getInitials(t.contactName)}
-                              </div>
-                              <div className={`absolute -bottom-1 -right-1 w-5 h-5 rounded-lg border-2 border-white flex items-center justify-center shadow-sm ${
-                                t.type === 'CALL' ? 'bg-blue-500 text-white' : 
-                                t.type === 'MEETING' ? 'bg-purple-500 text-white' : 
-                                'bg-orange-500 text-white'
-                              }`}>
-                                {t.type === 'CALL' && <PhoneCall size={10} />}
-                                {t.type === 'MEETING' && <Calendar size={10} />}
-                                {t.type === 'FOLLOW_UP' && <Clock size={10} />}
-                              </div>
-                           </button>
+                   <div key={t._id} className="group bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col hover:border-teal-200 hover:shadow-xl transition-all animate-fade-in relative">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                         <div className="flex items-start sm:items-center space-x-3 sm:space-x-5 text-left">
+                            <button 
+                              onClick={() => openContactProfile(t.contactId)}
+                              className="relative shrink-0"
+                            >
+                               <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-xs sm:text-sm font-black transition-all ${
+                                 t.type === 'CALL' ? 'bg-blue-50 text-blue-600' : 
+                                 t.type === 'MEETING' ? 'bg-purple-50 text-purple-600' : 
+                                 'bg-orange-50 text-orange-600'
+                               }`}>
+                                 {getInitials(t.contactName)}
+                               </div>
+                               <div className={`absolute -bottom-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-lg border-2 border-white flex items-center justify-center shadow-sm ${
+                                 t.type === 'CALL' ? 'bg-blue-500 text-white' : 
+                                 t.type === 'MEETING' ? 'bg-purple-500 text-white' : 
+                                 'bg-orange-500 text-white'
+                               }`}>
+                                 {t.type === 'CALL' && <PhoneCall size={8} />}
+                                 {t.type === 'MEETING' && <Calendar size={8} />}
+                                 {t.type === 'FOLLOW_UP' && <Clock size={8} />}
+                               </div>
+                            </button>
 
-                           <div>
-                              <div className="flex items-center space-x-3 mb-1">
-                                 <div className="flex flex-col">
-                                     <h3 className="text-sm font-black text-slate-800 tracking-tight">{t.title}</h3>
-                                     {t.description && (
-                                        <div className="mt-1 flex items-start">
-                                           <div className="w-1 h-3 bg-teal-500/20 rounded-full mr-2 mt-0.5 shrink-0"></div>
-                                           <p className="text-[11px] text-slate-500 font-bold leading-tight italic">{t.description}</p>
-                                        </div>
-                                     )}
+                            <div className="min-w-0 flex-1">
+                               <div className="flex flex-wrap items-center gap-2 mb-1">
+                                  <h3 className="text-sm font-black text-slate-800 tracking-tight truncate max-w-[200px] sm:max-w-none">{t.title}</h3>
+                                  <div className="flex gap-1">
+                                     {isOverdue && <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[8px] font-black uppercase rounded">Overdue</span>}
+                                     {t.status === 'COMPLETED' && <span className="px-1.5 py-0.5 bg-teal-100 text-teal-600 text-[8px] font-black uppercase rounded">Done</span>}
                                   </div>
-                                 {isOverdue && <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[9px] font-black uppercase rounded">Overdue</span>}
-                                 {t.status === 'COMPLETED' && <span className="px-1.5 py-0.5 bg-teal-100 text-teal-600 text-[9px] font-black uppercase rounded">Completed</span>}
-                                 {t.status === 'IN_PROGRESS' && <span className="px-1.5 py-0.5 bg-blue-100 text-blue-600 text-[9px] font-black uppercase rounded">Changing</span>}
-                                 {t.status === 'CANCELLED' && <span className="px-1.5 py-0.5 bg-slate-100 text-slate-400 text-[9px] font-black uppercase rounded">Cancelled</span>}
-                              </div>
-                              <div className="flex items-center space-x-4">
-                                  <button 
-                                    onClick={() => openContactProfile(t.contactId)}
-                                    className="flex items-center text-[11px] font-bold text-slate-400 hover:text-teal-600 transition-colors"
-                                  >
-                                     <User size={12} className="mr-1.5 opacity-60" />
-                                     {t.contactName}
-                                  </button>
-                                 <div className={`flex items-center text-[11px] font-bold ${isOverdue ? 'text-rose-500' : 'text-slate-400'}`}>
-                                    <Calendar size={12} className="mr-1.5 opacity-60" />
-                                    {new Date(t.dueDate).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
-                                 </div>
+                               </div>
+                               <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
+                                   <button 
+                                     onClick={() => openContactProfile(t.contactId)}
+                                     className="flex items-center text-[10px] sm:text-[11px] font-bold text-slate-400 hover:text-teal-600 transition-colors"
+                                   >
+                                      <User size={12} className="mr-1 opacity-60" />
+                                      <span className="truncate max-w-[120px]">{t.contactName}</span>
+                                   </button>
+                                  <div className={`flex items-center text-[10px] sm:text-[11px] font-bold ${isOverdue ? 'text-rose-500' : 'text-slate-400'}`}>
+                                     <Calendar size={12} className="mr-1 opacity-60" />
+                                     {new Date(t.dueDate).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                                  </div>
+                                  <div className={`inline-flex items-center px-1.5 py-0.5 text-[8px] font-black uppercase rounded-md border w-fit ${
+                                     STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'NEW' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                                     STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'OPEN' ? 'bg-teal-50 text-teal-600 border-teal-100' :
+                                     'bg-slate-50 text-slate-500 border-slate-100'
+                                  }`}>
+                                     {STATUS_MAPPING[t.contactStatus?.toUpperCase()] || 'OPEN'}
+                                  </div>
+                               </div>
+                            </div>
+                         </div>
 
-                                 {/* Lead Owner Badge */}
-                                 {(t.assignedAgent || t.assignedCounsellor) && (
-                                    <div className="flex items-center px-2 py-0.5 bg-slate-50 text-[9px] font-bold text-slate-500 border border-slate-100 rounded-md">
-                                       <Briefcase size={10} className="mr-1 opacity-60" />
-                                       Owner: {agents.find(a => a._id === (t.assignedAgent || t.assignedCounsellor))?.name || 'Assigned'}
-                                    </div>
-                                 )}
-
-                                 {/* Lead Status Badge */}
-                                 <div className={`flex items-center px-2 py-0.5 text-[9px] font-black uppercase rounded-md border ${
-                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'NEW' ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'OPEN' ? 'bg-teal-50 text-teal-600 border-teal-100' :
-                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'ADMISSION' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'CLOSE' ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'VISITED' ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                                    STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'PENDING VISIT' ? 'bg-orange-50 text-orange-600 border-orange-100' :
-                                    'bg-slate-50 text-slate-500 border-slate-100'
-                                 }`}>
-                                    {STATUS_MAPPING[t.contactStatus?.toUpperCase()] || t.contactStatus?.replace('_', ' ') || 'OPEN'}
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-
-                        <div className="flex items-center space-x-2">
-                           {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
-                              <button 
-                                onClick={() => { setCompletingTask(t); setActiveDropdown(null); }}
-                                className="h-9 px-4 bg-teal-600 text-white text-xs font-black rounded-xl hover:bg-teal-700 transition-all flex items-center shadow-md shadow-teal-600/10 active:scale-95"
-                              >
-                                <Check size={14} className="mr-2" /> follow up update
-                              </button>
-                           )}
+                         <div className="flex items-center justify-between sm:justify-end gap-2 mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
+                            {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
+                               <button 
+                                 onClick={() => { setCompletingTask(t); setActiveDropdown(null); }}
+                                 className="flex-1 sm:flex-initial h-8 px-4 bg-teal-600 text-white text-[10px] font-black rounded-lg hover:bg-teal-700 transition-all flex items-center justify-center shadow-lg shadow-teal-600/20 active:scale-95 uppercase tracking-widest"
+                               >
+                                 <Check size={12} className="mr-1.5" /> Update
+                               </button>
+                            )}
                            <div className="relative" ref={activeDropdown === t._id ? dropdownRef : null}>
                               <button 
                                  onClick={(e) => {
