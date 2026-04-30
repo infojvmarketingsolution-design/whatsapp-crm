@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, X, Users, CheckSquare, ChevronRight, Loader2, 
-  Settings, Smartphone, Layout, Megaphone, MessageSquare, User, ShieldCheck, Zap
+  Settings, Smartphone, Layout, Megaphone, MessageSquare, User, ShieldCheck, Zap,
+  Compass, History, Sparkles, ArrowUpRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const SYSTEM_PAGES = [
-  { type: 'NAV', name: 'Settings', sub: 'Workspace, Profile & Billing', icon: Settings, link: '/settings', color: 'text-slate-600 bg-slate-100' },
-  { type: 'NAV', name: 'API Setup', sub: 'WhatsApp Business API Config', icon: Smartphone, link: '/api-setup', color: 'text-indigo-600 bg-indigo-50' },
-  { type: 'NAV', name: 'Message Templates', sub: 'Manage Approved Templates', icon: Layout, link: '/templates', color: 'text-purple-600 bg-purple-50' },
-  { type: 'NAV', name: 'Campaigns', sub: 'Bulk Marketing & Broadcasts', icon: Megaphone, link: '/campaigns', color: 'text-orange-600 bg-orange-50' },
-  { type: 'NAV', name: 'Inbox / Chat', sub: 'Real-time Lead Management', icon: MessageSquare, link: '/inbox', color: 'text-emerald-600 bg-emerald-50' },
-  { type: 'NAV', name: 'Tasks & CRM', sub: 'Follow-ups & Overdue Items', icon: CheckSquare, link: '/tasks', color: 'text-blue-600 bg-blue-50' },
-  { type: 'NAV', name: 'Profile Settings', sub: 'Manage Personal Information', icon: User, link: '/profile', color: 'text-teal-600 bg-teal-50' },
-  { type: 'NAV', name: 'Flow Builder', sub: 'Automation & Chatbots', icon: Zap, link: '/flows', color: 'text-yellow-600 bg-yellow-50' },
+  { type: 'NAV', name: 'System Settings', sub: 'Workspace & API configuration', icon: Settings, link: '/settings', color: 'text-slate-600 bg-slate-100' },
+  { type: 'NAV', name: 'API Credentials', sub: 'WABA & Meta developer keys', icon: Smartphone, link: '/api-setup', color: 'text-indigo-600 bg-indigo-50' },
+  { type: 'NAV', name: 'Message Templates', sub: 'Approved HSM & Utility templates', icon: Layout, link: '/templates', color: 'text-purple-600 bg-purple-50' },
+  { type: 'NAV', name: 'Campaign Studio', sub: 'Blast analytics & scheduling', icon: Megaphone, link: '/campaigns', color: 'text-orange-600 bg-orange-50' },
+  { type: 'NAV', name: 'Unified Inbox', sub: 'Real-time conversation stream', icon: MessageSquare, link: '/inbox', color: 'text-emerald-600 bg-emerald-50' },
+  { type: 'NAV', name: 'CRM & Tasks', sub: 'Workflow & lead automation', icon: CheckSquare, link: '/tasks', color: 'text-blue-600 bg-blue-50' },
 ];
 
 export default function GlobalSearch({ isOpen, onClose }) {
@@ -35,13 +34,11 @@ export default function GlobalSearch({ isOpen, onClose }) {
         const tenantId = localStorage.getItem('tenantId');
         if (!token) return;
 
-        // 1. Filter System Pages
         const navResults = SYSTEM_PAGES.filter(p => 
           p.name.toLowerCase().includes(query.toLowerCase()) || 
           p.sub.toLowerCase().includes(query.toLowerCase())
         ).map(p => ({ ...p, id: p.link }));
 
-        // Only fetch from backend if query is 2+ chars
         let backendResults = [];
         if (query.length >= 2) {
           const [contactsRes, tasksRes] = await Promise.all([
@@ -59,11 +56,12 @@ export default function GlobalSearch({ isOpen, onClose }) {
             backendResults.push(...filteredContacts.map(c => ({
               id: c._id,
               type: 'CONTACT',
-              name: c.name || 'Unknown Contact',
-              sub: c.phone || 'No phone',
+              name: c.name || 'Unknown Lead',
+              sub: c.phone || 'No phone attached',
               icon: Users,
-              color: 'text-teal-600 bg-teal-50',
-              link: `/inbox?contactId=${c._id}`
+              color: 'text-emerald-600 bg-emerald-50',
+              link: `/inbox?contactId=${c._id}`,
+              badge: 'Lead'
             })));
           }
 
@@ -78,17 +76,18 @@ export default function GlobalSearch({ isOpen, onClose }) {
               id: t._id,
               type: 'TASK',
               name: t.title,
-              sub: `Due: ${new Date(t.dueDate).toLocaleDateString()}`,
+              sub: `Deadline: ${new Date(t.dueDate).toLocaleDateString()}`,
               icon: CheckSquare,
               color: 'text-blue-600 bg-blue-50',
-              link: '/tasks'
+              link: '/tasks',
+              badge: 'CRM'
             })));
           }
         }
 
         setResults([...navResults, ...backendResults]);
       } catch (err) {
-        console.error('Search failed', err);
+        console.error('Search error', err);
       } finally {
         setLoading(false);
       }
@@ -106,96 +105,135 @@ export default function GlobalSearch({ isOpen, onClose }) {
   return (
     <>
       {isOpen && (
-        <div className="fixed inset-0 bg-white z-[300] flex flex-col animate-in fade-in duration-200">
-          <div className="p-6 border-b border-slate-100 flex items-center space-x-4 h-[calc(5rem+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] bg-white/80 backdrop-blur-md sticky top-0">
-            <div className="flex-1 relative">
-              {loading ? (
-                <Loader2 className="absolute left-4 top-1/2 -translate-y-1/2 text-teal-500 animate-spin" size={20} />
-              ) : (
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-              )}
-              <input 
-                autoFocus
-                type="text"
-                placeholder="Search leads, tasks, settings..."
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-3xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-500 transition-all shadow-inner"
-              />
-            </div>
-            <button onClick={() => { onClose(); setQuery(''); }} className="px-4 py-2 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:text-rose-500 transition-colors">
-              Cancel
-            </button>
-          </div>
-
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-            {query.length > 0 ? (
-              <>
-                <div className="flex items-center justify-between ml-1 px-1">
-                   <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Search Results</h3>
-                   {loading && <span className="text-[9px] font-bold text-teal-600 animate-pulse uppercase tracking-tighter">Syncing...</span>}
-                </div>
-                <div className="space-y-3">
-                  {results.length > 0 ? results.map((res, idx) => (
-                    <div 
-                      key={res.id || idx} 
-                      onClick={() => handleSelect(res)}
-                      className="flex items-center justify-between p-4 bg-white rounded-3xl border border-slate-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all cursor-pointer group active:scale-[0.98]"
-                    >
-                      <div className="flex items-center space-x-4">
-                        <div className={`p-3 rounded-2xl ${res.color} group-hover:scale-110 transition-transform shadow-sm`}>
-                          <res.icon size={20} />
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-slate-800 leading-tight">{res.name}</p>
-                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-0.5">{res.sub}</p>
-                        </div>
-                      </div>
-                      <ChevronRight size={18} className="text-slate-300 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
-                    </div>
-                  )) : !loading && (
-                    <div className="py-20 text-center space-y-4">
-                      <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
-                         <Search size={40} className="text-slate-200" />
-                      </div>
-                      <p className="text-xs font-black text-slate-400 uppercase tracking-widest">No matching results found</p>
-                      <p className="text-[10px] font-bold text-slate-300 uppercase tracking-tight">Try searching for "API", "Task", or a phone number</p>
-                    </div>
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-[300] flex flex-col animate-in fade-in duration-300">
+          {/* Main Search Container */}
+          <div className="mx-auto w-full max-w-2xl mt-[env(safe-area-inset-top)] sm:mt-20 h-full sm:h-auto sm:max-h-[80vh] bg-white sm:rounded-[2rem] shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom-8 duration-500">
+            
+            {/* Professional Search Header */}
+            <div className="relative p-6 border-b border-slate-100 flex items-center bg-slate-50/30">
+               <div className="absolute inset-0 bg-gradient-to-r from-teal-500/5 to-blue-500/5 opacity-50"></div>
+               <div className="relative flex-1 flex items-center space-x-4">
+                  {loading ? (
+                    <Loader2 className="text-teal-500 animate-spin" size={24} />
+                  ) : (
+                    <Search className="text-slate-400" size={24} />
                   )}
-                </div>
-              </>
-            ) : (
-              <div className="space-y-10 animate-in slide-in-from-bottom-4 duration-500">
-                 <div>
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-6 px-1">Global Navigation</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                       <div onClick={() => { navigate('/inbox'); onClose(); }} className="group p-6 bg-emerald-50/50 rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-4 cursor-pointer hover:bg-emerald-100 transition-all border border-emerald-100/30">
-                          <div className="p-4 bg-white rounded-2xl text-emerald-600 shadow-md group-hover:scale-110 transition-transform"><MessageSquare size={28} /></div>
-                          <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">Open Inbox</span>
-                       </div>
-                       <div onClick={() => { navigate('/tasks'); onClose(); }} className="group p-6 bg-blue-50/50 rounded-[2.5rem] flex flex-col items-center justify-center text-center space-y-4 cursor-pointer hover:bg-blue-100 transition-all border border-blue-100/30">
-                          <div className="p-4 bg-white rounded-2xl text-blue-600 shadow-md group-hover:scale-110 transition-transform"><CheckSquare size={28} /></div>
-                          <span className="text-[10px] font-black text-blue-800 uppercase tracking-widest">My Tasks</span>
-                       </div>
-                    </div>
-                 </div>
-                 
-                 <div>
-                    <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-4 px-1">Recently Used Modules</h3>
-                    <div className="space-y-3">
-                       {SYSTEM_PAGES.slice(0, 3).map((p, i) => (
-                         <div key={i} onClick={() => handleSelect(p)} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl hover:bg-white hover:shadow-soft transition-all cursor-pointer border border-transparent hover:border-slate-100">
-                            <div className="flex items-center space-x-3">
-                               <p.icon size={16} className="text-slate-400" />
-                               <span className="text-xs font-bold text-slate-600">{p.name}</span>
+                  <input 
+                    autoFocus
+                    type="text"
+                    placeholder="Search intelligence, leads, systems..."
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    className="flex-1 bg-transparent border-none text-lg font-bold text-slate-800 placeholder:text-slate-300 focus:ring-0"
+                  />
+               </div>
+               <button 
+                  onClick={() => { onClose(); setQuery(''); }} 
+                  className="relative p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all"
+               >
+                  <X size={20} />
+               </button>
+            </div>
+
+            {/* Content Area */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+              {query.length > 0 ? (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between px-2">
+                     <div className="flex items-center space-x-2">
+                        <Sparkles size={14} className="text-teal-500" />
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Intelligence Results</h3>
+                     </div>
+                     {loading && <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-ping"></div>}
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {results.length > 0 ? results.map((res, idx) => (
+                      <div 
+                        key={res.id || idx} 
+                        onClick={() => handleSelect(res)}
+                        className="group flex items-center justify-between p-4 bg-white hover:bg-slate-50 rounded-2xl transition-all cursor-pointer border border-transparent hover:border-slate-100 shadow-sm hover:shadow-md"
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className={`p-3 rounded-xl ${res.color} group-hover:scale-110 transition-all shadow-sm`}>
+                            <res.icon size={20} />
+                          </div>
+                          <div>
+                            <div className="flex items-center space-x-2">
+                               <p className="text-sm font-black text-slate-800 leading-tight">{res.name}</p>
+                               {res.badge && (
+                                 <span className="px-2 py-0.5 bg-slate-100 text-[8px] font-black text-slate-500 rounded-md uppercase tracking-wider">{res.badge}</span>
+                               )}
                             </div>
-                            <ChevronRight size={14} className="text-slate-300" />
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tight mt-1">{res.sub}</p>
+                          </div>
+                        </div>
+                        <ArrowUpRight size={18} className="text-slate-200 group-hover:text-teal-500 transition-all" />
+                      </div>
+                    )) : !loading && (
+                      <div className="py-20 text-center opacity-30">
+                         <Compass size={64} className="mx-auto mb-4 text-slate-300" />
+                         <p className="text-xs font-black text-slate-400 uppercase tracking-widest">No Intelligence Found</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-10">
+                   {/* Quick Shortcuts Section */}
+                   <div>
+                      <div className="flex items-center space-x-2 mb-6 px-2">
+                         <Compass size={14} className="text-teal-500" />
+                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Quick Launch</h3>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                         <div onClick={() => { navigate('/inbox'); onClose(); }} className="group p-6 bg-emerald-50/50 rounded-[2rem] border border-emerald-100/50 flex flex-col items-center justify-center text-center space-y-4 cursor-pointer hover:bg-white hover:shadow-xl hover:shadow-emerald-500/10 transition-all duration-300 active:scale-95">
+                            <div className="p-4 bg-white text-emerald-600 rounded-2xl shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                               <MessageSquare size={28} />
+                            </div>
+                            <span className="text-[10px] font-black text-emerald-800 uppercase tracking-widest">Open Workspace</span>
                          </div>
-                       ))}
-                    </div>
-                 </div>
-              </div>
-            )}
+                         
+                         <div onClick={() => { navigate('/tasks'); onClose(); }} className="group p-6 bg-blue-50/50 rounded-[2rem] border border-blue-100/50 flex flex-col items-center justify-center text-center space-y-4 cursor-pointer hover:bg-white hover:shadow-xl hover:shadow-blue-500/10 transition-all duration-300 active:scale-95">
+                            <div className="p-4 bg-white text-blue-600 rounded-2xl shadow-sm group-hover:bg-blue-600 group-hover:text-white transition-all">
+                               <CheckSquare size={28} />
+                            </div>
+                            <span className="text-[10px] font-black text-blue-800 uppercase tracking-widest">Manage Tasks</span>
+                         </div>
+                      </div>
+                   </div>
+
+                   {/* Core Modules List */}
+                   <div>
+                      <div className="flex items-center space-x-2 mb-4 px-2">
+                         <History size={14} className="text-slate-400" />
+                         <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Recent Systems</h3>
+                      </div>
+                      <div className="space-y-2">
+                         {SYSTEM_PAGES.slice(0, 4).map((p, i) => (
+                           <div key={i} onClick={() => handleSelect(p)} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl hover:bg-white hover:shadow-md transition-all cursor-pointer group active:scale-[0.98]">
+                              <div className="flex items-center space-x-4">
+                                 <div className={`p-2.5 rounded-xl bg-white shadow-sm text-slate-400 group-hover:${p.color.split(' ')[0]} transition-colors`}>
+                                    <p.icon size={18} />
+                                 </div>
+                                 <div className="flex flex-col">
+                                    <span className="text-xs font-black text-slate-700">{p.name}</span>
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{p.sub}</span>
+                                 </div>
+                              </div>
+                              <ChevronRight size={16} className="text-slate-200 group-hover:text-teal-500 transition-all" />
+                           </div>
+                         ))}
+                      </div>
+                   </div>
+                </div>
+              )}
+            </div>
+
+            {/* Professional Footer */}
+            <div className="p-4 bg-slate-50/80 border-t border-slate-100 text-center">
+               <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.2em]">Press <span className="px-1.5 py-0.5 bg-white border border-slate-200 rounded-md shadow-sm mx-1">Esc</span> to dismiss intelligence</p>
+            </div>
           </div>
         </div>
       )}

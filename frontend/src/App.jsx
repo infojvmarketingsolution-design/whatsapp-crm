@@ -1085,7 +1085,7 @@ function AppLayout() {
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">System Online</span>
              </div>
              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-                Developed by J.V group | WapiPulse v1.4.6-STABLE
+                Developed by J.V group | WapiPulse v1.4.7-STABLE
              </p>
           </div>
         )}
