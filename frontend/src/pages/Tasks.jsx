@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  CheckCircle2, PhoneCall, Calendar, Clock, AlertCircle, 
+  CheckSquare, CheckCircle2, PhoneCall, Calendar, Clock, AlertCircle, 
   Search, Filter, ChevronRight, User, Check, CalendarDays,
   MoreVertical, MoreHorizontal, ArrowUpRight, ExternalLink,
   X, Mail, MapPin, Phone, Users, Activity, Target, Tag, Save, Edit3,
