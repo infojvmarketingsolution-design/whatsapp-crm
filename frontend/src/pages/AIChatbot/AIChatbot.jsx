@@ -334,55 +334,58 @@ export default function AIChatbot() {
   );
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen">
+    <div className="p-4 sm:p-8 bg-slate-50 min-h-screen animate-fade-in-up">
       <div className="max-w-6xl mx-auto">
-        <div className="flex justify-between items-center mb-10">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 sm:mb-10">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center uppercase tracking-tight">
-              <Bot className="mr-3 text-teal-600" size={28} />
-              AI Chatbot Configuration
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center uppercase tracking-tight">
+              <Bot className="mr-3 text-blue-600" size={28} />
+              AI Chatbot <span className="hidden sm:inline ml-2">Configuration</span>
             </h1>
-            <p className="text-sm text-gray-500 mt-1 font-medium">Design your automated conversation flow in real-time.</p>
+            <p className="text-[10px] sm:text-sm text-slate-500 mt-1 font-bold uppercase tracking-widest">Real-time automation engine</p>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
              <button 
                onClick={() => setSettings({ ...settings, botEnabled: !settings.botEnabled })}
-               className={`px-4 py-2 rounded-xl flex items-center space-x-2 border transition-all cursor-pointer hover:shadow-md active:scale-95 ${settings.botEnabled ? 'bg-teal-50 border-teal-200 text-teal-700' : 'bg-gray-100 border-gray-200 text-gray-500'}`}
-               title={settings.botEnabled ? "Click to Disable Bot" : "Click to Enable Bot"}
+               className={`w-full sm:w-auto px-4 py-3 rounded-2xl flex items-center justify-center space-x-2 border transition-all active:scale-95 ${settings.botEnabled ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
              >
-                <div className={`w-2 h-2 rounded-full ${settings.botEnabled ? 'bg-teal-500 animate-pulse' : 'bg-gray-400'}`}></div>
-                <span className="text-xs font-black uppercase tracking-widest">{settings.botEnabled ? 'Bot Active' : 'Bot Disabled'}</span>
+                <div className={`w-2 h-2 rounded-full ${settings.botEnabled ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`}></div>
+                <span className="text-[10px] font-black uppercase tracking-widest">{settings.botEnabled ? 'Bot Active' : 'Bot Disabled'}</span>
              </button>
              <button 
                onClick={handleSave}
                disabled={saving}
-               className="px-8 py-3 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-700 transition shadow-lg shadow-teal-500/20 flex items-center disabled:opacity-50"
+               className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-glow flex items-center justify-center disabled:opacity-50 active:scale-95"
              >
-               {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={18} className="mr-2" />}
-               Publish Bot Changes
+               {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={16} className="mr-2" />}
+               Save Changes
              </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm p-6 mb-8 flex flex-col md:flex-row items-start md:items-center justify-between">
-           <div>
-              <h2 className="text-lg font-bold text-gray-800 tracking-tight">AI Strategy Mode</h2>
-              <p className="text-sm text-gray-500 mt-1">Choose between the fixed Education Template or your custom dragged sequences.</p>
-           </div>
-           <div className="mt-4 md:mt-0 flex flex-col md:flex-row items-center space-y-3 md:space-y-0 md:space-x-3 w-full md:w-auto">
-              <div className="flex bg-gray-100 p-1 rounded-xl w-full md:w-auto">
-                 <button 
-                   onClick={() => setSettings({ ...settings, botMode: 'PRD' })}
-                   className={`px-5 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all w-1/2 md:w-auto ${settings.botMode === 'PRD' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                 >
-                   Education Template
-                 </button>
-                 <button 
-                   onClick={() => setSettings({ ...settings, botMode: 'CUSTOM' })}
-                   className={`px-5 py-2 rounded-lg text-sm font-bold uppercase tracking-wider transition-all w-1/2 md:w-auto ${settings.botMode === 'CUSTOM' ? 'bg-white text-teal-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
-                 >
-                   Custom Flow Canvas
-                 </button>
+        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 sm:p-8 mb-8">
+           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div>
+                 <h2 className="text-lg font-black text-slate-800 tracking-tight flex items-center">
+                    <Layers className="mr-2 text-blue-500" size={20} /> AI Strategy Mode
+                 </h2>
+                 <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest leading-relaxed">Toggle between system templates or custom logic.</p>
+              </div>
+              <div className="w-full md:w-auto">
+                 <div className="flex bg-slate-50 p-1.5 rounded-2xl w-full border border-slate-100">
+                    <button 
+                      onClick={() => setSettings({ ...settings, botMode: 'PRD' })}
+                      className={`flex-1 sm:px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${settings.botMode === 'PRD' ? 'bg-white text-blue-600 shadow-soft border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      Education
+                    </button>
+                    <button 
+                      onClick={() => setSettings({ ...settings, botMode: 'CUSTOM' })}
+                      className={`flex-1 sm:px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${settings.botMode === 'CUSTOM' ? 'bg-white text-blue-600 shadow-soft border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
+                    >
+                      Custom Flow
+                    </button>
+                 </div>
               </div>
            </div>
         </div>

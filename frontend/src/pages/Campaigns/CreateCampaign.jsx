@@ -468,47 +468,49 @@ function CreateCampaign() {
                       </div>
 
                       <div className="pt-4 border-t border-gray-100">
-                        <div className="flex justify-between items-center mb-2">
-                           <label className="block text-sm font-semibold text-gray-700">Interactive Buttons</label>
+                        <div className="flex justify-between items-center mb-3">
+                           <label className="block text-sm font-black text-slate-800 uppercase tracking-widest">Interactive Buttons</label>
                            {newTemplate.buttons.length < 3 && (
                              <button type="button" onClick={() => {
                                setNewTemplate({...newTemplate, buttons: [...newTemplate.buttons, {type: 'URL', text: '', url: ''}]});
-                             }} className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-1 rounded hover:bg-blue-100">+ Add Button</button>
+                             }} className="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl hover:bg-blue-100 uppercase tracking-widest border border-blue-100">+ Add Button</button>
                            )}
                         </div>
-                        {newTemplate.buttons.map((btn, idx) => (
-                           <div key={idx} className="flex gap-2 mb-2 items-center bg-gray-50 p-2 rounded-lg border border-gray-100">
-                              <select className="px-2 py-1 border border-gray-200 rounded text-xs bg-white" value={btn.type} onChange={e => {
-                                 const btns = [...newTemplate.buttons]; btns[idx].type = e.target.value; btns[idx].url = ''; btns[idx].phoneNumber = ''; setNewTemplate({...newTemplate, buttons: btns});
-                              }}>
-                                 <option value="URL">Visit Website</option>
-                                 <option value="PHONE_NUMBER">Call Phone</option>
-                                 <option value="QUICK_REPLY">Quick Reply</option>
-                              </select>
-                              <div className="flex-1 relative">
-                                <input type="text" className={`w-full px-2 py-1.5 border rounded text-xs ${btn.text.length > 25 ? 'border-red-500 bg-red-50' : 'border-gray-200'}`} placeholder="Button Text" value={btn.text} onChange={e => {
-                                   const btns = [...newTemplate.buttons]; btns[idx].text = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
-                                }} maxLength={50} />
-                                <span className={`absolute right-1 -bottom-3 text-[8px] font-bold ${btn.text.length > 25 ? 'text-red-500' : 'text-gray-400'}`}>{btn.text.length}/25</span>
-                              </div>
-                              
-                              {btn.type === 'URL' && <input type="text" className="flex-[1.5] px-2 py-1.5 border border-gray-200 rounded text-xs" placeholder="https://..." value={btn.url} onChange={e => {
-                                 const btns = [...newTemplate.buttons]; btns[idx].url = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
-                              }} />}
-                              {btn.type === 'PHONE_NUMBER' && <input type="text" className="flex-[1.5] px-2 py-1.5 border border-gray-200 rounded text-xs" placeholder="+12345678" value={btn.phoneNumber} onChange={e => {
-                                 const btns = [...newTemplate.buttons]; btns[idx].phoneNumber = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
-                              }} />}
-                              
-                              <button type="button" onClick={() => {
-                                 const btns = newTemplate.buttons.filter((_, i) => i !== idx); setNewTemplate({...newTemplate, buttons: btns});
-                              }} className="text-gray-400 hover:text-red-500 font-bold px-2 rounded transition-colors">×</button>
-                           </div>
-                        ))}
+                        <div className="space-y-3">
+                          {newTemplate.buttons.map((btn, idx) => (
+                             <div key={idx} className="flex flex-col sm:flex-row gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 relative group animate-fade-in-up">
+                                <select className="w-full sm:w-auto px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white outline-none focus:ring-4 focus:ring-blue-100" value={btn.type} onChange={e => {
+                                   const btns = [...newTemplate.buttons]; btns[idx].type = e.target.value; btns[idx].url = ''; btns[idx].phoneNumber = ''; setNewTemplate({...newTemplate, buttons: btns});
+                                }}>
+                                   <option value="URL">Visit Website</option>
+                                   <option value="PHONE_NUMBER">Call Phone</option>
+                                   <option value="QUICK_REPLY">Quick Reply</option>
+                                </select>
+                                <div className="flex-1 relative">
+                                  <input type="text" className={`w-full px-3 py-2 border rounded-xl text-xs font-bold ${btn.text.length > 25 ? 'border-red-500 bg-red-50' : 'border-slate-200'} outline-none focus:ring-4 focus:ring-blue-100`} placeholder="Button Label" value={btn.text} onChange={e => {
+                                     const btns = [...newTemplate.buttons]; btns[idx].text = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
+                                  }} maxLength={50} />
+                                  <span className={`absolute right-3 -bottom-4 text-[8px] font-black uppercase tracking-tighter ${btn.text.length > 25 ? 'text-red-500' : 'text-slate-400'}`}>{btn.text.length}/25</span>
+                                </div>
+                                
+                                {btn.type === 'URL' && <input type="text" className="w-full sm:flex-[1.5] px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-4 focus:ring-blue-100 bg-white" placeholder="https://..." value={btn.url} onChange={e => {
+                                   const btns = [...newTemplate.buttons]; btns[idx].url = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
+                                }} />}
+                                {btn.type === 'PHONE_NUMBER' && <input type="text" className="w-full sm:flex-[1.5] px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-4 focus:ring-blue-100 bg-white" placeholder="+12345678" value={btn.phoneNumber} onChange={e => {
+                                   const btns = [...newTemplate.buttons]; btns[idx].phoneNumber = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
+                                }} />}
+                                
+                                <button type="button" onClick={() => {
+                                   const btns = newTemplate.buttons.filter((_, i) => i !== idx); setNewTemplate({...newTemplate, buttons: btns});
+                                }} className="absolute -top-2 -right-2 w-6 h-6 bg-white border border-slate-200 text-slate-400 hover:text-red-500 font-bold rounded-full transition-all shadow-sm flex items-center justify-center">×</button>
+                             </div>
+                          ))}
+                        </div>
                       </div>
 
-                      <div className="flex justify-end space-x-3 mt-4 pt-4 border-t border-gray-100">
-                         <button onClick={() => setIsCreatingTemplate(false)} className="px-5 py-2 text-sm font-bold text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">Cancel</button>
-                         <button onClick={handleCreateTemplate} disabled={!newTemplate.name || !newTemplate.bodyText || loading} className="px-5 py-2 text-sm font-bold bg-[var(--theme-bg)] text-white rounded-lg hover:bg-teal-900 disabled:opacity-50 transition-colors shadow-sm flex items-center">
+                      <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6 pt-6 border-t border-gray-100">
+                         <button onClick={() => setIsCreatingTemplate(false)} className="w-full sm:w-auto px-6 py-3 text-xs font-black text-slate-500 hover:bg-slate-100 rounded-xl transition-all uppercase tracking-widest order-2 sm:order-1">Cancel</button>
+                         <button onClick={handleCreateTemplate} disabled={!newTemplate.name || !newTemplate.bodyText || loading} className="w-full sm:w-auto px-8 py-3 text-xs font-black bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-all shadow-glow flex items-center justify-center uppercase tracking-widest order-1 sm:order-2">
                             {loading ? <span className="animate-pulse">Submitting...</span> : 'Submit to Meta'}
                          </button>
                       </div>
