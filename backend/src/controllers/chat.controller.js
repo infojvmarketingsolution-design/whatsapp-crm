@@ -305,15 +305,26 @@ const performContactAction = async (req, res) => {
           }
 
           // 3. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
-           // Securely merge payload into existing contact
-           const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline'];
-           Object.keys(payload).forEach(key => {
-              if (!protectedFields.includes(key)) {
-                 contact[key] = payload[key];
-              }
-           });
-           const updatedContact = await contact.save();
-           return res.json({ message: 'Contact updated', contact: updatedContact });
+            // Securely merge payload into existing contact
+            const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline'];
+            console.log("[UpdateContact] Incoming Payload Keys:", Object.keys(payload));
+            
+            Object.keys(payload).forEach(key => {
+               if (!protectedFields.includes(key)) {
+                  console.log(`[UpdateContact] Setting ${key} to:`, payload[key]);
+                  contact[key] = payload[key];
+               }
+            });
+
+            const updatedContact = await contact.save();
+            console.log("[UpdateContact] Save Successful. Saved Fields:", {
+               secondaryPhone: updatedContact.secondaryPhone,
+               altMobile: updatedContact.altMobile,
+               houseNo: updatedContact.houseNo,
+               societyName: updatedContact.societyName
+            });
+
+            return res.json({ message: 'Contact updated', contact: updatedContact });
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
