@@ -62,37 +62,37 @@ function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction
   return (
     <div 
       onClick={isClickable ? onClick : undefined}
-      className={`bg-crm-card p-5 rounded-lg shadow-sm border border-crm-border flex flex-col transition-all duration-300 group relative ${isClickable ? 'cursor-pointer hover:shadow-premium hover:border-blue-300 hover:-translate-y-1' : 'hover:shadow-soft'}`}
+      className={`bg-crm-card p-3 sm:p-5 rounded-xl shadow-sm border border-crm-border flex flex-col transition-all duration-300 group relative ${isClickable ? 'cursor-pointer hover:shadow-premium hover:border-blue-300 hover:-translate-y-1' : 'hover:shadow-soft'}`}
     >
-      <div className="flex justify-between items-start mb-2">
-        <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase">{title}</h3>
-        <div className="flex items-center space-x-2">
+      <div className="flex justify-between items-start mb-1 sm:mb-2">
+        <h3 className="text-[9px] sm:text-xs font-semibold text-gray-400 tracking-wider uppercase truncate pr-2">{title}</h3>
+        <div className="flex items-center space-x-1 sm:space-x-2">
            {onAction && (
              <button 
                onClick={(e) => { e.stopPropagation(); onAction(); }}
-               className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black uppercase flex items-center shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white"
+               className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[8px] sm:text-[10px] font-black uppercase flex items-center shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white"
              >
-               <Plus size={10} className="mr-1" /> {actionLabel}
+               <Plus size={8} className="sm:mr-1" /> <span className="hidden sm:inline">{actionLabel}</span>
              </button>
            )}
            {Icon && (
-             <div className={`p-2 rounded-full text-white ${isClickable ? 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-glow' : 'bg-blue-500'}`}>
-                <Icon size={16} />
+             <div className={`p-1.5 sm:p-2 rounded-full text-white ${isClickable ? 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-glow' : 'bg-blue-500'}`}>
+                <Icon size={12} className="sm:w-4 sm:h-4" />
              </div>
            )}
         </div>
       </div>
-      <div className="mb-2">
+      <div className="mb-1 sm:mb-2">
         {greenBadge ? (
-          <span className="px-3 py-1 bg-brand-light text-white text-xs font-medium rounded-md">{greenBadge}</span>
+          <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-brand-light text-white text-[10px] sm:text-xs font-medium rounded-md">{greenBadge}</span>
         ) : (
-          <span className="text-xl font-bold text-gray-800">{value}</span>
+          <span className="text-lg sm:text-xl font-bold text-gray-800">{value}</span>
         )}
       </div>
       <div className="flex justify-between items-end">
-        <p className="text-xs text-gray-500 font-medium">{subtext}</p>
+        <p className="text-[9px] sm:text-xs text-gray-500 font-medium truncate pr-1">{subtext}</p>
         {isClickable && (
-          <div className="text-[10px] text-blue-500 font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="text-[8px] sm:text-[10px] text-blue-500 font-black uppercase tracking-tighter opacity-0 sm:opacity-0 group-hover:opacity-100 transition-opacity">
             Details →
           </div>
         )}
@@ -313,7 +313,7 @@ function Dashboard() {
         </div>
       </div>
 
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Welcome back, <span className="capitalize">{userName}</span> 👋</h2>
+      <h2 className="text-lg sm:text-2xl font-bold text-gray-800 mb-4">Welcome back, <span className="capitalize">{userName}</span> 👋</h2>
 
       <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">
         {isAdminOrSuperAdmin && (
@@ -342,7 +342,7 @@ function Dashboard() {
       </div>
 
       {isAdminOrSuperAdmin && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
           <div className="bg-crm-card p-5 rounded-lg shadow-soft border-l-4 border-[var(--theme-border)] flex flex-col justify-center lg:col-span-2">
              <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-3">WhatsApp Business API Status</h3>
              <div>
@@ -367,7 +367,7 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
         {isAdminOrSuperAdmin && (
           <>
             <DashboardCard title="Campaigns" value={loading && stats.campaigns === 0 ? "..." : stats.campaigns} subtext={stats.campaigns > 0 ? stats.recentCampaign : "No active campaigns"} icon={Megaphone} />
@@ -392,7 +392,7 @@ function Dashboard() {
               <h3 className="text-sm font-black text-slate-700 tracking-widest uppercase">Lead Lifecycle & Revenue</h3>
               <span className="text-[10px] bg-teal-100 text-teal-600 px-2 py-0.5 rounded-full font-bold animate-pulse">Live Stats</span>
            </div>
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
               <DashboardCard 
                 isClickable={true}
                 onClick={() => fetchLeadDetails('new_leads', 'New Leads')}
@@ -449,7 +449,7 @@ function Dashboard() {
               <h3 className="text-sm font-black text-slate-700 tracking-widest uppercase">Lead & Revenue Performance</h3>
               <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold animate-pulse">Live Stats</span>
            </div>
-           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 mb-8">
               <DashboardCard 
                 isClickable={true} 
                 onClick={() => fetchUserBreakdown('new_leads', 'New Leads')}
@@ -511,7 +511,7 @@ function Dashboard() {
       )}
 
       {isAdminOrSuperAdmin && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <DashboardCard title="Reply Bots" value={loading && !wabaConfig ? "..." : "0"} subtext="0 Messages sent" icon={Bot} />
           <DashboardCard 
              title="Ad Budget Credit" 
@@ -1072,7 +1072,7 @@ function AppLayout() {
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">System Online</span>
              </div>
              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-                Developed by J.V group | WapiPulse v1.3.9-STABLE
+                Developed by J.V group | WapiPulse v1.4.0-STABLE
              </p>
           </div>
         )}
