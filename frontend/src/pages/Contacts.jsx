@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { 
-  Search, Plus, X, Mail, MapPin, Phone, Users, 
+  Search, Plus, X, Mail, MapPin, Phone, Users, User,
   Clock, Activity, Target, Tag, Save, Filter, 
   Briefcase, Building2, Download, MoreVertical, 
-  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones, ChevronDown, UserCircle, RefreshCw, Sparkles, Edit3
+  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones, ChevronDown, UserCircle, RefreshCw, Sparkles, Edit3,
+  Award, CheckCircle, Video, Home, School, Map, GraduationCap, Star
 } from 'lucide-react';
 
 export default function Contacts({ roleAccess }) {
@@ -168,7 +169,6 @@ export default function Contacts({ roleAccess }) {
     }
   }, []);
 
-  // Intelligence Filter Engine (V2)
   // Intelligence Filter Engine (V3) - Simplified for Maximum Visibility
   const filteredContacts = contacts.filter(contact => {
     // 1. Search Term (Phone or Name)
@@ -808,7 +808,7 @@ export default function Contacts({ roleAccess }) {
                                       {c.firstName && c.lastName ? `${c.firstName} ${c.lastName}` : (c.name || 'Unknown User')}
                                    </p>
                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{c.phone}</p>
-                                </div>
+                                 </div>
                              </div>
                           </td>
                           <td className="py-5 px-6 border-b border-gray-50">
@@ -835,7 +835,7 @@ export default function Contacts({ roleAccess }) {
           </div>
       </div>
 
-{showProfile && selectedContact && editedContact && (
+      {showProfile && selectedContact && editedContact && (
           <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setShowProfile(false)}>
             <div 
               className="w-drawer h-full bg-white shadow-3xl flex flex-col animate-slide-left relative overflow-hidden"
@@ -1017,232 +1017,219 @@ export default function Contacts({ roleAccess }) {
                         </div>
                      </div>
 
-                     {/* STEP 2: QUALIFICATION */}
-                     <div className="space-y-6">
-                        <div className="flex items-center space-x-3">
-                           <div className="w-6 h-6 rounded-full bg-slate-800 text-white text-[10px] flex items-center justify-center font-bold">2</div>
-                           <h3 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest">Qualification</h3>
-                        </div>
-                        
-                        <div className="space-y-4 pl-9">
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Last Qualification</label>
-                              <input value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="e.g. 12th, Graduate" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
+                     {/* STEP 2: QUALIFICATION DETAILS */}
+                     <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in delay-100">
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 rounded-2xl bg-teal-500 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-teal-500/20">02</div>
+                              <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Qualification Details</h3>
                            </div>
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Interested Program</label>
-                              <input value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} placeholder="Target Course" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
+                           <GraduationCap size={18} className="text-slate-200" />
+                        </div>
+
+                        <div className="space-y-6">
+                           <div className="space-y-2">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Last Qualification</label>
+                              <div className="relative group">
+                                 <input value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="e.g. Bachelor of Commerce" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
+                              </div>
+                           </div>
+                           <div className="space-y-2">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Selected Program</label>
+                              <div className="relative group">
+                                 <select value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
+                                    <option value="">Choose Program</option>
+                                    {['MBA Professional', 'Executive PGDM', 'Digital Marketing', 'Data Science', 'UI/UX Design'].map(p => <option key={p} value={p}>{p}</option>)}
+                                 </select>
+                                 <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                              </div>
                            </div>
                         </div>
                      </div>
-                     
-                     {/* STEP 3: VISIT & ADMISSION */}
-                     <div className="space-y-6 pb-10">
-                        <div className="flex items-center space-x-3">
-                           <div className="w-6 h-6 rounded-full bg-slate-800 text-white text-[10px] flex items-center justify-center font-bold">3</div>
-                           <h3 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest text-red-600">Visit & Admission</h3>
+
+                     {/* STEP 3: VISIT FORMAT */}
+                     <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in delay-200">
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 rounded-2xl bg-indigo-500 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-indigo-500/20">03</div>
+                              <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Visit Format</h3>
+                           </div>
+                           <Map size={18} className="text-slate-200" />
                         </div>
-                        
-                        <div className="space-y-6 pl-9">
-                           {/* VISIT STATUS (FIRST) */}
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Visit Conducted?</label>
-                              <div className="grid grid-cols-2 gap-2">
-                                 {['Not Done', 'Done'].map(v => (
-                                    <button key={v} onClick={() => handleFieldChange('visitStatus', v)} className={`py-2.5 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitStatus === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}>{v === 'Done' ? 'follow up update' : v}</button>
-                                 ))}
+
+                        <div className="grid grid-cols-2 gap-4">
+                           <button 
+                              onClick={() => handleFieldChange('visitStatus', editedContact.visitStatus === 'Done' ? 'Not Done' : 'Done')}
+                              className={`p-5 rounded-3xl border-2 transition-all flex flex-col items-center justify-center space-y-3 ${
+                                 editedContact.visitStatus === 'Done' 
+                                 ? 'bg-emerald-50 border-emerald-500 text-emerald-600 shadow-lg shadow-emerald-500/10' 
+                                 : 'bg-slate-50 border-transparent text-slate-400 hover:bg-white hover:border-slate-200'
+                              }`}
+                           >
+                              <CheckCircle size={20} />
+                              <span className="text-[10px] font-black uppercase tracking-widest">{editedContact.visitStatus === 'Done' ? 'Visit Done' : 'Mark Done'}</span>
+                           </button>
+
+                           <div className="relative group">
+                              <select 
+                                 value={editedContact.visitType || ''} 
+                                 onChange={e=>handleFieldChange('visitType', e.target.value)} 
+                                 className="w-full h-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-[10px] font-black uppercase tracking-widest text-slate-700 rounded-3xl outline-none focus:bg-white focus:border-indigo-500/20 transition-all appearance-none text-center"
+                              >
+                                 <option value="">Format</option>
+                                 <option value="Online">Online</option>
+                                 <option value="Office Visit">Office</option>
+                                 <option value="Campus Visit">Campus</option>
+                              </select>
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* STEP 4: COUNSELLING STATUS */}
+                     <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in delay-300">
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-amber-500/20">04</div>
+                              <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Counselling Status</h3>
+                           </div>
+                           <Award size={18} className="text-slate-200" />
+                        </div>
+
+                        <div className="space-y-6">
+                           <div className="space-y-2">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned Counsellor</label>
+                              <div className="relative group">
+                                 <select 
+                                    value={editedContact.assignedCounsellor || ''} 
+                                    onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} 
+                                    className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-amber-500/20 transition-all appearance-none pr-10"
+                                 >
+                                    <option value="">Assign Expert...</option>
+                                    {agents.filter(a => a.role === 'MANAGER_COUNSELLOUR').map(a => (
+                                       <option key={a._id} value={a._id}>{a.name}</option>
+                                    ))}
+                                 </select>
+                                 <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                               </div>
                            </div>
-
-                           {/* VISIT TYPE (VISIBLE IF DONE) */}
-                           {editedContact.visitStatus === 'Done' && (
-                              <div className="space-y-1.5 animate-fade-in">
-                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Select Visit Type</label>
-                                 <div className="grid grid-cols-2 gap-2">
-                                    {['University Visit', 'Campus Visit'].map(v => (
-                                       <button key={v} onClick={() => handleFieldChange('visitType', v)} className={`py-2.5 rounded text-[9px] font-bold uppercase border transition-all ${editedContact.visitType === v ? 'bg-slate-800 text-white border-slate-800' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}>{v}</button>
-                                    ))}
-                                 </div>
-                              </div>
-                           )}
-
-                           {/* COUNSELLOR & ADMISSION (VISIBLE IF TYPE SELECTED) */}
-                           {editedContact.visitStatus === 'Done' && editedContact.visitType && (
-                              <div className="space-y-6 animate-fade-in pt-2">
-                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Transfer Lead to</label>
-                                    <select value={editedContact.assignedCounsellor || ''} onChange={e=>handleFieldChange('assignedCounsellor', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded outline-none focus:border-slate-400">
-                                       <option value="">Select Target...</option>
-                                       {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
-                                    </select>
-                                 </div>
-
-                                 <div className="space-y-1.5">
-                                    <label className="text-[9px] font-bold text-slate-400 uppercase">Admission Verdict</label>
-                                    <div className="flex flex-col gap-2">
-                                       {/* ADMISSION VERDICT */}
-                                       <div className="flex bg-slate-50 p-1 rounded-lg border border-slate-200">
-                                          {[
-                                             { id: 'CLOSED_WON', label: 'follow up update', color: 'green' },
-                                             { id: 'PENDING', label: 'Pending', color: 'slate' },
-                                             { id: 'CLOSED_LOST', label: 'Canceled', color: 'red' }
-                                          ].map(s => (
-                                             <button 
-                                                key={s.id}
-                                                onClick={() => handleFieldChange('status', s.id)}
-                                                className={`flex-1 py-2 text-[9px] font-bold uppercase tracking-widest rounded transition-all ${
-                                                   editedContact.status === s.id 
-                                                   ? `bg-${s.color === 'green' ? 'emerald-500' : s.color === 'red' ? 'red-500' : 'slate-800'} text-white shadow-sm` 
-                                                   : 'text-slate-400 hover:text-slate-600'
-                                                }`}
-                                             >
-                                                {s.label}
-                                             </button>
-                                          ))}
-                                       </div>
-
-                                       {/* CLOSE REASON - SHOW ONLY IF CANCELED */}
-                                       {editedContact.status === 'CLOSED_LOST' && (
-                                          <div className="animate-fade-in space-y-2 mt-2">
-                                             <label className="text-[9px] font-bold text-red-500 uppercase tracking-widest">Why was this Admission Canceled?</label>
-                                             <select 
-                                                value={editedContact.closeReason || ''} 
-                                                onChange={e => handleFieldChange('closeReason', e.target.value)}
-                                                className="w-full bg-white border border-red-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-red-400"
-                                             >
-                                                <option value="">-- Choose Reason --</option>
-                                                <option value="Admission Done">Admission follow up update Elsewhere</option>
-                                                <option value="Not Interested">Not Interested</option>
-                                                <option value="Fees Too High">Fees Too High</option>
-                                                <option value="Distance Issue">Distance Issue</option>
-                                                <option value="Course Not Available">Course Not Available</option>
-                                                <option value="Family Issues">Family Issues</option>
-                                                <option value="Other">Other Reason</option>
-                                             </select>
-                                          </div>
-                                       )}
-                                    </div>
-                                 </div>
-                              </div>
-                           )}
                         </div>
                      </div>
                   </div>
 
-                 {/* RIGHT PANEL: INTERACTION HUB */}
-                 <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
-                      <div className="flex items-center space-x-1 p-2 shrink-0 bg-slate-50/50 border-b border-slate-100">
-                         {['timeline', 'chat history', 'strategic notes'].map((tab) => (
-                            <button
-                               key={tab}
-                               onClick={() => setActiveTab(tab)}
-                               className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${
-                                  activeTab === tab 
-                                  ? 'bg-white text-slate-900 shadow-premium scale-[1.02] z-10' 
-                                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
-                               }`}
-                            >
-                               {tab}
-                            </button>
-                         ))}
-                      </div>
+                  {/* RIGHT PANEL: INTERACTION HUB */}
+                  <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
+                       <div className="flex items-center space-x-1 p-2 shrink-0 bg-slate-50/50 border-b border-slate-100">
+                          {['timeline', 'chat history', 'strategic notes'].map((tab) => (
+                             <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${
+                                   activeTab === tab 
+                                   ? 'bg-white text-slate-900 shadow-premium scale-[1.02] z-10' 
+                                   : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                                }`}
+                             >
+                                {tab}
+                             </button>
+                          ))}
+                       </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-resp">
-                       {activeTab === 'timeline' && (
-                          <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100">
-                              {(selectedContact.timeline || []).filter(e => !e.description.includes('Contact details updated')).slice().reverse().map((event, idx) => (
-                                 <div key={idx} className="relative pl-8">
-                                    <div className="absolute left-0 top-1 w-[22px] h-[22px] rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center z-10 text-slate-400">
-                                       <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
-                                    </div>
-                                    <div className="pb-4">
-                                       <div className="flex justify-between items-center">
-                                          <div className="flex flex-col">
-                                           <p className="text-sm font-medium text-slate-700">{event.description.split(' - ')[0]}</p>
-                                           {event.description?.includes(' - ') && (
-                                              <p className="text-[11px] text-slate-500 font-bold mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 italic leading-relaxed">
-                                                 {event.description.split(' - ').slice(1).join(' - ')}
-                                              </p>
-                                           )}
+                     <div className="flex-1 overflow-y-auto custom-scrollbar p-resp">
+                        {activeTab === 'timeline' && (
+                           <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100">
+                               {(selectedContact.timeline || []).filter(e => !e.description.includes('Contact details updated')).slice().reverse().map((event, idx) => (
+                                  <div key={idx} className="relative pl-8">
+                                     <div className="absolute left-0 top-1 w-[22px] h-[22px] rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center z-10 text-slate-400">
+                                        <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
+                                     </div>
+                                     <div className="pb-4">
+                                        <div className="flex justify-between items-center">
+                                           <div className="flex flex-col">
+                                            <p className="text-sm font-medium text-slate-700">{event.description.split(' - ')[0]}</p>
+                                            {event.description?.includes(' - ') && (
+                                               <p className="text-[11px] text-slate-500 font-bold mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 italic leading-relaxed">
+                                                  {event.description.split(' - ').slice(1).join(' - ')}
+                                               </p>
+                                            )}
+                                         </div>
+                                           <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider">{event.eventType}</span>
                                         </div>
-                                          <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider">{event.eventType}</span>
+                                        <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(event.timestamp)}</p>
+                                     </div>
+                                  </div>
+                               ))}
+                           </div>
+                        )}
+
+                        {activeTab === 'chat history' && (
+                           <div className="space-y-6">
+                              {recentMessages.length === 0 ? (
+                                 <div className="py-20 text-center text-slate-300 text-xs uppercase tracking-widest">No communication history</div>
+                              ) : recentMessages.map((msg, idx) => (
+                                 <div key={idx} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
+                                    <div className={`max-w-[85%] p-5 rounded-[2rem] shadow-premium relative group transition-all hover:shadow-lg ${
+                                       msg.direction === 'OUTBOUND' 
+                                       ? 'bg-slate-900 text-white ml-auto rounded-tr-none border border-slate-800' 
+                                       : 'bg-slate-50 text-slate-800 rounded-tl-none border border-slate-100'
+                                    }`}>
+                                       <div className={`text-sm font-medium leading-relaxed mb-3 ${msg.direction === 'OUTBOUND' ? 'text-slate-100' : 'text-slate-700'}`}>
+                                          {msg.content}
                                        </div>
-                                       <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(event.timestamp)}</p>
+                                       <div className={`flex items-center justify-between text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity ${msg.direction === 'OUTBOUND' ? 'text-white' : 'text-slate-400'}`}>
+                                          <span>{new Date(msg.createdAt).toLocaleDateString()}</span>
+                                          <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                       </div>
                                     </div>
                                  </div>
                               ))}
-                          </div>
-                       )}
+                           </div>
+                        )}
 
-                       {activeTab === 'chat history' && (
-                          <div className="space-y-6">
-                             {recentMessages.length === 0 ? (
-                                <div className="py-20 text-center text-slate-300 text-xs uppercase tracking-widest">No communication history</div>
-                             ) : recentMessages.map((msg, idx) => (
-                                <div key={idx} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
-                                   <div className={`max-w-[85%] p-5 rounded-[2rem] shadow-premium relative group transition-all hover:shadow-lg ${
-                                      msg.direction === 'OUTBOUND' 
-                                      ? 'bg-slate-900 text-white ml-auto rounded-tr-none border border-slate-800' 
-                                      : 'bg-slate-50 text-slate-800 rounded-tl-none border border-slate-100'
-                                   }`}>
-                                      <div className={`text-sm font-medium leading-relaxed mb-3 ${msg.direction === 'OUTBOUND' ? 'text-slate-100' : 'text-slate-700'}`}>
-                                         {msg.content}
-                                      </div>
-                                      <div className={`flex items-center justify-between text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity ${msg.direction === 'OUTBOUND' ? 'text-white' : 'text-slate-400'}`}>
-                                         <span>{new Date(msg.createdAt).toLocaleDateString()}</span>
-                                         <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                      </div>
-                                   </div>
-                                </div>
-                             ))}
-                          </div>
-                       )}
+                        {activeTab === 'strategic notes' && (
+                           <div className="space-y-8 animate-fade-in">
+                              <div className="space-y-8">
+                                 <div className="flex items-center justify-between px-2">
+                                    <div className="flex items-center space-x-3">
+                                       <div className="w-10 h-10 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center">
+                                          <Edit3 size={18} />
+                                       </div>
+                                       <div>
+                                          <h4 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Activity Journal</h4>
+                                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Strategic Notes & Observations</p>
+                                       </div>
+                                    </div>
+                                    <button 
+                                       onClick={() => addInternalNote(selectedContact._id)}
+                                       disabled={isAddingNote || !noteInput.trim()}
+                                       className="px-5 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-slate-900/10 active:scale-95 transition-all disabled:opacity-30"
+                                    >
+                                       {isAddingNote ? <RefreshCw size={12} className="animate-spin" /> : 'Save Entry'}
+                                    </button>
+                                 </div>
 
-                       {activeTab === 'strategic notes' && (
-                          <div className="space-y-8 animate-fade-in">
-                             <div className="space-y-8">
-                                <div className="flex items-center justify-between px-2">
-                                   <div className="flex items-center space-x-3">
-                                      <div className="w-10 h-10 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center">
-                                         <Edit3 size={18} />
-                                      </div>
-                                      <div>
-                                         <h4 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Activity Journal</h4>
-                                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Strategic Notes & Observations</p>
-                                      </div>
-                                   </div>
-                                   <button 
-                                      onClick={() => addInternalNote(selectedContact._id)}
-                                      disabled={isAddingNote || !noteInput.trim()}
-                                      className="px-5 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-slate-900/10 active:scale-95 transition-all disabled:opacity-30"
-                                   >
-                                      {isAddingNote ? <RefreshCw size={12} className="animate-spin" /> : 'Save Entry'}
-                                   </button>
-                                </div>
+                                 <div className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100 shadow-inner group focus-within:bg-white focus-within:shadow-premium transition-all">
+                                    <textarea
+                                       value={noteInput}
+                                       onChange={e => setNoteInput(e.target.value)}
+                                       placeholder="Document interaction insights, follow-up strategies, and key lead observations..."
+                                       className="w-full h-80 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-300 outline-none resize-none leading-loose"
+                                    />
+                                 </div>
+                              </div>
 
-                                <div className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100 shadow-inner group focus-within:bg-white focus-within:shadow-premium transition-all">
-                                   <textarea
-                                      value={noteInput}
-                                      onChange={e => setNoteInput(e.target.value)}
-                                      placeholder="Document interaction insights, follow-up strategies, and key lead observations..."
-                                      className="w-full h-80 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-300 outline-none resize-none leading-loose"
-                                   />
-                                </div>
-                             </div>
-
-                             <div className="space-y-4">
-                                {(selectedContact.notes || []).slice().reverse().map((note, idx) => (
-                                   <div key={idx} className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-premium transition-all hover:scale-[1.01]">
-                                      <p className="text-sm font-medium text-slate-700 leading-relaxed">{note.content}</p>
-                                      <div className="flex items-center justify-between text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4 pt-4 border-t border-slate-50">
-                                         <span className="flex items-center"><User size={10} className="mr-1" /> {note.createdBy}</span>
-                                         <span className="flex items-center"><Clock size={10} className="mr-1" /> {formatDateTime(note.createdAt)}</span>
-                                      </div>
-                                   </div>
-                                ))}
-                             </div>
-                          </div>
-                       )}
+                              <div className="space-y-4">
+                                 {(selectedContact.notes || []).slice().reverse().map((note, idx) => (
+                                    <div key={idx} className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-premium transition-all hover:scale-[1.01]">
+                                       <p className="text-sm font-medium text-slate-700 leading-relaxed">{note.content}</p>
+                                       <div className="flex items-center justify-between text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4 pt-4 border-t border-slate-50">
+                                          <span className="flex items-center"><UserCircle size={10} className="mr-1" /> {note.createdBy}</span>
+                                          <span className="flex items-center"><Clock size={10} className="mr-1" /> {formatDateTime(note.createdAt)}</span>
+                                       </div>
+                                    </div>
+                                 ))}
+                              </div>
+                           </div>
+                        )}
                      </div>
                   </div>
                </div>

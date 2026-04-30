@@ -6,7 +6,8 @@ import {
   X, Mail, MapPin, Phone, Users, Activity, Target, Tag, Save, Edit3,
   Briefcase, Building2, Download, Flame, Sun, Snowflake, Send, 
   ShieldCheck, History, TrendingUp, Globe, Smartphone, Bell, 
-  Landmark, Hash, Wallet, Video, Home, School, Plus, Sparkles, RefreshCw
+  Landmark, Hash, Wallet, Video, Home, School, Plus, Sparkles, RefreshCw,
+  ChevronDown, Award, CheckCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
