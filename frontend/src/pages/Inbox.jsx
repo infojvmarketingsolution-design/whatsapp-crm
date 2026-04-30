@@ -1240,7 +1240,84 @@ export default function Inbox({ roleAccess }) {
              )}
          </div>
 
-         {/* AI Lead Intelligence Block */}
+         
+          {/* Identity Records (Address, Secondary WhatsApp) */}
+                    <div className="px-6 py-2">
+            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 shadow-sm relative overflow-hidden group border-l-4 border-l-teal-500">
+              <div className="absolute top-0 right-0 p-1 bg-teal-50 rounded-bl-lg">
+                <ShieldCheck size={12} className="text-teal-600" />
+              </div>
+              <h3 className="text-[10px] font-black text-teal-800 mb-4 tracking-[0.2em] uppercase flex items-center">
+                Identity Records
+              </h3>
+              
+              <div className="space-y-4">
+                {/* Secondary WhatsApp */}
+                <div>
+                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Secondary WhatsApp</label>
+                   <input 
+                      type="tel" 
+                      defaultValue={activeChat?.secondaryPhone || ''} 
+                      onBlur={(e) => handleAction('update_contact', { secondaryPhone: e.target.value })}
+                      placeholder="+91..."
+                      className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm"
+                   />
+                </div>
+
+                {/* Alternative Mobile */}
+                <div>
+                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Alternative Mobile</label>
+                   <input 
+                      type="tel" 
+                      defaultValue={activeChat?.altMobile || ''} 
+                      onBlur={(e) => handleAction('update_contact', { altMobile: e.target.value })}
+                      placeholder="Alternative mobile..."
+                      className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm"
+                   />
+                </div>
+
+                {/* Address Fields */}
+                <div className="pt-2 border-t border-slate-200/50">
+                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">House No & Society</label>
+                   <div className="flex space-x-2 mb-2">
+                      <input 
+                         placeholder="House No"
+                         defaultValue={activeChat?.houseNo || ''} 
+                         onBlur={(e) => handleAction('update_contact', { houseNo: e.target.value })}
+                         className="w-1/3 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm"
+                      />
+                      <input 
+                         placeholder="Society Name"
+                         defaultValue={activeChat?.societyName || ''} 
+                         onBlur={(e) => handleAction('update_contact', { societyName: e.target.value })}
+                         className="w-2/3 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm"
+                      />
+                   </div>
+                   <input 
+                      placeholder="Street Address"
+                      defaultValue={activeChat?.streetAddress || ''} 
+                      onBlur={(e) => handleAction('update_contact', { streetAddress: e.target.value })}
+                      className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm mb-2"
+                   />
+                   <div className="flex space-x-2">
+                      <input 
+                         placeholder="City"
+                         defaultValue={activeChat?.city || ''} 
+                         onBlur={(e) => handleAction('update_contact', { city: e.target.value })}
+                         className="w-1/2 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm"
+                      />
+                      <input 
+                         placeholder="Pincode"
+                         defaultValue={activeChat?.pincode || ''} 
+                         onBlur={(e) => handleAction('update_contact', { pincode: e.target.value })}
+                         className="w-1/2 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm"
+                      />
+                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* AI Lead Intelligence Block */}
          <div className="px-6 py-2 pb-3">
              {/* AI Summary Action */}
              {!aiSummary ? (

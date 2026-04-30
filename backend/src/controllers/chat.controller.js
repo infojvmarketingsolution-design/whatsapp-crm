@@ -305,18 +305,15 @@ const performContactAction = async (req, res) => {
           }
 
           // 3. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
-          const updatedContact = await ContactModel.findByIdAndUpdate(
-             contactId,
-             { $set: payload },
-             { new: true, runValidators: true }
-          );
-          
-          if (!updatedContact) return res.status(404).json({ error: 'Contact not found' });
-          
-          // 3. Final synchronization and save
-          await updatedContact.save();
-
-          return res.json({ message: 'Contact updated', contact: updatedContact });
+           // Securely merge payload into existing contact
+           const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline'];
+           Object.keys(payload).forEach(key => {
+              if (!protectedFields.includes(key)) {
+                 contact[key] = payload[key];
+              }
+           });
+           const updatedContact = await contact.save();
+           return res.json({ message: 'Contact updated', contact: updatedContact });
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];

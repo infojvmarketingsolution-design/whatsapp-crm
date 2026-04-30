@@ -246,7 +246,11 @@ export default function Tasks() {
            city: freshContact.city || '',
            state: freshContact.state || '',
            pincode: freshContact.pincode || '',
-           qualification: freshContact.qualification || ''
+           qualification: freshContact.qualification || '',
+           email: freshContact.email || '',
+           address: freshContact.address || '',
+           estimatedValue: freshContact.estimatedValue || 0,
+           leadSource: freshContact.leadSource || ''
         });
         setShowSaveFab(false);
         toast.success("Identity Records Updated");
