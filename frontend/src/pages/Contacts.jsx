@@ -835,76 +835,80 @@ export default function Contacts({ roleAccess }) {
           </div>
       </div>
 
-      {showProfile && selectedContact && editedContact && (
-          <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowProfile(false)}>
+{showProfile && selectedContact && editedContact && (
+          <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setShowProfile(false)}>
             <div 
-              className="w-drawer h-full bg-white shadow-2xl flex flex-col animate-slide-left relative overflow-hidden"
+              className="w-drawer h-full bg-white shadow-3xl flex flex-col animate-slide-left relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-                {/* PROFESSIONAL MINIMALIST HEADER */}
-                <div className="bg-white border-b border-slate-100 px-4 sm:px-10 py-4 sm:py-7 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 sm:gap-0">
-                     <div className="flex items-center space-x-3 sm:space-x-6 w-full sm:w-auto">
-                         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-xl sm:text-2xl font-bold text-slate-400 shrink-0">
-                            {editedContact.firstName?.charAt(0) || selectedContact.name?.charAt(0) || 'U'}
+                {/* PROFESSIONAL PREMIUM HEADER */}
+                <div className="bg-slate-50/50 backdrop-blur-xl border-b border-slate-100 px-4 sm:px-10 py-5 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 sm:gap-0 relative overflow-hidden">
+                     <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
+                     <div className="flex items-center space-x-4 sm:space-x-7 w-full sm:w-auto relative z-10">
+                         <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-[1.5rem] bg-white shadow-premium border border-slate-100 flex items-center justify-center text-2xl sm:text-3xl font-black text-slate-800 shrink-0 group hover:scale-105 transition-all">
+                            <span className="opacity-40 group-hover:opacity-100 transition-opacity">{editedContact.firstName?.charAt(0) || selectedContact.name?.charAt(0) || 'U'}</span>
                          </div>
                          <div className="min-w-0 flex-1">
-                            <div className="flex flex-wrap items-center gap-2">
-                               <h2 className="text-lg sm:text-2xl font-semibold text-slate-800 tracking-tight truncate max-w-[150px] sm:max-w-none">
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                               <h2 className="text-xl sm:text-3xl font-black text-slate-800 tracking-tight truncate max-w-[180px] sm:max-w-none">
                                   {editedContact.firstName || editedContact.name || 'Lead'} {editedContact.lastName || ''}
                                </h2>
-                               <div className="px-2 py-0.5 bg-slate-50 text-slate-500 rounded text-[8px] sm:text-[9px] font-bold uppercase tracking-widest border border-slate-200">
+                               <div className="px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-teal-100 shadow-sm">
                                   {editedContact.pipelineStage || 'Discovery'}
                                </div>
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 mt-1 text-slate-400 text-[10px] sm:text-xs font-medium">
-                               <span className="flex items-center truncate"><Phone size={12} className="mr-1.5 opacity-60" /> {editedContact.phone}</span>
-                               <span className="flex items-center"><Hash size={12} className="mr-1.5 opacity-60" /> ID: {selectedContact._id.slice(-6).toUpperCase()}</span>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 mt-2 text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">
+                               <span className="flex items-center truncate hover:text-slate-600 transition-colors cursor-default"><Phone size={14} className="mr-2 text-teal-500" /> {editedContact.phone}</span>
+                               <span className="flex items-center hover:text-slate-600 transition-colors cursor-default"><Hash size={14} className="mr-2 text-indigo-400" /> ID: {selectedContact._id.slice(-6).toUpperCase()}</span>
                             </div>
                          </div>
                      </div>
 
-                     <div className="flex items-center justify-between sm:justify-end space-x-3 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-0 border-slate-50">
-                      <div className="flex flex-col items-start sm:items-end mr-0 sm:mr-2">
-                         <label className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Lead Status</label>
-                         <select 
-                            value={editedContact.status || 'NEW LEAD'} 
-                            onChange={e => handleFieldChange('status', e.target.value)}
-                            className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1.5 rounded border transition-all outline-none ${
-                               editedContact.status === 'CLOSED_WON' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
-                               editedContact.status === 'CLOSED_LOST' ? 'bg-red-50 border-red-200 text-red-600' :
-                               'bg-slate-50 border-slate-200 text-slate-600 focus:border-slate-400'
-                            }`}
-                         >
-                            <option value="NEW LEAD">New Lead</option>
-                            <option value="CONTACTED">Contacted</option>
-                            <option value="INTERESTED">Interested</option>
-                            <option value="FOLLOW_UP">Follow Up</option>
-                            <option value="CLOSED_WON">Admission follow up update</option>
-                            <option value="CLOSED_LOST">Admission Cancelled</option>
-                         </select>
+                     <div className="flex items-center justify-between sm:justify-end space-x-3 w-full sm:w-auto mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-slate-100 relative z-10">
+                      <div className="flex flex-col items-start sm:items-end mr-0 sm:mr-3">
+                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Lead Status</label>
+                         <div className="relative group">
+                            <select 
+                               value={editedContact.status || 'NEW LEAD'} 
+                               onChange={e => handleFieldChange('status', e.target.value)}
+                               className={`text-[10px] sm:text-[11px] font-black uppercase tracking-widest px-4 sm:px-6 py-2.5 rounded-xl border-2 shadow-sm transition-all outline-none appearance-none pr-10 ${
+                                  editedContact.status === 'CLOSED_WON' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                                  editedContact.status === 'CLOSED_LOST' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                  'bg-white border-slate-100 text-slate-700 hover:border-slate-300'
+                               }`}
+                            >
+                               <option value="NEW LEAD">New Lead</option>
+                               <option value="CONTACTED">Contacted</option>
+                               <option value="INTERESTED">Interested</option>
+                               <option value="FOLLOW_UP">Follow Up</option>
+                               <option value="CLOSED_WON">Admission follow up update</option>
+                               <option value="CLOSED_LOST">Admission Cancelled</option>
+                            </select>
+                            <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-slate-600 transition-colors" />
+                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-3">
                         <button 
                            onClick={() => {
                               console.log("[Sync] Triggering Save for:", selectedContact._id);
                               updateContactDetail(selectedContact._id, editedContact);
                            }}
                            disabled={isUpdatingContact}
-                           className={`px-4 sm:px-8 py-2.5 rounded-lg text-[10px] sm:text-[11px] font-bold uppercase tracking-widest shadow-sm transition-all flex items-center ${
+                           className={`h-11 sm:h-12 px-5 sm:px-10 rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.1em] shadow-lg transition-all flex items-center justify-center active:scale-95 ${
                               showSaveFab 
-                              ? 'bg-slate-800 text-white hover:bg-black ring-4 ring-slate-800/10' 
-                              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                              ? 'bg-slate-900 text-white hover:bg-black shadow-slate-900/20 ring-4 ring-slate-900/5' 
+                              : 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100'
                            }`}
                         >
                            {isUpdatingContact ? (
-                              <RefreshCw size={12} className="animate-spin" />
+                              <RefreshCw size={14} className="animate-spin" />
                            ) : (
-                              <><Save size={12} className="sm:mr-2" /> <span className="hidden sm:inline">Save Changes</span></>
+                              <><Save size={16} className="sm:mr-3" /> <span className="hidden sm:inline">Commit Changes</span></>
                            )}
                         </button>
-                        <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
-                           <X size={20} />
+                        <button onClick={() => setShowProfile(false)} className="w-11 h-11 sm:w-12 sm:h-12 bg-white hover:bg-rose-50 hover:text-rose-600 rounded-2xl text-slate-400 transition-all flex items-center justify-center border border-slate-100 shadow-sm active:scale-90">
+                           <X size={22} />
                         </button>
                       </div>
                    </div>
@@ -912,85 +916,102 @@ export default function Contacts({ roleAccess }) {
 
                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                   {/* LEFT PANEL: STRUCTURED STEP-BY-STEP FLOW */}
-                  <div className="flex-1 lg:w-[420px] bg-slate-50/50 border-b lg:border-b-0 lg:border-r border-slate-100 overflow-y-auto custom-scrollbar p-resp space-y-12 lg:shrink-0">
+                  <div className="flex-1 lg:w-[460px] bg-slate-50/80 border-b lg:border-b-0 lg:border-r border-slate-100 overflow-y-auto custom-scrollbar p-4 sm:p-8 space-y-10 lg:shrink-0">
                      
                      {/* STEP 1: BASIC INFORMATION */}
-                     <div className="space-y-6">
-                        <div className="flex items-center space-x-3">
-                           <div className="w-6 h-6 rounded-full bg-slate-800 text-white text-[10px] flex items-center justify-center font-bold">1</div>
-                           <h3 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest">Basic Information</h3>
+                     <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in">
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-slate-900/20">01</div>
+                              <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Basic Information</h3>
+                           </div>
+                           <div className="h-[2px] flex-1 bg-slate-50 mx-6 rounded-full hidden sm:block"></div>
+                           <User size={18} className="text-slate-200" />
                         </div>
                         
-                        <div className="space-y-4 pl-0 sm:pl-9 mt-4 sm:mt-0">
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Full Name</label>
-                              <input value={editedContact.firstName || editedContact.name || ''} onChange={e=>handleFieldChange('firstName', e.target.value)} placeholder="Full Name" className="w-full bg-white border border-slate-200 py-3 sm:py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
-                           </div>
-
-                           <div className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">WhatsApp Profile (Locked)</label>
-                              <div className="w-full bg-slate-100/50 border border-slate-100 py-3 sm:py-2.5 px-3 text-sm font-medium text-slate-400 rounded flex items-center">
-                                 <Phone size={12} className="mr-2 opacity-40" /> {editedContact.phone}
+                        <div className="space-y-6">
+                           <div className="space-y-2">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Legal Full Name</label>
+                              <div className="relative group">
+                                 <input 
+                                   value={editedContact.firstName || editedContact.name || ''} 
+                                   onChange={e=>handleFieldChange('firstName', e.target.value)} 
+                                   placeholder="Enter full name" 
+                                   className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 focus:ring-4 focus:ring-teal-500/5 transition-all" 
+                                 />
+                                 <Edit3 size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-200 group-focus-within:text-teal-500 transition-colors" />
                               </div>
                            </div>
 
-                           <div className="space-y-3">
+                           <div className="space-y-2">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">WhatsApp Identity (Verified)</label>
+                              <div className="w-full bg-slate-50 border-2 border-transparent py-3.5 px-5 text-sm font-bold text-slate-500 rounded-2xl flex items-center">
+                                 <Phone size={14} className="mr-3 text-teal-500 opacity-60" /> {editedContact.phone}
+                              </div>
+                           </div>
+
+                           <div className="space-y-4 pt-4 border-t border-slate-50">
                               <div className="flex items-center justify-between">
-                                 <label className="text-[9px] font-bold text-slate-400 uppercase">Alternative Numbers</label>
+                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Communication Channels</label>
                                  {(!editedContact.secondaryPhone || editedContact.secondaryPhone.trim() === '') && (
                                     <button 
                                        onClick={() => handleFieldChange('secondaryPhone', '+')} 
-                                       className="text-[9px] font-bold text-slate-800 flex items-center hover:bg-slate-100 px-2 py-1 rounded transition-all"
+                                       className="text-[10px] font-black text-teal-600 flex items-center hover:bg-teal-50 px-3 py-1.5 rounded-xl transition-all"
                                     >
-                                       <Plus size={10} className="mr-1" /> Add WhatsApp
+                                       <Plus size={12} className="mr-1.5" /> Add WhatsApp
                                     </button>
                                  )}
                               </div>
                               
-                              {/* Always show if it has content or was just added */}
-                              {((editedContact.secondaryPhone && editedContact.secondaryPhone.length > 0) || (editedContact.altMobile && editedContact.altMobile.length > 0)) && (
-                                 <div className="space-y-1.5 animate-fade-in">
-                                    <label className="text-[8px] font-bold text-slate-400 uppercase ml-1">Secondary WhatsApp</label>
+                              <div className="grid grid-cols-1 gap-4">
+                                 {((editedContact.secondaryPhone && editedContact.secondaryPhone.length > 0) || (editedContact.altMobile && editedContact.altMobile.length > 0)) && (
+                                    <div className="space-y-2 animate-fade-in">
+                                       <input 
+                                          value={editedContact.secondaryPhone} 
+                                          onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} 
+                                          placeholder="Secondary WhatsApp Number" 
+                                          className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 focus:ring-4 focus:ring-teal-500/5 transition-all" 
+                                       />
+                                    </div>
+                                 )}
+
+                                 <div className="space-y-2">
                                     <input 
-                                       value={editedContact.secondaryPhone} 
-                                       onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} 
-                                       placeholder="Secondary WhatsApp Number" 
-                                       className="w-full bg-white border border-slate-200 py-3 sm:py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400" 
+                                       value={editedContact.altMobile || ''} 
+                                       onChange={e=>handleFieldChange('altMobile', e.target.value)} 
+                                       placeholder="Alternative Mobile Number" 
+                                       className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 focus:ring-4 focus:ring-teal-500/5 transition-all" 
                                     />
                                  </div>
-                              )}
-
-                              <div className="space-y-1.5">
-                                 <label className="text-[8px] font-bold text-slate-400 uppercase ml-1">Alternative Mobile</label>
-                                 <input 
-                                    value={editedContact.altMobile || ''} 
-                                    onChange={e=>handleFieldChange('altMobile', e.target.value)} 
-                                    placeholder="Alternative Mobile Number" 
-                                    className="w-full bg-white border border-slate-200 py-3 sm:py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400" 
-                                 />
                               </div>
                            </div>
 
-                           <div className="space-y-4 pt-2">
-                              <label className="text-[9px] font-bold text-slate-400 uppercase">Detailed Address</label>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                 <input value={editedContact.houseNo || ''} onChange={e=>handleFieldChange('houseNo', e.target.value)} placeholder="House No" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
-                                 <input value={editedContact.societyName || ''} onChange={e=>handleFieldChange('societyName', e.target.value)} placeholder="Society Name" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
+                           <div className="space-y-5 pt-4 border-t border-slate-50">
+                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Location Details</label>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <input value={editedContact.houseNo || ''} onChange={e=>handleFieldChange('houseNo', e.target.value)} placeholder="House No" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
+                                 <input value={editedContact.societyName || ''} onChange={e=>handleFieldChange('societyName', e.target.value)} placeholder="Society Name" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                               </div>
-                              <input value={editedContact.streetAddress || ''} onChange={e=>handleFieldChange('streetAddress', e.target.value)} placeholder="Street Address" className="w-full bg-white border border-slate-200 py-3 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                 <select value={editedContact.city || ''} onChange={e=>handleFieldChange('city', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded outline-none h-10">
-                                    <option value="">Choose City</option>
-                                    {['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Mumbai', 'Pune', 'Bangalore', 'Delhi'].map(c => <option key={c} value={c}>{c}</option>)}
-                                 </select>
-                                 <select value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded outline-none h-10">
-                                    <option value="">Choose State</option>
-                                    {['Gujarat', 'Maharashtra', 'Karnataka', 'Rajasthan', 'Madhya Pradesh', 'Delhi'].map(s => <option key={s} value={s}>{s}</option>)}
-                                 </select>
+                              <input value={editedContact.streetAddress || ''} onChange={e=>handleFieldChange('streetAddress', e.target.value)} placeholder="Street Address" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <div className="relative group">
+                                    <select value={editedContact.city || ''} onChange={e=>handleFieldChange('city', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
+                                       <option value="">Choose City</option>
+                                       {['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Mumbai', 'Pune', 'Bangalore', 'Delhi'].map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                                 </div>
+                                 <div className="relative group">
+                                    <select value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
+                                       <option value="">Choose State</option>
+                                       {['Gujarat', 'Maharashtra', 'Karnataka', 'Rajasthan', 'Madhya Pradesh', 'Delhi'].map(s => <option key={s} value={s}>{s}</option>)}
+                                    </select>
+                                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                                 </div>
                               </div>
-                              <div className="grid grid-cols-2 gap-3">
-                                 <div className="w-full bg-slate-50 border border-slate-100 py-2.5 px-3 text-xs font-bold text-slate-400 rounded flex items-center">India</div>
-                                 <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
+                              <div className="grid grid-cols-2 gap-4">
+                                 <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-black text-slate-400 rounded-2xl flex items-center uppercase tracking-widest">India</div>
+                                 <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                               </div>
                            </div>
                         </div>
@@ -1109,23 +1130,22 @@ export default function Contacts({ roleAccess }) {
                   </div>
 
                  {/* RIGHT PANEL: INTERACTION HUB */}
-                 <div className="flex-1 flex flex-col bg-white overflow-hidden">
-                    <div className="px-8 flex space-x-8 border-b border-slate-100 bg-white shrink-0">
-                       {['Timeline', 'Chat history', 'Strategic Notes'].map(tab => {
-                          const tabId = tab.toLowerCase().split(' ')[0];
-                          const isActive = activeTab === (tabId === 'chat' ? 'chatlog' : tabId === 'strategic' ? 'internalnotes' : tabId);
-                          return (
-                             <button 
-                               key={tab} 
-                               onClick={() => setActiveTab(tabId === 'chat' ? 'chatlog' : tabId === 'strategic' ? 'internalnotes' : tabId)} 
-                               className={`py-4 text-[10px] font-bold uppercase tracking-wider relative transition-all ${isActive ? 'text-slate-800' : 'text-slate-400 hover:text-slate-600'}`}
-                             >
-                                {tab}
-                                {isActive && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-slate-800"></div>}
-                             </button>
-                          );
-                       })}
-                    </div>
+                 <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
+                      <div className="flex items-center space-x-1 p-2 shrink-0 bg-slate-50/50 border-b border-slate-100">
+                         {['timeline', 'chat history', 'strategic notes'].map((tab) => (
+                            <button
+                               key={tab}
+                               onClick={() => setActiveTab(tab)}
+                               className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${
+                                  activeTab === tab 
+                                  ? 'bg-white text-slate-900 shadow-premium scale-[1.02] z-10' 
+                                  : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
+                               }`}
+                            >
+                               {tab}
+                            </button>
+                         ))}
+                      </div>
 
                     <div className="flex-1 overflow-y-auto custom-scrollbar p-resp">
                        {activeTab === 'timeline' && (
@@ -1154,94 +1174,69 @@ export default function Contacts({ roleAccess }) {
                           </div>
                        )}
 
-                       {activeTab === 'chatlog' && (
-                          <div className="space-y-4">
+                       {activeTab === 'chat history' && (
+                          <div className="space-y-6">
                              {recentMessages.length === 0 ? (
                                 <div className="py-20 text-center text-slate-300 text-xs uppercase tracking-widest">No communication history</div>
                              ) : recentMessages.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
-                                   <div className={`p-3.5 px-4 rounded-lg text-sm max-w-[85%] ${msg.direction === 'OUTBOUND' ? 'bg-slate-800 text-white' : 'bg-slate-100 text-slate-700'}`}>
-                                      {msg.content}
-                                      <div className={`mt-2 text-[9px] font-medium uppercase opacity-50`}>{formatDateTime(msg.createdAt)}</div>
+                                   <div className={`max-w-[85%] p-5 rounded-[2rem] shadow-premium relative group transition-all hover:shadow-lg ${
+                                      msg.direction === 'OUTBOUND' 
+                                      ? 'bg-slate-900 text-white ml-auto rounded-tr-none border border-slate-800' 
+                                      : 'bg-slate-50 text-slate-800 rounded-tl-none border border-slate-100'
+                                   }`}>
+                                      <div className={`text-sm font-medium leading-relaxed mb-3 ${msg.direction === 'OUTBOUND' ? 'text-slate-100' : 'text-slate-700'}`}>
+                                         {msg.content}
+                                      </div>
+                                      <div className={`flex items-center justify-between text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity ${msg.direction === 'OUTBOUND' ? 'text-white' : 'text-slate-400'}`}>
+                                         <span>{new Date(msg.createdAt).toLocaleDateString()}</span>
+                                         <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                      </div>
                                    </div>
                                 </div>
                              ))}
                           </div>
                        )}
 
-                       {activeTab === 'internalnotes' && (
+                       {activeTab === 'strategic notes' && (
                           <div className="space-y-8 animate-fade-in">
-                             {/* AI STRATEGIC BRIEF SECTION */}
-                             <div className="space-y-4">
-                                <div className="flex justify-between items-center">
-                                   <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
-                                      <Activity size={12} className="mr-2" /> Strategic Insight
-                                   </h3>
-                                   {!strategicBrief && (
-                                      <button 
-                                        onClick={() => generateBrief(selectedContact._id)}
-                                        disabled={isGeneratingBrief}
-                                        className="px-4 py-2 bg-slate-800 text-white rounded text-[9px] font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center disabled:opacity-50"
-                                      >
-                                         {isGeneratingBrief ? <RefreshCw size={10} className="mr-2 animate-spin" /> : <Sparkles size={10} className="mr-2 text-teal-400" />}
-                                         Run AI Analysis
-                                      </button>
-                                   )}
-                                </div>
-
-                                {strategicBrief && (
-                                   <div className="border border-slate-200 rounded-lg overflow-hidden">
-                                      <div className="bg-slate-50 px-6 py-3 border-b border-slate-200 flex items-center justify-between">
-                                         <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">AI Profile Scan</span>
+                             <div className="space-y-8">
+                                <div className="flex items-center justify-between px-2">
+                                   <div className="flex items-center space-x-3">
+                                      <div className="w-10 h-10 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center">
+                                         <Edit3 size={18} />
                                       </div>
-                                      <div className="p-6 space-y-6">
-                                         <div className="grid grid-cols-2 gap-6">
-                                            <div className="space-y-1">
-                                               <p className="text-[9px] font-bold text-slate-400 uppercase">Response Velocity</p>
-                                               <p className="text-xs font-bold text-slate-700">{strategicBrief.responseVelocity}</p>
-                                            </div>
-                                            <div className="space-y-1">
-                                               <p className="text-[9px] font-bold text-slate-400 uppercase">Inferred Qualification</p>
-                                               <p className="text-xs font-bold text-slate-700">{strategicBrief.qualification || 'N/A'}</p>
-                                            </div>
-                                         </div>
-                                         <div className="p-4 bg-slate-50 rounded border border-slate-100">
-                                            <p className="text-[9px] font-bold text-slate-400 uppercase mb-2">Executive Summary</p>
-                                            <p className="text-xs text-slate-600 leading-relaxed italic">{strategicBrief.summary}</p>
-                                         </div>
+                                      <div>
+                                         <h4 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Activity Journal</h4>
+                                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Strategic Notes & Observations</p>
                                       </div>
                                    </div>
-                                )}
+                                   <button 
+                                      onClick={() => addInternalNote(selectedContact._id)}
+                                      disabled={isAddingNote || !noteInput.trim()}
+                                      className="px-5 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-slate-900/10 active:scale-95 transition-all disabled:opacity-30"
+                                   >
+                                      {isAddingNote ? <RefreshCw size={12} className="animate-spin" /> : 'Save Entry'}
+                                   </button>
+                                </div>
+
+                                <div className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100 shadow-inner group focus-within:bg-white focus-within:shadow-premium transition-all">
+                                   <textarea
+                                      value={noteInput}
+                                      onChange={e => setNoteInput(e.target.value)}
+                                      placeholder="Document interaction insights, follow-up strategies, and key lead observations..."
+                                      className="w-full h-80 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-300 outline-none resize-none leading-loose"
+                                   />
+                                </div>
                              </div>
 
                              <div className="space-y-4">
-                                <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center">
-                                   <Edit3 size={12} className="mr-2" /> Activity Journal
-                                </h3>
-                                <textarea 
-                                  value={noteInput} 
-                                  onChange={e=>setNoteInput(e.target.value)} 
-                                  placeholder="Document interaction..." 
-                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-4 text-sm text-slate-700 outline-none focus:border-slate-400" 
-                                  rows={3} 
-                                />
-                                <div className="flex justify-end">
-                                   <button 
-                                     onClick={()=>addInternalNote(selectedContact._id)} 
-                                     disabled={isAddingNote || !noteInput.trim()} 
-                                     className="px-6 py-2 bg-slate-800 text-white text-[9px] font-bold uppercase tracking-widest rounded hover:bg-slate-900 transition-all"
-                                   >
-                                      Save Entry
-                                   </button>
-                                </div>
-                             </div>
-                             <div className="space-y-4">
                                 {(selectedContact.notes || []).slice().reverse().map((note, idx) => (
-                                   <div key={idx} className="p-4 border border-slate-100 rounded-lg bg-slate-50/50">
-                                      <p className="text-xs text-slate-700 leading-relaxed">{note.content}</p>
-                                      <div className="flex items-center justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-3">
-                                         <span>{note.createdBy}</span>
-                                         <span>{formatDateTime(note.createdAt)}</span>
+                                   <div key={idx} className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-premium transition-all hover:scale-[1.01]">
+                                      <p className="text-sm font-medium text-slate-700 leading-relaxed">{note.content}</p>
+                                      <div className="flex items-center justify-between text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4 pt-4 border-t border-slate-50">
+                                         <span className="flex items-center"><User size={10} className="mr-1" /> {note.createdBy}</span>
+                                         <span className="flex items-center"><Clock size={10} className="mr-1" /> {formatDateTime(note.createdAt)}</span>
                                       </div>
                                    </div>
                                 ))}
