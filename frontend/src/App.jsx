@@ -297,72 +297,74 @@ function Dashboard() {
   return (
     <>
       <div className="p-resp bg-crm-bg min-h-full animate-fade-in-up">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-        <div>
-           <h1 className="text-xs sm:text-sm font-bold text-gray-600 tracking-wider uppercase">Dashboard</h1>
-           <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">SaaS Workspace Overview</p>
-        </div>
-        <div className="flex items-center space-x-3 text-right">
-          <div>
-             <p className="text-xs sm:text-sm font-black text-slate-800 capitalize leading-none mb-1">{userName}</p>
-             <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 leading-none">{activeUser.email || 'agent@workspace.crm'}</p>
-          </div>
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
-             <UserCircle size={20} className="sm:w-6 sm:h-6" />
-          </div>
+      {/* Modern Unified Header */}
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center space-x-4 min-w-0">
+           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shadow-lg transform rotate-3 hover:rotate-0 transition-all duration-300">
+              <UserCircle size={28} />
+           </div>
+           <div className="flex flex-col min-w-0">
+              <h1 className="text-base sm:text-xl font-black text-slate-900 truncate tracking-tight leading-tight">{userName}</h1>
+              <div className="flex items-center space-x-2">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{activeUser.role || 'SAAS WORKSPACE'}</span>
+                <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest flex items-center">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-1.5 animate-pulse"></span> Online
+                </span>
+              </div>
+           </div>
         </div>
       </div>
 
-      <h2 className="text-lg sm:text-2xl font-bold text-gray-800 mb-4">Welcome back, <span className="capitalize">{userName}</span> 👋</h2>
+      <div className="bg-white/50 backdrop-blur-sm border border-white/20 p-5 rounded-[2rem] mb-8 shadow-sm">
+        <h2 className="text-xl sm:text-3xl font-black text-slate-800 tracking-tight">Welcome back, <span className="text-blue-600 capitalize">{userName.split(' ')[0]}</span> 👋</h2>
+        <p className="text-xs sm:text-sm font-medium text-slate-500 mt-1">Here's what's happening in your workspace today.</p>
+      </div>
       
-      <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 sm:gap-4 mb-4 sm:mb-8">
-        {isAdminOrSuperAdmin && (
-          <button onClick={() => navigate('/campaigns')} className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 px-1 py-2 sm:px-4 sm:py-2 border border-gray-300 rounded-lg text-[9px] sm:text-sm font-bold sm:font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all shadow-sm">
-             <Send size={12} className="text-brand-light sm:w-3.5 sm:h-3.5" />
-             <span className="text-center leading-none">Campaign</span>
-          </button>
-        )}
-        {isAdminOrSuperAdmin && (
-          <>
-            <button onClick={() => navigate('/templates')} className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 px-1 py-2 sm:px-4 sm:py-2 border border-blue-200 rounded-lg text-[9px] sm:text-sm font-bold sm:font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-all shadow-sm">
-               <MessageCircle size={12} className="sm:w-3.5 sm:h-3.5" />
-               <span className="text-center leading-none">Quick Reply</span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-2 sm:gap-4 flex-1">
+          {isAdminOrSuperAdmin && (
+            <button onClick={() => navigate('/campaigns')} className="group flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 p-2 sm:px-5 sm:py-3 border border-slate-200 rounded-2xl text-[10px] sm:text-xs font-black text-slate-700 bg-white hover:border-blue-500 hover:text-blue-600 transition-all shadow-sm hover:shadow-md">
+               <Send size={14} className="text-slate-400 group-hover:text-blue-500 transition-colors" />
+               <span className="uppercase tracking-widest">Campaign</span>
             </button>
-            <button onClick={() => navigate('/templates')} className="flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 px-1 py-2 sm:px-4 sm:py-2 border border-[var(--theme-border)]/30 rounded-lg text-[9px] sm:text-sm font-bold sm:font-medium text-[var(--theme-text)] bg-brand-light/10 hover:bg-brand-light/20 transition-all shadow-sm">
-               <FileText size={12} className="sm:w-3.5 sm:h-3.5" />
-               <span className="text-center leading-none">Template</span>
-            </button>
-          </>
-        )}
-      </div>
-
-      <div className="w-full sm:w-auto mb-6 sm:mb-0">
-         <button onClick={refreshData} disabled={loading} className="w-full sm:w-auto px-4 py-2 sm:px-6 sm:py-2.5 bg-blue-500 text-white rounded-lg text-xs sm:text-sm font-bold hover:bg-blue-600 transition-all shadow-premium active:scale-95 disabled:opacity-50">
-           {loading ? 'Refreshing...' : 'Refresh Data'}
-         </button>
+          )}
+          {isAdminOrSuperAdmin && (
+            <>
+              <button onClick={() => navigate('/templates')} className="group flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 p-2 sm:px-5 sm:py-3 border border-slate-200 rounded-2xl text-[10px] sm:text-xs font-black text-slate-700 bg-white hover:border-indigo-500 hover:text-indigo-600 transition-all shadow-sm hover:shadow-md">
+                 <MessageCircle size={14} className="text-slate-400 group-hover:text-indigo-500 transition-colors" />
+                 <span className="uppercase tracking-widest">Quick Reply</span>
+              </button>
+              <button onClick={() => navigate('/templates')} className="group flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2 p-2 sm:px-5 sm:py-3 border border-slate-200 rounded-2xl text-[10px] sm:text-xs font-black text-slate-700 bg-white hover:border-teal-500 hover:text-teal-600 transition-all shadow-sm hover:shadow-md">
+                 <FileText size={14} className="text-slate-400 group-hover:text-teal-500 transition-colors" />
+                 <span className="uppercase tracking-widest">Template</span>
+              </button>
+            </>
+          )}
+        </div>
+        <button onClick={refreshData} disabled={loading} className="px-6 py-3 bg-slate-900 text-white rounded-2xl text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] hover:bg-black transition-all shadow-xl active:scale-95 disabled:opacity-50">
+           {loading ? 'SYNCING...' : 'REFRESH DATA'}
+        </button>
       </div>
 
       {isAdminOrSuperAdmin && (
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4">
-          <div className="bg-crm-card p-3 sm:p-5 rounded-xl shadow-sm border border-crm-border flex flex-col justify-center">
-             <h3 className="text-[9px] sm:text-xs font-semibold text-gray-400 tracking-wider uppercase mb-1 sm:mb-3">API STATUS</h3>
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-4">
+          <div className="bg-crm-card p-4 sm:p-6 rounded-3xl shadow-soft border border-slate-100 flex flex-col justify-center">
+             <h3 className="text-[10px] sm:text-xs font-black text-slate-400 tracking-widest uppercase mb-2">API STATUS</h3>
              <div>
-               <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-brand-light text-white text-[9px] sm:text-xs font-bold rounded shadow-glow">CONNECTED</span>
+               <span className="px-3 py-1 bg-emerald-500 text-white text-[10px] sm:text-xs font-black rounded-xl shadow-glow">CONNECTED</span>
              </div>
           </div>
-          <div className="bg-crm-card p-3 sm:p-5 rounded-xl shadow-sm flex flex-col justify-center border border-crm-border">
-             <h3 className="text-[9px] sm:text-xs font-semibold text-gray-400 tracking-wider uppercase mb-1 sm:mb-3">QUALITY</h3>
+          <div className="bg-crm-card p-4 sm:p-6 rounded-3xl shadow-soft flex flex-col justify-center border border-slate-100">
+             <h3 className="text-[10px] sm:text-xs font-black text-slate-400 tracking-widest uppercase mb-2">HEALTH</h3>
              <div>
-               <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-brand-light text-white text-[9px] sm:text-xs font-medium rounded">High</span>
+               <span className="px-3 py-1 bg-blue-500 text-white text-[10px] sm:text-xs font-black rounded-xl">OPTIMAL</span>
              </div>
           </div>
-          <div className="bg-crm-card p-3 sm:p-5 rounded-xl shadow-sm flex flex-col justify-center relative overflow-hidden border border-crm-border col-span-2 sm:col-span-1">
-             <h3 className="text-[9px] sm:text-xs font-semibold text-gray-400 tracking-wider uppercase mb-0.5">WABA PHONE</h3>
-             <span className="text-xs sm:text-md font-bold text-gray-800 truncate">{wabaConfig?.phoneNumber || 'Not Connected'}</span>
-             <p className="text-[8px] sm:text-[10px] text-gray-400 mt-0.5 uppercase font-bold tracking-wide truncate">{wabaConfig?.wabaName || 'Not Connected'}</p>
-             <div className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 bg-brand-light/10 text-[var(--theme-text)] rounded-full hidden sm:block">
-                <UserCircle size={16} />
-             </div>
+          <div className="bg-crm-card p-4 sm:p-6 rounded-3xl shadow-soft flex flex-col justify-center relative overflow-hidden border border-slate-100 col-span-2 sm:col-span-1">
+             <h3 className="text-[10px] sm:text-xs font-black text-slate-400 tracking-widest uppercase mb-1">OFFICIAL NUMBER</h3>
+             <span className="text-sm sm:text-base font-black text-slate-800 tracking-tight truncate">{wabaConfig?.phoneNumber || 'Not Connected'}</span>
+             <p className="text-[9px] font-bold text-blue-600 mt-1 uppercase tracking-widest truncate">{wabaConfig?.wabaName || 'Workspace Official'}</p>
           </div>
         </div>
       )}
@@ -1072,7 +1074,7 @@ function AppLayout() {
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">System Online</span>
              </div>
              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">
-                Developed by J.V group | WapiPulse v1.4.1-STABLE
+                Developed by J.V group | WapiPulse v1.4.2-STABLE
              </p>
           </div>
         )}
