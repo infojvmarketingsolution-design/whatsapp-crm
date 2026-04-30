@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Globe, Settings, Code, Copy, CheckCircle, Save } from 'lucide-react';
+import { Globe, Settings as SettingsIcon, Code, Copy, CheckCircle, Save } from 'lucide-react';
 
 export default function WebWidget() {
   const [settings, setSettings] = useState({
@@ -75,23 +75,23 @@ export default function WebWidget() {
   if (loading) return <div className="p-8">Loading widget settings...</div>;
 
   return (
-    <div className="p-8 bg-crm-bg min-h-full animate-fade-in-up">
-      <div className="flex justify-between items-end mb-8">
+    <div className="p-4 sm:p-8 bg-slate-50 min-h-screen animate-fade-in-up">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 sm:mb-10">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800 flex items-center">
-            <Globe className="mr-3 text-blue-600" /> Web Chat Widget
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight flex items-center">
+            <Globe className="mr-3 text-blue-600" size={28} /> Web Chat Widget
           </h1>
-          <p className="text-sm text-gray-500 mt-2 font-medium">Configure your website tracking and chat embed code.</p>
+          <p className="text-[10px] sm:text-sm font-black text-slate-400 mt-1 uppercase tracking-widest leading-relaxed">Configure your website tracking and chat embed code.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Configuration Form */}
-        <div className="lg:col-span-2 space-y-6">
-          <form onSubmit={handleSave} className="bg-white p-6 rounded-2xl shadow-soft border border-crm-border">
-            <div className="flex items-center mb-6 pb-4 border-b border-gray-100">
-              <Settings className="text-gray-400 mr-2" size={20}/>
-              <h2 className="text-lg font-bold text-gray-800">Widget Configuration</h2>
+        <div className="lg:col-span-2 space-y-8">
+          <form onSubmit={handleSave} className="bg-white p-5 sm:p-8 rounded-3xl shadow-premium border border-slate-100">
+            <div className="flex items-center mb-8 pb-4 border-b border-slate-50">
+              <SettingsIcon className="text-slate-400 mr-3" size={24}/>
+              <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">Widget Configuration</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">

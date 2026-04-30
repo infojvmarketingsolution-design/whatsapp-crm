@@ -6,14 +6,15 @@ import {
   UserCog, 
   CreditCard, 
   Link as LinkIcon, 
-  Bot, 
+  Settings as SettingsIcon, 
   ShieldCheck, 
   Bell, 
   Palette, 
   Search,
   CheckCircle2,
   AlertCircle,
-  History
+  History,
+  ArrowLeft
 } from 'lucide-react';
 import WorkspaceSettings from './WorkspaceSettings';
 import AutomationSettings from './AutomationSettings';
@@ -120,35 +121,36 @@ export default function Settings({ roleAccess }) {
   };
 
   return (
-    <div className="flex flex-col h-full bg-gray-50/50">
-      {/* Settings Header */}
-      <div className="bg-white border-b border-gray-200 px-8 py-5 flex-shrink-0">
-        <div className="flex justify-between items-center max-w-7xl mx-auto">
+    <div className="flex flex-col h-full bg-slate-50/50">
+      <div className="bg-white border-b border-slate-200 px-4 sm:px-8 py-5 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 max-w-7xl mx-auto">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Settings</h1>
-            <p className="text-sm text-gray-500 mt-1">Manage your workspace configuration and preferences</p>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center">
+               <SettingsIcon className="mr-3 text-blue-600" size={24} /> Settings
+            </h1>
+            <p className="text-[10px] sm:text-sm font-bold text-slate-400 mt-1 uppercase tracking-widest leading-relaxed">Manage your workspace configuration and preferences</p>
           </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+          <div className="relative w-full sm:w-64 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" size={18} />
             <input 
               type="text" 
               placeholder="Search settings..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm w-64 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all bg-gray-50 focus:bg-white"
+              className="w-full pl-11 pr-4 py-3 border border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-4 focus:ring-blue-100 transition-all bg-slate-50 focus:bg-white"
             />
           </div>
         </div>
       </div>
 
       {/* Settings Layout */}
-      <div className="flex-1 overflow-hidden flex max-w-7xl mx-auto w-full">
-        {/* Sidebar Nav */}
-        <div className="w-72 bg-white border-r border-gray-200 overflow-y-auto custom-scrollbar flex-shrink-0 relative z-10">
+      <div className="flex-1 overflow-hidden flex flex-col sm:flex-row max-w-7xl mx-auto w-full">
+        {/* Sidebar Nav - Desktop: Side, Mobile: List (if no active tab on small screens) */}
+        <div className={`${activeTab && !window.innerWidth < 640 ? 'hidden sm:block' : 'block'} w-full sm:w-72 bg-white border-r border-slate-200 overflow-y-auto custom-scrollbar flex-shrink-0 relative z-10`}>
           <nav className="p-4 space-y-1">
             {filteredItems.length === 0 ? (
-              <div className="px-4 py-8 text-center text-gray-500 text-sm">
-                No settings found matching "{searchQuery}"
+              <div className="px-4 py-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                No results for "{searchQuery}"
               </div>
             ) : (
               filteredItems.map(item => {
@@ -157,21 +159,21 @@ export default function Settings({ roleAccess }) {
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-start space-x-3 px-4 py-3 rounded-xl transition-all duration-200 text-left ${
+                    className={`w-full flex items-start space-x-4 px-5 py-4 rounded-2xl transition-all duration-200 text-left active:scale-95 ${
                       isActive 
-                        ? 'bg-teal-50 text-teal-900 shadow-sm border border-teal-100/50' 
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-transparent'
+                        ? 'bg-blue-50 text-blue-900 shadow-sm border border-blue-100/50' 
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 border border-transparent'
                     }`}
                   >
                     <item.icon 
                       size={20} 
-                      className={`mt-0.5 flex-shrink-0 ${isActive ? 'text-teal-600' : 'text-gray-400'}`} 
+                      className={`mt-0.5 flex-shrink-0 ${isActive ? 'text-blue-600' : 'text-slate-400'}`} 
                     />
                     <div>
-                      <div className={`text-sm font-semibold ${isActive ? 'text-teal-900' : 'text-gray-700'}`}>
+                      <div className={`text-xs font-black uppercase tracking-widest ${isActive ? 'text-blue-900' : 'text-slate-700'}`}>
                         {item.name}
                       </div>
-                      <div className={`text-xs mt-0.5 line-clamp-1 ${isActive ? 'text-teal-600/80' : 'text-gray-400'}`}>
+                      <div className={`text-[10px] mt-1 font-bold line-clamp-1 ${isActive ? 'text-blue-600/80' : 'text-slate-400'}`}>
                         {item.desc}
                       </div>
                     </div>
@@ -183,9 +185,22 @@ export default function Settings({ roleAccess }) {
         </div>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar relative">
-          <div className="max-w-4xl mx-auto">
-             {renderContent()}
+        <div className={`${!activeTab ? 'hidden sm:block' : 'block'} flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar relative bg-white/50`}>
+          <div className="max-w-4xl mx-auto pb-20">
+             {activeTab && (
+               <button 
+                 onClick={() => setActiveTab(null)} 
+                 className="sm:hidden mb-6 flex items-center text-[10px] font-black uppercase tracking-widest text-slate-400 hover:text-blue-600 transition-colors"
+               >
+                 <ArrowLeft size={14} className="mr-2" /> Back to Settings
+               </button>
+             )}
+             {activeTab ? renderContent() : (
+               <div className="hidden sm:flex flex-col items-center justify-center h-[60vh] text-center opacity-40">
+                  <SettingsIcon size={64} className="text-slate-300 mb-4" />
+                  <p className="text-sm font-black text-slate-400 uppercase tracking-widest">Select a category to configure</p>
+               </div>
+             )}
           </div>
         </div>
       </div>
