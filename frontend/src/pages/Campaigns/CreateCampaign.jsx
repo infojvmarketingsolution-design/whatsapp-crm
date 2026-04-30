@@ -318,23 +318,23 @@ function CreateCampaign() {
   };
 
   return (
-    <div className="p-8 bg-crm-bg min-h-full animate-fade-in-up">
+    <div className="p-4 sm:p-8 bg-crm-bg min-h-full animate-fade-in-up">
       <div className="max-w-4xl mx-auto">
-        <button onClick={() => navigate('/campaigns')} className="flex items-center text-gray-500 hover:text-gray-800 mb-6 transition-colors font-medium">
-          <ArrowLeft size={16} className="mr-2" /> Back to Campaigns
+        <button onClick={() => navigate('/campaigns')} className="flex items-center text-gray-500 hover:text-gray-800 mb-4 sm:mb-6 transition-colors font-bold text-xs sm:text-sm uppercase tracking-widest">
+          <ArrowLeft size={16} className="mr-2" /> <span className="hidden sm:inline">Back to</span> Campaigns
         </button>
 
-        <div className="bg-white rounded-xl shadow-premium border border-gray-100 p-8">
-          <h1 className="text-2xl font-bold text-gray-800 mb-8">Create New Campaign</h1>
+        <div className="bg-white rounded-2xl sm:rounded-3xl shadow-premium border border-gray-100 p-5 sm:p-8">
+          <h1 className="text-xl sm:text-2xl font-black text-gray-800 mb-6 sm:mb-8 tracking-tight">New Campaign</h1>
 
           {/* Stepper */}
-          <div className="flex items-center mb-10">
+          <div className="flex items-center mb-8 sm:mb-10">
             {[1, 2, 3, 4].map((s, idx) => (
               <React.Fragment key={s}>
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${step >= s ? 'bg-blue-600 text-white shadow-glow' : 'bg-gray-100 text-gray-400'}`}>
-                  {step > s ? <CheckCircle size={16} /> : s}
+                <div className={`flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-full font-black text-xs sm:text-sm transition-all ${step >= s ? 'bg-blue-600 text-white shadow-glow' : 'bg-gray-100 text-gray-400'}`}>
+                  {step > s ? <CheckCircle size={14} /> : s}
                 </div>
-                {idx < 3 && <div className={`flex-1 h-1 mx-2 rounded ${step > s ? 'bg-blue-600' : 'bg-gray-100'}`}></div>}
+                {idx < 3 && <div className={`flex-1 h-1 mx-1 sm:mx-2 rounded-full transition-all ${step > s ? 'bg-blue-600' : 'bg-gray-100'}`}></div>}
               </React.Fragment>
             ))}
           </div>
@@ -358,19 +358,19 @@ function CreateCampaign() {
 
             {step === 2 && (
               <div className="space-y-6 animate-fade-in-up">
-                <div className="flex justify-between items-center">
-                   <h2 className="text-xl font-bold text-gray-800">{isCreatingTemplate ? 'Create New Template' : 'Select Template'}</h2>
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+                   <h2 className="text-lg sm:text-xl font-black text-slate-800 tracking-tight">{isCreatingTemplate ? 'New Template' : 'Select Template'}</h2>
                    {!isCreatingTemplate && (
-                     <button onClick={() => setIsCreatingTemplate(true)} className="text-sm font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded-md transition-colors border border-transparent hover:border-blue-100">+ New Template</button>
+                     <button onClick={() => setIsCreatingTemplate(true)} className="w-full sm:w-auto text-[10px] font-black text-blue-600 bg-blue-50 px-4 py-2 rounded-xl transition-all border border-blue-100 uppercase tracking-widest">+ New Template</button>
                    )}
                 </div>
 
                 {isCreatingTemplate ? (
-                   <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4 animate-fade-in">
+                   <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm space-y-5 animate-fade-in">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-1">Template Name</label>
-                        <input type="text" className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. spring_promo_v1" value={newTemplate.name} onChange={e => setNewTemplate({...newTemplate, name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_')})} />
-                        <p className="text-[10px] text-gray-400 mt-1">Only lowercase alphanumeric characters and underscores allowed.</p>
+                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Template Name</label>
+                        <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-100 text-sm font-bold placeholder-slate-300" placeholder="e.g. spring_promo_v1" value={newTemplate.name} onChange={e => setNewTemplate({...newTemplate, name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_')})} />
+                        <p className="text-[9px] font-bold text-slate-400 mt-2 uppercase tracking-tighter">Lowercase alphanumeric & underscores only.</p>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -563,39 +563,41 @@ function CreateCampaign() {
                 <h2 className="text-xl font-bold text-gray-800">Select Audience</h2>
                <p className="text-sm text-gray-500">Filter existing contacts or upload a new CSV file to target this campaign.</p>
                
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Target by Tags</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-8">
+                  <div>
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Target by Tags</label>
                     <input 
                       type="text" 
-                      placeholder="Enter tags separated by comma (e.g., vip, active)" 
-                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all mb-2"
+                      placeholder="vip, active, organic..." 
+                      className="w-full px-4 py-3 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-100 outline-none transition-all mb-2 text-sm font-bold"
                       value={formData.audienceTags.join(', ')}
                       onChange={e => setFormData({ ...formData, audienceTags: e.target.value.split(',').map(t => t.trim()), uploadedContacts: [] })}
                     />
-                    <p className="text-xs text-gray-400">Leave blank if uploading a CSV file.</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase">Leave blank for CSV upload.</p>
                   </div>
                   
-                  <div className="relative border-2 border-dashed border-gray-200 rounded-xl p-6 flex flex-col items-center justify-center hover:bg-gray-50 hover:border-blue-300 transition-colors cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
+                  <div className="relative border-2 border-dashed border-slate-200 rounded-2xl p-4 sm:p-6 flex flex-col items-center justify-center hover:bg-blue-50/30 hover:border-blue-300 transition-all cursor-pointer group" onClick={() => fileInputRef.current?.click()}>
                      <input type="file" accept=".csv" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
-                     <UploadCloud size={32} className="text-blue-500 mb-3" />
-                     <p className="text-sm font-bold text-gray-700 text-center">Upload CSV List</p>
-                     <p className="text-xs text-gray-500 mt-1 mb-3 text-center truncate max-w-[200px]">
-                        {formData.uploadedContacts.length > 0 ? <span className="text-green-600 font-bold">{formData.uploadedContacts.length} contacts loaded</span> : 'Drag and drop or click target'}
+                     <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl mb-3 group-hover:scale-110 transition-transform">
+                        <UploadCloud size={28} />
+                     </div>
+                     <p className="text-xs font-black text-slate-800 text-center uppercase tracking-widest">CSV Payload</p>
+                     <p className="text-[10px] text-slate-500 mt-1 mb-4 text-center truncate max-w-[200px]">
+                        {formData.uploadedContacts.length > 0 ? <span className="text-emerald-600 font-black">{formData.uploadedContacts.length} Leads Loaded</span> : 'Drag & Drop CSV'}
                      </p>
-                     <button onClick={downloadSampleCSV} className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded hover:bg-blue-100 flex items-center transition-colors">
-                        <Download size={12} className="mr-1" /> Download Demo CSV
+                     <button onClick={downloadSampleCSV} className="text-[10px] font-black text-blue-600 bg-white border border-blue-100 px-4 py-2 rounded-xl hover:bg-blue-50 flex items-center transition-all uppercase tracking-widest shadow-sm">
+                        <Download size={14} className="mr-2" /> Sample CSV
                      </button>
                   </div>
                </div>
 
-                <div className="p-4 bg-brand-light/10 border border-[var(--theme-border)]/20 rounded-lg flex items-start space-x-3 text-[var(--theme-text)] mt-6">
-                   <AlertCircle size={20} className="mt-0.5 shrink-0" />
-                   <div className="text-sm">
+                <div className="p-4 bg-slate-50 border border-slate-100 rounded-2xl flex items-start space-x-3 text-slate-600 mt-6">
+                   <AlertCircle size={18} className="mt-0.5 shrink-0 text-blue-500" />
+                   <div className="text-[10px] font-bold uppercase tracking-tight leading-relaxed">
                      {formData.uploadedContacts.length > 0 ? (
-                       <p>This campaign will target the <b>{formData.uploadedContacts.length}</b> custom contacts uploaded directly via your CSV file.</p>
+                       <p>Targeting <span className="text-blue-600">{formData.uploadedContacts.length}</span> verified contacts from your uploaded payload.</p>
                      ) : (
-                       <p>This will target approximately <b>500</b> predefined contacts that match the tag requirements and have opted in.</p>
+                       <p>Targeting approximately <span className="text-blue-600">500</span> predefined leads matching your criteria.</p>
                      )}
                    </div>
                 </div>
