@@ -138,39 +138,57 @@ function Flows() {
             <button onClick={handleCreateNew} className="px-6 py-2.5 bg-blue-600 text-white rounded-md text-sm font-bold shadow-soft hover:bg-blue-700 transition-colors">Start Building</button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {flows.map(f => (
-            <div key={f._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-premium transition-shadow">
-              <div className="flex justify-between items-start mb-4">
-                 <div className="flex-1 space-y-1 overflow-hidden pr-2">
-                    <h3 className="font-bold text-gray-800 text-lg truncate" title={f.name}>{f.name}</h3>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider truncate">
-                       {f.triggerType} Trigger {f.triggerKeywords?.length > 0 && `("${f.triggerKeywords.join(', ')}")`}
-                    </p>
+            <div key={f._id} className="bg-white rounded-[2rem] shadow-premium border border-slate-100 p-6 sm:p-8 flex flex-col hover:shadow-glow transition-all group relative overflow-hidden">
+              <div className="flex justify-between items-start mb-6">
+                 <div className="flex-1 space-y-1 overflow-hidden pr-4">
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Flow Identity</p>
+                    <h3 className="font-black text-slate-800 text-lg tracking-tight truncate group-hover:text-blue-600 transition-colors" title={f.name}>{f.name}</h3>
+                    <div className="flex items-center space-x-2 mt-2">
+                       <Zap size={12} className="text-blue-600" />
+                       <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest truncate">
+                          {f.triggerType} Trigger {f.triggerKeywords?.length > 0 && `("${f.triggerKeywords.join(', ')}")`}
+                       </p>
+                    </div>
                  </div>
-                 {f.status === 'ACTIVE' ? (
-                   <span className="shrink-0 flex items-center text-green-700 bg-green-100 border border-green-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"><Play size={10} className="mr-1" /> Active</span>
-                 ) : (
-                   <span className="shrink-0 flex items-center text-gray-600 bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"><Pause size={10} className="mr-1" /> Draft</span>
-                 )}
+                 <div className="transform scale-90 origin-right">
+                   {f.status === 'ACTIVE' ? (
+                     <span className="flex items-center text-emerald-700 bg-emerald-50 border border-emerald-100 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest animate-pulse"><Play size={10} className="mr-2" /> Active</span>
+                   ) : (
+                     <span className="flex items-center text-slate-500 bg-slate-50 border border-slate-100 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest"><Pause size={10} className="mr-2" /> Draft</span>
+                   )}
+                 </div>
               </div>
-              <p className="text-sm text-gray-600 flex-1 line-clamp-2">{f.description}</p>
               
-              <div className="mt-4 pt-4 border-t border-gray-100 flex justify-between items-center">
-                <div className="flex space-x-1">
-                   <button onClick={() => handleDelete(f._id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Delete Flow">
-                     <Trash2 size={16} />
+              <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-50 flex-1 mb-6">
+                 <p className="text-xs text-slate-500 font-medium leading-relaxed line-clamp-3 italic">
+                    {f.description || "No description provided for this automation sequence."}
+                 </p>
+              </div>
+              
+              <div className="flex items-center space-x-3">
+                <button 
+                   onClick={() => navigate(`/flows/${f._id}`)} 
+                   className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-3 shadow-glow hover:bg-slate-800 transition-all active:scale-95"
+                >
+                   <Edit size={14} />
+                   <span>Orchestrate</span>
+                </button>
+                <div className="flex space-x-2">
+                   <button 
+                      onClick={() => openSettings(f)}
+                      className="p-4 bg-white border border-slate-100 text-slate-400 hover:text-blue-600 hover:border-blue-100 rounded-2xl transition-all active:scale-90 shadow-sm"
+                   >
+                      <Settings size={18} />
                    </button>
                    <button 
-                     onClick={() => openSettings(f)}
-                     className="p-1.5 text-gray-400 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors" title="Settings"
+                      onClick={() => handleDelete(f._id)}
+                      className="p-4 bg-rose-50 text-rose-400 hover:text-rose-600 hover:bg-rose-100 rounded-2xl transition-all active:scale-90 border border-rose-100/50"
                    >
-                     <Settings size={16} />
+                      <Trash2 size={18} />
                    </button>
                 </div>
-                <button onClick={() => navigate(`/flows/${f._id}`)} className="text-blue-600 font-bold text-sm hover:text-blue-800 transition-colors flex items-center bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-md">
-                   <Edit size={14} className="mr-1.5" /> Open Canvas
-                </button>
               </div>
             </div>
           ))}

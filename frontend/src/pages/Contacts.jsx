@@ -585,27 +585,27 @@ export default function Contacts({ roleAccess }) {
 
   return (
     <div className="bg-crm-bg min-h-screen flex flex-col animate-fade-in font-sans tracking-normal text-slate-800">
-      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-3 sticky top-0 z-40 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-3">
+      <div className="bg-white border-b border-slate-100 px-4 sm:px-8 py-3 sticky top-0 z-40 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-4">
          <div className="w-full sm:w-auto flex items-center justify-between">
-            <h1 className="text-[10px] sm:text-xs font-black text-gray-400 tracking-wider uppercase flex items-center">
-               <Users className="mr-2 text-[var(--theme-text)]" size={16} /> <span className="hidden sm:inline">Workspace</span> Database
+            <h1 className="text-[10px] sm:text-xs font-black text-slate-400 tracking-wider uppercase flex items-center">
+               <Users className="mr-2 text-blue-600" size={16} /> <span className="hidden sm:inline">Workspace</span> Database
             </h1>
-            <div className="flex items-center space-x-3 text-[10px] sm:hidden">
-                <div className="text-right">
-                   <p className="font-bold text-gray-800">{filteredContacts.length} Leads</p>
+            <div className="flex items-center space-x-3 sm:hidden">
+                <div className="bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
+                   <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{filteredContacts.length} Leads</p>
                 </div>
             </div>
          </div>
          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
             <div className="hidden sm:flex items-center space-x-3 text-xs">
                <div className="text-right">
-                  <p className="text-gray-400 font-bold uppercase tracking-tighter text-[9px]">Filtered</p>
-                  <p className="font-bold text-gray-800">{filteredContacts.length}</p>
+                  <p className="text-slate-400 font-bold uppercase tracking-tighter text-[9px]">Filtered</p>
+                  <p className="font-black text-slate-800">{filteredContacts.length}</p>
                </div>
-               <div className="w-[1px] h-6 bg-gray-100 mx-2"></div>
+               <div className="w-[1px] h-6 bg-slate-100 mx-2"></div>
                <div>
-                  <p className="text-[var(--theme-text)] font-bold uppercase tracking-tighter text-[9px]">Selected</p>
-                  <p className="font-bold text-gray-800">{selectedIds.size}</p>
+                  <p className="text-blue-600 font-bold uppercase tracking-tighter text-[9px]">Selected</p>
+                  <p className="font-black text-slate-800">{selectedIds.size}</p>
                </div>
             </div>
             
@@ -631,12 +631,12 @@ export default function Contacts({ roleAccess }) {
                   <Download size={18} />
                </button>
              )}
-
-            {canAdd && (
+             {canAdd && (
                <button 
                  onClick={() => setShowAddModal(true)} 
-                 className="px-5 py-2.5 bg-[var(--theme-bg)] text-white text-xs font-black rounded-xl hover:shadow-glow transition transform hover:-translate-y-0.5 active:scale-95 uppercase tracking-widest"
+                 className="flex-1 sm:flex-none px-6 py-3 bg-slate-900 text-white text-[10px] font-black rounded-2xl hover:shadow-glow transition transform hover:-translate-y-0.5 active:scale-95 uppercase tracking-widest flex items-center justify-center space-x-2"
                >
+                  <Plus size={14} />
                   <span>Add Profile</span>
                </button>
             )}
@@ -669,78 +669,87 @@ export default function Contacts({ roleAccess }) {
 
               {canFilter && (
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-                      <div className="flex-1 bg-white p-2 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-2 overflow-x-auto no-scrollbar">
-                          <div className="flex items-center px-3 border-r border-gray-100 space-x-2 mr-1">
-                              <Activity size={14} className="text-teal-500" />
+                      <div className="flex-1 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-2 overflow-x-auto no-scrollbar">
+                          <div className="flex items-center px-4 border-r border-slate-100 space-x-3 mr-1 shrink-0">
+                              <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pulse Hunt:</span>
                           </div>
                           
-                          <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer min-w-[100px]">
-                             <option value="ALL">Status</option>
-                             {['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'].map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
+                          <div className="flex items-center space-x-2 shrink-0">
+                             <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2.5 px-4 rounded-xl border-none focus:ring-2 focus:ring-blue-100 cursor-pointer min-w-[110px] appearance-none">
+                                <option value="ALL">All Status</option>
+                                {['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'].map(s => <option key={s} value={s}>{s}</option>)}
+                             </select>
 
-                          <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer min-w-[100px]">
-                             <option value="ALL">Stage</option>
-                             {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
-                          </select>
-
-                          <select value={filters.agent} onChange={e=>setFilters({...filters, agent: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer min-w-[100px]">
-                             <option value="ALL">Agent</option>
-                             {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
-                          </select>
+                             <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2.5 px-4 rounded-xl border-none focus:ring-2 focus:ring-blue-100 cursor-pointer min-w-[110px] appearance-none">
+                                <option value="ALL">All Stages</option>
+                                {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
+                             </select>
+                          </div>
                       </div>
 
                       <button 
                         onClick={() => setShowFilters(true)}
-                        className="flex items-center justify-center space-x-2 px-6 py-3 bg-white border border-gray-100 rounded-2xl shadow-sm text-slate-700 hover:border-teal-200 hover:text-teal-600 transition-all font-black"
+                        className="flex items-center justify-center space-x-3 px-6 py-4 bg-white border border-slate-100 rounded-3xl shadow-sm text-slate-700 hover:border-blue-200 hover:text-blue-600 transition-all active:scale-95 group"
                       >
-                         <Filter size={16} className={activeFilterCount > 0 ? "text-teal-600 animate-pulse" : "text-gray-400"} />
-                         <span className="text-[10px] uppercase tracking-widest">Filters</span>
+                         <Filter size={18} className={activeFilterCount > 0 ? "text-blue-600" : "text-slate-400 group-hover:text-blue-600 transition-colors"} />
+                         <span className="text-[10px] font-black uppercase tracking-widest">More Filters</span>
                       </button>
                   </div>
                )}
           </div>
 
           {/* Mobile Leads View */}
-          <div className="sm:hidden space-y-3">
-             {filteredContacts.map((c, i) => (
-                <div key={c._id || i} onClick={() => handleRowClick(c)} className="bg-white p-4 rounded-[1.5rem] border border-slate-100 shadow-sm active:scale-[0.98] transition-all">
-                   <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center space-x-3">
-                         <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center font-black text-slate-400 text-xs uppercase">
-                            {c.firstName?.charAt(0) || c.name?.charAt(0) || 'U'}
-                         </div>
-                         <div>
-                            <p className="text-xs font-black text-slate-800 tracking-tight">{c.name || 'Unknown'}</p>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{c.phone}</p>
-                         </div>
-                      </div>
-                      <span className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-wider ${
-                        c.pipelineStage === 'Closing' ? 'bg-green-100 text-green-600' : 'bg-slate-100 text-slate-500'
-                      }`}>{c.pipelineStage || 'Discovery'}</span>
-                   </div>
-                   <div className="flex items-center justify-between pt-3 border-t border-slate-50">
-                      <div className="flex items-center space-x-2">
-                         <Users size={12} className="text-slate-300" />
-                         <span className="text-[9px] font-bold text-slate-500 uppercase">{agents.find(a => a._id === c.assignedAgent)?.name || 'Unassigned'}</span>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                         <div className="w-12 h-1 bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-teal-500" style={{ width: `${c.score || 0}%` }}></div>
-                         </div>
-                         <span className="text-[9px] font-black text-teal-600">{c.score || 0}%</span>
-                      </div>
-                   </div>
-                </div>
-             ))}
-             {filteredContacts.length === 0 && (
-                <div className="py-20 text-center opacity-40">
-                   <Users size={48} className="mx-auto mb-4 text-slate-200" />
-                   <p className="text-xs font-black uppercase tracking-widest text-slate-400">No matching leads found</p>
-                </div>
-             )}
-          </div>
+           <div className="sm:hidden space-y-4">
+              {filteredContacts.map((c, i) => (
+                 <div key={c._id || i} onClick={() => handleRowClick(c)} className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-premium active:scale-[0.98] transition-all relative overflow-hidden group">
+                    <div className="flex items-center justify-between mb-4">
+                       <div className="flex items-center space-x-4">
+                          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-sm uppercase shadow-sm border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                             {c.firstName?.charAt(0) || c.name?.charAt(0) || 'U'}
+                          </div>
+                          <div>
+                             <p className="text-sm font-black text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors">{c.name || 'Unknown'}</p>
+                             <div className="flex items-center space-x-2 mt-0.5">
+                                <Smartphone size={10} className="text-slate-300" />
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{c.phone}</p>
+                             </div>
+                          </div>
+                       </div>
+                       <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border ${
+                         c.pipelineStage === 'ADMISSION' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
+                         c.pipelineStage === 'CLOSE' ? 'bg-rose-50 text-rose-600 border-rose-100' :
+                         'bg-slate-50 text-slate-500 border-slate-100'
+                       }`}>{c.pipelineStage || 'Discovery'}</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                       <div className="flex items-center space-x-2">
+                          <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center">
+                             <UserCircle size={14} className="text-slate-400" />
+                          </div>
+                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">
+                             {agents.find(a => a._id === c.assignedAgent)?.name || 'Unassigned'}
+                          </span>
+                       </div>
+                       <div className="flex items-center space-x-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
+                          <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
+                             <div className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] transition-all duration-500" style={{ width: `${c.score || 0}%` }}></div>
+                          </div>
+                          <span className="text-[10px] font-black text-blue-600 tracking-tighter">{c.score || 0}%</span>
+                       </div>
+                    </div>
+                 </div>
+              ))}
+              {filteredContacts.length === 0 && (
+                 <div className="py-24 text-center">
+                    <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                       <Users size={40} className="text-slate-200" />
+                    </div>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No matching leads discovered</p>
+                 </div>
+              )}
+           </div>
 
           {/* Desktop Table View */}
           <div className="hidden sm:block bg-white rounded-2xl border border-gray-100 shadow-premium overflow-hidden">

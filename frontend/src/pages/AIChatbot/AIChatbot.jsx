@@ -336,8 +336,8 @@ export default function AIChatbot() {
   return (
     <div className="p-4 sm:p-8 bg-slate-50 min-h-screen animate-fade-in-up">
       <div className="max-w-6xl mx-auto">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 sm:mb-10">
-          <div>
+         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 sm:mb-10">
+          <div className="w-full sm:w-auto">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center uppercase tracking-tight">
               <Bot className="mr-3 text-blue-600" size={28} />
               AI Chatbot <span className="hidden sm:inline ml-2">Configuration</span>
@@ -347,18 +347,18 @@ export default function AIChatbot() {
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
              <button 
                onClick={() => setSettings({ ...settings, botEnabled: !settings.botEnabled })}
-               className={`w-full sm:w-auto px-4 py-3 rounded-2xl flex items-center justify-center space-x-2 border transition-all active:scale-95 ${settings.botEnabled ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
+               className={`w-full sm:w-auto px-6 py-3.5 rounded-2xl flex items-center justify-center space-x-3 border transition-all active:scale-95 ${settings.botEnabled ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
              >
-                <div className={`w-2 h-2 rounded-full ${settings.botEnabled ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`}></div>
+                <div className={`w-2.5 h-2.5 rounded-full ${settings.botEnabled ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`}></div>
                 <span className="text-[10px] font-black uppercase tracking-widest">{settings.botEnabled ? 'Bot Active' : 'Bot Disabled'}</span>
              </button>
              <button 
                onClick={handleSave}
                disabled={saving}
-               className="w-full sm:w-auto px-8 py-3 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 transition shadow-glow flex items-center justify-center disabled:opacity-50 active:scale-95"
+               className="w-full sm:w-auto px-10 py-3.5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition shadow-glow flex items-center justify-center disabled:opacity-50 active:scale-95"
              >
                {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={16} className="mr-2" />}
-               Save Changes
+               Save Logic
              </button>
           </div>
         </div>

@@ -61,7 +61,7 @@ export default function GlobalSearch({ isOpen, onClose }) {
               icon: Users,
               color: 'text-emerald-600 bg-emerald-50',
               link: `/inbox?contactId=${c._id}`,
-              badge: 'Lead'
+              badge: 'LEAD'
             })));
           }
 

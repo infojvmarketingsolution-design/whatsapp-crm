@@ -104,30 +104,30 @@ function Campaigns() {
         </button>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-8">
-        <div className="bg-white p-4 sm:p-5 rounded-3xl shadow-sm border border-gray-100 group hover:border-blue-200 transition-all">
-          <p className="text-gray-400 text-[9px] font-black uppercase tracking-widest">Total Campaigns</p>
-          <div className="flex items-center justify-between mt-2">
-            <p className="text-xl sm:text-2xl font-black text-gray-800 tracking-tighter">{campaigns.length}</p>
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl group-hover:bg-blue-600 group-hover:text-white transition-all"><Megaphone size={14} /></div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
+        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 group hover:border-blue-200 transition-all">
+          <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Total Campaigns</p>
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-2xl font-black text-slate-800 tracking-tighter">{campaigns.length}</p>
+            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm"><Megaphone size={16} /></div>
           </div>
         </div>
-        <div className="bg-white p-4 sm:p-5 rounded-3xl shadow-sm border border-gray-100 group hover:border-emerald-200 transition-all">
-          <p className="text-gray-400 text-[9px] font-black uppercase tracking-widest">Messages Sent</p>
-          <div className="flex items-center justify-between mt-2">
-            <p className="text-xl sm:text-2xl font-black text-gray-800 tracking-tighter">
+        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 group hover:border-emerald-200 transition-all">
+          <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Messages Sent</p>
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-2xl font-black text-slate-800 tracking-tighter">
                {campaigns.reduce((acc, curr) => acc + (curr.metrics?.sent || 0), 0)}
             </p>
-            <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl group-hover:bg-emerald-600 group-hover:text-white transition-all"><Send size={14} /></div>
+            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm"><Send size={16} /></div>
           </div>
         </div>
-        <div className="bg-white p-4 sm:p-5 rounded-3xl shadow-sm border border-gray-100">
-          <p className="text-gray-400 text-[9px] font-black uppercase tracking-widest">Delivery Rate</p>
-          <p className="text-xl sm:text-2xl font-black text-emerald-600 mt-2 tracking-tighter">98.5%</p>
+        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100">
+          <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Avg Delivery</p>
+          <p className="text-2xl font-black text-emerald-600 mt-3 tracking-tighter">98.5%</p>
         </div>
-        <div className="bg-white p-4 sm:p-5 rounded-3xl shadow-sm border border-gray-100">
-          <p className="text-gray-400 text-[9px] font-black uppercase tracking-widest">Avg Read Rate</p>
-          <p className="text-xl sm:text-2xl font-black text-blue-500 mt-2 tracking-tighter">45.2%</p>
+        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100">
+          <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Read Rate</p>
+          <p className="text-2xl font-black text-blue-500 mt-3 tracking-tighter">45.2%</p>
         </div>
       </div>
 
@@ -140,42 +140,49 @@ function Campaigns() {
         {/* Mobile Grid View */}
         <div className="block md:hidden p-4 space-y-4">
            {campaigns.map(c => (
-             <div key={c._id} className="p-4 bg-slate-50/50 rounded-2xl border border-slate-100 space-y-4">
+             <div key={c._id} className="p-5 bg-white rounded-[2rem] border border-slate-100 shadow-premium space-y-5 group relative overflow-hidden">
                 <div className="flex items-center justify-between">
-                   <p className="text-sm font-black text-slate-800 tracking-tight">{c.name}</p>
-                   {getStatusBadge(c.status)}
-                </div>
-                <div className="grid grid-cols-4 gap-2">
-                   <div className="flex flex-col">
-                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Audience</span>
-                      <span className="text-xs font-bold text-slate-700">{c.metrics?.totalContacts || 0}</span>
+                   <div>
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Campaign Identity</p>
+                      <p className="text-sm font-black text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors">{c.name}</p>
                    </div>
-                   <div className="flex flex-col">
-                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter">Sent</span>
-                      <span className="text-xs font-bold text-slate-700">{c.metrics?.sent || 0}</span>
-                   </div>
-                   <div className="flex flex-col">
-                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-tighter">Delivered</span>
-                      <span className="text-xs font-bold text-emerald-600">{c.metrics?.delivered || 0}</span>
-                   </div>
-                   <div className="flex flex-col">
-                      <span className="text-[8px] font-black text-red-500 uppercase tracking-tighter">Failed</span>
-                      <span className="text-xs font-bold text-red-600">{c.metrics?.failed || 0}</span>
+                   <div className="transform scale-90 origin-right">
+                      {getStatusBadge(c.status)}
                    </div>
                 </div>
-                <div className="flex items-center space-x-2 pt-3 border-t border-slate-100">
+                
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                   <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Audience</span>
+                      <span className="text-sm font-black text-slate-700">{c.metrics?.totalContacts || 0}</span>
+                   </div>
+                   <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
+                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Processed</span>
+                      <span className="text-sm font-black text-slate-700">{c.metrics?.sent || 0}</span>
+                   </div>
+                   <div className="bg-emerald-50/30 p-3 rounded-2xl border border-emerald-100/50">
+                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest block mb-1">Success</span>
+                      <span className="text-sm font-black text-emerald-600">{c.metrics?.delivered || 0}</span>
+                   </div>
+                   <div className="bg-rose-50/30 p-3 rounded-2xl border border-rose-100/50">
+                      <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest block mb-1">Failure</span>
+                      <span className="text-sm font-black text-rose-600">{c.metrics?.failed || 0}</span>
+                   </div>
+                </div>
+
+                <div className="flex items-center space-x-3 pt-2">
                    <button 
                       onClick={() => showReport(c)}
-                      className="flex-1 py-2 bg-white border border-blue-100 text-blue-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-2 active:scale-95 transition-transform"
+                      className="flex-1 py-3.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-3 shadow-glow active:scale-95 transition-all"
                    >
-                      <BarChart2 size={12} />
-                      <span>Analytics</span>
+                      <BarChart2 size={14} />
+                      <span>Intelligence Report</span>
                    </button>
                    <button 
                       onClick={() => handleDelete(c._id)}
-                      className="p-2 bg-rose-50 text-rose-500 rounded-xl active:scale-90 transition-transform"
+                      className="p-3.5 bg-slate-100 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-2xl transition-all active:scale-90"
                    >
-                      <Trash2 size={14} />
+                      <Trash2 size={18} />
                    </button>
                 </div>
              </div>

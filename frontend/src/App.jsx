@@ -1023,6 +1023,18 @@ function AppLayout() {
       
       {/* Global Search Overlay */}
       {!isAuthPage && <GlobalSearch isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />}
+      
+      {/* Keyboard Shortcut Listener */}
+      {useEffect(() => {
+        const handleKeyDown = (e) => {
+          if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+            e.preventDefault();
+            setIsSearchOpen(true);
+          }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+      }, [])}
 
       {/* Main Sidebar (Drawer on mobile) */}
       {!isAuthPage && (

@@ -93,25 +93,38 @@ function Templates() {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
         {templates.map(t => (
-          <div key={t._id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-premium transition-shadow">
-            <div className="flex justify-between items-start mb-4">
-               <div>
-                  <h3 className="font-bold text-gray-800 text-lg flex items-center truncate max-w-[200px]" title={t.name}>{t.name}</h3>
-                  <p className="text-xs text-gray-500 mt-1 font-medium">{t.category} • {t.language.toUpperCase()}</p>
+          <div key={t._id} className="bg-white rounded-[2rem] shadow-premium border border-slate-100 p-6 sm:p-8 flex flex-col hover:shadow-glow transition-all group relative overflow-hidden">
+            <div className="flex justify-between items-start mb-6">
+               <div className="flex-1 space-y-1 overflow-hidden pr-4">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Template Identity</p>
+                  <h3 className="font-black text-slate-800 text-lg tracking-tight truncate group-hover:text-blue-600 transition-colors" title={t.name}>{t.name}</h3>
+                  <div className="flex items-center space-x-2 mt-2">
+                     <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{t.category}</span>
+                     <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">• {t.language.toUpperCase()}</span>
+                  </div>
                </div>
-               {getStatusBadge(t.status)}
+               <div className="transform scale-90 origin-right">
+                  {getStatusBadge(t.status)}
+               </div>
             </div>
-            <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-700 font-medium mb-4 flex-1">
-               {t.components?.find(c => c.type === 'BODY')?.text || 'No body content'}
+            <div className="bg-slate-50/50 p-5 rounded-2xl border border-slate-50 text-[11px] text-slate-600 font-medium mb-8 flex-1 line-clamp-4 leading-relaxed italic">
+               {t.components?.find(c => c.type === 'BODY')?.text || 'No body content available.'}
             </div>
-            <div className="pt-4 border-t border-gray-100 flex justify-between items-center">
-               <button onClick={() => handleDelete(t._id)} className="text-red-500 font-bold text-sm hover:text-red-700 transition-colors flex items-center px-2 py-1 rounded hover:bg-red-50">
-                 <Trash2 size={16} className="mr-1" /> Delete
+            <div className="flex items-center space-x-3 pt-2">
+               <button 
+                  onClick={() => setSelectedTemplate(t)} 
+                  className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-3 shadow-glow hover:bg-slate-800 transition-all active:scale-95"
+               >
+                 <FileText size={14} />
+                 <span>Preview Detail</span>
                </button>
-               <button onClick={() => setSelectedTemplate(t)} className="text-blue-600 font-bold text-sm hover:text-blue-700 transition-colors flex items-center">
-                 <FileText size={16} className="mr-1" /> View Details
+               <button 
+                  onClick={() => handleDelete(t._id)}
+                  className="p-4 bg-rose-50 text-rose-400 hover:text-rose-600 hover:bg-rose-100 rounded-2xl transition-all active:scale-90 border border-rose-100/50"
+               >
+                 <Trash2 size={18} />
                </button>
             </div>
           </div>

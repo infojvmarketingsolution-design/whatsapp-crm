@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
   Building2, 
   MessageCircle, 
@@ -44,8 +45,14 @@ const PlaceholderSettings = ({ title, icon: Icon, description }) => (
 );
 
 export default function Settings({ roleAccess }) {
-  const [activeTab, setActiveTab] = useState('workspace');
+  const [activeTab, setActiveTab] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const location = useLocation();
+
+  // Reset to menu view on every visit to /settings
+  useEffect(() => {
+    setActiveTab(null);
+  }, [location.pathname, location.key]);
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user.role || 'AGENT').toUpperCase();
@@ -93,7 +100,7 @@ export default function Settings({ roleAccess }) {
               <MessageCircle className="mr-2 text-[var(--theme-text)]" size={20} />
               WhatsApp API Settings
             </h2>
-            <div className="p-6">
+            <div className="p-0 sm:p-2">
                <ApiSetup />
             </div>
           </div>
@@ -147,7 +154,7 @@ export default function Settings({ roleAccess }) {
       {/* Settings Layout */}
       <div className="flex-1 overflow-hidden flex flex-col sm:flex-row max-w-7xl mx-auto w-full">
         {/* Sidebar Nav - Desktop: Side, Mobile: List (if no active tab on small screens) */}
-        <div className={`${activeTab && !window.innerWidth < 640 ? 'hidden sm:block' : 'block'} w-full sm:w-72 bg-white border-r border-slate-200 overflow-y-auto custom-scrollbar flex-shrink-0 relative z-10`}>
+        <div className={`${activeTab ? 'hidden sm:block' : 'block'} w-full sm:w-72 bg-white border-r border-slate-200 overflow-y-auto custom-scrollbar flex-shrink-0 relative z-10`}>
           <nav className="p-4 space-y-1">
             {filteredItems.length === 0 ? (
               <div className="px-4 py-12 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">
