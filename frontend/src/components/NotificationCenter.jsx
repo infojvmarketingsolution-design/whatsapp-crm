@@ -1,13 +1,129 @@
-import React from 'react';
-import { X, Bell, MessageSquare, CheckSquare, PlusCircle, AlertCircle, Trash2 } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, Bell, MessageSquare, CheckSquare, PlusCircle, AlertCircle, Trash2, Smartphone, Clock, ShieldAlert } from 'lucide-react';
+import io from 'socket.io-client';
 
 export default function NotificationCenter({ isOpen, onClose }) {
-  const [notifications, setNotifications] = React.useState([
-    { id: 1, type: 'CHAT', title: 'New Message', desc: 'John Doe sent you a message', time: 'Just now', icon: MessageSquare, color: 'text-teal-600 bg-teal-50' },
-    { id: 2, type: 'TASK', title: 'Task Assigned', desc: 'Review the new lead from Instagram', time: '5 mins ago', icon: CheckSquare, color: 'text-blue-600 bg-blue-50' },
-    { id: 3, type: 'SYSTEM', title: 'Template Approved', desc: 'Your "Welcome" template is ready', time: '1 hour ago', icon: PlusCircle, color: 'text-emerald-600 bg-emerald-50' },
-    { id: 4, type: 'ALERT', title: 'Critical Overdue', desc: 'Lead "Sarah Smith" is overdue for 24h', time: '3 hours ago', icon: AlertCircle, color: 'text-rose-600 bg-rose-50' },
-  ]);
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      setLoading(true);
+      try {
+        const token = localStorage.getItem('token');
+        const tenantId = localStorage.getItem('tenantId');
+        if (!token) return;
+
+        // 1. Fetch Task Stats
+        const taskRes = await fetch('/api/chat/stats/pending-tasks', {
+          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+        });
+        
+        // 2. Fetch API Config
+        const configRes = await fetch('/api/whatsapp/config', {
+          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+        });
+
+        let newNotes = [];
+
+        if (taskRes.ok) {
+          const taskData = await taskRes.json();
+          // Calculate counts
+          const now = new Date();
+          const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+          
+          const allTasks = [...(taskData.telecallerTasks || []), ...(taskData.counsellorTasks || [])];
+          
+          const pending = allTasks.filter(t => t.status === 'PENDING').length;
+          const overdue = allTasks.filter(t => t.status === 'PENDING' && new Date(t.dueDate) < now).length;
+          const dueToday = allTasks.filter(t => {
+            const d = new Date(t.dueDate);
+            return t.status === 'PENDING' && d >= today && d < new Date(today.getTime() + 86400000);
+          }).length;
+
+          if (overdue > 0) {
+            newNotes.push({
+              id: 'overdue',
+              type: 'ALERT',
+              title: 'Critical Overdue',
+              desc: `You have ${overdue} tasks that require immediate attention!`,
+              time: 'Priority',
+              icon: ShieldAlert,
+              color: 'text-rose-600 bg-rose-50'
+            });
+          }
+
+          if (dueToday > 0) {
+            newNotes.push({
+              id: 'due-today',
+              type: 'TASK',
+              title: 'Due Today',
+              desc: `${dueToday} tasks are scheduled for completion today.`,
+              time: 'Action Required',
+              icon: Clock,
+              color: 'text-orange-600 bg-orange-50'
+            });
+          }
+
+          if (pending > 0 && overdue === 0 && dueToday === 0) {
+            newNotes.push({
+              id: 'pending',
+              type: 'TASK',
+              title: 'Pending Tasks',
+              desc: `Total ${pending} tasks are waiting in your queue.`,
+              time: 'Upcoming',
+              icon: CheckSquare,
+              color: 'text-blue-600 bg-blue-50'
+            });
+          }
+        }
+
+        if (configRes.ok) {
+          const config = await configRes.json();
+          if (!config.accessToken || config.accessToken === 'DUMMY') {
+            newNotes.push({
+              id: 'api-status',
+              type: 'SYSTEM',
+              title: 'API Disconnected',
+              desc: 'Your WhatsApp Business API is not configured or disconnected.',
+              time: 'System',
+              icon: Smartphone,
+              color: 'text-rose-600 bg-rose-50'
+            });
+          }
+        }
+
+        setNotifications(newNotes);
+      } catch (err) {
+        console.error('Failed to load notifications', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isOpen) fetchNotifications();
+
+    // Socket for real-time "New Lead"
+    const tenantId = localStorage.getItem('tenantId');
+    const socket = io('', { query: { tenantId } });
+
+    socket.on('new_message', (data) => {
+      if (data.content === 'New Lead Established' || data.type === 'new_lead') {
+        const newLeadNote = {
+          id: Date.now(),
+          type: 'CHAT',
+          title: 'New Lead Assigned',
+          desc: `A new lead "${data.contact?.name || 'Unknown'}" has entered the pipeline.`,
+          time: 'Just now',
+          icon: MessageSquare,
+          color: 'text-emerald-600 bg-emerald-50'
+        };
+        setNotifications(prev => [newLeadNote, ...prev]);
+      }
+    });
+
+    return () => socket.disconnect();
+  }, [isOpen]);
 
   const clearAll = () => setNotifications([]);
 
@@ -23,7 +139,7 @@ export default function NotificationCenter({ isOpen, onClose }) {
 
       {/* Drawer */}
       <div className={`
-        fixed top-0 right-0 bottom-0 w-80 bg-white z-[210] shadow-2xl transform transition-transform duration-300 ease-in-out
+        fixed top-0 right-0 bottom-0 w-80 sm:w-96 bg-white z-[210] shadow-2xl transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         flex flex-col
       `}>
@@ -42,7 +158,12 @@ export default function NotificationCenter({ isOpen, onClose }) {
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
-          {notifications.length === 0 ? (
+          {loading ? (
+             <div className="h-full flex flex-col items-center justify-center space-y-4">
+                <div className="w-8 h-8 border-4 border-teal-500/20 border-t-teal-600 rounded-full animate-spin"></div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Syncing Alerts...</p>
+             </div>
+          ) : notifications.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-4 opacity-40">
                <Bell size={48} className="text-slate-300" />
                <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">No New Notifications</p>
