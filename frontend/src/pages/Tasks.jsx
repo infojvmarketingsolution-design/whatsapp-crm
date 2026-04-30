@@ -768,7 +768,8 @@ export default function Tasks() {
                const counsellor = t.metadata?.assignedCounsellor ? agents.find(a => a._id === t.metadata.assignedCounsellor) : null;
                
                return (
-                   <div key={t._id} className="group bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col hover:border-teal-200 hover:shadow-xl transition-all animate-fade-in relative">
+                   <div key={t._id} className={`group bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col hover:border-teal-200 hover:shadow-xl transition-all animate-fade-in relative ${activeDropdown === t._id ? 'z-[50] ring-2 ring-teal-500/20 shadow-2xl' : 'z-0'}`}>
+                      {/* Top Content Row */}
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                          <div className="flex items-start sm:items-center space-x-3 sm:space-x-5 text-left">
                             <button 
@@ -811,7 +812,7 @@ export default function Tasks() {
                                             <span className="truncate max-w-[100px]">{t.contactName}</span>
                                          </button>
                                          
-                                         {/* Lead Owner - ADDED BACK */}
+                                         {/* Lead Owner Badge */}
                                          {(t.assignedAgent || t.assignedCounsellor) && (
                                             <div className="flex items-center text-[10px] sm:text-[11px] font-bold text-indigo-500/80">
                                                <Briefcase size={12} className="mr-1 opacity-60" />
@@ -838,29 +839,34 @@ export default function Tasks() {
                                    </div>
                                 </div>
                              </div>
+                           </div>
 
-                             <div className="flex items-center justify-between sm:justify-end gap-2 mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
+                             {/* Action Buttons Row */}
+                             <div className="flex items-center justify-between sm:justify-end gap-2 mt-4 sm:mt-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-50">
                                 {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
                                    <button 
                                      onClick={() => { setCompletingTask(t); setActiveDropdown(null); }}
-                                     className="flex-1 sm:flex-initial h-8 px-4 bg-teal-600 text-white text-[10px] font-black rounded-lg hover:bg-teal-700 transition-all flex items-center justify-center shadow-lg shadow-teal-600/20 active:scale-95 uppercase tracking-widest"
+                                     className="flex-1 sm:flex-initial h-9 px-6 bg-teal-600 text-white text-[10px] font-black rounded-lg hover:bg-teal-700 transition-all flex items-center justify-center shadow-lg shadow-teal-600/20 active:scale-95 uppercase tracking-widest"
                                    >
-                                     <Check size={12} className="mr-1.5" /> Update
+                                     <Check size={14} className="mr-2" /> Update Outcome
                                    </button>
                                 )}
-                               <div className="relative" ref={activeDropdown === t._id ? dropdownRef : null}>
-                                  <button 
-                                     onClick={(e) => {
-                                        e.stopPropagation();
-                                        setActiveDropdown(activeDropdown === t._id ? null : t._id);
-                                     }}
-                                     className={`h-8 w-8 sm:h-9 sm:w-9 text-slate-400 rounded-lg sm:rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center border border-slate-100 sm:border-none ${activeDropdown === t._id ? 'bg-slate-100 text-slate-600' : ''}`}
-                                  >
-                                     <MoreHorizontal size={18} />
-                                  </button>
+                             </div>
 
-                              {activeDropdown === t._id && (
-                                 <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 py-2 z-[100] animate-pop-in divide-y divide-slate-50">
+                             {/* 3-DOT MENU (Top Right) */}
+                             <div className="absolute top-4 right-4 sm:top-5 sm:right-5" ref={activeDropdown === t._id ? dropdownRef : null}>
+                                <button 
+                                   onClick={(e) => {
+                                      e.stopPropagation();
+                                      setActiveDropdown(activeDropdown === t._id ? null : t._id);
+                                   }}
+                                   className={`h-8 w-8 sm:h-10 sm:w-10 text-slate-400 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center border border-slate-100 sm:border-none ${activeDropdown === t._id ? 'bg-slate-100 text-slate-600' : ''}`}
+                                >
+                                   <MoreVertical size={20} />
+                                </button>
+
+                                {activeDropdown === t._id && (
+                                   <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-3xl border border-slate-100 py-2 z-[100] animate-pop-in divide-y divide-slate-50">
                                     {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
                                        <div className="pb-2">
                                           <button 
@@ -945,10 +951,8 @@ export default function Tasks() {
                                  </div>
                               )}
                            </div>
-                        </div>
-                     </div>
 
-                     {/* RICH COMPLETED DETAILS (Redesigned) */}
+                           {/* COMPLETED DETAILS */}
                      {t.status === 'COMPLETED' && (
                         <div className="mt-4 pt-4 border-t border-slate-50 bg-slate-50/50 -mx-5 -mb-5 px-5 pb-5 rounded-b-2xl">
                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -982,7 +986,6 @@ export default function Tasks() {
                               )}
                            </div>
                            
-                           {/* Quick indicators for potential follow-up links */}
                            <div className="mt-3 flex items-center space-x-4">
                               <div className="flex items-center text-[9px] font-black text-slate-400 uppercase tracking-tighter">
                                  <Clock size={12} className="mr-1.5 opacity-60" />
