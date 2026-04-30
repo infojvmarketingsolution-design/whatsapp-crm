@@ -987,7 +987,7 @@ function AppLayout() {
   }
 
   return (
-    <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden flex-col lg:flex-row`}>
+    <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden ${!isAuthPage && isMobile ? 'flex-col' : 'flex-row'}`}>
       <Toaster position="top-right" reverseOrder={false} />
       {!isAuthPage && <AutoLogout />}
       {!isAuthPage && <GlobalSuspensionTimer />}
@@ -1002,12 +1002,14 @@ function AppLayout() {
               onLogout={handleLogout} 
               isMobileOpen={isSidebarOpen} 
               onClose={() => setIsSidebarOpen(false)} 
+              isMobile={isMobile}
             /> 
           : <Sidebar 
               whatsappConfig={whatsappConfig} 
               roleAccess={roleAccess} 
               isMobileOpen={isSidebarOpen} 
               onClose={() => setIsSidebarOpen(false)} 
+              isMobile={isMobile}
             />
       )}
 

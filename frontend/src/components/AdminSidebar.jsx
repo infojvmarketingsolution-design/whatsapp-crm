@@ -12,7 +12,7 @@ import {
   X
 } from 'lucide-react';
 
-const AdminSidebar = ({ onLogout, isMobileOpen, onClose }) => {
+const AdminSidebar = ({ onLogout, isMobileOpen, onClose, isMobile }) => {
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: <Building2 size={20} />, label: 'Clients', path: '/admin/clients' },
@@ -33,9 +33,11 @@ const AdminSidebar = ({ onLogout, isMobileOpen, onClose }) => {
       )}
 
       <div className={`
-        fixed inset-y-0 left-0 z-[60] lg:relative lg:translate-x-0 transform transition-transform duration-300 ease-in-out
-        ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
-        flex flex-col h-screen w-64 bg-slate-900 text-white border-r border-slate-800
+        ${isMobile ? 'fixed' : 'lg:relative fixed'} inset-y-0 left-0 z-[60]
+        w-72 lg:w-64
+        transform transition-transform duration-300 ease-in-out
+        ${isMobile ? (isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full') : 'translate-x-0'}
+        flex flex-col h-screen bg-slate-900 text-white border-r border-slate-800 shrink-0
       `}>
         <div className="p-6 flex justify-between items-center">
           <div>
