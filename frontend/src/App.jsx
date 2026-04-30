@@ -863,6 +863,17 @@ function AppLayout() {
   };
 
   React.useEffect(() => {
+    // 0. Version Enforcement Logic
+    const SYSTEM_VERSION = '1.4.5';
+    const lastSeenVersion = localStorage.getItem('wapipulse_version');
+    if (lastSeenVersion && lastSeenVersion !== SYSTEM_VERSION) {
+       console.log('🔄 New System Version Detected! Clearing Cache & Reloading...');
+       localStorage.setItem('wapipulse_version', SYSTEM_VERSION);
+       window.location.reload(true);
+       return;
+    }
+    localStorage.setItem('wapipulse_version', SYSTEM_VERSION);
+
     // 1. Initialize Facebook SDK dynamically
     const appId = import.meta.env.VITE_FACEBOOK_APP_ID;
     if (appId) {
