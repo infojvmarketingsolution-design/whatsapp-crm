@@ -841,71 +841,73 @@ export default function Contacts({ roleAccess }) {
               className="w-drawer h-full bg-white shadow-2xl flex flex-col animate-slide-left relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
-               {/* PROFESSIONAL MINIMALIST HEADER */}
-               <div className="bg-white border-b border-slate-100 px-10 py-7 flex items-center justify-between shrink-0">
-                    <div className="flex items-center space-x-6">
-                        <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-2xl font-bold text-slate-400">
-                           {editedContact.firstName?.charAt(0) || selectedContact.name?.charAt(0) || 'U'}
-                        </div>
-                        <div>
-                           <div className="flex items-center space-x-3">
-                              <h2 className="text-2xl font-semibold text-slate-800 tracking-tight">
-                                 {editedContact.firstName || editedContact.name || 'Lead'} {editedContact.lastName || ''}
-                              </h2>
-                              <div className="px-2.5 py-1 bg-slate-50 text-slate-500 rounded text-[9px] font-bold uppercase tracking-widest border border-slate-200">
-                                 {editedContact.pipelineStage || 'Discovery'}
-                              </div>
-                           </div>
-                           <div className="flex items-center space-x-6 mt-1.5 text-slate-400 text-xs font-medium">
-                              <span className="flex items-center"><Phone size={13} className="mr-2 opacity-60" /> {editedContact.phone}</span>
-                              <span className="flex items-center"><Hash size={13} className="mr-2 opacity-60" /> ID: {selectedContact._id.slice(-6).toUpperCase()}</span>
-                           </div>
-                        </div>
-                    </div>
-
-                    <div className="flex items-center space-x-4">
-                     <div className="flex flex-col items-end mr-2">
-                        <label className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Lead Status</label>
-                        <select 
-                           value={editedContact.status || 'NEW LEAD'} 
-                           onChange={e => handleFieldChange('status', e.target.value)}
-                           className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded border transition-all outline-none ${
-                              editedContact.status === 'CLOSED_WON' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
-                              editedContact.status === 'CLOSED_LOST' ? 'bg-red-50 border-red-200 text-red-600' :
-                              'bg-slate-50 border-slate-200 text-slate-600 focus:border-slate-400'
-                           }`}
-                        >
-                           <option value="NEW LEAD">New Lead</option>
-                           <option value="CONTACTED">Contacted</option>
-                           <option value="INTERESTED">Interested</option>
-                           <option value="FOLLOW_UP">Follow Up</option>
-                           <option value="CLOSED_WON">Admission follow up update</option>
-                           <option value="CLOSED_LOST">Admission Cancelled</option>
-                        </select>
+                {/* PROFESSIONAL MINIMALIST HEADER */}
+                <div className="bg-white border-b border-slate-100 px-4 sm:px-10 py-4 sm:py-7 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 sm:gap-0">
+                     <div className="flex items-center space-x-3 sm:space-x-6 w-full sm:w-auto">
+                         <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-xl sm:text-2xl font-bold text-slate-400 shrink-0">
+                            {editedContact.firstName?.charAt(0) || selectedContact.name?.charAt(0) || 'U'}
+                         </div>
+                         <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-2">
+                               <h2 className="text-lg sm:text-2xl font-semibold text-slate-800 tracking-tight truncate max-w-[150px] sm:max-w-none">
+                                  {editedContact.firstName || editedContact.name || 'Lead'} {editedContact.lastName || ''}
+                               </h2>
+                               <div className="px-2 py-0.5 bg-slate-50 text-slate-500 rounded text-[8px] sm:text-[9px] font-bold uppercase tracking-widest border border-slate-200">
+                                  {editedContact.pipelineStage || 'Discovery'}
+                               </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-6 mt-1 text-slate-400 text-[10px] sm:text-xs font-medium">
+                               <span className="flex items-center truncate"><Phone size={12} className="mr-1.5 opacity-60" /> {editedContact.phone}</span>
+                               <span className="flex items-center"><Hash size={12} className="mr-1.5 opacity-60" /> ID: {selectedContact._id.slice(-6).toUpperCase()}</span>
+                            </div>
+                         </div>
                      </div>
 
-                     <button 
-                        onClick={() => {
-                           console.log("[Sync] Triggering Save for:", selectedContact._id);
-                           updateContactDetail(selectedContact._id, editedContact);
-                        }}
-                        disabled={isUpdatingContact}
-                        className={`px-8 py-2.5 rounded-lg text-[11px] font-bold uppercase tracking-widest shadow-sm transition-all flex items-center ${
-                           showSaveFab 
-                           ? 'bg-slate-800 text-white hover:bg-black ring-4 ring-slate-800/10' 
-                           : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                        }`}
-                     >
-                        {isUpdatingContact ? (
-                           <><RefreshCw size={12} className="mr-2 animate-spin" /> Syncing...</>
-                        ) : (
-                           <><Save size={12} className="mr-2" /> Save Changes</>
-                        )}
-                     </button>
-                     <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
-                        <X size={20} />
-                     </button>
-                  </div>
+                     <div className="flex items-center justify-between sm:justify-end space-x-3 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-0 border-slate-50">
+                      <div className="flex flex-col items-start sm:items-end mr-0 sm:mr-2">
+                         <label className="text-[8px] font-bold text-slate-400 uppercase tracking-tighter mb-1">Lead Status</label>
+                         <select 
+                            value={editedContact.status || 'NEW LEAD'} 
+                            onChange={e => handleFieldChange('status', e.target.value)}
+                            className={`text-[9px] sm:text-[10px] font-bold uppercase tracking-widest px-2 sm:px-3 py-1.5 rounded border transition-all outline-none ${
+                               editedContact.status === 'CLOSED_WON' ? 'bg-emerald-50 border-emerald-200 text-emerald-600' :
+                               editedContact.status === 'CLOSED_LOST' ? 'bg-red-50 border-red-200 text-red-600' :
+                               'bg-slate-50 border-slate-200 text-slate-600 focus:border-slate-400'
+                            }`}
+                         >
+                            <option value="NEW LEAD">New Lead</option>
+                            <option value="CONTACTED">Contacted</option>
+                            <option value="INTERESTED">Interested</option>
+                            <option value="FOLLOW_UP">Follow Up</option>
+                            <option value="CLOSED_WON">Admission follow up update</option>
+                            <option value="CLOSED_LOST">Admission Cancelled</option>
+                         </select>
+                      </div>
+
+                      <div className="flex items-center space-x-2">
+                        <button 
+                           onClick={() => {
+                              console.log("[Sync] Triggering Save for:", selectedContact._id);
+                              updateContactDetail(selectedContact._id, editedContact);
+                           }}
+                           disabled={isUpdatingContact}
+                           className={`px-4 sm:px-8 py-2.5 rounded-lg text-[10px] sm:text-[11px] font-bold uppercase tracking-widest shadow-sm transition-all flex items-center ${
+                              showSaveFab 
+                              ? 'bg-slate-800 text-white hover:bg-black ring-4 ring-slate-800/10' 
+                              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                           }`}
+                        >
+                           {isUpdatingContact ? (
+                              <RefreshCw size={12} className="animate-spin" />
+                           ) : (
+                              <><Save size={12} className="sm:mr-2" /> <span className="hidden sm:inline">Save Changes</span></>
+                           )}
+                        </button>
+                        <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-slate-100 rounded-full text-slate-400 transition-colors">
+                           <X size={20} />
+                        </button>
+                      </div>
+                   </div>
                </div>
 
                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
@@ -919,15 +921,15 @@ export default function Contacts({ roleAccess }) {
                            <h3 className="text-[10px] font-bold text-slate-800 uppercase tracking-widest">Basic Information</h3>
                         </div>
                         
-                        <div className="space-y-4 pl-9">
+                        <div className="space-y-4 pl-0 sm:pl-9 mt-4 sm:mt-0">
                            <div className="space-y-1.5">
                               <label className="text-[9px] font-bold text-slate-400 uppercase">Full Name</label>
-                              <input value={editedContact.firstName || editedContact.name || ''} onChange={e=>handleFieldChange('firstName', e.target.value)} placeholder="Full Name" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
+                              <input value={editedContact.firstName || editedContact.name || ''} onChange={e=>handleFieldChange('firstName', e.target.value)} placeholder="Full Name" className="w-full bg-white border border-slate-200 py-3 sm:py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400 transition-all" />
                            </div>
 
                            <div className="space-y-1.5">
                               <label className="text-[9px] font-bold text-slate-400 uppercase">WhatsApp Profile (Locked)</label>
-                              <div className="w-full bg-slate-100/50 border border-slate-100 py-2.5 px-3 text-sm font-medium text-slate-400 rounded flex items-center">
+                              <div className="w-full bg-slate-100/50 border border-slate-100 py-3 sm:py-2.5 px-3 text-sm font-medium text-slate-400 rounded flex items-center">
                                  <Phone size={12} className="mr-2 opacity-40" /> {editedContact.phone}
                               </div>
                            </div>
@@ -953,7 +955,7 @@ export default function Contacts({ roleAccess }) {
                                        value={editedContact.secondaryPhone} 
                                        onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} 
                                        placeholder="Secondary WhatsApp Number" 
-                                       className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400" 
+                                       className="w-full bg-white border border-slate-200 py-3 sm:py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400" 
                                     />
                                  </div>
                               )}
@@ -964,31 +966,31 @@ export default function Contacts({ roleAccess }) {
                                     value={editedContact.altMobile || ''} 
                                     onChange={e=>handleFieldChange('altMobile', e.target.value)} 
                                     placeholder="Alternative Mobile Number" 
-                                    className="w-full bg-white border border-slate-200 py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400" 
+                                    className="w-full bg-white border border-slate-200 py-3 sm:py-2.5 px-3 text-sm font-medium text-slate-800 rounded outline-none focus:border-slate-400" 
                                  />
                               </div>
                            </div>
 
                            <div className="space-y-4 pt-2">
                               <label className="text-[9px] font-bold text-slate-400 uppercase">Detailed Address</label>
-                              <div className="grid grid-cols-2 gap-3">
-                                 <input value={editedContact.houseNo || ''} onChange={e=>handleFieldChange('houseNo', e.target.value)} placeholder="House No" className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
-                                 <input value={editedContact.societyName || ''} onChange={e=>handleFieldChange('societyName', e.target.value)} placeholder="Society Name" className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                 <input value={editedContact.houseNo || ''} onChange={e=>handleFieldChange('houseNo', e.target.value)} placeholder="House No" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
+                                 <input value={editedContact.societyName || ''} onChange={e=>handleFieldChange('societyName', e.target.value)} placeholder="Society Name" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
                               </div>
-                              <input value={editedContact.streetAddress || ''} onChange={e=>handleFieldChange('streetAddress', e.target.value)} placeholder="Street Address" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
-                              <div className="grid grid-cols-2 gap-3">
-                                 <select value={editedContact.city || ''} onChange={e=>handleFieldChange('city', e.target.value)} className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-700 rounded outline-none">
+                              <input value={editedContact.streetAddress || ''} onChange={e=>handleFieldChange('streetAddress', e.target.value)} placeholder="Street Address" className="w-full bg-white border border-slate-200 py-3 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                 <select value={editedContact.city || ''} onChange={e=>handleFieldChange('city', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded outline-none h-10">
                                     <option value="">Choose City</option>
                                     {['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Mumbai', 'Pune', 'Bangalore', 'Delhi'].map(c => <option key={c} value={c}>{c}</option>)}
                                  </select>
-                                 <select value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-700 rounded outline-none">
+                                 <select value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-700 rounded outline-none h-10">
                                     <option value="">Choose State</option>
                                     {['Gujarat', 'Maharashtra', 'Karnataka', 'Rajasthan', 'Madhya Pradesh', 'Delhi'].map(s => <option key={s} value={s}>{s}</option>)}
                                  </select>
                               </div>
                               <div className="grid grid-cols-2 gap-3">
-                                 <div className="w-full bg-slate-50 border border-slate-100 py-2 px-3 text-xs font-bold text-slate-400 rounded">India</div>
-                                 <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-white border border-slate-200 py-2 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
+                                 <div className="w-full bg-slate-50 border border-slate-100 py-2.5 px-3 text-xs font-bold text-slate-400 rounded flex items-center">India</div>
+                                 <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-white border border-slate-200 py-2.5 px-3 text-xs font-medium text-slate-800 rounded outline-none" />
                               </div>
                            </div>
                         </div>
