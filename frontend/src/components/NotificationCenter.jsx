@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { X, Bell, MessageSquare, CheckSquare, PlusCircle, AlertCircle, Trash2, Smartphone, Clock, ShieldAlert } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 
 export default function NotificationCenter({ isOpen, onClose }) {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchNotifications = async () => {
@@ -28,7 +30,6 @@ export default function NotificationCenter({ isOpen, onClose }) {
 
         if (taskRes.ok) {
           const taskData = await taskRes.json();
-          // Calculate counts
           const now = new Date();
           const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
           
@@ -103,14 +104,13 @@ export default function NotificationCenter({ isOpen, onClose }) {
 
     if (isOpen) fetchNotifications();
 
-    // Socket for real-time "New Lead"
     const tenantId = localStorage.getItem('tenantId');
     const socket = io('', { query: { tenantId } });
 
     socket.on('new_message', (data) => {
       if (data.content === 'New Lead Established' || data.type === 'new_lead') {
         const newLeadNote = {
-          id: Date.now(),
+          id: `new-lead-${Date.now()}`,
           type: 'CHAT',
           title: 'New Lead Assigned',
           desc: `A new lead "${data.contact?.name || 'Unknown'}" has entered the pipeline.`,
@@ -125,11 +125,21 @@ export default function NotificationCenter({ isOpen, onClose }) {
     return () => socket.disconnect();
   }, [isOpen]);
 
+  const handleNoteClick = (note) => {
+    if (note.id === 'overdue' || note.id === 'due-today' || note.id === 'pending') {
+      navigate('/tasks');
+    } else if (note.id === 'api-status') {
+      navigate('/settings');
+    } else if (note.type === 'CHAT' || note.id.toString().startsWith('new-lead')) {
+      navigate('/inbox');
+    }
+    onClose();
+  };
+
   const clearAll = () => setNotifications([]);
 
   return (
     <>
-      {/* Backdrop */}
       {isOpen && (
         <div 
           className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[200] animate-fade-in"
@@ -137,13 +147,11 @@ export default function NotificationCenter({ isOpen, onClose }) {
         />
       )}
 
-      {/* Drawer */}
       <div className={`
         fixed top-0 right-0 bottom-0 w-80 sm:w-96 bg-white z-[210] shadow-2xl transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : 'translate-x-full'}
         flex flex-col
       `}>
-        {/* Header */}
         <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div className="flex items-center space-x-3">
              <div className="p-2 bg-teal-600 text-white rounded-xl shadow-lg shadow-teal-600/20">
@@ -156,7 +164,6 @@ export default function NotificationCenter({ isOpen, onClose }) {
           </button>
         </div>
 
-        {/* Content */}
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4">
           {loading ? (
              <div className="h-full flex flex-col items-center justify-center space-y-4">
@@ -170,7 +177,11 @@ export default function NotificationCenter({ isOpen, onClose }) {
             </div>
           ) : (
             notifications.map((note) => (
-              <div key={note.id} className="group p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all cursor-pointer relative overflow-hidden">
+              <div 
+                key={note.id} 
+                onClick={() => handleNoteClick(note)}
+                className="group p-4 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-teal-200 transition-all cursor-pointer relative overflow-hidden"
+              >
                 <div className="flex items-start space-x-4 relative z-10">
                   <div className={`p-3 rounded-xl ${note.color} shrink-0`}>
                     <note.icon size={18} />
@@ -183,14 +194,12 @@ export default function NotificationCenter({ isOpen, onClose }) {
                     <p className="text-[11px] font-medium text-slate-500 leading-relaxed">{note.desc}</p>
                   </div>
                 </div>
-                {/* Visual Accent */}
                 <div className={`absolute top-0 left-0 bottom-0 w-1 ${note.color.split(' ')[0].replace('text-', 'bg-')}`}></div>
               </div>
             ))
           )}
         </div>
 
-        {/* Footer */}
         {notifications.length > 0 && (
           <div className="p-6 border-t border-slate-100">
             <button 
