@@ -184,8 +184,8 @@ export default function Pipeline() {
   };
 
   return (
-    <div className="flex-1 bg-white lg:rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex flex-col relative z-10 w-full lg:w-[calc(100%-24px)] lg:ml-3 lg:my-3 lg:mr-3">
-      <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#fdfdfd] gap-4">
+    <div className="flex-1 bg-white lg:rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex flex-col relative z-10 w-full lg:w-[calc(100%-12px)] lg:ml-3 lg:my-3">
+      <div className="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-[#fdfdfd] gap-4">
         <div className="flex items-center space-x-4">
           <div className="w-10 h-10 lg:w-12 lg:h-12 bg-teal-50 rounded-2xl flex items-center justify-center border border-teal-100 shadow-premium shrink-0">
              <TrendingUp className="text-teal-600" size={20} />
@@ -196,8 +196,8 @@ export default function Pipeline() {
           </div>
         </div>
 
-        <div className="flex w-full sm:w-auto items-center space-x-2 sm:space-x-3">
-          <div className="relative group flex-1 sm:flex-none min-w-[140px]">
+        <div className="flex w-full sm:w-auto space-x-2 sm:space-x-3">
+          <div className="relative group flex-1 sm:flex-none">
             <Filter className="absolute left-3 top-2.5 text-gray-400" size={16} />
             <select 
               value={qualificationFilter}
@@ -208,7 +208,7 @@ export default function Pipeline() {
               {QUALIFICATIONS.map(q => <option key={q} value={q}>{q}</option>)}
             </select>
           </div>
-          <button onClick={() => setShowAddModal(true)} className="flex items-center space-x-2 bg-slate-900 hover:bg-black text-white px-4 lg:px-5 py-2.5 rounded-xl font-black text-[10px] lg:text-[11px] uppercase tracking-widest transition-all shadow-premium hover:shadow-glow hover:-translate-y-0.5 transform active:scale-95 shrink-0">
+          <button onClick={() => setShowAddModal(true)} className="flex items-center space-x-2 bg-slate-900 hover:bg-black text-white px-4 lg:px-5 py-2.5 rounded-xl font-black text-[10px] lg:text-[11px] uppercase tracking-widest transition-all shadow-premium hover:shadow-glow hover:-translate-y-0.5 transform active:scale-95">
             <Plus size={16} className="text-teal-400" />
             <span className="hidden xs:inline">Create Deal</span>
             <span className="xs:hidden">New</span>
@@ -228,7 +228,7 @@ export default function Pipeline() {
             return (
               <div 
                 key={stage.id} 
-                className="w-[85vw] sm:w-80 flex flex-col bg-gray-50/50 rounded-3xl border border-gray-100/50 snap-center shrink-0"
+                className="w-[85vw] sm:w-80 flex flex-col bg-gray-50/50 rounded-3xl border border-gray-100/50 snap-center"
                 onDragOver={e => e.preventDefault()}
                 onDrop={e => handleDrop(e, stage.id)}
               >

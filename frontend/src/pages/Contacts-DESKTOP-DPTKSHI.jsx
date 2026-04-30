@@ -585,52 +585,53 @@ export default function Contacts({ roleAccess }) {
 
   return (
     <div className="bg-crm-bg min-h-screen flex flex-col animate-fade-in font-sans tracking-normal text-slate-800">
-      <div className="bg-white border-b border-gray-100 px-4 sm:px-8 py-4 sticky top-0 z-40 flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-sm gap-4">
+      <div className="bg-white border-b border-gray-100 px-4 lg:px-8 py-4 sticky top-0 z-40 flex flex-col sm:flex-row items-stretch sm:items-center justify-between shadow-sm gap-4">
          <div>
-            <h1 className="text-sm font-black text-gray-400 tracking-wider uppercase flex items-center">
-               <Users className="mr-2 text-[var(--theme-text)]" size={16} /> Workspace Database
-            </h1>
+            <h1 className="text-sm lg:text-base font-black text-slate-800 tracking-tight uppercase">Lead Records</h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Enterprise Contact Management</p>
          </div>
-         <div className="flex flex-wrap items-center gap-4 sm:gap-6 w-full sm:w-auto">
+         <div className="flex items-center justify-between sm:justify-end space-x-3 lg:space-x-6">
             <div className="flex items-center space-x-3 text-xs">
                <div className="text-right">
                   <p className="text-gray-400 font-bold uppercase tracking-tighter text-[9px]">Filtered</p>
-                  <p className="font-bold text-gray-800">{filteredContacts.length}</p>
+                  <p className="font-bold text-gray-800 leading-none">{filteredContacts.length}</p>
                </div>
-               <div className="w-[1px] h-6 bg-gray-100 mx-2"></div>
+               <div className="w-[1px] h-6 bg-gray-100 mx-1 lg:mx-2"></div>
                <div>
                   <p className="text-[var(--theme-text)] font-bold uppercase tracking-tighter text-[9px]">Selected</p>
-                  <p className="font-bold text-gray-800">{selectedIds.size}</p>
+                  <p className="font-bold text-gray-800 leading-none">{selectedIds.size}</p>
                </div>
             </div>
             
-            {canImport && (
-               <>
-                 <input type="file" ref={fileInputRef} onChange={handleImportCSV} accept=".csv" className="hidden" />
-                 <button 
-                    onClick={() => fileInputRef.current.click()}
-                    className="p-2.5 bg-white border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 rounded-xl transition shadow-sm"
-                    title="Import CSV"
-                 >
-                    <TrendingUp size={18} />
-                 </button>
-               </>
-             )}
-             
-             {canExport && (
-               <button 
-                  onClick={handleExportCSV}
-                  className="p-2.5 bg-white border border-gray-200 text-gray-400 hover:text-green-600 hover:border-green-200 rounded-xl transition shadow-sm"
-                  title="Export Selected/Filtered"
-               >
-                  <Download size={18} />
-               </button>
-             )}
+            <div className="flex items-center space-x-2">
+              {canImport && (
+                <>
+                  <input type="file" ref={fileInputRef} onChange={handleImportCSV} accept=".csv" className="hidden" />
+                  <button 
+                      onClick={() => fileInputRef.current.click()}
+                      className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-blue-600 hover:border-blue-200 rounded-xl transition shadow-sm"
+                      title="Import CSV"
+                  >
+                      <TrendingUp size={16} />
+                  </button>
+                </>
+              )}
+              
+              {canExport && (
+                <button 
+                    onClick={handleExportCSV}
+                    className="p-2 bg-white border border-gray-200 text-gray-400 hover:text-green-600 hover:border-green-200 rounded-xl transition shadow-sm"
+                    title="Export Selected/Filtered"
+                >
+                    <Download size={16} />
+                </button>
+              )}
+            </div>
 
             {canAdd && (
                <button 
                  onClick={() => setShowAddModal(true)} 
-                 className="px-5 py-2.5 bg-[var(--theme-bg)] text-white text-xs font-black rounded-xl hover:shadow-glow transition transform hover:-translate-y-0.5 active:scale-95 uppercase tracking-widest"
+                 className="flex-1 sm:flex-none px-4 lg:px-5 py-2 bg-[var(--theme-bg)] text-white text-[10px] lg:text-xs font-black rounded-xl hover:shadow-glow transition transform hover:-translate-y-0.5 active:scale-95 uppercase tracking-widest"
                >
                   <span>Add Profile</span>
                </button>
@@ -638,20 +639,26 @@ export default function Contacts({ roleAccess }) {
          </div>
       </div>
 
-      <div className="p-resp flex-1 flex flex-col max-w-7xl mx-auto w-full">
+      <div className="p-4 lg:p-8 flex-1 flex flex-col max-w-7xl mx-auto w-full overflow-hidden">
           <div className="flex flex-col space-y-6 mb-8">
-              <div className="flex justify-between items-center">
-                  <div className="flex flex-col"><h2 className="text-2xl font-black text-slate-800 tracking-tight">Contact Workspace</h2><div className="flex items-center space-x-2 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Server: {contacts.length} Leads | Filtered: {filteredContacts.length} Visible</p></div></div>
+              <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4 lg:gap-0">
+                  <div className="flex flex-col">
+                    <h2 className="text-xl lg:text-2xl font-black text-slate-800 tracking-tight">Identity Hub</h2>
+                    <div className="flex items-center space-x-2 mt-1">
+                      <div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Server: {contacts.length} Leads | Filtered: {filteredContacts.length} Visible</p>
+                    </div>
+                  </div>
                   {canSearch && (
-                     <div className="flex items-center space-x-3">
-                        <div className="relative w-full sm:w-[360px]">
-                           <Search className="absolute left-4 top-3.5 text-gray-300" size={16} />
+                     <div className="flex items-center space-x-3 w-full lg:w-auto">
+                        <div className="relative w-full lg:w-auto">
+                           <Search className="absolute left-4 top-3 text-gray-300" size={16} />
                            <input 
                              type="text" 
                              value={searchTerm}
                              onChange={(e) => setSearchTerm(e.target.value)}
-                             placeholder="Search identity or mobile..." 
-                             className="bg-white border border-gray-100 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-bold text-gray-700 placeholder-gray-300 focus:ring-4 focus:ring-[var(--theme-border)]/10 outline-none transition-all w-full shadow-sm"
+                             placeholder="Search identity..." 
+                             className="bg-white border border-gray-100 rounded-2xl py-2.5 lg:py-3.5 pl-12 pr-4 text-xs lg:text-sm font-bold text-gray-700 placeholder-gray-300 focus:ring-4 focus:ring-[var(--theme-border)]/10 outline-none transition-all w-full lg:w-[360px] shadow-sm"
                            />
                         </div>
                      </div>
@@ -659,42 +666,35 @@ export default function Contacts({ roleAccess }) {
               </div>
 
               {canFilter && (
-                  <div className="flex items-center justify-between">
-                      <div className="bg-white p-2.5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-3 overflow-x-auto no-scrollbar max-w-full sm:max-w-[80%]">
-                          <div className="flex items-center px-4 border-r border-gray-100 space-x-2 mr-1">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                      <div className="bg-white p-2.5 rounded-2xl border border-gray-100 shadow-sm flex items-center space-x-3 overflow-x-auto no-scrollbar w-full lg:max-w-[80%]">
+                          <div className="flex items-center px-4 border-r border-gray-100 space-x-2 mr-1 shrink-0">
                               <Activity size={14} className="text-teal-500" />
-                              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pulse Hunt:</span>
+                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pulse:</span>
                           </div>
                           
-                          <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
+                          <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="bg-slate-50 text-[9px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer shrink-0">
                              <option value="ALL">Status ALL</option>
                              {['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'].map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
 
-                          <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
+                          <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="bg-slate-50 text-[9px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer shrink-0">
                              <option value="ALL">Stage ALL</option>
                              {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
                           </select>
 
-                          <select value={filters.agent} onChange={e=>setFilters({...filters, agent: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer">
+                          <select value={filters.agent} onChange={e=>setFilters({...filters, agent: e.target.value})} className="bg-slate-50 text-[9px] font-black uppercase py-2 px-3 rounded-xl border-none focus:ring-2 focus:ring-teal-100 cursor-pointer shrink-0">
                              <option value="ALL">Agent ALL</option>
                              {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
                           </select>
-
-                          {activeFilterCount > 0 && (
-                             <div className="flex items-center space-x-2 pl-3">
-                                <span className="w-1.5 h-1.5 bg-orange-400 rounded-full animate-ping"></span>
-                                <span className="text-[9px] font-black text-orange-500 uppercase tracking-widest">{activeFilterCount} Active Filters</span>
-                             </div>
-                          )}
                       </div>
 
                       <button 
                         onClick={() => setShowFilters(true)}
-                        className="flex items-center space-x-3 px-6 py-3.5 bg-white border border-gray-100 rounded-2xl shadow-sm text-slate-700 hover:border-teal-200 hover:text-teal-600 transition-all font-black group"
+                        className="flex items-center justify-center space-x-3 px-6 py-2.5 bg-white border border-gray-100 rounded-2xl shadow-sm text-slate-700 hover:border-teal-200 hover:text-teal-600 transition-all font-black group w-full lg:w-auto shrink-0"
                       >
-                         <Filter size={18} className={activeFilterCount > 0 ? "text-teal-600 animate-pulse" : "text-gray-400"} />
-                         <span className="text-xs uppercase tracking-widest">Advance Filters</span>
+                         <Filter size={16} className={activeFilterCount > 0 ? "text-teal-600 animate-pulse" : "text-gray-400"} />
+                         <span className="text-[10px] lg:text-xs uppercase tracking-widest">Filters</span>
                       </button>
                   </div>
                )}
@@ -786,11 +786,11 @@ export default function Contacts({ roleAccess }) {
       {showProfile && selectedContact && editedContact && (
           <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowProfile(false)}>
             <div 
-              className="w-drawer h-full bg-white shadow-2xl flex flex-col animate-slide-left relative overflow-hidden"
+              className="w-full lg:w-[1050px] h-full bg-white shadow-2xl flex flex-col animate-slide-left relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
                {/* PROFESSIONAL MINIMALIST HEADER */}
-               <div className="bg-white border-b border-slate-100 px-10 py-7 flex items-center justify-between shrink-0">
+               <div className="bg-white border-b border-slate-100 px-6 lg:px-10 py-5 lg:py-7 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4">
                     <div className="flex items-center space-x-6">
                         <div className="w-16 h-16 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-2xl font-bold text-slate-400">
                            {editedContact.firstName?.charAt(0) || selectedContact.name?.charAt(0) || 'U'}
@@ -858,7 +858,7 @@ export default function Contacts({ roleAccess }) {
 
                <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
                   {/* LEFT PANEL: STRUCTURED STEP-BY-STEP FLOW */}
-                  <div className="w-full lg:w-[420px] bg-slate-50/50 border-b lg:border-b-0 lg:border-r border-slate-100 overflow-y-auto custom-scrollbar p-resp space-y-12 shrink-0">
+                  <div className="w-full lg:w-[420px] bg-slate-50/50 border-b lg:border-b-0 lg:border-r border-slate-100 overflow-y-auto custom-scrollbar p-6 lg:p-8 space-y-8 lg:space-y-12 h-1/2 lg:h-full">
                      
                      {/* STEP 1: BASIC INFORMATION */}
                      <div className="space-y-6">
@@ -1073,7 +1073,7 @@ export default function Contacts({ roleAccess }) {
                        })}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-resp">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
                        {activeTab === 'timeline' && (
                           <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100">
                               {(selectedContact.timeline || []).filter(e => !e.description.includes('Contact details updated')).slice().reverse().map((event, idx) => (
@@ -1205,7 +1205,7 @@ export default function Contacts({ roleAccess }) {
       {showFilters && (
          <div className="fixed inset-0 z-[200] flex justify-end items-stretch bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowFilters(false)}>
             <div className="w-[500px] bg-white shadow-2xl flex flex-col animate-slide-left h-full" onClick={e=>e.stopPropagation()}>
-               <div className="p-resp border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
+               <div className="p-8 border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
                   <div>
                      <h2 className="text-xl font-black text-slate-800 tracking-tight">Intelligence Filter</h2>
                      <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">Granular Lead Data Mining</p>
@@ -1324,7 +1324,7 @@ export default function Contacts({ roleAccess }) {
 
                </div>
 
-               <div className="p-resp border-t border-slate-100 bg-white grid grid-cols-2 gap-4 shrink-0">
+               <div className="p-8 border-t border-slate-100 bg-white grid grid-cols-2 gap-4 shrink-0">
                   <button 
                      onClick={() => {
                         setFilters({ status: 'ALL', heat: 'ALL', stage: 'ALL', agent: 'ALL', source: 'ALL', program: 'ALL', qualification: 'ALL', minScore: 0, maxScore: 100, dateRange: 'ALL', startDate: '', endDate: '', startTime: '00:00', endTime: '23:59', month: 'ALL' });

@@ -42,4 +42,83 @@
   .animate-pop-in {
     animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   }
+
+  /* Responsive Font Utilities */
+  @media (max-width: 768px) {
+    .text-mobile-xs { font-size: 11px; }
+    .text-mobile-sm { font-size: 12px; }
+    .text-mobile-base { font-size: 14px; }
+  }
+
+  /* Responsive Padding Utility */
+  .p-resp {
+    padding: 1rem; /* 16px */
+  }
+  @media (min-width: 640px) {
+    .p-resp {
+      padding: 1.5rem; /* 24px */
+    }
+  }
+  @media (min-width: 1024px) {
+    .p-resp {
+      padding: 2rem; /* 32px */
+    }
+  }
+
+  /* Drawer Width Utility */
+  .w-drawer {
+    width: 100%;
+  }
+  @media (min-width: 1024px) {
+    .w-drawer {
+      width: 1050px;
+    }
+  }
+
+  /* Touch optimizations */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  .no-select {
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html, body {
+    height: 100%;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+
+  #root {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* Safe Area for iOS */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  @media (max-width: 1024px) {
+    .main-content-mobile {
+      padding-top: calc(4rem + env(safe-area-inset-top));
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+    }
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+  }
 }

@@ -581,11 +581,20 @@ export default function Tasks() {
     
     // Status View Filter
     if (view === 'PENDING') {
-      if (!isPending || (isOverdue && !isDueToday)) return false;
+      if (!isPending) return false;
     }
     if (view === 'COMPLETED' && !isCompleted) return false;
-    if (view === 'OVERDUE' && (!isOverdue || isDueToday)) return false;
-    if (view === 'UPCOMING' && (!isPending || !(!isOverdue && !isDueToday))) return false;
+    if (view === 'OVERDUE') {
+       if (!isOverdue || isDueToday) return false;
+    }
+    if (view === 'TODAY') {
+       if (!isPending || !isDueToday) return false;
+    }
+    if (view === 'UPCOMING') {
+       const todayEnd = new Date();
+       todayEnd.setHours(23, 59, 59, 999);
+       if (!isPending || dueDate <= todayEnd) return false;
+    }
 
     // Type Filter
     if (filter !== 'ALL' && t.type !== filter) return false;
@@ -625,46 +634,38 @@ export default function Tasks() {
       `}</style>
       
       {/* Header with Stats */}
-      <div className="px-4 sm:px-8 pt-6 sm:pt-8 pb-6 bg-white border-b border-slate-200 shadow-sm">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end mb-6 sm:mb-8 gap-4">
+      <div className="px-4 lg:px-8 pt-4 lg:pt-8 pb-6 bg-white border-b border-slate-200 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:justify-between lg:items-end mb-6 lg:mb-8 gap-6">
           <div>
-            <h1 className="text-2xl font-black text-slate-800 tracking-tight">Work Console</h1>
-            <p className="text-slate-500 font-semibold text-sm">Manage your sales activities and follow-ups</p>
+            <h1 className="text-xl lg:text-2xl font-black text-slate-800 tracking-tight">Work Console</h1>
+            <p className="text-slate-500 font-semibold text-xs lg:text-sm">Manage your sales activities and follow-ups</p>
           </div>
-          <div className="hidden lg:flex items-center space-x-6">
-             <div className="text-right">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Work Statistics</p>
-                <div className="flex items-center space-x-4">
-                   <div className="flex flex-col items-end border-r border-slate-100 pr-4">
-                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Total Task</span>
-                      <span className="text-sm font-black text-slate-700 leading-none">{totalCount}</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+             <div className="w-full sm:w-auto">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1.5 lg:text-right">Work Statistics</p>
+                 <div className="flex items-center justify-between sm:justify-end space-x-2 sm:space-x-4">
+                   <div className="flex flex-col items-center sm:items-end border-r border-slate-100 pr-2 sm:pr-4">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Total</span>
+                      <span className="text-sm sm:text-base font-black text-slate-700 leading-none">{totalCount}</span>
                    </div>
-                   <div className="flex flex-col items-end border-r border-slate-100 pr-4">
-                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Complete Task</span>
-                      <span className="text-sm font-black text-teal-600 leading-none">{completedCount}</span>
+                   <div className="flex flex-col items-center sm:items-end border-r border-slate-100 pr-2 sm:pr-4">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Done</span>
+                      <span className="text-sm sm:text-base font-black text-teal-600 leading-none">{completedCount}</span>
                    </div>
-                   <div className="flex flex-col items-end border-r border-slate-100 pr-4">
-                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Pending Task</span>
-                      <span className="text-sm font-black text-rose-500 leading-none">{pendingCount}</span>
+                   <div className="flex flex-col items-center sm:items-end border-r border-slate-100 pr-2 sm:pr-4">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Pending</span>
+                      <span className="text-sm sm:text-base font-black text-rose-500 leading-none">{pendingCount}</span>
                    </div>
-                   <div className="flex flex-col items-end border-r border-slate-100 pr-4">
-                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Task Changing</span>
-                      <span className="text-sm font-black text-blue-500 leading-none">{inProgressCount}</span>
-                   </div>
-                   <div className="flex flex-col items-end">
-                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Task Cancellation</span>
-                      <span className="text-sm font-black text-slate-400 leading-none">{cancelledCount}</span>
+                   <div className="flex flex-col items-center sm:items-end">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Eff%</span>
+                      <span className="text-sm sm:text-base font-black text-teal-600 leading-none">{efficiency}%</span>
                    </div>
                 </div>
              </div>
              
-             <div className="h-10 w-[1px] bg-slate-100 mx-2"></div>
+             <div className="hidden sm:block h-10 w-[1px] bg-slate-100 mx-2"></div>
              
-             <div className="text-right">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Efficiency</p>
-                <p className="text-lg font-black text-teal-600 leading-none mt-1">{efficiency}%</p>
-             </div>
-             <div className="flex -space-x-2 ml-4">
+             <div className="hidden lg:flex -space-x-2">
                 {[1,2,3].map(i => (
                   <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden">
                     <img src={`https://i.pravatar.cc/100?u=${i+10}`} alt="avatar" />
@@ -674,7 +675,7 @@ export default function Tasks() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 lg:gap-4">
            <div onClick={() => setView('OVERDUE')} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all ${view === 'OVERDUE' ? 'bg-rose-50 border-rose-200 shadow-md' : 'bg-white border-slate-100 hover:border-rose-100'}`}>
               <div className="flex justify-between items-start">
                  <div className="p-2 bg-rose-100 text-rose-600 rounded-xl">
@@ -684,12 +685,12 @@ export default function Tasks() {
               </div>
               <p className="mt-3 font-bold text-slate-500 text-sm">Overdue</p>
            </div>
-           <div onClick={() => setView('PENDING')} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all ${view === 'PENDING' ? 'bg-teal-50 border-teal-200 shadow-md' : 'bg-white border-slate-100 hover:border-teal-100'}`}>
+           <div onClick={() => setView('TODAY')} className={`cursor-pointer p-4 rounded-2xl border-2 transition-all ${view === 'TODAY' ? 'bg-teal-50 border-teal-200 shadow-md' : 'bg-white border-slate-100 hover:border-teal-100'}`}>
               <div className="flex justify-between items-start">
                  <div className="p-2 bg-teal-100 text-teal-600 rounded-xl">
                     <Clock size={20} />
                  </div>
-                 <span className={`text-2xl font-black ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-700'}`}>{todayCount}</span>
+                 <span className={`text-2xl font-black ${view === 'TODAY' ? 'text-teal-600' : 'text-slate-700'}`}>{todayCount}</span>
               </div>
               <p className="mt-3 font-bold text-slate-500 text-sm">Due Today</p>
            </div>
@@ -706,11 +707,11 @@ export default function Tasks() {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="px-4 sm:px-8 py-4 bg-white border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-         <div className="flex items-center space-x-6">
-            <div className="flex bg-slate-100 p-1 rounded-xl">
-               <button onClick={() => setView('PENDING')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${view === 'PENDING' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Pending</button>
-               <button onClick={() => setView('COMPLETED')} className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${view === 'COMPLETED' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Completed</button>
+      <div className="px-4 lg:px-8 py-4 bg-white border-b border-slate-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+         <div className="flex flex-wrap items-center gap-4 lg:gap-6">
+            <div className="flex bg-slate-100 p-1 rounded-xl flex-1 sm:flex-none">
+               <button onClick={() => setView('PENDING')} className={`flex-1 px-4 py-1.5 rounded-lg text-[10px] lg:text-xs font-bold transition-all ${view === 'PENDING' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Pending</button>
+               <button onClick={() => setView('COMPLETED')} className={`flex-1 px-4 py-1.5 rounded-lg text-[10px] lg:text-xs font-bold transition-all ${view === 'COMPLETED' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>Completed</button>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -718,7 +719,7 @@ export default function Tasks() {
                <select 
                  value={filter} 
                  onChange={e => setFilter(e.target.value)}
-                 className="bg-transparent border-none text-xs font-bold text-slate-600 focus:ring-0 cursor-pointer"
+                 className="bg-transparent border-none text-[10px] lg:text-xs font-bold text-slate-600 focus:ring-0 cursor-pointer"
                >
                  <option value="ALL">All Activities</option>
                  <option value="CALL">Calls Only</option>
@@ -728,11 +729,11 @@ export default function Tasks() {
             </div>
          </div>
 
-         <div className="relative group w-full sm:w-64">
+         <div className="relative group w-full md:w-64">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
             <input 
               type="text" 
-              placeholder="Search by contact or title..."
+              placeholder="Search..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="bg-slate-100 border-none rounded-xl pl-10 pr-4 py-2 text-xs font-medium w-full focus:bg-white focus:ring-2 focus:ring-teal-100 transition-all outline-none"
@@ -741,7 +742,7 @@ export default function Tasks() {
       </div>
 
       {/* Task List */}
-      <div className="flex-1 p-4 sm:p-8 overflow-y-auto custom-scrollbar">
+      <div className="flex-1 p-4 lg:p-8 overflow-y-auto custom-scrollbar">
          <div className="max-w-5xl mx-auto space-y-4 pb-20">
             {filteredTasks.length > 0 ? filteredTasks.map(t => {
                const isOverdue = t.status === 'PENDING' && new Date(t.dueDate) < new Date();
@@ -997,7 +998,7 @@ export default function Tasks() {
       {showProfile && selectedContact && editedContact && (
           <div className="fixed inset-0 z-[1000] flex justify-end bg-slate-900/40 backdrop-blur-sm animate-fade-in" onClick={() => setShowProfile(false)}>
             <div 
-              className="w-drawer h-full bg-white shadow-2xl flex flex-col animate-slide-left relative overflow-hidden"
+              className="w-[1050px] h-full bg-white shadow-2xl flex flex-col animate-slide-left relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
                {/* PROFESSIONAL MINIMALIST HEADER */}
@@ -1066,9 +1067,9 @@ export default function Tasks() {
                   </div>
                </div>
 
-               <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+               <div className="flex-1 flex overflow-hidden">
                   {/* LEFT PANEL: STRUCTURED STEP-BY-STEP FLOW */}
-                  <div className="w-full lg:w-[420px] bg-slate-50/50 border-b lg:border-b-0 lg:border-r border-slate-100 overflow-y-auto custom-scrollbar p-resp space-y-12 shrink-0">
+                  <div className="w-[420px] bg-slate-50/50 border-r border-slate-100 overflow-y-auto custom-scrollbar p-8 space-y-12">
                      
                      {/* STEP 1: BASIC INFORMATION */}
                      <div className="space-y-6">
@@ -1283,7 +1284,7 @@ export default function Tasks() {
                        })}
                     </div>
 
-                    <div className="flex-1 overflow-y-auto custom-scrollbar p-resp">
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
                        {activeTab === 'timeline' && (
                           <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100">
                               {(selectedContact.timeline || []).filter(e => !e.description.includes('Contact details updated')).slice().reverse().map((event, idx) => (
@@ -1416,7 +1417,7 @@ export default function Tasks() {
            <div className="bg-white rounded-[2.5rem] shadow-3xl w-full max-w-xl overflow-hidden animate-pop-in border border-white/20">
              
              {/* Modal Dynamic Header */}
-             <div className="p-resp bg-gradient-to-br from-teal-500 to-emerald-600 text-white relative">
+             <div className="p-8 bg-gradient-to-br from-teal-500 to-emerald-600 text-white relative">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-white/10 rounded-full -mr-20 -mt-20 blur-3xl"></div>
                 <div className="flex items-center justify-between relative z-10">
                    <div className="flex items-center space-x-4">
@@ -1432,7 +1433,7 @@ export default function Tasks() {
                 </div>
              </div>
              
-             <div className="p-resp space-y-8 max-h-[65vh] overflow-y-auto custom-scrollbar bg-slate-50/30">
+             <div className="p-8 space-y-8 max-h-[65vh] overflow-y-auto custom-scrollbar bg-slate-50/30">
                 
                 {/* Meeting Type Selector (If applicable) */}
                 {completingTask.type === 'MEETING' && (
@@ -1563,7 +1564,7 @@ export default function Tasks() {
                 </div>
              </div>
 
-             <div className="p-resp border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between bg-white gap-4">
+             <div className="p-8 border-t border-slate-100 flex items-center justify-between bg-white">
                 <button onClick={() => setCompletingTask(null)} className="px-8 py-3 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 hover:bg-slate-50 transition-all">Discard</button>
                 <div className="flex space-x-3">
                    <button 
@@ -1584,8 +1585,8 @@ export default function Tasks() {
       {/* Cancel Confirmation Modal */}
       {cancellingTaskConfirm && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/70 backdrop-blur-md animate-fade-in" onClick={() => setCancellingTaskConfirm(null)}>
-          <div className="bg-white rounded-[2rem] w-full max-w-[450px] overflow-hidden shadow-3xl animate-pop-in" onClick={e => e.stopPropagation()}>
-            <div className="p-resp text-center">
+          <div className="bg-white rounded-[2rem] w-[450px] overflow-hidden shadow-3xl animate-pop-in" onClick={e => e.stopPropagation()}>
+            <div className="p-8 text-center">
               <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-bounce">
                 <AlertCircle size={40} />
               </div>
@@ -1622,7 +1623,7 @@ export default function Tasks() {
       {/* Set to Today Confirmation Modal */}
       {settingToTodayTask && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setSettingToTodayTask(null)}>
-          <div className="bg-white rounded-[2.5rem] w-full max-w-[400px] p-resp shadow-3xl animate-pop-in" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-[2.5rem] w-[400px] p-8 shadow-3xl animate-pop-in" onClick={e => e.stopPropagation()}>
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Clock size={32} />
@@ -1750,7 +1751,7 @@ export default function Tasks() {
       {/* Reschedule Task Modal */}
       {reschedulingTask && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setReschedulingTask(null)}>
-          <div className="bg-white rounded-3xl w-full max-w-[400px] p-resp shadow-2xl animate-pop-in" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-3xl w-[400px] p-8 shadow-2xl animate-pop-in" onClick={e => e.stopPropagation()}>
             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                 <CalendarDays size={32} />
             </div>
@@ -1788,7 +1789,7 @@ export default function Tasks() {
       {/* Critical Overdue Popup */}
       {showCriticalOverduePopup && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-rose-900/80 backdrop-blur-md animate-fade-in">
-          <div className="bg-white rounded-3xl w-full max-w-[450px] p-resp shadow-2xl border-4 border-rose-500 animate-pop-in text-center shadow-rose-500/20">
+          <div className="bg-white rounded-3xl w-[450px] p-8 shadow-2xl border-4 border-rose-500 animate-pop-in text-center shadow-rose-500/20">
             <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertCircle size={40} />
             </div>

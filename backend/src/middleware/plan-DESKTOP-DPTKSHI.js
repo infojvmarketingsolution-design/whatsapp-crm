@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Client = require('../models/core/Client');
 const GlobalSettings = require('../models/core/GlobalSettings');
 
@@ -9,7 +10,12 @@ const GlobalSettings = require('../models/core/GlobalSettings');
 const checkPlanAccess = (feature) => {
   return async (req, res, next) => {
     try {
-      // 1. Check Global Settings first (Master Switch)
+      // 1. SAFETY CHECK: If MongoDB is offline, bypass plan checks to prevent hanging
+      if (mongoose.connection.readyState !== 1) {
+        return next();
+      }
+
+      // 2. Check Global Settings first (Master Switch)
       const globalSettings = await GlobalSettings.findOne({});
       if (globalSettings && globalSettings.allowedModules) {
         // Map feature name to global module key if necessary

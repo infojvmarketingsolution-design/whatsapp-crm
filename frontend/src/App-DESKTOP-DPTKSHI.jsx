@@ -21,8 +21,6 @@ import WebWidget from './pages/WebWidget';
 import Settings from './pages/Settings';
 import AIChatbot from './pages/AIChatbot/AIChatbot';
 import AdminSidebar from './components/AdminSidebar';
-import MobileNavbar from './components/MobileNavbar';
-import MobileHeader from './components/MobileHeader';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import ClientManagement from './pages/Admin/ClientManagement';
 import PlanManagement from './pages/Admin/PlanManagement';
@@ -52,44 +50,45 @@ import {
   Clock, 
   X, 
   Plus, 
-  CheckCircle 
+  CheckCircle,
+  Menu
 } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add", onClick, isClickable }) {
   return (
     <div 
       onClick={isClickable ? onClick : undefined}
-      className={`bg-crm-card p-5 rounded-lg shadow-sm border border-crm-border flex flex-col transition-all duration-300 group relative ${isClickable ? 'cursor-pointer hover:shadow-premium hover:border-blue-300 hover:-translate-y-1' : 'hover:shadow-soft'}`}
+      className={`bg-crm-card p-4 sm:p-5 rounded-lg shadow-sm border border-crm-border flex flex-col transition-all duration-300 group relative ${isClickable ? 'cursor-pointer hover:shadow-premium hover:border-blue-300 hover:-translate-y-1' : 'hover:shadow-soft'}`}
     >
       <div className="flex justify-between items-start mb-2">
-        <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase">{title}</h3>
+        <h3 className="text-[10px] sm:text-xs font-semibold text-gray-400 tracking-wider uppercase">{title}</h3>
         <div className="flex items-center space-x-2">
            {onAction && (
              <button 
                onClick={(e) => { e.stopPropagation(); onAction(); }}
-               className="opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 text-blue-600 px-2 py-1 rounded text-[10px] font-black uppercase flex items-center shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white"
+               className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 text-blue-600 px-2 py-1 rounded text-[9px] sm:text-[10px] font-black uppercase flex items-center shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white"
              >
                <Plus size={10} className="mr-1" /> {actionLabel}
              </button>
            )}
            {Icon && (
-             <div className={`p-2 rounded-full text-white ${isClickable ? 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-glow' : 'bg-blue-500'}`}>
-                <Icon size={16} />
+             <div className={`p-1.5 sm:p-2 rounded-full text-white ${isClickable ? 'bg-gradient-to-br from-blue-400 to-indigo-600 shadow-glow' : 'bg-blue-500'}`}>
+                <Icon size={14} className="sm:w-4 sm:h-4" />
              </div>
            )}
         </div>
       </div>
       <div className="mb-2">
         {greenBadge ? (
-          <span className="px-3 py-1 bg-brand-light text-white text-xs font-medium rounded-md">{greenBadge}</span>
+          <span className="px-2 py-1 bg-brand-light text-white text-[10px] sm:text-xs font-medium rounded-md">{greenBadge}</span>
         ) : (
-          <span className="text-xl font-bold text-gray-800">{value}</span>
+          <span className="text-lg sm:text-xl font-bold text-gray-800">{value}</span>
         )}
       </div>
       <div className="flex justify-between items-end">
-        <p className="text-xs text-gray-500 font-medium">{subtext}</p>
+        <p className="text-[10px] sm:text-xs text-gray-500 font-medium">{subtext}</p>
         {isClickable && (
-          <div className="text-[10px] text-blue-500 font-black uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="text-[9px] sm:text-[10px] text-blue-500 font-black uppercase tracking-tighter opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity">
             Details →
           </div>
         )}
@@ -293,57 +292,60 @@ function Dashboard() {
 
   return (
     <>
-      <div className="p-resp bg-crm-bg min-h-full animate-fade-in-up">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+      <div className="p-4 lg:p-8 bg-crm-bg min-h-full animate-fade-in-up">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 lg:mb-8 gap-4">
         <div>
-           <h1 className="text-xs sm:text-sm font-bold text-gray-600 tracking-wider uppercase">Dashboard</h1>
-           <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">SaaS Workspace Overview</p>
+           <h1 className="text-xs lg:text-sm font-bold text-gray-600 tracking-wider uppercase">Dashboard</h1>
+           <p className="text-[10px] lg:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">SaaS Workspace Overview</p>
         </div>
-        <div className="flex items-center space-x-3 text-right">
+        <div className="flex items-center space-x-3 text-right self-end md:self-auto">
           <div>
-             <p className="text-xs sm:text-sm font-black text-slate-800 capitalize leading-none mb-1">{userName}</p>
-             <p className="text-[9px] sm:text-[10px] font-bold text-slate-400 leading-none">{activeUser.email || 'agent@workspace.crm'}</p>
+             <p className="text-xs lg:text-sm font-black text-slate-800 capitalize leading-none mb-1">{userName}</p>
+             <p className="text-[9px] lg:text-[10px] font-bold text-slate-400 leading-none">{activeUser.email || 'agent@workspace.crm'}</p>
           </div>
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
-             <UserCircle size={20} className="sm:w-6 sm:h-6" />
+          <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shadow-sm">
+             <UserCircle size={20} className="lg:hidden" />
+             <UserCircle size={24} className="hidden lg:block" />
           </div>
         </div>
       </div>
-
-      <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6">Welcome back, <span className="capitalize">{userName}</span> 👋</h2>
-
-      <div className="flex flex-wrap items-center gap-3 sm:gap-4 mb-8">
-        {isAdminOrSuperAdmin && (
-          <button onClick={() => navigate('/campaigns')} className="flex items-center space-x-2 px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-soft">
-             <Send size={14} className="text-brand-light" />
-             <span>Send campaign</span>
-          </button>
-        )}
-        {isAdminOrSuperAdmin && (
-          <>
-            <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-4 py-2 border border-blue-200 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors shadow-soft">
-               <MessageCircle size={14} />
-               <span>Create quick reply</span>
-            </button>
-            <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-4 py-2 border border-[var(--theme-border)]/30 rounded-md text-sm font-medium text-[var(--theme-text)] bg-brand-light/10 hover:bg-brand-light/20 transition-colors shadow-soft">
-               <FileText size={14} />
-               <span>Create template</span>
-            </button>
-          </>
-        )}
-        <div className="w-full sm:flex-1 sm:flex sm:justify-end mt-2 sm:mt-0">
-           <button onClick={refreshData} disabled={loading} className="w-full sm:w-auto px-6 py-2.5 bg-blue-500 text-white rounded-md text-sm font-bold hover:bg-blue-600 transition-colors shadow-premium hover:shadow-glow hover:-translate-y-0.5 transform disabled:opacity-50 disabled:cursor-not-allowed">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+        <h2 className="text-lg lg:text-2xl font-bold text-gray-800">Welcome back, <span className="capitalize">{userName}</span> 👋</h2>
+        
+        <div className="flex items-center justify-end">
+           <button onClick={refreshData} disabled={loading} className="w-full sm:w-auto px-6 py-2 bg-blue-500 text-white rounded-md text-sm font-bold hover:bg-blue-600 transition-colors shadow-premium hover:shadow-glow hover:-translate-y-0.5 transform disabled:opacity-50 disabled:cursor-not-allowed">
              {loading ? 'Refreshing...' : 'Refresh Data'}
            </button>
         </div>
       </div>
 
+      <div className="flex flex-wrap items-center gap-2 lg:gap-4 mb-8">
+        {isAdminOrSuperAdmin && (
+          <button onClick={() => navigate('/campaigns')} className="flex items-center space-x-2 px-3 lg:px-4 py-2 border border-gray-300 rounded-md text-[10px] lg:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors shadow-soft">
+             <Send size={14} className="text-brand-light" />
+             <span>Campaign</span>
+          </button>
+        )}
+        {isAdminOrSuperAdmin && (
+          <>
+            <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-3 lg:px-4 py-2 border border-blue-200 rounded-md text-[10px] lg:text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors shadow-soft">
+               <MessageCircle size={14} />
+               <span>Reply</span>
+            </button>
+            <button onClick={() => navigate('/templates')} className="flex items-center space-x-2 px-3 lg:px-4 py-2 border border-[var(--theme-border)]/30 rounded-md text-[10px] lg:text-sm font-medium text-[var(--theme-text)] bg-brand-light/10 hover:bg-brand-light/20 transition-colors shadow-soft">
+               <FileText size={14} />
+               <span>Template</span>
+            </button>
+          </>
+        )}
+      </div>
+
       {isAdminOrSuperAdmin && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-          <div className="bg-crm-card p-5 rounded-lg shadow-soft border-l-4 border-[var(--theme-border)] flex flex-col justify-center lg:col-span-2">
-             <h3 className="text-xs font-semibold text-gray-400 tracking-wider uppercase mb-3">WhatsApp Business API Status</h3>
+          <div className="bg-crm-card p-4 lg:p-5 rounded-lg shadow-soft border-l-4 border-[var(--theme-border)] flex flex-col justify-center lg:col-span-2">
+             <h3 className="text-[10px] font-semibold text-gray-400 tracking-wider uppercase mb-2 lg:mb-3">WhatsApp API Status</h3>
              <div>
-               <span className="px-3 py-1 bg-brand-light text-white text-xs font-bold rounded-md shadow-glow">CONNECTED</span>
+               <span className="px-3 py-1 bg-brand-light text-white text-[10px] font-bold rounded-md shadow-glow uppercase">CONNECTED</span>
              </div>
           </div>
           <div className="bg-crm-card p-5 rounded-lg shadow-soft flex flex-col justify-center border border-crm-border">
@@ -364,17 +366,11 @@ function Dashboard() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         {isAdminOrSuperAdmin && (
           <>
             <DashboardCard title="Campaigns" value={loading && stats.campaigns === 0 ? "..." : stats.campaigns} subtext={stats.campaigns > 0 ? stats.recentCampaign : "No active campaigns"} icon={Megaphone} />
             <DashboardCard title="Templates" value={loading && stats.templates === 0 ? "..." : stats.templates} subtext={`${stats.templates} Synchronized`} icon={FileText} />
-          </>
-        )}
-        
-        {/* Core Metrics - ADMIN ONLY */}
-        {isAdminOrSuperAdmin && (
-          <>
             <DashboardCard title="Contacts" value={loading && stats.contacts === 0 ? "..." : stats.contacts} subtext={`${stats.contacts} Total contacts`} icon={Users} />
             <DashboardCard title="Open Chats" value={loading && stats.chats === 0 ? "..." : stats.chats} subtext={`${stats.chats} Active conversations`} icon={MessageCircle} />
           </>
@@ -538,7 +534,7 @@ function Dashboard() {
       {breakdownModal.show && (
         <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/40 backdrop-blur-md animate-fade-in p-4" onClick={() => setBreakdownModal(prev => ({ ...prev, show: false }))}>
            <div className="bg-white/90 backdrop-blur-xl w-full max-w-3xl rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden animate-scale-in" onClick={(e) => e.stopPropagation()}>
-              <div className="p-resp border-b border-slate-100 flex flex-col items-center justify-center text-center relative bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
+              <div className="p-8 border-b border-slate-100 flex flex-col items-center justify-center text-center relative bg-gradient-to-r from-blue-50/50 to-indigo-50/50">
                  <div>
                     <h2 className="text-2xl font-black text-slate-800 tracking-tight uppercase">{breakdownModal.categoryName}</h2>
                     <p className="text-xs text-slate-500 font-bold uppercase tracking-widest mt-1">User Performance Breakdown</p>
@@ -548,7 +544,7 @@ function Dashboard() {
                  </button>
               </div>
 
-              <div className="p-resp max-h-[70vh] overflow-y-auto scrollbar-hide">
+              <div className="p-8 max-h-[70vh] overflow-y-auto scrollbar-hide">
                  {breakdownModal.loading ? (
                    <div className="flex flex-col items-center justify-center py-20">
                       <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-600 rounded-full animate-spin mb-4"></div>
@@ -713,7 +709,7 @@ function Dashboard() {
        {leadDetailsModal.show && (
          <div className="fixed inset-0 z-[250] flex items-center justify-center bg-slate-900/40 backdrop-blur-md animate-fade-in p-4" onClick={() => setLeadDetailsModal(prev => ({ ...prev, show: false }))}>
             <div className="bg-white/95 backdrop-blur-2xl w-full max-w-2xl rounded-[32px] shadow-2xl border border-white/20 relative overflow-hidden animate-scale-in flex flex-col max-h-[85vh]" onClick={(e) => e.stopPropagation()}>
-               <div className="p-resp border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-teal-50/50 to-blue-50/50 shrink-0">
+               <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-gradient-to-r from-teal-50/50 to-blue-50/50 shrink-0">
                   <div className="flex items-center space-x-4">
                      <div className="p-3 bg-white shadow-sm border border-slate-100 rounded-2xl text-teal-600">
                         {leadDetailsModal.category === 'new_leads' ? <PlusCircle size={24} /> :
@@ -733,7 +729,7 @@ function Dashboard() {
                   </button>
                </div>
 
-               <div className="flex-1 overflow-y-auto p-resp bg-slate-50/30 custom-scrollbar">
+               <div className="flex-1 overflow-y-auto p-8 bg-slate-50/30 custom-scrollbar">
                   {leadDetailsModal.loading ? (
                     <div className="flex flex-col items-center justify-center py-20">
                        <div className="w-12 h-12 border-4 border-teal-500/20 border-t-teal-600 rounded-full animate-spin mb-4"></div>
@@ -834,8 +830,7 @@ function AppLayout() {
   const [isMaintenance, setIsMaintenance] = React.useState(false);
   const [whatsappConfig, setWhatsappConfig] = React.useState(null);
   const [roleAccess, setRoleAccess] = React.useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
-  const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
@@ -964,14 +959,9 @@ function AppLayout() {
           localStorage.setItem('themeColor', e.detail.color);
        }
     };
-    const handleResize = () => {
-       setIsMobile(window.innerWidth < 1024);
-    };
-    window.addEventListener('resize', handleResize);
-
+    window.addEventListener('themeChanged', handleThemeEvent);
     return () => {
        window.removeEventListener('themeChanged', handleThemeEvent);
-       window.removeEventListener('resize', handleResize);
        clearInterval(configInterval);
        socket.disconnect();
     };
@@ -982,37 +972,60 @@ function AppLayout() {
     '--theme-border': themeColor === '#10b981' ? '#128C7E' : themeColor,
   };
 
+  const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen);
+
   if (isMaintenance && !isAdminPath) {
     return <Maintenance />;
   }
 
   return (
-    <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden flex-col lg:flex-row`}>
+    <div style={appStyle} className={`flex h-screen bg-crm-bg tracking-normal overflow-hidden relative`}>
       <Toaster position="top-right" reverseOrder={false} />
       {!isAuthPage && <AutoLogout />}
       {!isAuthPage && <GlobalSuspensionTimer />}
       
-      {/* Mobile Top Header */}
-      {!isAuthPage && isMobile && <MobileHeader />}
-
-      {/* Main Sidebar (Drawer on mobile) */}
-      {!isAuthPage && (
-        userRole === 'SUPER_ADMIN' 
-          ? <AdminSidebar 
-              onLogout={handleLogout} 
-              isMobileOpen={isSidebarOpen} 
-              onClose={() => setIsSidebarOpen(false)} 
-            /> 
-          : <Sidebar 
-              whatsappConfig={whatsappConfig} 
-              roleAccess={roleAccess} 
-              isMobileOpen={isSidebarOpen} 
-              onClose={() => setIsSidebarOpen(false)} 
-            />
+      {/* Mobile Sidebar Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-[45] lg:hidden backdrop-blur-sm"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
       )}
 
-      {/* Main Content Area */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-hidden ${!isAuthPage && isMobile ? 'main-content-mobile' : ''}`}>
+      {!isAuthPage && (
+        userRole === 'SUPER_ADMIN' 
+          ? <AdminSidebar onLogout={handleLogout} isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} /> 
+          : <Sidebar whatsappConfig={whatsappConfig} roleAccess={roleAccess} isMobileOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+      )}
+
+      <div className="flex-1 flex flex-col transition-all duration-300 relative z-10 overflow-hidden w-full">
+        {/* Mobile Header */}
+        {!isAuthPage && (
+          <div className="lg:hidden h-16 bg-white border-b border-gray-100 text-[var(--theme-text)] flex items-center justify-between px-4 shrink-0 z-40 shadow-sm">
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={toggleMobileMenu}
+                className="p-2.5 hover:bg-gray-50 rounded-xl transition-colors border border-gray-100 shadow-sm"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+              <div className="flex flex-col">
+                <span className="font-black text-sm uppercase tracking-widest text-slate-800 leading-none mb-0.5">WapiPulse</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">CRM Console</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+               <div className="text-right hidden sm:block">
+                  <p className="text-[11px] font-black text-slate-800 leading-none">Active</p>
+                  <p className="text-[9px] font-bold text-green-500 leading-none uppercase">Online</p>
+               </div>
+               <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center border border-blue-100 shadow-sm">
+                  <UserCircle size={22} />
+               </div>
+            </div>
+          </div>
+        )}
+
         <div id="main-scroll-container" className="flex-1 overflow-y-auto custom-scrollbar">
           <Routes>
             <Route path="/" element={<LandingPage />} />
@@ -1046,7 +1059,7 @@ function AppLayout() {
           </Routes>
         </div>
 
-        {!isAuthPage && !isMobile && (
+        {!isAuthPage && (
           <div className="w-full py-1.5 px-8 bg-white border-t border-slate-200 flex justify-between items-center shrink-0">
              <div className="flex items-center space-x-2">
                 <div className="w-1.5 h-1.5 bg-teal-500 rounded-full animate-pulse"></div>
@@ -1058,9 +1071,6 @@ function AppLayout() {
           </div>
         )}
       </div>
-
-      {/* Mobile Bottom Navigation */}
-      {!isAuthPage && isMobile && <MobileNavbar onMenuClick={() => setIsSidebarOpen(true)} />}
     </div>
   );
 }

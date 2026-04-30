@@ -471,10 +471,10 @@ export default function Inbox({ roleAccess }) {
     .sort((a, b) => new Date(b.lastMessageAt || 0) - new Date(a.lastMessageAt || 0));
 
   return (
-    <div className="flex h-full bg-white lg:rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex-row animate-fade-in relative z-10 w-full lg:w-[calc(100%-24px)] lg:ml-3 lg:my-3 lg:mr-3">
+    <div className="flex h-full bg-white lg:rounded-3xl shadow-[0_4px_30px_rgb(0,0,0,0.06)] overflow-hidden border border-gray-50 flex-col lg:flex-row animate-fade-in relative z-10 w-full lg:w-[calc(100%-12px)] lg:ml-3 lg:my-3">
       
       {/* Contact List Panel (Left) */}
-      <div className={`${activeChat ? 'hidden lg:flex' : 'flex'} w-full lg:w-[340px] border-r border-gray-100 flex-col bg-white shrink-0 z-10`}>
+      <div className={`w-full lg:w-[340px] border-r border-gray-100 flex flex-col bg-white shrink-0 z-10 ${activeChat ? 'hidden lg:flex' : 'flex h-full'}`}>
         
         <div className="p-3 bg-white flex flex-col border-b border-gray-50">
           <div className="relative w-full mb-3">
@@ -501,7 +501,7 @@ export default function Inbox({ roleAccess }) {
                <button 
                   key={btn.id} 
                   onClick={() => setSidebarFilter(btn.id)}
-                  className={`py-2 px-1 rounded-xl text-[9px] sm:text-[10px] font-black tracking-tighter transition-all border shadow-sm ${
+                  className={`py-2 px-1 rounded-xl text-[9px] font-black tracking-tighter transition-all border shadow-sm ${
                     sidebarFilter === btn.id 
                     ? 'bg-[var(--theme-bg)] text-white border-[var(--theme-bg)]' 
                     : 'bg-white text-slate-500 border-slate-100 hover:border-teal-200 hover:bg-teal-50/30'
@@ -604,47 +604,43 @@ export default function Inbox({ roleAccess }) {
       </div>
 
       {/* Chat Area (Middle) */}
-      <div className={`${activeChat ? 'flex' : 'hidden lg:flex'} flex-1 flex-col bg-[#eef0eb] relative min-w-0 border-r border-gray-100 shadow-[inset_10px_0_20px_-10px_rgba(0,0,0,0.02)]`}>
-        
+      <div className={`flex-1 flex flex-col min-w-0 bg-white relative h-full ${!activeChat ? 'hidden lg:flex' : 'flex'}`}>
         {activeChat ? (
         <>
         {/* Chat Header */}
-        <div className="h-[52px] bg-[var(--theme-bg)] text-white flex items-center px-4 lg:px-6 shadow-sm z-20 justify-between shrink-0">
-          <div className="flex items-center space-x-3 min-w-0">
-            {/* Mobile Back Button */}
-            <button 
-               onClick={() => setActiveChat(null)}
-               className="lg:hidden p-2 -ml-2 hover:bg-teal-700 rounded-full transition-colors shrink-0"
-            >
-               <X size={20} />
-            </button>
-
-            <img src={getAvatarUrl(activeChat?.name)} className="w-8 h-8 rounded-full object-cover shadow-sm border border-white/20 shrink-0" alt="avatar" />
-            <div className="flex flex-col min-w-0">
-               <span className="font-semibold text-sm leading-tight truncate">{activeChat?.name}</span>
-                <span className="text-white/70 text-[10px] font-medium tracking-wide leading-tight truncate">
-                  {activeChat?.phone}
-                </span>
-             </div>
-          </div>
-          <div className="flex items-center space-x-2 shrink-0">
+        <div className="h-16 bg-[var(--theme-bg)] text-white px-4 flex items-center justify-between shrink-0 z-40 shadow-sm">
+           <div className="flex items-center space-x-3 overflow-hidden">
+              <button 
+                onClick={() => setActiveChat(null)}
+                className="lg:hidden p-2 hover:bg-black/10 rounded-lg transition-colors mr-1"
+              >
+                <X size={20} />
+              </button>
+              <img src={getAvatarUrl(activeChat?.name)} className="w-9 h-9 rounded-full object-cover shadow-sm border-2 border-white/20 shrink-0" alt="avatar" />
+              <div className="flex flex-col min-w-0">
+                 <span className="font-bold text-sm leading-tight truncate">{activeChat?.name}</span>
+                 <span className="text-white/70 text-[10px] font-medium tracking-wide leading-tight truncate">
+                   {activeChat?.phone}
+                 </span>
+              </div>
+           </div>
+          <div className="flex items-center space-x-2">
             <button 
                onClick={() => setShowProfile(!showProfile)}
                className={`text-xs font-bold transition-colors px-3 py-1 rounded-md ${showProfile ? 'bg-teal-700 text-white' : 'text-teal-100 hover:text-white bg-teal-800/50'}`}
             >
-               <span className="hidden sm:inline">Chat Profile</span>
-               <UserCircle className="sm:hidden" size={18} />
-            </button>
-          </div>
+            Chat Profile
+          </button>
+        </div>
         </div>
         
         {/* Chat Feed */}
-        <div className="flex-1 p-4 sm:p-8 overflow-y-auto flex flex-col space-y-4 sm:space-y-6 relative z-10 custom-scrollbar" style={{ backgroundImage: 'radial-gradient(circle, #e5dfd5 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
+        <div className="flex-1 p-8 overflow-y-auto flex flex-col space-y-6 relative z-10 custom-scrollbar" style={{ backgroundImage: 'radial-gradient(circle, #e5dfd5 1px, transparent 1px)', backgroundSize: '30px 30px' }}>
            
            {/* Loop through live DB messages if available */}
            {messages.length > 0 ? (
               messages.map((m, idx) => (
-                 <div key={m._id || idx} className={`relative group max-w-[85%] sm:max-w-[70%] w-fit animate-msg-enter ${m.direction === 'OUTBOUND' ? 'self-end' : 'self-start'}`} style={{ animationDelay: `${idx * 0.1}s` }}>
+                 <div key={m._id || idx} className={`relative group max-w-[70%] w-fit animate-msg-enter ${m.direction === 'OUTBOUND' ? 'self-end' : 'self-start'}`} style={{ animationDelay: `${idx * 0.1}s` }}>
                    
                    {/* Internal Team Note Decoration */}
                    {m.isInternal && (
@@ -817,9 +813,20 @@ export default function Inbox({ roleAccess }) {
         )}
       </div>
 
-      {/* Chat Profile Panel (Right) */}
-      {activeChat && showProfile && (
-      <div className="w-[300px] bg-[#fdfdfd] flex flex-col shrink-0 z-20 overflow-y-auto custom-scrollbar shadow-[-5px_0_15px_rgba(0,0,0,0.01)] animate-fade-in">
+      {/* Chat Profile Panel (Right) - Responsive Overlay on Mobile */}
+      {activeChat && (
+      <div className={`
+        fixed inset-y-0 right-0 z-[60] lg:relative lg:inset-auto lg:z-10
+        ${showProfile ? 'translate-x-0' : 'translate-x-full lg:translate-x-0'}
+        ${!showProfile && 'lg:hidden'}
+        w-full sm:w-[320px] bg-white border-l border-gray-100 flex flex-col shrink-0 transition-transform duration-300 shadow-2xl lg:shadow-none overflow-y-auto custom-scrollbar h-full
+      `}>
+         <div className="h-16 px-6 border-b border-gray-50 flex items-center justify-between shrink-0 bg-white">
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Lead Profile</span>
+            <button onClick={() => setShowProfile(false)} className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+               <X size={18} />
+            </button>
+         </div>
          
          <div className="p-8 pb-6 flex flex-col items-center justify-center border-b border-gray-50 text-center relative mt-2">
             <img src={getAvatarUrl(activeChat?.name)} className="w-24 h-24 rounded-full shadow-lg object-cover border-4 border-white mb-4" />

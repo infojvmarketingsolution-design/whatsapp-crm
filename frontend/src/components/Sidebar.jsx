@@ -18,10 +18,11 @@ import {
   Menu,
   Download,
   Share,
-  Info
+  Info,
+  X
 } from 'lucide-react';
 
-export default function Sidebar({ whatsappConfig, roleAccess }) {
+export default function Sidebar({ whatsappConfig, roleAccess, isMobileOpen, onClose }) {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = React.useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -118,144 +119,170 @@ export default function Sidebar({ whatsappConfig, roleAccess }) {
     return false;
   });
 
-
   return (
-    <div className={`${collapsed ? 'w-20' : 'w-64'} shrink-0 bg-[var(--theme-bg)] text-white min-h-screen flex flex-col shadow-lg z-20 transition-all duration-300`}>
-      <div className={`p-5 border-b border-teal-800/50 flex items-center ${collapsed ? 'justify-center' : 'justify-between'} relative h-[73px]`}>
-        {!collapsed && <span className="text-xl font-bold tracking-wider truncate mr-10">WapiPulse CRM</span>}
-        <button 
-          onClick={() => setCollapsed(!collapsed)}
-          className={`${collapsed ? '' : 'absolute right-5'} text-teal-200 hover:text-white transition-colors cursor-pointer p-1 hover:bg-teal-800/50 rounded-md`}
-        >
-          <Menu className="w-6 h-6" />
-        </button>
-      </div>
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide">
-        {menuItems.map((item, i) => (
-           <NavLink 
-             key={item.name} 
-             to={item.path}
-             title={collapsed ? item.name : ''}
-             className={({ isActive }) => 
-               `flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-md transition-all duration-200 outline-none ${
-                 isActive 
-                  ? 'bg-teal-700/50 text-white font-medium shadow-inner border-l-4 border-green-400' 
-                  : 'text-teal-50 hover:bg-teal-800/80 hover:text-white border-l-4 border-transparent'
-               }`
-             }
-           >
-             {({ isActive }) => (
-               <div className={`flex items-center ${collapsed ? 'justify-center min-w-[24px]' : 'space-x-3 w-full'}`}>
-                 <item.icon size={22} className={`${isActive ? 'text-green-400' : 'text-teal-200'} shrink-0`} />
-                 {!collapsed && <span className="text-sm tracking-wide truncate">{item.name}</span>}
-               </div>
-             )}
-           </NavLink>
-        ))}
-      </nav>
-      <div className="mt-auto border-t border-teal-800/50">
-        {!collapsed && whatsappConfig && (
-          <div className="px-6 py-4 border-b border-teal-800/30 bg-teal-900/20">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-bold text-teal-300 uppercase tracking-wider">Meta Status</span>
-              <div className="flex items-center space-x-1">
-                <div className={`w-2 h-2 rounded-full ${whatsappConfig.accessToken ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]' : 'bg-red-400'}`}></div>
-                <span className="text-[10px] font-bold text-white uppercase">{whatsappConfig.accessToken ? 'Connected' : 'Disconnected'}</span>
-              </div>
-            </div>
-            {whatsappConfig.wabaName && (
-               <div className="text-[11px] font-bold text-white truncate mb-1">{whatsappConfig.wabaName}</div>
-            )}
-            <div className="flex flex-col space-y-0.5">
-              <div className="flex items-center justify-between text-[9px] text-teal-300/80">
-                <span>Phone ID:</span>
-                <span className="font-mono text-white">{whatsappConfig.phoneNumberId ? `...${whatsappConfig.phoneNumberId.slice(-4)}` : 'N/A'}</span>
-              </div>
-              <div className="flex items-center justify-between text-[9px] text-teal-300/80">
-                <span>WABA ID:</span>
-                <span className="font-mono text-white">{whatsappConfig.wabaId ? `...${whatsappConfig.wabaId.slice(-4)}` : 'N/A'}</span>
-              </div>
-            </div>
-          </div>
-        )}
-        
-        <div className={`px-6 py-4 border-b border-teal-800/30 bg-teal-900/10 flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
-          {!collapsed && (
-             <div className="flex flex-col">
-                <span className="text-[11px] font-bold text-teal-200 uppercase tracking-wider">Status</span>
-                <span className="text-[9px] text-teal-400/80">{isAvailable ? 'Receiving Leads' : 'Auto-Assign Paused'}</span>
-             </div>
-          )}
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isMobileOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[55] lg:hidden animate-fade-in"
+          onClick={onClose}
+        />
+      )}
+
+      <div className={`
+        ${collapsed ? 'w-20' : 'w-64'} 
+        fixed inset-y-0 left-0 z-[60] lg:relative lg:translate-x-0 transform transition-transform duration-300 ease-in-out
+        ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
+        shrink-0 bg-[var(--theme-bg)] text-white h-screen flex flex-col shadow-lg transition-all
+      `}>
+        <div className={`p-5 border-b border-teal-800/50 flex items-center ${collapsed ? 'justify-center' : 'justify-between'} relative h-[73px]`}>
+          {!collapsed && <span className="text-xl font-bold tracking-wider truncate mr-10">WapiPulse CRM</span>}
+          
+          {/* Mobile Close Button */}
           <button 
-             onClick={toggleAvailability}
-             title={isAvailable ? "Active (Receiving Leads)" : "Non-Active (Auto-Assign Paused)"}
-             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none transition-colors ${isAvailable ? 'bg-green-500' : 'bg-slate-500'}`}
+            onClick={onClose}
+            className="lg:hidden p-2 hover:bg-teal-800/50 rounded-md text-teal-200"
           >
-             <span className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAvailable ? 'translate-x-1.5' : '-translate-x-1.5'}`} />
+            <X size={24} />
+          </button>
+
+          {/* Desktop Toggle Button */}
+          <button 
+            onClick={() => setCollapsed(!collapsed)}
+            className={`hidden lg:block ${collapsed ? '' : 'absolute right-5'} text-teal-200 hover:text-white transition-colors cursor-pointer p-1 hover:bg-teal-800/50 rounded-md`}
+          >
+            <Menu className="w-6 h-6" />
           </button>
         </div>
-
-        {deferredPrompt && (
-          <button 
-            onClick={handleInstall} 
-            className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-green-400 hover:text-white hover:bg-green-700/50 transition-colors border-t border-teal-800/50`}
-          >
-            <Download size={20} />
-            {!collapsed && <span className="font-bold">Install App</span>}
-          </button>
-        )}
-
-        {shouldShowIosInstall && (
-          <button 
-            onClick={() => setShowIosGuide(true)} 
-            className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-blue-400 hover:text-white hover:bg-blue-700/50 transition-colors border-t border-teal-800/50`}
-          >
-            <Info size={20} />
-            {!collapsed && <span className="font-bold">Install on iPhone</span>}
-          </button>
-        )}
-
-        {showIosGuide && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowIosGuide(false)}>
-            <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-slate-800 shadow-2xl animate-scale-in" onClick={e => e.stopPropagation()}>
-              <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Share size={32} />
-                </div>
-                <h3 className="text-xl font-black uppercase tracking-tight">Install on iPhone</h3>
-              </div>
-              
-              <div className="space-y-6 text-sm font-medium text-slate-600">
-                <div className="flex items-start space-x-4">
-                  <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black shrink-0">1</div>
-                  <p>Tap the <span className="font-black text-blue-600">Share</span> button in Safari (box with arrow at the bottom).</p>
-                </div>
-                <div className="flex items-start space-x-4">
-                  <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black shrink-0">2</div>
-                  <p>Scroll down and tap <span className="font-black text-blue-600">"Add to Home Screen"</span>.</p>
-                </div>
-                <div className="flex items-start space-x-4">
-                  <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black shrink-0">3</div>
-                  <p>The **WapiPulse** icon will appear on your iPhone home screen!</p>
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide">
+          {menuItems.map((item, i) => (
+             <NavLink 
+               key={item.name} 
+               to={item.path}
+               title={collapsed ? item.name : ''}
+               onClick={() => { if (window.innerWidth < 1024) onClose(); }}
+               className={({ isActive }) => 
+                 `flex items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-4 py-3 rounded-md transition-all duration-200 outline-none ${
+                   isActive 
+                    ? 'bg-teal-700/50 text-white font-medium shadow-inner border-l-4 border-green-400' 
+                    : 'text-teal-50 hover:bg-teal-800/80 hover:text-white border-l-4 border-transparent'
+                 }`
+               }
+             >
+               {({ isActive }) => (
+                 <div className={`flex items-center ${collapsed ? 'justify-center min-w-[24px]' : 'space-x-3 w-full'}`}>
+                   <item.icon size={22} className={`${isActive ? 'text-green-400' : 'text-teal-200'} shrink-0`} />
+                   {!collapsed && <span className="text-sm tracking-wide truncate">{item.name}</span>}
+                 </div>
+               )}
+             </NavLink>
+          ))}
+        </nav>
+        <div className="mt-auto border-t border-teal-800/50">
+          {!collapsed && whatsappConfig && (
+            <div className="px-6 py-4 border-b border-teal-800/30 bg-teal-900/20">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[10px] font-bold text-teal-300 uppercase tracking-wider">Meta Status</span>
+                <div className="flex items-center space-x-1">
+                  <div className={`w-2 h-2 rounded-full ${whatsappConfig.accessToken ? 'bg-green-400 shadow-[0_0_8px_rgba(74,222,128,0.6)]' : 'bg-red-400'}`}></div>
+                  <span className="text-[10px] font-bold text-white uppercase">{whatsappConfig.accessToken ? 'Connected' : 'Disconnected'}</span>
                 </div>
               </div>
-
-              <button 
-                onClick={() => setShowIosGuide(false)}
-                className="w-full mt-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all"
-              >
-                Got it!
-              </button>
+              {whatsappConfig.wabaName && (
+                 <div className="text-[11px] font-bold text-white truncate mb-1">{whatsappConfig.wabaName}</div>
+              )}
+              <div className="flex flex-col space-y-0.5">
+                <div className="flex items-center justify-between text-[9px] text-teal-300/80">
+                  <span>Phone ID:</span>
+                  <span className="font-mono text-white">{whatsappConfig.phoneNumberId ? `...${whatsappConfig.phoneNumberId.slice(-4)}` : 'N/A'}</span>
+                </div>
+                <div className="flex items-center justify-between text-[9px] text-teal-300/80">
+                  <span>WABA ID:</span>
+                  <span className="font-mono text-white">{whatsappConfig.wabaId ? `...${whatsappConfig.wabaId.slice(-4)}` : 'N/A'}</span>
+                </div>
+              </div>
             </div>
+          )}
+          
+          <div className={`px-6 py-4 border-b border-teal-800/30 bg-teal-900/10 flex items-center ${collapsed ? 'justify-center' : 'justify-between'}`}>
+            {!collapsed && (
+               <div className="flex flex-col">
+                  <span className="text-[11px] font-bold text-teal-200 uppercase tracking-wider">Status</span>
+                  <span className="text-[9px] text-teal-400/80">{isAvailable ? 'Receiving Leads' : 'Auto-Assign Paused'}</span>
+               </div>
+            )}
+            <button 
+               onClick={toggleAvailability}
+               title={isAvailable ? "Active (Receiving Leads)" : "Non-Active (Auto-Assign Paused)"}
+               className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full focus:outline-none transition-colors ${isAvailable ? 'bg-green-500' : 'bg-slate-500'}`}
+            >
+               <span className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${isAvailable ? 'translate-x-1.5' : '-translate-x-1.5'}`} />
+            </button>
           </div>
-        )}
 
-        <button onClick={handleLogout} className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-teal-200 hover:text-white hover:bg-teal-800/80 transition-colors`}>
-          <LogOut size={20} />
-          {!collapsed && <span>Logout</span>}
-        </button>
+          {deferredPrompt && (
+            <button 
+              onClick={handleInstall} 
+              className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-green-400 hover:text-white hover:bg-green-700/50 transition-colors border-t border-teal-800/50`}
+            >
+              <Download size={20} />
+              {!collapsed && <span className="font-bold">Install App</span>}
+            </button>
+          )}
+
+          {shouldShowIosInstall && (
+            <button 
+              onClick={() => setShowIosGuide(true)} 
+              className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-blue-400 hover:text-white hover:bg-blue-700/50 transition-colors border-t border-teal-800/50`}
+            >
+              <Info size={20} />
+              {!collapsed && <span className="font-bold">Install on iPhone</span>}
+            </button>
+          )}
+
+          {showIosGuide && (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setShowIosGuide(false)}>
+              <div className="bg-white rounded-3xl p-8 max-w-sm w-full text-slate-800 shadow-2xl animate-scale-in" onClick={e => e.stopPropagation()}>
+                <div className="text-center mb-6">
+                  <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Share size={32} />
+                  </div>
+                  <h3 className="text-xl font-black uppercase tracking-tight">Install on iPhone</h3>
+                </div>
+                
+                <div className="space-y-6 text-sm font-medium text-slate-600">
+                  <div className="flex items-start space-x-4">
+                    <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black shrink-0">1</div>
+                    <p>Tap the <span className="font-black text-blue-600">Share</span> button in Safari (box with arrow at the bottom).</p>
+                  </div>
+                  <div className="flex items-start space-x-4">
+                    <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black shrink-0">2</div>
+                    <p>Scroll down and tap <span className="font-black text-blue-600">"Add to Home Screen"</span>.</p>
+                  </div>
+                  <div className="flex items-start space-x-4">
+                    <div className="w-6 h-6 bg-slate-100 rounded-full flex items-center justify-center text-xs font-black shrink-0">3</div>
+                    <p>The **WapiPulse** icon will appear on your iPhone home screen!</p>
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => setShowIosGuide(false)}
+                  className="w-full mt-8 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all"
+                >
+                  Got it!
+                </button>
+              </div>
+            </div>
+          )}
+
+          <button onClick={handleLogout} className={`flex w-full items-center ${collapsed ? 'justify-center' : 'space-x-3'} px-7 py-5 text-sm text-teal-200 hover:text-white hover:bg-teal-800/80 transition-colors`}>
+            <LogOut size={20} />
+            {!collapsed && <span>Logout</span>}
+          </button>
+        </div>
       </div>
-    </div>
+    </>
   );
+
 }
 // FORCE REBUILD 2026-03-29 01:27
