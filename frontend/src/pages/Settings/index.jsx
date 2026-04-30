@@ -7,6 +7,7 @@ import {
   CreditCard, 
   Link as LinkIcon, 
   Settings as SettingsIcon, 
+  Bot,
   ShieldCheck, 
   Bell, 
   Palette, 
