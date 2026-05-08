@@ -732,9 +732,16 @@ export default function Contacts({ roleAccess }) {
                           <div className="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center">
                              <UserCircle size={14} className="text-slate-400" />
                           </div>
-                          <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">
-                             {agents.find(a => a._id === c.assignedAgent)?.name || 'Unassigned'}
-                          </span>
+                                                     <div className="flex flex-col space-y-0.5">
+                              <span className="text-[9px] font-black text-blue-500 uppercase tracking-tighter flex items-center">
+                                 <Users size={8} className="mr-1" /> {agents.find(a => a._id === c.assignedAgent)?.name || 'Unassigned'}
+                              </span>
+                              {c.assignedCounsellor && (
+                                 <span className="text-[9px] font-black text-indigo-500 uppercase tracking-tighter flex items-center">
+                                    <Shield size={8} className="mr-1" /> {agents.find(a => a._id === c.assignedCounsellor)?.name || 'No Expert'}
+                                 </span>
+                              )}
+                           </div>
                        </div>
                        <div className="flex items-center space-x-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
                           <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
@@ -769,7 +776,8 @@ export default function Contacts({ roleAccess }) {
                              className="rounded border-gray-300 text-[var(--theme-bg)] focus:ring-[var(--theme-bg)] cursor-pointer"
                            />
                         </th>
-                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Owner</th>
+                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Telecaller</th>
+                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Counsellor</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Profile Identity</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Current Phase</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Lead Health</th>
@@ -787,21 +795,36 @@ export default function Contacts({ roleAccess }) {
                                className="rounded border-gray-300 text-[var(--theme-bg)] focus:ring-[var(--theme-bg)] cursor-pointer"
                              />
                           </td>
-                          <td className="py-5 px-6 border-b border-gray-50" onClick={(e) => e.stopPropagation()}>
-                             <div className="flex items-center">
-                                <Users size={12} className="mr-2 text-gray-400" />
-                                <select 
-                                   value={c.assignedAgent || ''} 
-                                   onChange={(e) => {
-                                      handleBulkAction("transfer_leads", e.target.value, [c._id]);
-                                   }}
-                                   className="bg-transparent text-[11px] font-bold text-slate-600 outline-none cursor-pointer border-none p-0 focus:ring-0 max-w-[120px] overflow-hidden text-ellipsis"
-                                >
-                                   <option value="">Unassigned</option>
-                                   {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
-                                </select>
-                             </div>
-                          </td>
+                                                     <td className="py-5 px-6 border-b border-gray-50" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center">
+                                 <Users size={12} className="mr-2 text-blue-400" />
+                                 <select 
+                                    value={c.assignedAgent || ''} 
+                                    onChange={(e) => {
+                                       handleBulkAction("transfer_leads", e.target.value, [c._id]);
+                                    }}
+                                    className="bg-transparent text-[11px] font-bold text-slate-600 outline-none cursor-pointer border-none p-0 focus:ring-0 max-w-[100px] overflow-hidden text-ellipsis"
+                                 >
+                                    <option value="">Unassigned</option>
+                                    {agents.filter(a => ['TELECALLER', 'AGENT', 'ADMIN'].includes(a.role?.toUpperCase())).map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                                 </select>
+                              </div>
+                           </td>
+                           <td className="py-5 px-6 border-b border-gray-50" onClick={(e) => e.stopPropagation()}>
+                              <div className="flex items-center">
+                                 <Shield size={12} className="mr-2 text-indigo-400" />
+                                 <select 
+                                    value={c.assignedCounsellor || ''} 
+                                    onChange={(e) => {
+                                       updateContactDetail(c._id, { ...c, assignedCounsellor: e.target.value });
+                                    }}
+                                    className="bg-transparent text-[11px] font-bold text-slate-600 outline-none cursor-pointer border-none p-0 focus:ring-0 max-w-[100px] overflow-hidden text-ellipsis"
+                                 >
+                                    <option value="">No Expert</option>
+                                    {agents.filter(a => ['MANAGER_COUNSELLOUR', 'MANAGER_COUNSELOR', 'COUNSELLOUR', 'COUNSELLOR', 'COUNSELOR', 'MANAGER COUNSELLOUR'].includes(a.role?.toUpperCase())).map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
+                                 </select>
+                              </div>
+                           </td>
                           <td className="py-5 px-6 border-b border-gray-50" onClick={() => handleRowClick(c)}>
                              <div className="flex items-center space-x-4">
                                 <div className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center font-black text-sm group-hover:bg-[var(--theme-bg)] group-hover:text-white transition-colors">
