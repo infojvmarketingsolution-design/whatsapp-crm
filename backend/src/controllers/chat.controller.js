@@ -144,7 +144,8 @@ const getContacts = async (req, res) => {
           isClosed: 1,
           closeReason: 1,
           meetingType: 1,
-          meetingRemark: 1
+          meetingRemark: 1,
+          notes: 1
         }
       },
       { $sort: { lastMessageAt: -1 } }
@@ -326,7 +327,7 @@ const performContactAction = async (req, res) => {
             });
 
         } else if (action === 'add_note') {
-       const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };
+       const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
        contact.notes.push(newNote);
        contact.timeline.push({ eventType: 'NOTE_ADDED', description: `Note added${payload.note ? ` - ${payload.note}` : ''}`, timestamp: new Date() });
