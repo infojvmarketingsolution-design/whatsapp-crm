@@ -118,8 +118,8 @@ export default function TeamPerformance() {
               <Users size={24} className="text-teal-600" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Team Hub</h1>
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5 flex items-center">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Team Hub</h1>
+              <p className="text-[9px] text-slate-400 font-bold capitalize mt-0.5 flex items-center">
                 <Shield size={10} className="mr-1 text-teal-500" /> Oversight for conversion
               </p>
             </div>
@@ -147,9 +147,9 @@ export default function TeamPerformance() {
            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-16 h-16 bg-blue-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700"></div>
               <div className="flex flex-col">
-                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">Network Reach</p>
+                <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 capitalize mb-2 sm:mb-3">Network Reach</p>
                 <div className="flex items-center space-x-2 sm:space-x-3">
-                   <h3 className="text-xl sm:text-3xl font-black text-slate-800 leading-none">{totalLeads}</h3>
+                   <h3 className="text-xl sm:text-3xl font-bold text-slate-800 leading-none">{totalLeads}</h3>
                    <span className="text-[8px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded tracking-tight hidden sm:inline">Active Leads</span>
                 </div>
               </div>
@@ -158,9 +158,9 @@ export default function TeamPerformance() {
            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-16 h-16 bg-teal-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700"></div>
               <div className="flex flex-col">
-                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">Operational Pulse</p>
+                <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 capitalize mb-2 sm:mb-3">Operational Pulse</p>
                 <div className="flex items-center space-x-2 sm:space-x-3">
-                   <h3 className="text-xl sm:text-3xl font-black text-slate-800 leading-none">{avgEfficiency}%</h3>
+                   <h3 className="text-xl sm:text-3xl font-bold text-slate-800 leading-none">{avgEfficiency}%</h3>
                    <span className="text-[8px] font-bold text-teal-600 bg-teal-50 px-1.5 py-0.5 rounded tracking-tight hidden sm:inline">Avg Efficacy</span>
                 </div>
               </div>
@@ -169,9 +169,9 @@ export default function TeamPerformance() {
            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-16 h-16 bg-orange-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700"></div>
               <div className="flex flex-col">
-                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">Workforce Active</p>
+                <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 capitalize mb-2 sm:mb-3">Workforce Active</p>
                 <div className="flex items-center space-x-2 sm:space-x-3">
-                   <h3 className="text-xl sm:text-3xl font-black text-slate-800 leading-none">{teamStats.filter(m => m.isAvailable).length}</h3>
+                   <h3 className="text-xl sm:text-3xl font-bold text-slate-800 leading-none">{teamStats.filter(m => m.isAvailable).length}</h3>
                    <span className="text-[8px] font-bold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded tracking-tight hidden sm:inline">Available</span>
                 </div>
               </div>
@@ -180,9 +180,9 @@ export default function TeamPerformance() {
            <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-200 shadow-premium relative overflow-hidden group">
               <div className="absolute top-0 right-0 w-16 h-16 bg-purple-500/5 rounded-full -mr-8 -mt-8 group-hover:scale-150 transition-transform duration-700"></div>
               <div className="flex flex-col">
-                <p className="text-[8px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 sm:mb-3">Team Composition</p>
+                <p className="text-[8px] sm:text-[10px] font-bold text-slate-400 capitalize mb-2 sm:mb-3">Team Composition</p>
                 <div className="flex items-center space-x-2 sm:space-x-3">
-                   <h3 className="text-xl sm:text-3xl font-black text-slate-800 leading-none">{teamStats.length}</h3>
+                   <h3 className="text-xl sm:text-3xl font-bold text-slate-800 leading-none">{teamStats.length}</h3>
                    <span className="text-[8px] font-bold text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded tracking-tight hidden sm:inline">Verified Staff</span>
                 </div>
               </div>
@@ -193,13 +193,13 @@ export default function TeamPerformance() {
         {loading ? (
           <div className="py-20 flex flex-col items-center justify-center space-y-4">
              <RefreshCw size={40} className="text-slate-200 animate-spin" />
-             <p className="text-slate-400 font-bold text-sm tracking-tighter">Synchronizing Team Performance Metrics...</p>
+             <p className="text-slate-400 font-semibold">Synchronizing team performance metrics...</p>
           </div>
         ) : filteredTeam.length === 0 ? (
           <div className="py-20 bg-white rounded-3xl border border-dashed border-slate-200 flex flex-col items-center justify-center">
              <AlertCircle size={48} className="text-slate-200 mb-4" />
-             <h3 className="text-xl font-black text-slate-800">No Teammates Found</h3>
-             <p className="text-slate-400 font-bold text-xs mt-2 uppercase tracking-widest">Adjust search or invite staff.</p>
+             <h3 className="text-xl font-bold text-slate-800">No teammates found</h3>
+             <p className="text-slate-400 font-semibold text-xs mt-2">Adjust search or invite staff.</p>
           </div>
         ) : viewMode === 'grid' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
@@ -208,12 +208,12 @@ export default function TeamPerformance() {
                   <div className="p-6">
                      <div className="flex items-start justify-between mb-6">
                         <div className="flex items-center space-x-4">
-                           <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center font-black text-xl group-hover:bg-teal-600 group-hover:text-white group-hover:border-teal-500 transition-all shadow-sm">
+                           <div className="w-14 h-14 rounded-2xl bg-slate-50 border border-slate-100 text-slate-400 flex items-center justify-center font-bold text-xl group-hover:bg-teal-600 group-hover:text-white group-hover:border-teal-500 transition-all shadow-sm">
                               {member.name.charAt(0)}
                            </div>
                            <div>
-                              <h4 className="text-base font-black text-slate-800 tracking-tight leading-tight mb-1">{member.name}</h4>
-                              <div className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-lg inline-block ${
+                              <h4 className="text-base font-bold text-slate-800 tracking-tight leading-tight mb-1">{member.name}</h4>
+                              <div className={`text-[9px] font-bold capitalize px-2.5 py-1 rounded-lg inline-block ${
                                 member.role === 'BUSINESS_HEAD' ? 'bg-indigo-50 text-indigo-600' :
                                 member.role === 'MANAGER_COUNSELLOUR' ? 'bg-orange-50 text-orange-600' :
                                 'bg-teal-50 text-teal-600'
@@ -229,7 +229,7 @@ export default function TeamPerformance() {
                               title="Click to toggle receiving leads"
                            >
                               <div className={`w-1.5 h-1.5 rounded-full ${member.isAvailable ? 'bg-teal-500 animate-pulse' : 'bg-slate-300'}`} />
-                              <span className="text-[7px] font-black uppercase tracking-widest whitespace-nowrap">
+                              <span className="text-[7px] font-bold capitalize whitespace-nowrap">
                                  {member.isAvailable ? 'Receiving Leads' : 'Leads Paused'}
                               </span>
                            </button>
@@ -238,41 +238,41 @@ export default function TeamPerformance() {
 
                       <div className="grid grid-cols-2 gap-3 mb-6">
                         <div className="bg-blue-50/50 p-3 rounded-2xl border border-blue-100/50">
-                           <p className="text-[8px] font-black text-blue-400 uppercase tracking-widest mb-0.5 leading-none">New Leads</p>
-                           <p className="text-base font-black text-blue-700">{member.newLeads || 0}</p>
+                           <p className="text-[8px] font-bold text-blue-400 capitalize mb-0.5 leading-none">New Leads</p>
+                           <p className="text-base font-bold text-blue-700">{member.newLeads || 0}</p>
                         </div>
                         <div className="bg-indigo-50/50 p-3 rounded-2xl border border-indigo-100/50">
-                           <p className="text-[8px] font-black text-indigo-400 uppercase tracking-widest mb-0.5 leading-none">Open Leads</p>
-                           <p className="text-base font-black text-indigo-700">{member.openLeads || 0}</p>
+                           <p className="text-[8px] font-bold text-indigo-400 capitalize mb-0.5 leading-none">Open Leads</p>
+                           <p className="text-base font-bold text-indigo-700">{member.openLeads || 0}</p>
                         </div>
                         <div className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
-                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5 leading-none">Closed Leads</p>
-                           <p className="text-base font-black text-slate-800">{member.closedLeads || 0}</p>
+                           <p className="text-[8px] font-bold text-slate-400 capitalize mb-0.5 leading-none">Closed Leads</p>
+                           <p className="text-base font-bold text-slate-800">{member.closedLeads || 0}</p>
                         </div>
                         <div className="bg-emerald-50/50 p-3 rounded-2xl border border-emerald-100/50">
-                           <p className="text-[8px] font-black text-emerald-500 uppercase tracking-widest mb-0.5 leading-none">Admissions</p>
-                           <p className="text-base font-black text-emerald-700">{member.admissions || 0}</p>
+                           <p className="text-[8px] font-bold text-emerald-500 capitalize mb-0.5 leading-none">Admissions</p>
+                           <p className="text-base font-bold text-emerald-700">{member.admissions || 0}</p>
                         </div>
                         <div className="bg-amber-50/50 p-3 rounded-2xl border border-amber-100/50">
-                           <p className="text-[8px] font-black text-amber-500 uppercase tracking-widest mb-0.5 leading-none">Pending Adm.</p>
-                           <p className="text-base font-black text-amber-700">{member.pendingAdmissions || 0}</p>
+                           <p className="text-[8px] font-bold text-amber-500 capitalize mb-0.5 leading-none">Pending Adm.</p>
+                           <p className="text-base font-bold text-amber-700">{member.pendingAdmissions || 0}</p>
                         </div>
                         <div className="bg-purple-50/50 p-3 rounded-2xl border border-purple-100/50">
-                           <p className="text-[8px] font-black text-purple-400 uppercase tracking-widest mb-0.5 leading-none">Total Coll.</p>
-                           <p className="text-base font-black text-purple-700">₹{member.collectionTotal?.toLocaleString() || 0}</p>
+                           <p className="text-[8px] font-bold text-purple-400 capitalize mb-0.5 leading-none">Total Coll.</p>
+                           <p className="text-base font-bold text-purple-700">₹{member.collectionTotal?.toLocaleString() || 0}</p>
                         </div>
                         <div className="bg-rose-50/50 p-3 rounded-2xl border border-rose-100/50">
-                           <p className="text-[8px] font-black text-rose-400 uppercase tracking-widest mb-0.5 leading-none">Pending Coll.</p>
-                           <p className="text-base font-black text-rose-700">₹{member.collectionPending?.toLocaleString() || 0}</p>
+                           <p className="text-[8px] font-bold text-rose-400 capitalize mb-0.5 leading-none">Pending Coll.</p>
+                           <p className="text-base font-bold text-rose-700">₹{member.collectionPending?.toLocaleString() || 0}</p>
                         </div>
                         <div className="bg-slate-800 p-3 rounded-2xl border border-slate-700">
-                           <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-0.5 leading-none">Pending Tasks</p>
-                           <p className="text-base font-black text-white">{member.pendingTasks || 0}</p>
+                           <p className="text-[8px] font-bold text-slate-400 capitalize mb-0.5 leading-none">Pending Tasks</p>
+                           <p className="text-base font-bold text-white">{member.pendingTasks || 0}</p>
                         </div>
                       </div>
 
                       <div className="space-y-3">
-                         <div className="flex items-center justify-between text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                         <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 capitalize px-1">
                             <span>Efficiency</span>
                             <span className="text-slate-800">{member.taskEfficiency}%</span>
                          </div>
@@ -285,14 +285,14 @@ export default function TeamPerformance() {
                   <div className="px-6 py-5 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
                      <div className="flex -space-x-2">
                         {Object.entries(member.statusBreakdown || {}).slice(0, 3).map(([status, count]) => (
-                           <div key={status} className="w-8 h-8 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center text-[9px] font-black text-slate-700 shadow-sm" title={`${status}: ${count}`}>
+                           <div key={status} className="w-8 h-8 rounded-full bg-white border-2 border-slate-100 flex items-center justify-center text-[9px] font-bold text-slate-700 shadow-sm" title={`${status}: ${count}`}>
                               {count}
                            </div>
                         ))}
                      </div>
                      <button 
                        onClick={() => handleMonitorUser(member)}
-                       className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-sm hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all flex items-center active:scale-95"
+                       className="px-5 py-2.5 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold capitalize rounded-xl shadow-sm hover:bg-teal-600 hover:text-white hover:border-teal-600 transition-all flex items-center active:scale-95"
                      >
                         Audit Leads <ArrowUpRight size={14} className="ml-1.5" />
                      </button>
@@ -305,13 +305,13 @@ export default function TeamPerformance() {
              <table className="w-full text-left">
                 <thead>
                    <tr className="bg-slate-50/50 border-b border-slate-100">
-                      <th className="py-5 px-8 text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Teammate Identity</th>
-                      <th className="py-5 px-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Efficiency</th>
-                      <th className="py-5 px-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Leads (N/O/C)</th>
-                      <th className="py-5 px-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Admissions (A/P)</th>
-                      <th className="py-5 px-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Collections (T/P)</th>
-                      <th className="py-5 px-4 text-center text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pend. Tasks</th>
-                      <th className="py-5 px-8 text-right text-[10px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Actions</th>
+                      <th className="py-5 px-8 text-[10px] font-bold text-slate-400 capitalize whitespace-nowrap">Teammate Identity</th>
+                      <th className="py-5 px-4 text-center text-[10px] font-bold text-slate-400 capitalize whitespace-nowrap">Efficiency</th>
+                      <th className="py-5 px-4 text-center text-[10px] font-bold text-slate-400 capitalize whitespace-nowrap">Leads (N/O/C)</th>
+                      <th className="py-5 px-4 text-center text-[10px] font-bold text-slate-400 capitalize whitespace-nowrap">Admissions (A/P)</th>
+                      <th className="py-5 px-4 text-center text-[10px] font-bold text-slate-400 capitalize whitespace-nowrap">Collections (T/P)</th>
+                      <th className="py-5 px-4 text-center text-[10px] font-bold text-slate-400 capitalize whitespace-nowrap">Pend. Tasks</th>
+                      <th className="py-5 px-8 text-right text-[10px] font-bold text-slate-400 capitalize whitespace-nowrap">Actions</th>
                    </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -319,15 +319,15 @@ export default function TeamPerformance() {
                       <tr key={member._id} className="hover:bg-teal-50/20 transition-colors group">
                          <td className="py-5 px-8 min-w-[200px]">
                             <div className="flex items-center space-x-4">
-                               <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center font-black text-sm group-hover:bg-teal-600 group-hover:text-white transition-all shadow-sm">
+                               <div className="w-11 h-11 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center font-bold text-sm group-hover:bg-teal-600 group-hover:text-white transition-all shadow-sm">
                                   {member.name.charAt(0)}
                                </div>
                                <div>
-                                  <p className="text-[13px] font-black text-slate-800 tracking-tight leading-tight mb-0.5">{member.name}</p>
-                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5">{member.email}</p>
+                                  <p className="text-[13px] font-bold text-slate-800 tracking-tight leading-tight mb-0.5">{member.name}</p>
+                                  <p className="text-[9px] font-bold text-slate-400 capitalize mb-1.5">{member.email}</p>
                                   <button 
                                      onClick={(e) => { e.stopPropagation(); toggleUserAvailability(member._id, member.isAvailable); }}
-                                     className={`inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg border text-[7px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${member.isAvailable ? 'bg-teal-50 border-teal-100 text-teal-600 hover:bg-teal-100' : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'}`}
+                                     className={`inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg border text-[7px] font-bold capitalize transition-all hover:scale-105 active:scale-95 ${member.isAvailable ? 'bg-teal-50 border-teal-100 text-teal-600 hover:bg-teal-100' : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'}`}
                                      title="Click to toggle receiving leads"
                                   >
                                      <div className={`w-1 h-1 rounded-full ${member.isAvailable ? 'bg-teal-500 animate-pulse' : 'bg-slate-300'}`} />
@@ -338,7 +338,7 @@ export default function TeamPerformance() {
                          </td>
                          <td className="py-5 px-4 text-center">
                             <div className="flex flex-col items-center">
-                               <span className="text-[12px] font-black text-slate-800 mb-1">{member.taskEfficiency}%</span>
+                               <span className="text-[12px] font-bold text-slate-800 mb-1">{member.taskEfficiency}%</span>
                                <div className="w-16 h-1 bg-slate-100 rounded-full overflow-hidden">
                                   <div className="h-full bg-teal-500" style={{ width: `${member.taskEfficiency}%` }}></div>
                                </div>
@@ -346,28 +346,28 @@ export default function TeamPerformance() {
                          </td>
                          <td className="py-5 px-4 text-center">
                             <div className="flex items-center justify-center space-x-1.5">
-                               <span className="text-[12px] font-black text-blue-600" title="New">{member.newLeads || 0}</span>
+                               <span className="text-[12px] font-bold text-blue-600" title="New">{member.newLeads || 0}</span>
                                <span className="text-slate-300">/</span>
-                               <span className="text-[12px] font-black text-indigo-600" title="Open">{member.openLeads || 0}</span>
+                               <span className="text-[12px] font-bold text-indigo-600" title="Open">{member.openLeads || 0}</span>
                                <span className="text-slate-300">/</span>
-                               <span className="text-[12px] font-black text-slate-800" title="Closed">{member.closedLeads || 0}</span>
+                               <span className="text-[12px] font-bold text-slate-800" title="Closed">{member.closedLeads || 0}</span>
                             </div>
                          </td>
                          <td className="py-5 px-4 text-center">
                             <div className="flex items-center justify-center space-x-1.5">
-                               <span className="text-[12px] font-black text-emerald-600" title="Admitted">{member.admissions || 0}</span>
+                               <span className="text-[12px] font-bold text-emerald-600" title="Admitted">{member.admissions || 0}</span>
                                <span className="text-slate-300">/</span>
-                               <span className="text-[12px] font-black text-amber-600" title="Pending">{member.pendingAdmissions || 0}</span>
+                               <span className="text-[12px] font-bold text-amber-600" title="Pending">{member.pendingAdmissions || 0}</span>
                             </div>
                          </td>
                          <td className="py-5 px-4 text-center">
                             <div className="flex flex-col items-center">
-                               <span className="text-[11px] font-black text-purple-700" title="Total">₹{(member.collectionTotal / 1000).toFixed(1)}k</span>
+                               <span className="text-[11px] font-bold text-purple-700" title="Total">₹{(member.collectionTotal / 1000).toFixed(1)}k</span>
                                <span className="text-[9px] font-bold text-rose-500" title="Pending">₹{(member.collectionPending / 1000).toFixed(1)}k</span>
                             </div>
                          </td>
                          <td className="py-5 px-4 text-center">
-                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-800 text-white text-[12px] font-black">{member.pendingTasks || 0}</span>
+                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-slate-800 text-white text-[12px] font-bold">{member.pendingTasks || 0}</span>
                          </td>
                          <td className="py-5 px-8 text-right">
                             <button 

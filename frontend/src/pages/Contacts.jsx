@@ -593,28 +593,28 @@ export default function Contacts({ roleAccess }) {
   };
 
   return (
-    <div className="bg-crm-bg min-h-screen flex flex-col animate-fade-in font-sans tracking-normal text-slate-800">
+    <div className="bg-crm-bg min-h-screen flex flex-col animate-fade-in font-sans text-slate-800">
       <div className="bg-white border-b border-slate-100 px-4 sm:px-8 py-3 sticky top-0 z-40 flex flex-col sm:flex-row items-center justify-between shadow-sm gap-4">
          <div className="w-full sm:w-auto flex items-center justify-between">
-            <h1 className="text-[10px] sm:text-xs font-black text-slate-400 tracking-wider uppercase flex items-center">
+            <h1 className="text-[11px] sm:text-xs font-bold text-slate-400 flex items-center">
                <Users className="mr-2 text-blue-600" size={16} /> <span className="hidden sm:inline">Workspace</span> Database
             </h1>
             <div className="flex items-center space-x-3 sm:hidden">
                 <div className="bg-blue-50 px-3 py-1 rounded-full border border-blue-100">
-                   <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{filteredContacts.length} Leads</p>
+                   <p className="text-[10px] font-bold text-blue-600">{filteredContacts.length} Leads</p>
                 </div>
             </div>
          </div>
          <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
             <div className="hidden sm:flex items-center space-x-3 text-xs">
                <div className="text-right">
-                  <p className="text-slate-400 font-bold uppercase tracking-tighter text-[9px]">Filtered</p>
-                  <p className="font-black text-slate-800">{filteredContacts.length}</p>
+                  <p className="text-slate-400 font-bold text-[9px]">Filtered</p>
+                  <p className="font-bold text-slate-800">{filteredContacts.length}</p>
                </div>
                <div className="w-[1px] h-6 bg-slate-100 mx-2"></div>
                <div>
-                  <p className="text-blue-600 font-bold uppercase tracking-tighter text-[9px]">Selected</p>
-                  <p className="font-black text-slate-800">{selectedIds.size}</p>
+                  <p className="text-blue-600 font-bold text-[9px]">Selected</p>
+                  <p className="font-bold text-slate-800">{selectedIds.size}</p>
                </div>
             </div>
             
@@ -643,7 +643,7 @@ export default function Contacts({ roleAccess }) {
              {canAdd && (
                <button 
                  onClick={() => setShowAddModal(true)} 
-                 className="flex-1 sm:flex-none px-6 py-3 bg-slate-900 text-white text-[10px] font-black rounded-2xl hover:shadow-glow transition transform hover:-translate-y-0.5 active:scale-95 uppercase tracking-widest flex items-center justify-center space-x-2"
+                 className="flex-1 sm:flex-none px-6 py-3 bg-slate-900 text-white text-xs font-bold rounded-2xl hover:shadow-glow transition transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center space-x-2"
                >
                   <Plus size={14} />
                   <span>Add Profile</span>
@@ -656,10 +656,10 @@ export default function Contacts({ roleAccess }) {
           <div className="flex flex-col space-y-4 mb-6">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                   <div className="flex flex-col">
-                    <h2 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Contact Workspace</h2>
+                    <h2 className="text-xl sm:text-2xl font-bold text-slate-800">Contact Workspace</h2>
                     <div className="flex items-center space-x-2 mt-1">
                       <div className="w-1.5 h-1.5 rounded-full bg-teal-500"></div>
-                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{filteredContacts.length} Leads Active</p>
+                      <p className="text-[11px] font-semibold text-slate-400">{filteredContacts.length} Leads Active</p>
                     </div>
                   </div>
                   {canSearch && (
@@ -681,16 +681,16 @@ export default function Contacts({ roleAccess }) {
                       <div className="flex-1 bg-white p-2 rounded-2xl border border-slate-100 shadow-sm flex items-center space-x-2 overflow-x-auto no-scrollbar">
                           <div className="flex items-center px-4 border-r border-slate-100 space-x-3 mr-1 shrink-0">
                               <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest whitespace-nowrap">Pulse Hunt:</span>
+                              <span className="text-[11px] font-bold text-slate-400 whitespace-nowrap">Pulse Hunt:</span>
                           </div>
                           
                           <div className="flex items-center space-x-2 shrink-0">
-                             <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2.5 px-4 rounded-xl border-none focus:ring-2 focus:ring-blue-100 cursor-pointer min-w-[110px] appearance-none">
+                             <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="bg-slate-50 text-xs font-semibold py-2.5 px-4 rounded-xl border-none focus:ring-2 focus:ring-blue-100 cursor-pointer min-w-[110px] appearance-none">
                                 <option value="ALL">All Status</option>
                                 {['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'].map(s => <option key={s} value={s}>{s}</option>)}
                              </select>
 
-                             <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="bg-slate-50 text-[10px] font-black uppercase py-2.5 px-4 rounded-xl border-none focus:ring-2 focus:ring-blue-100 cursor-pointer min-w-[110px] appearance-none">
+                             <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="bg-slate-50 text-xs font-semibold py-2.5 px-4 rounded-xl border-none focus:ring-2 focus:ring-blue-100 cursor-pointer min-w-[110px] appearance-none">
                                 <option value="ALL">All Stages</option>
                                 {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
                              </select>
@@ -702,7 +702,7 @@ export default function Contacts({ roleAccess }) {
                         className="flex items-center justify-center space-x-3 px-6 py-4 bg-white border border-slate-100 rounded-3xl shadow-sm text-slate-700 hover:border-blue-200 hover:text-blue-600 transition-all active:scale-95 group"
                       >
                          <Filter size={18} className={activeFilterCount > 0 ? "text-blue-600" : "text-slate-400 group-hover:text-blue-600 transition-colors"} />
-                         <span className="text-[10px] font-black uppercase tracking-widest">More Filters</span>
+                         <span className="text-xs font-bold">More Filters</span>
                       </button>
                   </div>
                )}
@@ -714,18 +714,18 @@ export default function Contacts({ roleAccess }) {
                  <div key={c._id || i} onClick={() => handleRowClick(c)} className="bg-white p-5 rounded-[2rem] border border-slate-100 shadow-premium active:scale-[0.98] transition-all relative overflow-hidden group">
                     <div className="flex items-center justify-between mb-4">
                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-black text-sm uppercase shadow-sm border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+                          <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm shadow-sm border border-blue-100 group-hover:bg-blue-600 group-hover:text-white transition-colors">
                              {c.firstName?.charAt(0) || c.name?.charAt(0) || 'U'}
                           </div>
                           <div>
-                             <p className="text-sm font-black text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors">{c.name || 'Unknown'}</p>
+                             <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{c.name || 'Unknown'}</p>
                              <div className="flex items-center space-x-2 mt-0.5">
                                 <Smartphone size={10} className="text-slate-300" />
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{c.phone}</p>
+                                <p className="text-[10px] font-bold text-slate-400">{c.phone}</p>
                              </div>
                           </div>
                        </div>
-                       <span className={`px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest border ${
+                       <span className={`px-3 py-1 rounded-full text-[8px] font-bold border ${
                          c.pipelineStage === 'ADMISSION' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 
                          c.pipelineStage === 'CLOSE' ? 'bg-rose-50 text-rose-600 border-rose-100' :
                          'bg-slate-50 text-slate-500 border-slate-100'
@@ -738,11 +738,11 @@ export default function Contacts({ roleAccess }) {
                              <UserCircle size={14} className="text-slate-400" />
                           </div>
                                                      <div className="flex flex-col space-y-0.5">
-                              <span className="text-[9px] font-black text-blue-500 uppercase tracking-tighter flex items-center">
+                              <span className="text-[9px] font-bold text-blue-500 flex items-center">
                                  <Users size={8} className="mr-1" /> {agents.find(a => a._id === c.assignedAgent)?.name || 'Unassigned'}
                               </span>
                               {c.assignedCounsellor && (
-                                 <span className="text-[9px] font-black text-indigo-500 uppercase tracking-tighter flex items-center">
+                                 <span className="text-[9px] font-bold text-indigo-500 flex items-center">
                                     <Shield size={8} className="mr-1" /> {agents.find(a => a._id === c.assignedCounsellor)?.name || 'No Expert'}
                                  </span>
                               )}
@@ -756,7 +756,7 @@ export default function Contacts({ roleAccess }) {
                     <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-6">
                        <Users size={40} className="text-slate-200" />
                     </div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">No matching leads discovered</p>
+                    <p className="text-[10px] font-bold text-slate-400">No matching leads discovered</p>
                  </div>
               )}
            </div>
@@ -775,10 +775,10 @@ export default function Contacts({ roleAccess }) {
                              className="rounded border-gray-300 text-[var(--theme-bg)] focus:ring-[var(--theme-bg)] cursor-pointer"
                            />
                         </th>
-                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Telecaller</th>
-                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Counsellor</th>
-                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Profile Identity</th>
-                        <th className="py-5 px-8 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Actions</th>
+                        <th className="py-5 px-6 text-xs font-semibold text-gray-400">Telecaller</th>
+                        <th className="py-5 px-6 text-xs font-semibold text-gray-400">Counsellor</th>
+                        <th className="py-5 px-6 text-xs font-semibold text-gray-400">Profile Identity</th>
+                        <th className="py-5 px-8 text-right text-xs font-semibold text-gray-400">Actions</th>
                      </tr>
                    </thead>
                    <tbody>
@@ -824,14 +824,14 @@ export default function Contacts({ roleAccess }) {
                            </td>
                           <td className="py-5 px-6 border-b border-gray-50">
                              <div className="flex items-center space-x-4">
-                                <div className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center font-black text-sm group-hover:bg-[var(--theme-bg)] group-hover:text-white transition-colors">
+                                <div className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center font-bold text-sm group-hover:bg-[var(--theme-bg)] group-hover:text-white transition-colors">
                                    {c.firstName ? c.firstName.charAt(0) : (c.name?.charAt(0) || 'U')}
                                 </div>
                                 <div>
                                    <p className="text-[13px] font-bold text-slate-800 leading-none mb-1.5">
                                       {c.firstName && c.lastName ? `${c.firstName} ${c.lastName}` : (c.name || 'Unknown User')}
                                    </p>
-                                   <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{c.phone}</p>
+                                   <p className="text-[10px] font-bold text-gray-400 capitalize">{c.phone}</p>
                                  </div>
                              </div>
                           </td>
@@ -856,19 +856,19 @@ export default function Contacts({ roleAccess }) {
                 <div className="bg-slate-50/50 backdrop-blur-xl border-b border-slate-100 px-4 sm:px-10 py-5 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 sm:gap-0 relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
                      <div className="flex items-center space-x-4 sm:space-x-7 w-full sm:w-auto relative z-10">
-                         <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-[1.5rem] bg-white shadow-premium border border-slate-100 flex items-center justify-center text-2xl sm:text-3xl font-black text-slate-800 shrink-0 group hover:scale-105 transition-all">
+                         <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-[1.5rem] bg-white shadow-premium border border-slate-100 flex items-center justify-center text-2xl sm:text-3xl font-bold text-slate-800 shrink-0 group hover:scale-105 transition-all">
                             <span className="opacity-40 group-hover:opacity-100 transition-opacity">{editedContact.firstName?.charAt(0) || selectedContact.name?.charAt(0) || 'U'}</span>
                          </div>
                          <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                               <h2 className="text-xl sm:text-3xl font-black text-slate-800 tracking-tight truncate max-w-[180px] sm:max-w-none">
+                               <h2 className="text-xl sm:text-3xl font-bold text-slate-800 tracking-tight truncate max-w-[180px] sm:max-w-none">
                                   {editedContact.firstName || editedContact.name || 'Lead'} {editedContact.lastName || ''}
                                </h2>
-                               <div className="px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-teal-100 shadow-sm">
+                               <div className="px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-[9px] sm:text-[10px] font-bold capitalize border border-teal-100 shadow-sm">
                                   {editedContact.pipelineStage || 'Discovery'}
                                </div>
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 mt-2 text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 mt-2 text-slate-400 text-[10px] sm:text-[11px] font-bold capitalize">
                                <span className="flex items-center truncate hover:text-slate-600 transition-colors cursor-default"><Phone size={14} className="mr-2 text-teal-500" /> {editedContact.phone}</span>
                                <span className="flex items-center hover:text-slate-600 transition-colors cursor-default"><Hash size={14} className="mr-2 text-indigo-400" /> ID: {selectedContact._id.slice(-6).toUpperCase()}</span>
                             </div>
@@ -877,12 +877,12 @@ export default function Contacts({ roleAccess }) {
 
                      <div className="flex items-center justify-between sm:justify-end space-x-3 w-full sm:w-auto mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-slate-100 relative z-10">
                       <div className="flex flex-col items-start sm:items-end mr-0 sm:mr-3">
-                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Lead Status</label>
+                         <label className="text-[9px] font-bold text-slate-400 capitalize mb-1.5 ml-1">Lead Status</label>
                          <div className="relative group">
                             <select 
                                value={editedContact.status || 'NEW LEAD'} 
                                onChange={e => handleFieldChange('status', e.target.value)}
-                               className={`text-[10px] sm:text-[11px] font-black uppercase tracking-widest px-4 sm:px-6 py-2.5 rounded-xl border-2 shadow-sm transition-all outline-none appearance-none pr-10 ${
+                               className={`text-[10px] sm:text-[11px] font-bold capitalize px-4 sm:px-6 py-2.5 rounded-xl border-2 shadow-sm transition-all outline-none appearance-none pr-10 ${
                                   editedContact.status === 'CLOSED_WON' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
                                   editedContact.status === 'CLOSED_LOST' ? 'bg-rose-50 border-rose-100 text-rose-600' :
                                   'bg-white border-slate-100 text-slate-700 hover:border-slate-300'
@@ -906,7 +906,7 @@ export default function Contacts({ roleAccess }) {
                               updateContactDetail(selectedContact._id, editedContact);
                            }}
                            disabled={isUpdatingContact}
-                           className={`h-11 sm:h-12 px-5 sm:px-10 rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.1em] shadow-lg transition-all flex items-center justify-center active:scale-95 ${
+                           className={`h-11 sm:h-12 px-5 sm:px-10 rounded-2xl text-[10px] sm:text-[12px] font-bold uppercase tracking-[0.1em] shadow-lg transition-all flex items-center justify-center active:scale-95 ${
                               showSaveFab 
                               ? 'bg-slate-900 text-white hover:bg-black shadow-slate-900/20 ring-4 ring-slate-900/5' 
                               : 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100'
@@ -933,8 +933,8 @@ export default function Contacts({ roleAccess }) {
                      <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in">
                         <div className="flex items-center justify-between">
                            <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-slate-900/20">01</div>
-                              <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Basic Information</h3>
+                              <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-slate-900/20">01</div>
+                              <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Basic Information</h3>
                            </div>
                            <div className="h-[2px] flex-1 bg-slate-50 mx-6 rounded-full hidden sm:block"></div>
                            <User size={18} className="text-slate-200" />
@@ -942,7 +942,7 @@ export default function Contacts({ roleAccess }) {
                         
                         <div className="space-y-6">
                            <div className="space-y-2">
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Legal Full Name</label>
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Legal Full Name</label>
                               <div className="relative group">
                                  <input 
                                    value={editedContact.firstName || editedContact.name || ''} 
@@ -955,7 +955,7 @@ export default function Contacts({ roleAccess }) {
                            </div>
 
                            <div className="space-y-2">
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">WhatsApp Identity (Verified)</label>
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">WhatsApp Identity (Verified)</label>
                               <div className="w-full bg-slate-50 border-2 border-transparent py-3.5 px-5 text-sm font-bold text-slate-500 rounded-2xl flex items-center">
                                  <Phone size={14} className="mr-3 text-teal-500 opacity-60" /> {editedContact.phone}
                               </div>
@@ -963,11 +963,11 @@ export default function Contacts({ roleAccess }) {
 
                            <div className="space-y-4 pt-4 border-t border-slate-50">
                               <div className="flex items-center justify-between">
-                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Communication Channels</label>
+                                 <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Communication Channels</label>
                                  {(!editedContact.secondaryPhone || editedContact.secondaryPhone.trim() === '') && (
                                     <button 
                                        onClick={() => handleFieldChange('secondaryPhone', '+')} 
-                                       className="text-[10px] font-black text-teal-600 flex items-center hover:bg-teal-50 px-3 py-1.5 rounded-xl transition-all"
+                                       className="text-[10px] font-bold text-teal-600 flex items-center hover:bg-teal-50 px-3 py-1.5 rounded-xl transition-all"
                                     >
                                        <Plus size={12} className="mr-1.5" /> Add WhatsApp
                                     </button>
@@ -998,7 +998,7 @@ export default function Contacts({ roleAccess }) {
                            </div>
 
                            <div className="space-y-5 pt-4 border-t border-slate-50">
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Location Details</label>
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Location Details</label>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                  <input value={editedContact.houseNo || ''} onChange={e=>handleFieldChange('houseNo', e.target.value)} placeholder="House No" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                                  <input value={editedContact.societyName || ''} onChange={e=>handleFieldChange('societyName', e.target.value)} placeholder="Society Name" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
@@ -1021,7 +1021,7 @@ export default function Contacts({ roleAccess }) {
                                  </div>
                               </div>
                               <div className="grid grid-cols-2 gap-4">
-                                 <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-black text-slate-400 rounded-2xl flex items-center uppercase trackingest">India</div>
+                                 <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-bold text-slate-400 rounded-2xl flex items-center uppercase trackingest">India</div>
                                  <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                               </div>
                            </div>
@@ -1032,21 +1032,21 @@ export default function Contacts({ roleAccess }) {
                      <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in delay-100">
                         <div className="flex items-center justify-between">
                            <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 rounded-2xl bg-teal-500 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-teal-500/20">02</div>
-                              <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Qualification Details</h3>
+                              <div className="w-10 h-10 rounded-2xl bg-teal-500 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-teal-500/20">02</div>
+                              <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Qualification Details</h3>
                            </div>
                            <GraduationCap size={18} className="text-slate-200" />
                         </div>
 
                         <div className="space-y-6">
                            <div className="space-y-2">
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Last Qualification</label>
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Last Qualification</label>
                               <div className="relative group">
                                  <input value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="e.g. Bachelor of Commerce" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                               </div>
                            </div>
                            <div className="space-y-2">
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Selected Program</label>
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Selected Program</label>
                               <div className="relative group">
                                  <select value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
                                     <option value="">Choose Program</option>
@@ -1062,8 +1062,8 @@ export default function Contacts({ roleAccess }) {
                      <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in delay-200">
                         <div className="flex items-center justify-between">
                            <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 rounded-2xl bg-indigo-500 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-indigo-500/20">03</div>
-                              <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Visit Format</h3>
+                              <div className="w-10 h-10 rounded-2xl bg-indigo-500 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-indigo-500/20">03</div>
+                              <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Visit Format</h3>
                            </div>
                            <Map size={18} className="text-slate-200" />
                         </div>
@@ -1078,14 +1078,14 @@ export default function Contacts({ roleAccess }) {
                               }`}
                            >
                               <CheckCircle size={20} />
-                              <span className="text-[10px] font-black uppercase tracking-widest">{editedContact.visitStatus === 'Done' ? 'Visit Done' : 'Mark Done'}</span>
+                              <span className="text-[10px] font-bold capitalize">{editedContact.visitStatus === 'Done' ? 'Visit Done' : 'Mark Done'}</span>
                            </button>
 
                            <div className="relative group">
                               <select 
                                  value={editedContact.visitType || ''} 
                                  onChange={e=>handleFieldChange('visitType', e.target.value)} 
-                                 className="w-full h-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-[10px] font-black uppercase tracking-widest text-slate-700 rounded-3xl outline-none focus:bg-white focus:border-indigo-500/20 transition-all appearance-none text-center"
+                                 className="w-full h-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-[10px] font-bold capitalize text-slate-700 rounded-3xl outline-none focus:bg-white focus:border-indigo-500/20 transition-all appearance-none text-center"
                               >
                                  <option value="">Format</option>
                                  <option value="Online">Online</option>
@@ -1100,15 +1100,15 @@ export default function Contacts({ roleAccess }) {
                      <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in delay-300">
                         <div className="flex items-center justify-between">
                            <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-amber-500/20">04</div>
-                              <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Counselling Status</h3>
+                              <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-amber-500/20">04</div>
+                              <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Counselling Status</h3>
                            </div>
                            <Award size={18} className="text-slate-200" />
                         </div>
 
                         <div className="space-y-6">
                            <div className="space-y-2">
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Assigned Counsellor</label>
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Assigned Counsellor</label>
                               <div className="relative group">
                                  <select 
                                     value={editedContact.assignedCounsellor || ''} 
@@ -1136,7 +1136,7 @@ export default function Contacts({ roleAccess }) {
                              <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${
+                                className={`flex-1 py-2.5 rounded-xl text-[10px] font-bold capitalize transition-all relative ${
                                    activeTab === tab 
                                    ? 'bg-white text-slate-900 shadow-premium scale-[1.02] z-10' 
                                    : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
@@ -1177,7 +1177,7 @@ export default function Contacts({ roleAccess }) {
                         {activeTab === 'chat history' && (
                            <div className="space-y-6">
                               {recentMessages.length === 0 ? (
-                                 <div className="py-20 text-center text-slate-300 text-xs uppercase tracking-widest">No communication history</div>
+                                 <div className="py-20 text-center text-slate-300 text-xs capitalize">No communication history</div>
                               ) : recentMessages.map((msg, idx) => (
                                  <div key={idx} className={`flex ${msg.direction === 'OUTBOUND' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[85%] p-5 rounded-[2rem] shadow-premium relative group transition-all hover:shadow-lg ${
@@ -1188,7 +1188,7 @@ export default function Contacts({ roleAccess }) {
                                        <div className={`text-sm font-medium leading-relaxed mb-3 ${msg.direction === 'OUTBOUND' ? 'text-slate-100' : 'text-slate-700'}`}>
                                           {msg.content}
                                        </div>
-                                       <div className={`flex items-center justify-between text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity ${msg.direction === 'OUTBOUND' ? 'text-white' : 'text-slate-400'}`}>
+                                       <div className={`flex items-center justify-between text-[9px] font-bold capitalize opacity-40 group-hover:opacity-100 transition-opacity ${msg.direction === 'OUTBOUND' ? 'text-white' : 'text-slate-400'}`}>
                                           <span>{new Date(msg.createdAt).toLocaleDateString()}</span>
                                           <span>{new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                        </div>
@@ -1206,13 +1206,13 @@ export default function Contacts({ roleAccess }) {
                                        <Plus size={22} />
                                     </div>
                                     <div>
-                                       <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">Internal Remarks</h4>
-                                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">Follow-up notes & insights</p>
+                                       <h4 className="text-xs font-bold text-slate-800 capitalize">Internal Remarks</h4>
+                                       <p className="text-[10px] font-bold text-slate-400 capitalize mt-0.5">Follow-up notes & insights</p>
                                     </div>
                                  </div>
                                  <button 
                                     onClick={() => setShowNoteModal(true)}
-                                    className="px-8 py-3.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-slate-900/10 active:scale-95 hover:-translate-y-0.5 transition-all flex items-center space-x-3"
+                                    className="px-8 py-3.5 bg-slate-900 text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-slate-900/10 active:scale-95 hover:-translate-y-0.5 transition-all flex items-center space-x-3"
                                  >
                                     <Plus size={14} />
                                     <span>Add New Note</span>
@@ -1223,7 +1223,7 @@ export default function Contacts({ roleAccess }) {
                                  {(selectedContact.notes || []).slice().reverse().map((note, idx) => (
                                     <div key={idx} className="p-6 bg-white rounded-[2rem] border border-slate-100 shadow-premium transition-all hover:scale-[1.01]">
                                        <p className="text-sm font-medium text-slate-700 leading-relaxed">{note.content}</p>
-                                       <div className="flex items-center justify-between text-[9px] font-black text-slate-400 uppercase tracking-widest mt-4 pt-4 border-t border-slate-50">
+                                       <div className="flex items-center justify-between text-[9px] font-bold text-slate-400 capitalize mt-4 pt-4 border-t border-slate-50">
                                           <span className="flex items-center"><UserCircle size={10} className="mr-1" /> {note.createdBy}</span>
                                           <span className="flex items-center"><Clock size={10} className="mr-1" /> {formatDateTime(note.createdAt)}</span>
                                        </div>
@@ -1246,8 +1246,8 @@ export default function Contacts({ roleAccess }) {
             <div className="w-[500px] bg-white shadow-2xl flex flex-col animate-slide-left h-full" onClick={e=>e.stopPropagation()}>
                <div className="p-resp border-b border-slate-100 flex items-center justify-between shrink-0 bg-white">
                   <div>
-                     <h2 className="text-xl font-black text-slate-800 tracking-tight">Intelligence Filter</h2>
-                     <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest mt-1">Granular Lead Data Mining</p>
+                     <h2 className="text-xl font-bold text-slate-800 tracking-tight">Intelligence Filter</h2>
+                     <p className="text-[10px] font-bold text-slate-300 capitalize mt-1">Granular Lead Data Mining</p>
                   </div>
                   <button onClick={() => setShowFilters(false)} className="p-2 text-slate-400 hover:text-slate-800 transition-all"><X size={24} /></button>
                </div>
@@ -1256,11 +1256,11 @@ export default function Contacts({ roleAccess }) {
                   
                   {/* SECTION 1: LEAD OWNERSHIP */}
                   <div className="space-y-6">
-                     <h3 className="text-[11px] font-black text-teal-600 uppercase tracking-widest border-b border-teal-50 pb-3 flex items-center">
+                     <h3 className="text-[11px] font-bold text-teal-600 capitalize border-b border-teal-50 pb-3 flex items-center">
                         <Users size={14} className="mr-2" /> Team Ownership
                      </h3>
                      <div className="space-y-1.5">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lead Owner / Transferred to</label>
+                        <label className="text-[10px] font-bold text-slate-400 capitalize">Lead Owner / Transferred to</label>
                         <select value={filters.agent} onChange={e=>setFilters({...filters, agent: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50 focus:border-teal-400 transition-all">
                            <option value="ALL">All Team Members</option>
                            {agents.map(a => <option key={a._id} value={a._id}>{a.name} ({a.role})</option>)}
@@ -1270,12 +1270,12 @@ export default function Contacts({ roleAccess }) {
 
                   {/* SECTION 2: ACADEMIC PROFILE */}
                   <div className="space-y-6">
-                     <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
+                     <h3 className="text-[11px] font-bold text-slate-400 capitalize border-b border-slate-100 pb-3 flex items-center">
                         <Target size={14} className="mr-2" /> Academic Profile
                      </h3>
                      <div className="grid grid-cols-1 gap-5">
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Interested Program</label>
+                           <label className="text-[10px] font-bold text-slate-400 capitalize">Interested Program</label>
                            <input 
                               type="text" 
                               value={filters.program === 'ALL' ? '' : filters.program} 
@@ -1285,7 +1285,7 @@ export default function Contacts({ roleAccess }) {
                            />
                         </div>
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Last Qualification</label>
+                           <label className="text-[10px] font-bold text-slate-400 capitalize">Last Qualification</label>
                            <input 
                               type="text" 
                               value={filters.qualification === 'ALL' ? '' : filters.qualification} 
@@ -1299,13 +1299,13 @@ export default function Contacts({ roleAccess }) {
 
                   {/* SECTION 3: TIMELINE ENGINE */}
                   <div className="space-y-8">
-                     <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
+                     <h3 className="text-[11px] font-bold text-slate-400 capitalize border-b border-slate-100 pb-3 flex items-center">
                         <Clock size={14} className="mr-2" /> Timeline Engine
                      </h3>
                      
                      <div className="grid grid-cols-1 gap-6">
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Filter by Month</label>
+                           <label className="text-[10px] font-bold text-slate-400 capitalize">Filter by Month</label>
                            <select value={filters.month} onChange={e=>setFilters({...filters, month: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50 focus:border-teal-400 transition-all">
                               <option value="ALL">Any Month</option>
                               {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, i) => (
@@ -1316,22 +1316,22 @@ export default function Contacts({ roleAccess }) {
 
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Start Date</label>
+                              <label className="text-[10px] font-bold text-slate-400 capitalize">Start Date</label>
                               <input type="date" value={filters.startDate} onChange={e=>setFilters({...filters, startDate: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50" />
                            </div>
                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">End Date</label>
+                              <label className="text-[10px] font-bold text-slate-400 capitalize">End Date</label>
                               <input type="date" value={filters.endDate} onChange={e=>setFilters({...filters, endDate: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50" />
                            </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">From Time</label>
+                              <label className="text-[10px] font-bold text-slate-400 capitalize">From Time</label>
                               <input type="time" value={filters.startTime} onChange={e=>setFilters({...filters, startTime: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50" />
                            </div>
                            <div className="space-y-1.5">
-                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">To Time</label>
+                              <label className="text-[10px] font-bold text-slate-400 capitalize">To Time</label>
                               <input type="time" value={filters.endTime} onChange={e=>setFilters({...filters, endTime: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-xs font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50" />
                            </div>
                         </div>
@@ -1340,19 +1340,19 @@ export default function Contacts({ roleAccess }) {
 
                   {/* SECTION 4: OPERATIONAL STATUS */}
                   <div className="space-y-6">
-                     <h3 className="text-[11px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-3 flex items-center">
+                     <h3 className="text-[11px] font-bold text-slate-400 capitalize border-b border-slate-100 pb-3 flex items-center">
                         <Activity size={14} className="mr-2" /> Operational Status
                      </h3>
                      <div className="grid grid-cols-1 gap-4">
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lifecycle Status</label>
+                           <label className="text-[10px] font-bold text-slate-400 capitalize">Lifecycle Status</label>
                            <select value={filters.status} onChange={e=>setFilters({...filters, status: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50 focus:border-teal-400 transition-all">
                               <option value="ALL">All Lifecycle Statuses</option>
                               {['NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => <option key={s} value={s}>{s}</option>)}
                            </select>
                         </div>
                         <div className="space-y-1.5">
-                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pipeline Stage</label>
+                           <label className="text-[10px] font-bold text-slate-400 capitalize">Pipeline Stage</label>
                            <select value={filters.stage} onChange={e=>setFilters({...filters, stage: e.target.value})} className="w-full bg-white border border-slate-200 rounded-xl py-3 px-4 text-sm font-bold text-slate-700 outline-none focus:ring-4 focus:ring-teal-50 focus:border-teal-400 transition-all">
                               <option value="ALL">All Pipeline Stages</option>
                               {PIPELINE_STAGES.map(s => <option key={s} value={s}>{s}</option>)}
@@ -1369,11 +1369,11 @@ export default function Contacts({ roleAccess }) {
                         setFilters({ status: 'ALL', heat: 'ALL', stage: 'ALL', agent: 'ALL', source: 'ALL', program: 'ALL', qualification: 'ALL', minScore: 0, maxScore: 100, dateRange: 'ALL', startDate: '', endDate: '', startTime: '00:00', endTime: '23:59', month: 'ALL' });
                         toast.success("Filters Reset");
                      }}
-                     className="py-4 border border-slate-200 rounded-2xl text-[11px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all"
+                     className="py-4 border border-slate-200 rounded-2xl text-[11px] font-bold capitalize text-slate-400 hover:bg-slate-50 transition-all"
                   >
                      Reset All
                   </button>
-                  <button onClick={() => setShowFilters(false)} className="py-4 bg-teal-600 text-white rounded-2xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 hover:bg-teal-700 transition-all">Apply Filter</button>
+                  <button onClick={() => setShowFilters(false)} className="py-4 bg-teal-600 text-white rounded-2xl text-[11px] font-bold capitalize shadow-lg shadow-teal-500/20 hover:bg-teal-700 transition-all">Apply Filter</button>
                </div>
             </div>
          </div>
@@ -1385,21 +1385,21 @@ export default function Contacts({ roleAccess }) {
               <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--theme-bg)]/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
               <button onClick={() => setShowAddModal(false)} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-900 transition-all hover:rotate-90"><X size={26} /></button>
               <div className="w-16 h-16 bg-[var(--theme-bg)] text-white rounded-3xl flex items-center justify-center shadow-glow mb-8 transform -rotate-6"><Plus size={32} /></div>
-              <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Onboard Entity</h2>
+              <h2 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">Onboard Entity</h2>
               <p className="text-base font-bold text-slate-400 mb-10 lowercase tracking-tight">Initialize a new secure lead profile in the workspace.</p>
                <form onSubmit={handleAddContact} className="space-y-8">
                   <div className="space-y-2">
-                     <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Identity Signature</label>
+                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] ml-2">Identity Signature</label>
                      <input autoFocus type="text" value={newLeadName} onChange={e=>setNewLeadName(e.target.value)} required className="w-full bg-[#f9fafb] border border-slate-100 rounded-[2rem] px-7 py-5 outline-none focus:ring-4 focus:ring-[var(--theme-border)]/10 focus:border-[var(--theme-border)]/50 text-base font-bold text-slate-800 transition-all shadow-sm" placeholder="Full name profile" />
                   </div>
                   <div className="space-y-2">
-                     <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.3em] ml-2">Communication Hub</label>
+                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.3em] ml-2">Communication Hub</label>
                      <input type="tel" value={newLeadPhone} onChange={e=>setNewLeadPhone(e.target.value)} required className="w-full bg-[#f9fafb] border border-slate-100 rounded-[2rem] px-7 py-5 outline-none focus:ring-4 focus:ring-[var(--theme-border)]/10 focus:border-[var(--theme-border)]/50 text-base font-bold text-slate-800 transition-all shadow-sm" placeholder="+91 XXX XXX XXXX" />
                   </div>
                   <button 
                       type="submit" 
                       disabled={isSavingLead}
-                      className="w-full py-6 bg-slate-900 text-white text-[12px] font-black uppercase tracking-[0.4em] rounded-[2rem] shadow-3xl hover:-translate-y-2 active:scale-95 transition-all mt-4 disabled:opacity-50"
+                      className="w-full py-6 bg-slate-900 text-white text-[12px] font-bold uppercase tracking-[0.4em] rounded-[2rem] shadow-3xl hover:-translate-y-2 active:scale-95 transition-all mt-4 disabled:opacity-50"
                    >
                       {isSavingLead ? "Initializing Profile..." : "Establish Profile"}
                    </button>
@@ -1414,7 +1414,7 @@ export default function Contacts({ roleAccess }) {
               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
               <button onClick={() => setShowNoteModal(false)} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-900 transition-all hover:rotate-90"><X size={26} /></button>
               <div className="w-16 h-16 bg-teal-500 text-white rounded-3xl flex items-center justify-center shadow-glow mb-8 transform -rotate-6"><Plus size={28} /></div>
-              <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Add Remark</h2>
+              <h2 className="text-3xl font-bold text-slate-900 mb-2 tracking-tight">Add Remark</h2>
               <p className="text-sm font-bold text-slate-400 mb-8 lowercase tracking-tight">Type your internal follow-up note below.</p>
                <div className="space-y-6">
                   <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 shadow-inner">
@@ -1429,7 +1429,7 @@ export default function Contacts({ roleAccess }) {
                   <button 
                       onClick={() => addInternalNote(selectedContact._id)}
                       disabled={isAddingNote || !noteInput.trim()}
-                      className="w-full py-5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl shadow-3xl hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50"
+                      className="w-full py-5 bg-slate-900 text-white text-[11px] font-bold uppercase tracking-[0.3em] rounded-2xl shadow-3xl hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50"
                    >
                       {isAddingNote ? "Saving..." : "Save Note Now"}
                    </button>
@@ -1450,13 +1450,13 @@ export default function Contacts({ roleAccess }) {
                </div>
                
                <div className="text-center">
-                  <p className="text-[11px] font-black uppercase tracking-[0.3em] text-teal-600 mb-2">{selectedIds.size} Profiles Selected</p>
-                  <h2 className="text-3xl font-black text-slate-900 tracking-tight">Bulk Command</h2>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.3em] text-teal-600 mb-2">{selectedIds.size} Profiles Selected</p>
+                  <h2 className="text-3xl font-bold text-slate-900 tracking-tight">Bulk Command</h2>
                </div>
                
                <div className="w-full space-y-6">
                   <div className="space-y-3">
-                     <label className="text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] ml-2">Lead Assignment Control</label>
+                     <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] ml-2">Lead Assignment Control</label>
                      <div className="relative group">
                         <Users size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-teal-500 transition-colors" />
                         <select 
@@ -1477,7 +1477,7 @@ export default function Contacts({ roleAccess }) {
                      <button 
                         disabled={!bulkTargetAgent || isBulkUpdating} 
                         onClick={() => handleBulkAction("transfer_leads", bulkTargetAgent)} 
-                        className="w-full py-5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.4em] rounded-2xl shadow-xl hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50 disabled:translate-y-0"
+                        className="w-full py-5 bg-slate-900 text-white text-[11px] font-bold uppercase tracking-[0.4em] rounded-2xl shadow-xl hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50 disabled:translate-y-0"
                      >
                         {isBulkUpdating ? "Executing..." : "Manual Assign"}
                      </button>
@@ -1486,13 +1486,13 @@ export default function Contacts({ roleAccess }) {
                         <button 
                            disabled={isBulkUpdating}
                            onClick={() => handleBulkAction("transfer_leads", "")}
-                           className="flex-1 py-4 bg-red-50 text-red-600 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-red-100 transition-all active:scale-95"
+                           className="flex-1 py-4 bg-red-50 text-red-600 text-[10px] font-bold uppercase tracking-[0.2em] rounded-2xl hover:bg-red-100 transition-all active:scale-95"
                         >
                            Bulk Unassign
                         </button>
                         <button 
                            onClick={() => setSelectedIds(new Set())} 
-                           className="flex-1 py-4 bg-gray-50 text-gray-400 text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-100 transition-all active:scale-95"
+                           className="flex-1 py-4 bg-gray-50 text-gray-400 text-[10px] font-bold uppercase tracking-[0.2em] rounded-2xl hover:bg-gray-100 transition-all active:scale-95"
                         >
                            Dismiss
                         </button>

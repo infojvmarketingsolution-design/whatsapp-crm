@@ -65,12 +65,12 @@ function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction
       className={`bg-crm-card p-3 sm:p-5 rounded-xl shadow-sm border border-crm-border flex flex-col transition-all duration-300 group relative ${isClickable ? 'cursor-pointer hover:shadow-premium hover:border-blue-300 hover:-translate-y-1' : 'hover:shadow-soft'}`}
     >
       <div className="flex justify-between items-start mb-1 sm:mb-2">
-        <h3 className="text-[9px] sm:text-xs font-semibold text-gray-400 tracking-wider uppercase truncate pr-2">{title}</h3>
+        <h3 className="text-[9px] sm:text-xs font-semibold text-gray-400 truncate pr-2">{title}</h3>
         <div className="flex items-center space-x-1 sm:space-x-2">
            {onAction && (
              <button 
                onClick={(e) => { e.stopPropagation(); onAction(); }}
-               className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[8px] sm:text-[10px] font-black uppercase flex items-center shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white"
+               className="opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded text-[8px] sm:text-[10px] font-bold flex items-center shadow-sm border border-blue-100 hover:bg-blue-600 hover:text-white"
              >
                <Plus size={8} className="sm:mr-1" /> <span className="hidden sm:inline">{actionLabel}</span>
              </button>
@@ -92,7 +92,7 @@ function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction
       <div className="flex justify-between items-end">
         <p className="text-[9px] sm:text-xs text-gray-500 font-medium truncate pr-1">{subtext}</p>
         {isClickable && (
-          <div className="text-[8px] sm:text-[10px] text-blue-500 font-black uppercase tracking-tighter opacity-0 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+          <div className="text-[8px] sm:text-[10px] text-blue-500 font-bold opacity-0 sm:opacity-0 group-hover:opacity-100 transition-opacity">
             Details →
           </div>
         )}
@@ -106,7 +106,7 @@ function LeadAnalysisCard({ title, data, type = 'status' }) {
   return (
     <div className="bg-crm-card p-6 rounded-2xl shadow-soft border border-crm-border flex flex-col h-full">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xs font-black text-slate-400 tracking-widest uppercase">{title}</h3>
+        <h3 className="text-xs font-bold text-slate-400">{title}</h3>
         <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
            <History size={16} />
         </div>
@@ -116,7 +116,7 @@ function LeadAnalysisCard({ title, data, type = 'status' }) {
           <div className="text-center py-8 text-slate-300 font-medium italic text-sm">No lead data available</div>
         ) : data.map((item, i) => (
           <div key={i} className="group cursor-default">
-            <div className="flex justify-between text-xs font-bold text-slate-600 mb-1.5 uppercase tracking-wide">
+            <div className="flex justify-between text-xs font-semibold text-slate-600 mb-1.5">
               <span>{item.label}</span>
               <span className="text-indigo-600">{item.value}</span>
             </div>

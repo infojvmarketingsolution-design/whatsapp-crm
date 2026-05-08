@@ -81,11 +81,11 @@ function Campaigns() {
 
   const getStatusBadge = (status) => {
     switch(status) {
-      case 'COMPLETED': return <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-lg text-[10px] font-black uppercase tracking-wider">Completed</span>;
-      case 'RUNNING': return <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-black uppercase tracking-wider animate-pulse">Running</span>;
-      case 'SCHEDULED': return <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-lg text-[10px] font-black uppercase tracking-wider">Scheduled</span>;
-      case 'FAILED': return <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-lg text-[10px] font-black uppercase tracking-wider">Failed</span>;
-      default: return <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-lg text-[10px] font-black uppercase tracking-wider">{status}</span>;
+      case 'COMPLETED': return <span className="px-2 py-0.5 bg-green-100 text-green-700 rounded-lg text-[10px] font-bold capitalize">Completed</span>;
+      case 'RUNNING': return <span className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded-lg text-[10px] font-bold capitalize animate-pulse">Running</span>;
+      case 'SCHEDULED': return <span className="px-2 py-0.5 bg-purple-100 text-purple-700 rounded-lg text-[10px] font-bold capitalize">Scheduled</span>;
+      case 'FAILED': return <span className="px-2 py-0.5 bg-red-100 text-red-700 rounded-lg text-[10px] font-bold capitalize">Failed</span>;
+      default: return <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded-lg text-[10px] font-bold capitalize">{status}</span>;
     }
   };
 
@@ -93,12 +93,12 @@ function Campaigns() {
     <div className="p-4 sm:p-8 bg-crm-bg min-h-full animate-fade-in-up">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-gray-800 tracking-tight flex items-center">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight flex items-center">
             <Megaphone className="mr-3 text-blue-600" size={24} /> Campaigns
           </h1>
-          <p className="text-xs sm:text-sm font-bold text-gray-400 mt-1 uppercase tracking-widest">Manage and track bulk broadcasts.</p>
+          <p className="text-xs sm:text-sm font-bold text-gray-400 mt-1 capitalize">Manage and track bulk broadcasts.</p>
         </div>
-        <button onClick={() => navigate('/campaigns/create')} className="w-full sm:w-auto flex items-center justify-center space-x-3 px-6 py-3 bg-blue-600 text-white rounded-2xl text-xs font-black shadow-glow hover:bg-blue-700 transition-all active:scale-95 uppercase tracking-widest">
+        <button onClick={() => navigate('/campaigns/create')} className="w-full sm:w-auto flex items-center justify-center space-x-3 px-6 py-3 bg-blue-600 text-white rounded-2xl text-xs font-bold shadow-glow hover:bg-blue-700 transition-all active:scale-95 capitalize">
           <Plus size={18} />
           <span>Create Campaign</span>
         </button>
@@ -106,34 +106,34 @@ function Campaigns() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
         <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 group hover:border-blue-200 transition-all">
-          <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Total Campaigns</p>
+          <p className="text-slate-400 text-[9px] font-bold capitalize">Total Campaigns</p>
           <div className="flex items-center justify-between mt-3">
-            <p className="text-2xl font-black text-slate-800 tracking-tighter">{campaigns.length}</p>
+            <p className="text-2xl font-bold text-slate-800 tracking-tighter">{campaigns.length}</p>
             <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm"><Megaphone size={16} /></div>
           </div>
         </div>
         <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 group hover:border-emerald-200 transition-all">
-          <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Messages Sent</p>
+          <p className="text-slate-400 text-[9px] font-bold capitalize">Messages Sent</p>
           <div className="flex items-center justify-between mt-3">
-            <p className="text-2xl font-black text-slate-800 tracking-tighter">
+            <p className="text-2xl font-bold text-slate-800 tracking-tighter">
                {campaigns.reduce((acc, curr) => acc + (curr.metrics?.sent || 0), 0)}
             </p>
             <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm"><Send size={16} /></div>
           </div>
         </div>
         <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100">
-          <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Avg Delivery</p>
-          <p className="text-2xl font-black text-emerald-600 mt-3 tracking-tighter">98.5%</p>
+          <p className="text-slate-400 text-[9px] font-bold capitalize">Avg Delivery</p>
+          <p className="text-2xl font-bold text-emerald-600 mt-3 tracking-tighter">98.5%</p>
         </div>
         <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100">
-          <p className="text-slate-400 text-[9px] font-black uppercase tracking-widest">Read Rate</p>
-          <p className="text-2xl font-black text-blue-500 mt-3 tracking-tighter">45.2%</p>
+          <p className="text-slate-400 text-[9px] font-bold capitalize">Read Rate</p>
+          <p className="text-2xl font-bold text-blue-500 mt-3 tracking-tighter">45.2%</p>
         </div>
       </div>
 
       <div className="bg-white rounded-[2rem] shadow-sm border border-gray-100 overflow-hidden">
         <div className="px-6 py-5 border-b border-gray-50 flex items-center justify-between">
-           <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest">Recent Activity</h2>
+           <h2 className="text-xs font-bold text-gray-400 capitalize">Recent Activity</h2>
            {loading && <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>}
         </div>
 
@@ -143,8 +143,8 @@ function Campaigns() {
              <div key={c._id} className="p-5 bg-white rounded-[2rem] border border-slate-100 shadow-premium space-y-5 group relative overflow-hidden">
                 <div className="flex items-center justify-between">
                    <div>
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Campaign Identity</p>
-                      <p className="text-sm font-black text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors">{c.name}</p>
+                      <p className="text-[10px] font-bold text-slate-400 capitalize mb-1">Campaign Identity</p>
+                      <p className="text-sm font-bold text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors">{c.name}</p>
                    </div>
                    <div className="transform scale-90 origin-right">
                       {getStatusBadge(c.status)}
@@ -153,27 +153,27 @@ function Campaigns() {
                 
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
                    <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
-                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Audience</span>
-                      <span className="text-sm font-black text-slate-700">{c.metrics?.totalContacts || 0}</span>
+                      <span className="text-[8px] font-bold text-slate-400 capitalize block mb-1">Audience</span>
+                      <span className="text-sm font-bold text-slate-700">{c.metrics?.totalContacts || 0}</span>
                    </div>
                    <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
-                      <span className="text-[8px] font-black text-slate-400 uppercase tracking-widest block mb-1">Processed</span>
-                      <span className="text-sm font-black text-slate-700">{c.metrics?.sent || 0}</span>
+                      <span className="text-[8px] font-bold text-slate-400 capitalize block mb-1">Processed</span>
+                      <span className="text-sm font-bold text-slate-700">{c.metrics?.sent || 0}</span>
                    </div>
                    <div className="bg-emerald-50/30 p-3 rounded-2xl border border-emerald-100/50">
-                      <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest block mb-1">Success</span>
-                      <span className="text-sm font-black text-emerald-600">{c.metrics?.delivered || 0}</span>
+                      <span className="text-[8px] font-bold text-emerald-500 capitalize block mb-1">Success</span>
+                      <span className="text-sm font-bold text-emerald-600">{c.metrics?.delivered || 0}</span>
                    </div>
                    <div className="bg-rose-50/30 p-3 rounded-2xl border border-rose-100/50">
-                      <span className="text-[8px] font-black text-rose-500 uppercase tracking-widest block mb-1">Failure</span>
-                      <span className="text-sm font-black text-rose-600">{c.metrics?.failed || 0}</span>
+                      <span className="text-[8px] font-bold text-rose-500 capitalize block mb-1">Failure</span>
+                      <span className="text-sm font-bold text-rose-600">{c.metrics?.failed || 0}</span>
                    </div>
                 </div>
 
                 <div className="flex items-center space-x-3 pt-2">
                    <button 
                       onClick={() => showReport(c)}
-                      className="flex-1 py-3.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-3 shadow-glow active:scale-95 transition-all"
+                      className="flex-1 py-3.5 bg-blue-600 text-white rounded-2xl text-[10px] font-bold capitalize flex items-center justify-center space-x-3 shadow-glow active:scale-95 transition-all"
                    >
                       <BarChart2 size={14} />
                       <span>Intelligence Report</span>
@@ -193,7 +193,7 @@ function Campaigns() {
         <div className="hidden md:block overflow-x-auto h-full custom-scrollbar">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50 text-gray-400 text-[10px] font-black uppercase tracking-widest">
+              <tr className="bg-gray-50/50 text-gray-400 text-[10px] font-bold capitalize">
                 <th className="p-5">Campaign Name</th>
                 <th className="p-5">Status</th>
                 <th className="p-5 text-center"><Users size={14} className="mx-auto" /></th>
@@ -207,7 +207,7 @@ function Campaigns() {
             <tbody className="text-sm">
               {campaigns.map(c => (
                 <tr key={c._id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors group">
-                  <td className="p-5 font-black text-gray-800 tracking-tight">{c.name}</td>
+                  <td className="p-5 font-bold text-gray-800 tracking-tight">{c.name}</td>
                   <td className="p-5">{getStatusBadge(c.status)}</td>
                   <td className="p-5 text-center font-bold text-gray-600">{c.metrics?.totalContacts || 0}</td>
                   <td className="p-5 text-center font-bold text-gray-600">{c.metrics?.sent || 0}</td>
@@ -241,7 +241,7 @@ function Campaigns() {
         {campaigns.length === 0 && !loading && (
            <div className="py-20 text-center opacity-40">
               <Megaphone size={48} className="mx-auto mb-4 text-slate-200" />
-              <p className="text-xs font-black uppercase tracking-widest text-slate-400">No campaigns found. Launch one today.</p>
+              <p className="text-xs font-bold capitalize text-slate-400">No campaigns found. Launch one today.</p>
            </div>
         )}
       </div>

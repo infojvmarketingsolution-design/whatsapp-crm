@@ -82,12 +82,12 @@ function Templates() {
     <div className="p-4 sm:p-8 bg-crm-bg min-h-full animate-fade-in-up relative">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-xl sm:text-2xl font-black text-gray-800 tracking-tight flex items-center">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight flex items-center">
              <FileText className="mr-3 text-blue-600" size={24} /> Message Templates
           </h1>
-          <p className="text-[10px] sm:text-sm font-bold text-gray-400 mt-1 uppercase tracking-widest leading-relaxed">Manage and sync approved WhatsApp templates.</p>
+          <p className="text-[10px] sm:text-sm font-bold text-gray-400 mt-1 capitalize leading-relaxed">Manage and sync approved WhatsApp templates.</p>
         </div>
-        <button onClick={handleSync} disabled={loading} className="w-full sm:w-auto flex items-center justify-center space-x-3 px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm hover:bg-slate-50 transition-all active:scale-95">
+        <button onClick={handleSync} disabled={loading} className="w-full sm:w-auto flex items-center justify-center space-x-3 px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl text-[10px] font-bold capitalize shadow-sm hover:bg-slate-50 transition-all active:scale-95">
           <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
           <span>{loading ? 'Syncing...' : 'Sync from Meta'}</span>
         </button>
@@ -98,11 +98,11 @@ function Templates() {
           <div key={t._id} className="bg-white rounded-[2rem] shadow-premium border border-slate-100 p-6 sm:p-8 flex flex-col hover:shadow-glow transition-all group relative overflow-hidden">
             <div className="flex justify-between items-start mb-6">
                <div className="flex-1 space-y-1 overflow-hidden pr-4">
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Template Identity</p>
-                  <h3 className="font-black text-slate-800 text-lg tracking-tight truncate group-hover:text-blue-600 transition-colors" title={t.name}>{t.name}</h3>
+                  <p className="text-[10px] font-bold text-slate-400 capitalize mb-1">Template Identity</p>
+                  <h3 className="font-bold text-slate-800 text-lg tracking-tight truncate group-hover:text-blue-600 transition-colors" title={t.name}>{t.name}</h3>
                   <div className="flex items-center space-x-2 mt-2">
-                     <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{t.category}</span>
-                     <span className="text-[9px] text-slate-400 font-black uppercase tracking-widest">• {t.language.toUpperCase()}</span>
+                     <span className="text-[9px] text-slate-500 font-bold capitalize bg-slate-50 px-2 py-0.5 rounded border border-slate-100">{t.category}</span>
+                     <span className="text-[9px] text-slate-400 font-bold capitalize">• {t.language.toUpperCase()}</span>
                   </div>
                </div>
                <div className="transform scale-90 origin-right">
@@ -115,7 +115,7 @@ function Templates() {
             <div className="flex items-center space-x-3 pt-2">
                <button 
                   onClick={() => setSelectedTemplate(t)} 
-                  className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center space-x-3 shadow-glow hover:bg-slate-800 transition-all active:scale-95"
+                  className="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-bold capitalize flex items-center justify-center space-x-3 shadow-glow hover:bg-slate-800 transition-all active:scale-95"
                >
                  <FileText size={14} />
                  <span>Preview Detail</span>
@@ -139,8 +139,8 @@ function Templates() {
               <div>
                 <h2 className="text-xl font-bold text-gray-900">{selectedTemplate.name}</h2>
                 <div className="flex items-center mt-1 space-x-2">
-                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded uppercase tracking-wider">{selectedTemplate.category}</span>
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{selectedTemplate.language}</span>
+                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded capitalize">{selectedTemplate.category}</span>
+                  <span className="text-[10px] font-bold text-gray-400 capitalize">{selectedTemplate.language}</span>
                 </div>
               </div>
               <button onClick={() => setSelectedTemplate(null)} className="p-2 hover:bg-gray-100 rounded-full transition-colors"><XCircle size={20} className="text-gray-400" /></button>
@@ -182,7 +182,7 @@ function Templates() {
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Metadata</h4>
+                <h4 className="text-xs font-bold text-gray-400 capitalize">Metadata</h4>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
                     <p className="text-[10px] font-bold text-gray-400 uppercase">External ID (Meta)</p>

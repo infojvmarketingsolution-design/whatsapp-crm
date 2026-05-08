@@ -59,7 +59,7 @@ const AdminDashboard = () => {
           <div className="flex items-center space-x-2 mt-1">
             <p className="text-slate-500 text-sm font-medium">Welcome to the Super Admin Control Center</p>
             <span className="text-[10px] text-slate-300 font-bold uppercase">•</span>
-            <span className="text-[10px] text-blue-500 font-bold uppercase tracking-wider bg-blue-50 px-2 py-0.5 rounded">Updated: {lastUpdated}</span>
+            <span className="text-[10px] text-blue-500 font-bold capitalize bg-blue-50 px-2 py-0.5 rounded">Updated: {lastUpdated}</span>
           </div>
         </div>
         <div className="flex space-x-3">
@@ -159,7 +159,7 @@ const AdminDashboard = () => {
                 </div>
                 
                 <div className="pt-4 text-center">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">All systems are performing normally</p>
+                    <p className="text-[10px] text-slate-400 font-bold capitalize">All systems are performing normally</p>
                 </div>
             </div>
             <div className="p-6 bg-slate-50/50 border-t border-slate-100">

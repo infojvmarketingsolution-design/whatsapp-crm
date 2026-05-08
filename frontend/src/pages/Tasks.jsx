@@ -649,23 +649,23 @@ export default function Tasks() {
                     <CheckSquare size={16} className="text-teal-600" />
                  </div>
                  <div className="flex flex-col">
-                    <span className="text-[7px] font-black text-slate-400 uppercase leading-none">Pulse</span>
-                    <span className="text-[10px] font-black text-teal-600 leading-none">{efficiency}%</span>
+                    <span className="text-[7px] font-bold text-slate-400 uppercase leading-none">Pulse</span>
+                    <span className="text-[10px] font-bold text-teal-600 leading-none">{efficiency}%</span>
                  </div>
               </div>
               
               <div className="flex items-center space-x-1 flex-1 justify-end">
                  <div onClick={() => setView('OVERDUE')} className={`px-2 py-1.5 rounded-lg border flex flex-col items-center min-w-[50px] ${view === 'OVERDUE' ? 'bg-rose-50 border-rose-200' : 'bg-white border-slate-100'}`}>
-                    <span className={`text-[10px] font-black ${view === 'OVERDUE' ? 'text-rose-600' : 'text-slate-400'}`}>{overdueCount}</span>
-                    <span className="text-[6px] font-black uppercase text-slate-400 tracking-tighter">Overdue</span>
+                    <span className={`text-[10px] font-bold ${view === 'OVERDUE' ? 'text-rose-600' : 'text-slate-400'}`}>{overdueCount}</span>
+                    <span className="text-[6px] font-bold uppercase text-slate-400 tracking-tighter">Overdue</span>
                  </div>
                  <div onClick={() => setView('PENDING')} className={`px-2 py-1.5 rounded-lg border flex flex-col items-center min-w-[50px] ${view === 'PENDING' ? 'bg-teal-50 border-teal-200' : 'bg-white border-slate-100'}`}>
-                    <span className={`text-[10px] font-black ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-400'}`}>{todayCount}</span>
-                    <span className="text-[6px] font-black uppercase text-slate-400 tracking-tighter">Today</span>
+                    <span className={`text-[10px] font-bold ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-400'}`}>{todayCount}</span>
+                    <span className="text-[6px] font-bold uppercase text-slate-400 tracking-tighter">Today</span>
                  </div>
                  <div onClick={() => setView('UPCOMING')} className={`px-2 py-1.5 rounded-lg border flex flex-col items-center min-w-[50px] ${view === 'UPCOMING' ? 'bg-blue-50 border-blue-200' : 'bg-white border-slate-100'}`}>
-                    <span className={`text-[10px] font-black ${view === 'UPCOMING' ? 'text-blue-600' : 'text-slate-400'}`}>{upcomingCount}</span>
-                    <span className="text-[6px] font-black uppercase text-slate-400 tracking-tighter">Next</span>
+                    <span className={`text-[10px] font-bold ${view === 'UPCOMING' ? 'text-blue-600' : 'text-slate-400'}`}>{upcomingCount}</span>
+                    <span className="text-[6px] font-bold uppercase text-slate-400 tracking-tighter">Next</span>
                  </div>
               </div>
            </div>
@@ -677,8 +677,8 @@ export default function Tasks() {
                    <CheckSquare size={24} className="text-teal-600" />
                 </div>
                 <div>
-                   <h1 className="text-xl sm:text-2xl font-black text-slate-800 tracking-tight">Work Console</h1>
-                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">Manage your sales activities and follow-ups</p>
+                   <h1 className="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">Work Console</h1>
+                   <p className="text-[10px] text-slate-400 font-bold capitalize mt-0.5">Manage your sales activities and follow-ups</p>
                 </div>
               </div>
 
@@ -686,15 +686,15 @@ export default function Tasks() {
                  <div className="flex items-center space-x-4 shrink-0">
                     <div className="flex flex-col items-end border-r border-slate-100 pr-4">
                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Efficiency</span>
-                       <span className="text-sm font-black text-teal-600 leading-none">{efficiency}%</span>
+                       <span className="text-sm font-bold text-teal-600 leading-none">{efficiency}%</span>
                     </div>
                     <div className="flex flex-col items-end border-r border-slate-100 pr-4">
                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Progress</span>
-                       <span className="text-sm font-black text-blue-500 leading-none">{inProgressCount}</span>
+                       <span className="text-sm font-bold text-blue-500 leading-none">{inProgressCount}</span>
                     </div>
                     <div className="flex flex-col items-end">
                        <span className="text-[8px] font-bold text-slate-400 uppercase tracking-tight">Cancelled</span>
-                       <span className="text-sm font-black text-slate-300 leading-none">{cancelledCount}</span>
+                       <span className="text-sm font-bold text-slate-300 leading-none">{cancelledCount}</span>
                     </div>
                  </div>
                  
@@ -714,8 +714,8 @@ export default function Tasks() {
                     <div className="p-1.5 bg-rose-100 text-rose-600 rounded-lg mb-1">
                        <AlertCircle size={14} />
                     </div>
-                    <span className={`text-base sm:text-2xl font-black ${view === 'OVERDUE' ? 'text-rose-600' : 'text-slate-700'}`}>{overdueCount}</span>
-                    <p className="font-bold text-slate-400 text-[8px] sm:text-xs uppercase tracking-tighter">Overdue</p>
+                    <span className={`text-base sm:text-2xl font-bold ${view === 'OVERDUE' ? 'text-rose-600' : 'text-slate-700'}`}>{overdueCount}</span>
+                    <p className="font-bold text-slate-400 text-[8px] sm:text-xs capitalize">Overdue</p>
                  </div>
               </div>
               <div onClick={() => setView('PENDING')} className={`cursor-pointer p-2 sm:p-4 rounded-xl border transition-all ${view === 'PENDING' ? 'bg-teal-50 border-teal-200 shadow-sm' : 'bg-white border-slate-100'}`}>
@@ -723,8 +723,8 @@ export default function Tasks() {
                     <div className="p-1.5 bg-teal-100 text-teal-600 rounded-lg mb-1">
                        <Clock size={14} />
                     </div>
-                    <span className={`text-base sm:text-2xl font-black ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-700'}`}>{todayCount}</span>
-                    <p className="font-bold text-slate-400 text-[8px] sm:text-xs uppercase tracking-tighter">Today</p>
+                    <span className={`text-base sm:text-2xl font-bold ${view === 'PENDING' ? 'text-teal-600' : 'text-slate-700'}`}>{todayCount}</span>
+                    <p className="font-bold text-slate-400 text-[8px] sm:text-xs capitalize">Today</p>
                  </div>
               </div>
               <div onClick={() => setView('UPCOMING')} className={`cursor-pointer p-2 sm:p-4 rounded-xl border transition-all ${view === 'UPCOMING' ? 'bg-blue-50 border-blue-200 shadow-sm' : 'bg-white border-slate-100'}`}>
@@ -732,8 +732,8 @@ export default function Tasks() {
                     <div className="p-1.5 bg-blue-100 text-blue-600 rounded-lg mb-1">
                        <Calendar size={14} />
                     </div>
-                    <span className={`text-base sm:text-2xl font-black ${view === 'UPCOMING' ? 'text-blue-600' : 'text-slate-700'}`}>{upcomingCount}</span>
-                    <p className="font-bold text-slate-400 text-[8px] sm:text-xs uppercase tracking-tighter">Upcoming</p>
+                    <span className={`text-base sm:text-2xl font-bold ${view === 'UPCOMING' ? 'text-blue-600' : 'text-slate-700'}`}>{upcomingCount}</span>
+                    <p className="font-bold text-slate-400 text-[8px] sm:text-xs capitalize">Upcoming</p>
                  </div>
               </div>
            </div>
@@ -791,7 +791,7 @@ export default function Tasks() {
                               onClick={() => openContactProfile(t.contactId)}
                               className="relative shrink-0"
                             >
-                               <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-xs sm:text-sm font-black transition-all ${
+                               <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center text-xs sm:text-sm font-bold transition-all ${
                                  t.type === 'CALL' ? 'bg-blue-50 text-blue-600' : 
                                  t.type === 'MEETING' ? 'bg-purple-50 text-purple-600' : 
                                  'bg-orange-50 text-orange-600'
@@ -811,10 +811,10 @@ export default function Tasks() {
 
                             <div className="min-w-0 flex-1">
                                <div className="flex flex-wrap items-center gap-2 mb-1">
-                                  <h3 className="text-sm font-black text-slate-800 tracking-tight truncate max-w-[200px] sm:max-w-none">{t.title}</h3>
+                                  <h3 className="text-sm font-bold text-slate-800 tracking-tight truncate max-w-[200px] sm:max-w-none">{t.title}</h3>
                                   <div className="flex gap-1">
-                                     {isOverdue && <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[8px] font-black uppercase rounded">Overdue</span>}
-                                     {t.status === 'COMPLETED' && <span className="px-1.5 py-0.5 bg-teal-100 text-teal-600 text-[8px] font-black uppercase rounded">Done</span>}
+                                     {isOverdue && <span className="px-1.5 py-0.5 bg-rose-100 text-rose-600 text-[8px] font-bold uppercase rounded">Overdue</span>}
+                                     {t.status === 'COMPLETED' && <span className="px-1.5 py-0.5 bg-teal-100 text-teal-600 text-[8px] font-bold uppercase rounded">Done</span>}
                                   </div>
                                </div>
                                   <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
@@ -843,7 +843,7 @@ export default function Tasks() {
                                             <Calendar size={12} className="mr-1 opacity-60" />
                                             {new Date(t.dueDate).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                                          </div>
-                                         <div className={`inline-flex items-center px-1.5 py-0.5 text-[8px] font-black uppercase rounded-md border w-fit ${
+                                         <div className={`inline-flex items-center px-1.5 py-0.5 text-[8px] font-bold uppercase rounded-md border w-fit ${
                                             STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'NEW' ? 'bg-blue-50 text-blue-600 border-blue-100' :
                                             STATUS_MAPPING[t.contactStatus?.toUpperCase()] === 'OPEN' ? 'bg-teal-50 text-teal-600 border-teal-100' :
                                             'bg-slate-50 text-slate-500 border-slate-100'
@@ -861,7 +861,7 @@ export default function Tasks() {
                                 {(t.status === 'PENDING' || t.status === 'IN_PROGRESS') && (
                                    <button 
                                      onClick={() => { setCompletingTask(t); setActiveDropdown(null); }}
-                                     className="flex-1 sm:flex-initial h-9 px-6 bg-teal-600 text-white text-[10px] font-black rounded-lg hover:bg-teal-700 transition-all flex items-center justify-center shadow-lg shadow-teal-600/20 active:scale-95 uppercase tracking-widest"
+                                     className="flex-1 sm:flex-initial h-9 px-6 bg-teal-600 text-white text-[10px] font-bold rounded-lg hover:bg-teal-700 transition-all flex items-center justify-center shadow-lg shadow-teal-600/20 active:scale-95 capitalize"
                                    >
                                      <Check size={14} className="mr-2" /> Update Outcome
                                    </button>
@@ -972,17 +972,17 @@ export default function Tasks() {
                         <div className="mt-4 pt-4 border-t border-slate-50 bg-slate-50/50 -mx-5 -mb-5 px-5 pb-5 rounded-b-2xl">
                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                                 <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest block mb-1">Interaction Outcome</span>
+                                 <span className="text-[8px] font-bold uppercase text-slate-400 tracking-widest block mb-1">Interaction Outcome</span>
                                  <p className="text-[11px] font-bold text-slate-700 italic leading-relaxed">"{t.remark || 'No remarks provided'}"</p>
                               </div>
                               
                               {counsellor && (
                                  <div className="bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex items-center space-x-3">
-                                    <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-black text-indigo-600 shrink-0 uppercase">
+                                    <div className="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-600 shrink-0 uppercase">
                                        {getInitials(counsellor.name)}
                                     </div>
                                     <div>
-                                       <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest block">Expert Assigned</span>
+                                       <span className="text-[8px] font-bold uppercase text-slate-400 tracking-widest block">Expert Assigned</span>
                                        <span className="text-[10px] font-bold text-slate-800">{counsellor.name}</span>
                                     </div>
                                  </div>
@@ -994,7 +994,7 @@ export default function Tasks() {
                                        {t.metadata.meetingType.includes('Online') ? <Video size={14}/> : t.metadata.meetingType.includes('Campus') ? <School size={14}/> : <Home size={14}/>}
                                     </div>
                                     <div>
-                                       <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest block">Visit Format</span>
+                                       <span className="text-[8px] font-bold uppercase text-slate-400 tracking-widest block">Visit Format</span>
                                        <span className="text-[10px] font-bold text-slate-800">{t.metadata.meetingType}</span>
                                     </div>
                                  </div>
@@ -1002,7 +1002,7 @@ export default function Tasks() {
                            </div>
                            
                            <div className="mt-3 flex items-center space-x-4">
-                              <div className="flex items-center text-[9px] font-black text-slate-400 uppercase tracking-tighter">
+                              <div className="flex items-center text-[9px] font-bold text-slate-400 capitalize">
                                  <Clock size={12} className="mr-1.5 opacity-60" />
                                  Completed {new Date(t.completedAt || Date.now()).toLocaleDateString()}
                               </div>
@@ -1016,9 +1016,9 @@ export default function Tasks() {
                   <div className="w-20 h-20 bg-slate-100 rounded-3xl mx-auto mb-6 flex items-center justify-center text-slate-300">
                      <CheckCircle2 size={40} />
                   </div>
-                  <h3 className="text-lg font-black text-slate-700 tracking-tight">List is clear</h3>
+                  <h3 className="text-lg font-bold text-slate-700 tracking-tight">List is clear</h3>
                   <p className="text-slate-400 text-sm font-bold mt-2">No tasks found matching your criteria</p>
-                  <button onClick={() => { setFilter('ALL'); setView('PENDING'); setSearchQuery(''); }} className="mt-6 text-teal-600 text-xs font-black uppercase tracking-wider hover:underline">Reset Filters</button>
+                  <button onClick={() => { setFilter('ALL'); setView('PENDING'); setSearchQuery(''); }} className="mt-6 text-teal-600 text-xs font-bold uppercase tracking-normal hover:underline">Reset Filters</button>
                </div>
             )}
          </div>
@@ -1035,19 +1035,19 @@ export default function Tasks() {
                 <div className="bg-slate-50/50 backdrop-blur-xl border-b border-slate-100 px-4 sm:px-10 py-5 sm:py-8 flex flex-col sm:flex-row items-start sm:items-center justify-between shrink-0 gap-4 sm:gap-0 relative overflow-hidden">
                      <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
                      <div className="flex items-center space-x-4 sm:space-x-7 w-full sm:w-auto relative z-10">
-                         <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-[1.5rem] bg-white shadow-premium border border-slate-100 flex items-center justify-center text-2xl sm:text-3xl font-black text-slate-800 shrink-0 group hover:scale-105 transition-all">
+                         <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-[1.5rem] bg-white shadow-premium border border-slate-100 flex items-center justify-center text-2xl sm:text-3xl font-bold text-slate-800 shrink-0 group hover:scale-105 transition-all">
                             <span className="opacity-40 group-hover:opacity-100 transition-opacity">{editedContact.firstName?.charAt(0) || selectedContact.name?.charAt(0) || 'U'}</span>
                          </div>
                          <div className="min-w-0 flex-1">
                             <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-                               <h2 className="text-xl sm:text-3xl font-black text-slate-800 tracking-tight truncate max-w-[180px] sm:max-w-none">
+                               <h2 className="text-xl sm:text-3xl font-bold text-slate-800 tracking-tight truncate max-w-[180px] sm:max-w-none">
                                   {editedContact.firstName || editedContact.name || 'Lead'} {editedContact.lastName || ''}
                                </h2>
-                               <div className="px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-widest border border-teal-100 shadow-sm">
+                               <div className="px-3 py-1 bg-teal-50 text-teal-600 rounded-full text-[9px] sm:text-[10px] font-bold capitalize border border-teal-100 shadow-sm">
                                   {editedContact.pipelineStage || 'Discovery'}
                                </div>
                             </div>
-                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 mt-2 text-slate-400 text-[10px] sm:text-[11px] font-bold uppercase tracking-widest">
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 mt-2 text-slate-400 text-[10px] sm:text-[11px] font-bold capitalize">
                                <span className="flex items-center truncate hover:text-slate-600 transition-colors cursor-default"><Phone size={14} className="mr-2 text-teal-500" /> {editedContact.phone}</span>
                                <span className="flex items-center hover:text-slate-600 transition-colors cursor-default"><Hash size={14} className="mr-2 text-indigo-400" /> ID: {selectedContact._id.slice(-6).toUpperCase()}</span>
                             </div>
@@ -1056,12 +1056,12 @@ export default function Tasks() {
 
                      <div className="flex items-center justify-between sm:justify-end space-x-3 w-full sm:w-auto mt-2 sm:mt-0 pt-4 sm:pt-0 border-t sm:border-0 border-slate-100 relative z-10">
                       <div className="flex flex-col items-start sm:items-end mr-0 sm:mr-3">
-                         <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1.5 ml-1">Lead Status</label>
+                         <label className="text-[9px] font-bold text-slate-400 capitalize mb-1.5 ml-1">Lead Status</label>
                          <div className="relative group">
                             <select 
                                value={editedContact.status || 'NEW LEAD'} 
                                onChange={e => handleFieldChange('status', e.target.value)}
-                               className={`text-[10px] sm:text-[11px] font-black uppercase tracking-widest px-4 sm:px-6 py-2.5 rounded-xl border-2 shadow-sm transition-all outline-none appearance-none pr-10 ${
+                               className={`text-[10px] sm:text-[11px] font-bold capitalize px-4 sm:px-6 py-2.5 rounded-xl border-2 shadow-sm transition-all outline-none appearance-none pr-10 ${
                                   editedContact.status === 'CLOSED_WON' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
                                   editedContact.status === 'CLOSED_LOST' ? 'bg-rose-50 border-rose-100 text-rose-600' :
                                   'bg-white border-slate-100 text-slate-700 hover:border-slate-300'
@@ -1085,7 +1085,7 @@ export default function Tasks() {
                               updateContactDetail(selectedContact._id, editedContact);
                            }}
                            disabled={isUpdatingContact}
-                           className={`h-11 sm:h-12 px-5 sm:px-10 rounded-2xl text-[10px] sm:text-[12px] font-black uppercase tracking-[0.1em] shadow-lg transition-all flex items-center justify-center active:scale-95 ${
+                           className={`h-11 sm:h-12 px-5 sm:px-10 rounded-2xl text-[10px] sm:text-[12px] font-bold uppercase tracking-[0.1em] shadow-lg transition-all flex items-center justify-center active:scale-95 ${
                               showSaveFab 
                               ? 'bg-slate-900 text-white hover:bg-black shadow-slate-900/20 ring-4 ring-slate-900/5' 
                               : 'bg-slate-50 text-slate-300 cursor-not-allowed border border-slate-100'
@@ -1112,8 +1112,8 @@ export default function Tasks() {
                      <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in">
                         <div className="flex items-center justify-between">
                            <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-slate-900/20">01</div>
-                              <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Basic Information</h3>
+                              <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-slate-900/20">01</div>
+                              <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Basic Information</h3>
                            </div>
                            <div className="h-[2px] flex-1 bg-slate-50 mx-6 rounded-full hidden sm:block"></div>
                            <User size={18} className="text-slate-200" />
@@ -1121,7 +1121,7 @@ export default function Tasks() {
                         
                         <div className="space-y-6">
                            <div className="space-y-2">
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Legal Full Name</label>
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Legal Full Name</label>
                               <div className="relative group">
                                  <input 
                                    value={editedContact.firstName || editedContact.name || ''} 
@@ -1134,7 +1134,7 @@ export default function Tasks() {
                            </div>
 
                            <div className="space-y-2">
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">WhatsApp Identity (Verified)</label>
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">WhatsApp Identity (Verified)</label>
                               <div className="w-full bg-slate-50 border-2 border-transparent py-3.5 px-5 text-sm font-bold text-slate-500 rounded-2xl flex items-center">
                                  <Phone size={14} className="mr-3 text-teal-500 opacity-60" /> {editedContact.phone}
                               </div>
@@ -1142,11 +1142,11 @@ export default function Tasks() {
 
                            <div className="space-y-4 pt-4 border-t border-slate-50">
                               <div className="flex items-center justify-between">
-                                 <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Communication Channels</label>
+                                 <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Communication Channels</label>
                                  {(!editedContact.secondaryPhone || editedContact.secondaryPhone.trim() === '') && (
                                     <button 
                                        onClick={() => handleFieldChange('secondaryPhone', '+')} 
-                                       className="text-[10px] font-black text-teal-600 flex items-center hover:bg-teal-50 px-3 py-1.5 rounded-xl transition-all"
+                                       className="text-[10px] font-bold text-teal-600 flex items-center hover:bg-teal-50 px-3 py-1.5 rounded-xl transition-all"
                                     >
                                        <Plus size={12} className="mr-1.5" /> Add WhatsApp
                                     </button>
@@ -1177,7 +1177,7 @@ export default function Tasks() {
                            </div>
 
                            <div className="space-y-5 pt-4 border-t border-slate-50">
-                              <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Location Details</label>
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Location Details</label>
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                  <input value={editedContact.houseNo || ''} onChange={e=>handleFieldChange('houseNo', e.target.value)} placeholder="House No" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                                  <input value={editedContact.societyName || ''} onChange={e=>handleFieldChange('societyName', e.target.value)} placeholder="Society Name" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
@@ -1200,7 +1200,7 @@ export default function Tasks() {
                                  </div>
                               </div>
                               <div className="grid grid-cols-2 gap-4">
-                                 <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-black text-slate-400 rounded-2xl flex items-center uppercase tracking-widest">India</div>
+                                 <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-bold text-slate-400 rounded-2xl flex items-center capitalize">India</div>
                                  <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                               </div>
                            </div>
@@ -1211,8 +1211,8 @@ export default function Tasks() {
                       <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in">
                          <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
-                               <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-slate-900/20">02</div>
-                               <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Academic Qualification</h3>
+                               <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-slate-900/20">02</div>
+                               <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Academic Qualification</h3>
                             </div>
                             <div className="h-[2px] flex-1 bg-slate-50 mx-6 rounded-full hidden sm:block"></div>
                             <Award size={18} className="text-slate-200" />
@@ -1220,24 +1220,24 @@ export default function Tasks() {
                          
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Highest Degree</label>
+                               <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Highest Degree</label>
                                <input value={editedContact.lastQualification || ''} onChange={e=>handleFieldChange('lastQualification', e.target.value)} placeholder="e.g. 12th Commerce, B.Tech" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                             </div>
                             <div className="space-y-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Aggregate Score (%)</label>
+                               <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Aggregate Score (%)</label>
                                <input value={editedContact.lastPercentage || ''} onChange={e=>handleFieldChange('lastPercentage', e.target.value)} placeholder="e.g. 85%" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                             </div>
                          </div>
 
                          <div className="space-y-2">
-                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Dream Program / Course</label>
+                            <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Dream Program / Course</label>
                             <input value={editedContact.courseName || ''} onChange={e=>handleFieldChange('courseName', e.target.value)} placeholder="e.g. MBA (Finance), B.Arch" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                          </div>
 
                          <div className="pt-4 border-t border-slate-50">
                             <div className="flex items-center space-x-2 mb-4">
                                <Sparkles size={12} className="text-teal-500" />
-                               <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Counselor Insights</span>
+                               <span className="text-[9px] font-bold text-slate-400 capitalize">Counselor Insights</span>
                             </div>
                             <textarea 
                               value={editedContact.qualificationRemarks || ''} 
@@ -1252,8 +1252,8 @@ export default function Tasks() {
                       <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in">
                          <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
-                               <div className="w-10 h-10 rounded-2xl bg-teal-600 text-white text-xs flex items-center justify-center font-black shadow-lg shadow-teal-600/20">03</div>
-                               <h3 className="text-[11px] font-black text-slate-800 uppercase tracking-[0.2em]">Visit & Admission</h3>
+                               <div className="w-10 h-10 rounded-2xl bg-teal-600 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-teal-600/20">03</div>
+                               <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Visit & Admission</h3>
                             </div>
                             <div className="h-[2px] flex-1 bg-slate-50 mx-6 rounded-full hidden sm:block"></div>
                             <CheckCircle size={18} className="text-teal-200" />
@@ -1261,7 +1261,7 @@ export default function Tasks() {
 
                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                             <div className="space-y-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Interaction Type</label>
+                               <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Interaction Type</label>
                                <div className="relative group">
                                   <select value={editedContact.leadType || ''} onChange={e=>handleFieldChange('leadType', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
                                      <option value="">Choose Mode</option>
@@ -1273,7 +1273,7 @@ export default function Tasks() {
                                </div>
                             </div>
                             <div className="space-y-2">
-                               <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Consultation Date</label>
+                               <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Consultation Date</label>
                                <input type="date" value={editedContact.visitDate ? editedContact.visitDate.split('T')[0] : ''} onChange={e=>handleFieldChange('visitDate', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                             </div>
                          </div>
@@ -1287,7 +1287,7 @@ export default function Tasks() {
                           <button
                              key={tab}
                              onClick={() => setActiveTab(tab)}
-                             className={`flex-1 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all relative ${
+                             className={`flex-1 py-2.5 rounded-xl text-[10px] font-bold capitalize transition-all relative ${
                                 activeTab === tab 
                                 ? 'bg-white text-slate-900 shadow-premium scale-[1.02] z-10' 
                                 : 'text-slate-400 hover:text-slate-600 hover:bg-slate-100/50'
@@ -1316,7 +1316,7 @@ export default function Tasks() {
                                               </p>
                                            )}
                                         </div>
-                                          <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider">{event.eventType}</span>
+                                          <span className="text-[9px] font-bold text-slate-300 uppercase tracking-normal">{event.eventType}</span>
                                        </div>
                                        <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(event.timestamp)}</p>
                                     </div>
@@ -1328,7 +1328,7 @@ export default function Tasks() {
                        {activeTab === 'chat history' && (
                           <div className="space-y-6">
                              {(!selectedContact.chatLog || selectedContact.chatLog.length === 0) ? (
-                                <div className="py-20 text-center text-slate-300 text-xs uppercase tracking-widest">No communication history</div>
+                                <div className="py-20 text-center text-slate-300 text-xs capitalize">No communication history</div>
                              ) : selectedContact.chatLog.map((msg, idx) => (
                                 <div key={idx} className={`flex ${msg.fromMe ? 'justify-end' : 'justify-start'}`}>
                                    <div className={`max-w-[85%] p-5 rounded-[2rem] shadow-premium relative group transition-all hover:shadow-lg ${
@@ -1339,7 +1339,7 @@ export default function Tasks() {
                                       <div className={`text-sm font-medium leading-relaxed mb-3 ${msg.fromMe ? 'text-slate-100' : 'text-slate-700'}`}>
                                          {msg.body}
                                       </div>
-                                      <div className={`flex items-center justify-between text-[9px] font-black uppercase tracking-widest opacity-40 group-hover:opacity-100 transition-opacity ${msg.fromMe ? 'text-white' : 'text-slate-400'}`}>
+                                      <div className={`flex items-center justify-between text-[9px] font-bold capitalize opacity-40 group-hover:opacity-100 transition-opacity ${msg.fromMe ? 'text-white' : 'text-slate-400'}`}>
                                          <span>{new Date(msg.timestamp * 1000).toLocaleDateString()}</span>
                                          <span>{new Date(msg.timestamp * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                       </div>
@@ -1358,13 +1358,13 @@ export default function Tasks() {
                                          <Edit3 size={18} />
                                       </div>
                                       <div>
-                                         <h4 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Activity Journal</h4>
-                                         <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Strategic Notes & Observations</p>
+                                         <h4 className="text-[11px] font-bold text-slate-800 capitalize">Activity Journal</h4>
+                                         <p className="text-[9px] font-bold text-slate-400 capitalize">Strategic Notes & Observations</p>
                                       </div>
                                    </div>
                                    <button 
                                       onClick={() => updateContactDetail(selectedContact._id, editedContact)}
-                                      className="px-5 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-slate-900/10 active:scale-95 transition-all"
+                                      className="px-5 py-2.5 bg-slate-900 text-white text-[10px] font-bold capitalize rounded-xl shadow-lg shadow-slate-900/10 active:scale-95 transition-all"
                                    >
                                       Save Entry
                                    </button>
@@ -1401,8 +1401,8 @@ export default function Tasks() {
                         <CheckCircle2 size={24} className="sm:size-32" />
                       </div>
                       <div>
-                         <h2 className="text-lg sm:text-2xl font-black tracking-tight leading-tight">Finalize Activity</h2>
-                         <p className="text-teal-50 text-[9px] sm:text-[11px] font-bold uppercase tracking-widest opacity-80 truncate max-w-[200px] sm:max-w-none">Outcome for {completingTask.contactName}</p>
+                         <h2 className="text-lg sm:text-2xl font-semibold leading-tight">Finalize Activity</h2>
+                         <p className="text-teal-50 text-[9px] sm:text-[11px] font-bold opacity-80 truncate max-w-[200px] sm:max-w-none">Outcome for {completingTask.contactName}</p>
                       </div>
                    </div>
                    <button onClick={() => setCompletingTask(null)} className="p-2 sm:p-3 bg-white/10 hover:bg-white/20 rounded-xl sm:rounded-2xl transition-all"><X size={18} /></button>
@@ -1414,7 +1414,7 @@ export default function Tasks() {
                 {/* Meeting Type Selector */}
                 {completingTask.type === 'MEETING' && (
                    <div className="animate-fade-in">
-                      <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 sm:mb-4">Visit Format</label>
+                      <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 capitalize block mb-3 sm:mb-4">Visit Format</label>
                       <div className="grid grid-cols-3 gap-2 sm:gap-3">
                          {[
                             { id: 'Online', label: 'Online', icon: <Video size={16}/> },
@@ -1433,7 +1433,7 @@ export default function Tasks() {
                                <div className={`mb-1 sm:mb-2 p-1.5 sm:p-2 rounded-lg sm:rounded-xl ${meetingType === mode.id ? 'bg-teal-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
                                   {mode.icon}
                                 </div>
-                               <span className={`text-[8px] sm:text-[10px] font-black uppercase tracking-tighter ${meetingType === mode.id ? 'text-teal-900' : 'text-slate-400'}`}>{mode.label}</span>
+                               <span className={`text-[8px] sm:text-[10px] font-bold capitalize ${meetingType === mode.id ? 'text-teal-900' : 'text-slate-400'}`}>{mode.label}</span>
                             </button>
                          ))}
                       </div>
@@ -1442,7 +1442,7 @@ export default function Tasks() {
 
                 {/* Outcome Remarks */}
                 <div className="animate-fade-in">
-                   <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 sm:mb-3">Meeting / Interaction Remark</label>
+                   <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 capitalize block mb-2 sm:mb-3">Meeting / Interaction Remark</label>
                    <textarea 
                      value={completionNotes} 
                      onChange={(e) => setCompletionNotes(e.target.value)}
@@ -1453,7 +1453,7 @@ export default function Tasks() {
 
                 {/* Counsellor Referral */}
                 <div className="animate-fade-in">
-                   <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 sm:mb-4">Lead Handover (Counsellor)</label>
+                   <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 capitalize block mb-3 sm:mb-4">Lead Handover (Counsellor)</label>
                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
                       {agents.filter(a => ['MANAGER_COUNSELLOUR', 'MANAGER_COUNSELOR', 'COUNSELLOUR', 'COUNSELLOR', 'COUNSELOR', 'MANAGER COUNSELLOUR'].includes(a.role?.toUpperCase())).length > 0 ? (
                         agents.filter(a => ['MANAGER_COUNSELLOUR', 'MANAGER_COUNSELOR', 'COUNSELLOUR', 'COUNSELLOR', 'COUNSELOR', 'MANAGER COUNSELLOUR'].includes(a.role?.toUpperCase())).map(agent => (
@@ -1466,11 +1466,11 @@ export default function Tasks() {
                                  : 'bg-white border-slate-100'
                               }`}
                            >
-                              <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-black border-2 ${assignedCounsellorId === agent._id ? 'bg-indigo-500 text-white border-white' : 'bg-slate-100 text-slate-400 border-transparent'}`}>
+                              <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-[9px] sm:text-[10px] font-bold border-2 ${assignedCounsellorId === agent._id ? 'bg-indigo-500 text-white border-white' : 'bg-slate-100 text-slate-400 border-transparent'}`}>
                                  {getInitials(agent.name)}
                               </div>
                               <div className="text-left min-w-0">
-                                 <p className={`text-[10px] sm:text-[11px] font-black truncate ${assignedCounsellorId === agent._id ? 'text-indigo-900' : 'text-slate-700'}`}>{agent.name}</p>
+                                 <p className={`text-[10px] sm:text-[11px] font-bold truncate ${assignedCounsellorId === agent._id ? 'text-indigo-900' : 'text-slate-700'}`}>{agent.name}</p>
                                  <p className="text-[8px] font-bold text-slate-400 uppercase">Counselor</p>
                               </div>
                            </button>
@@ -1489,8 +1489,8 @@ export default function Tasks() {
                            <CalendarDays size={18} />
                          </div>
                          <div>
-                            <p className={`text-sm sm:text-base font-black ${isAddingFollowUp ? 'text-orange-900' : 'text-slate-600'}`}>Next Follow-up</p>
-                            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">Lifecycle</p>
+                            <p className={`text-sm sm:text-base font-bold ${isAddingFollowUp ? 'text-orange-900' : 'text-slate-600'}`}>Next Follow-up</p>
+                            <p className="text-[9px] font-bold text-slate-400 capitalize leading-none mt-1">Lifecycle</p>
                          </div>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
@@ -1503,7 +1503,7 @@ export default function Tasks() {
                      <div className="space-y-4 animate-fade-in">
                         <div className="space-y-3">
                            <div>
-                              <label className="text-[9px] font-black text-orange-400 uppercase tracking-widest mb-1 block">Subject</label>
+                              <label className="text-[9px] font-bold text-orange-400 capitalize mb-1 block">Subject</label>
                               <input 
                                 type="text" 
                                 value={nextFollowUpTitle} 
@@ -1513,7 +1513,7 @@ export default function Tasks() {
                               />
                            </div>
                            <div>
-                              <label className="text-[9px] font-black text-orange-400 uppercase tracking-widest mb-1 block">Scheduled Time</label>
+                              <label className="text-[9px] font-bold text-orange-400 capitalize mb-1 block">Scheduled Time</label>
                               <input 
                                 type="datetime-local" 
                                 value={nextFollowUpDate} 
@@ -1522,7 +1522,7 @@ export default function Tasks() {
                               />
                            </div>
                            <div>
-                              <label className="text-[9px] font-black text-red-500 uppercase tracking-widest mb-1 block">Description</label>
+                              <label className="text-[9px] font-bold text-red-500 capitalize mb-1 block">Description</label>
                               <textarea 
                                 value={nextFollowUpDescription} 
                                 onChange={e => setNextFollowUpDescription(e.target.value)}
@@ -1537,11 +1537,11 @@ export default function Tasks() {
              </div>
 
              <div className="p-4 sm:p-8 border-t border-slate-100 flex items-center justify-between bg-white gap-3 shrink-0">
-                <button onClick={() => setCompletingTask(null)} className="px-4 sm:px-8 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-slate-400 hover:text-slate-600 transition-all">Discard</button>
+                <button onClick={() => setCompletingTask(null)} className="px-4 sm:px-8 py-2.5 rounded-xl text-[10px] sm:text-[11px] font-bold capitalize text-slate-400 hover:text-slate-600 transition-all">Discard</button>
                 <button 
                   onClick={submitTaskCompletion} 
                   disabled={isSubmittingCompletion || (isAddingFollowUp && !nextFollowUpDate)} 
-                  className="flex-1 sm:flex-initial px-6 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-[11px] font-black uppercase tracking-widest text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 flex items-center justify-center shadow-lg transition-all active:scale-95 group"
+                  className="flex-1 sm:flex-initial px-6 sm:px-10 py-3 sm:py-4 rounded-xl sm:rounded-2xl text-[10px] sm:text-[11px] font-bold capitalize text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 flex items-center justify-center shadow-lg transition-all active:scale-95 group"
                 >
                    {isSubmittingCompletion ? <Clock size={16} className="animate-spin mr-2" /> : <Save size={16} className="mr-2" />}
                    Finalize
@@ -1560,19 +1560,19 @@ export default function Tasks() {
               <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner animate-bounce">
                 <AlertCircle size={40} />
               </div>
-              <h3 className="text-2xl font-black text-slate-800 mb-3 tracking-tight uppercase">Efficiency Warning!</h3>
+              <h3 className="text-2xl font-bold text-slate-800 mb-3 tracking-tight uppercase">Efficiency Warning!</h3>
               <p className="text-slate-500 font-bold text-sm leading-relaxed px-4">
                 Are you absolutely sure you want to cancel this task? 
                 <br/><br/>
                 <span className="text-rose-600 bg-rose-50 px-3 py-1.5 rounded-lg border border-rose-100 inline-block mt-2">
-                  ⚠️ Your efficiency will drop by <span className="font-black underline">5%</span> if you cancel.
+                  ⚠️ Your efficiency will drop by <span className="font-bold underline">5%</span> if you cancel.
                 </span>
               </p>
             </div>
             <div className="grid grid-cols-2 gap-0 border-t border-slate-100">
               <button 
                 onClick={() => setCancellingTaskConfirm(null)}
-                className="py-6 text-xs font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all border-r border-slate-100"
+                className="py-6 text-xs font-bold capitalize text-slate-400 hover:bg-slate-50 transition-all border-r border-slate-100"
               >
                 No, Keep Task
               </button>
@@ -1581,7 +1581,7 @@ export default function Tasks() {
                   updateTaskStatus(cancellingTaskConfirm.contactId, cancellingTaskConfirm._id, 'cancel_task');
                   setCancellingTaskConfirm(null);
                 }}
-                className="py-6 text-xs font-black uppercase tracking-widest text-rose-600 hover:bg-rose-50 transition-all"
+                className="py-6 text-xs font-bold capitalize text-rose-600 hover:bg-rose-50 transition-all"
               >
                 Yes, Cancel Task
               </button>
@@ -1598,22 +1598,22 @@ export default function Tasks() {
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Clock size={32} />
               </div>
-              <h3 className="text-xl font-black text-slate-800">Move to Today</h3>
-              <p className="text-xs font-bold text-slate-400 mt-2 uppercase tracking-widest">
+              <h3 className="text-xl font-bold text-slate-800">Move to Today</h3>
+              <p className="text-xs font-bold text-slate-400 mt-2 capitalize">
                 Original: {new Date(settingToTodayTask.dueDate).toLocaleDateString()}
               </p>
             </div>
 
             <div className="space-y-6">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Scheduled Date</label>
+                <label className="text-[10px] font-bold text-slate-400 capitalize mb-2 block">Scheduled Date</label>
                 <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-500">
                   {new Date().toLocaleDateString()} (Today)
                 </div>
               </div>
 
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Select Time</label>
+                <label className="text-[10px] font-bold text-slate-400 capitalize mb-2 block">Select Time</label>
                 <input 
                   type="time" 
                   value={todayTime} 
@@ -1625,7 +1625,7 @@ export default function Tasks() {
               <div className="pt-4 grid grid-cols-2 gap-4">
                 <button 
                   onClick={() => setSettingToTodayTask(null)}
-                  className="w-full py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:bg-slate-50 transition-all"
+                  className="w-full py-4 rounded-2xl text-[10px] font-bold capitalize text-slate-400 hover:bg-slate-50 transition-all"
                 >
                   Cancel
                 </button>
@@ -1652,7 +1652,7 @@ export default function Tasks() {
                       toast.error("Failed to move task");
                     }
                   }}
-                  className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200"
+                  className="w-full py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-bold capitalize hover:bg-black transition-all shadow-xl shadow-slate-200"
                 >
                   Move Now
                 </button>
@@ -1666,14 +1666,14 @@ export default function Tasks() {
       {editingTask && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setEditingTask(null)}>
           <div className="bg-white rounded-3xl w-[400px] p-6 shadow-2xl animate-pop-in" onClick={e => e.stopPropagation()}>
-            <h3 className="text-lg font-black text-slate-800 mb-6 flex items-center"><Edit3 size={20} className="mr-2 text-indigo-600"/> Edit Follow-Up</h3>
+            <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center"><Edit3 size={20} className="mr-2 text-indigo-600"/> Edit Follow-Up</h3>
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Subject</label>
+                <label className="text-[10px] font-bold text-slate-400 capitalize mb-2 block">Subject</label>
                 <input type="text" value={editTaskTitle} onChange={e=>setEditTaskTitle(e.target.value)} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold focus:border-indigo-500 outline-none" />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Follow-up Type</label>
+                <label className="text-[10px] font-bold text-slate-400 capitalize mb-2 block">Follow-up Type</label>
                 <select 
                   value={editTaskType} 
                   onChange={e=>setEditTaskType(e.target.value)} 
@@ -1686,20 +1686,20 @@ export default function Tasks() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Date (Read Only)</label>
+                  <label className="text-[10px] font-bold text-slate-400 capitalize mb-2 block">Date (Read Only)</label>
                   <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500">
                     {new Date(editTaskDate).toLocaleDateString()}
                   </div>
                 </div>
                 <div>
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Time (Read Only)</label>
+                  <label className="text-[10px] font-bold text-slate-400 capitalize mb-2 block">Time (Read Only)</label>
                   <div className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-500">
                     {new Date(editTaskDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Task Description</label>
+                <label className="text-[10px] font-bold text-slate-400 capitalize mb-2 block">Task Description</label>
                 <textarea 
                   rows={4}
                   value={editTaskDescription} 
@@ -1710,7 +1710,7 @@ export default function Tasks() {
               </div>
               <div className="pt-4 flex justify-end space-x-3">
                 <button onClick={() => setEditingTask(null)} className="px-5 py-2.5 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50">Cancel</button>
-                <button onClick={saveEditedTask} disabled={isUpdatingTask} className="px-5 py-2.5 rounded-xl text-xs font-black bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 disabled:opacity-50">
+                <button onClick={saveEditedTask} disabled={isUpdatingTask} className="px-5 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 disabled:opacity-50">
                   {isUpdatingTask ? 'Saving...' : 'Save Changes'}
                 </button>
               </div>
@@ -1725,12 +1725,12 @@ export default function Tasks() {
             <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-6">
                 <CalendarDays size={32} />
             </div>
-            <h3 className="text-xl font-black text-slate-800 mb-2">Reschedule Task</h3>
+            <h3 className="text-xl font-bold text-slate-800 mb-2">Reschedule Task</h3>
             <p className="text-sm font-bold text-slate-500 mb-6">Select a new date and time for this follow-up.</p>
             
             <div className="space-y-4">
               <div>
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block ml-1">New Date & Time</label>
+                <label className="text-[10px] font-bold text-slate-400 capitalize mb-2 block ml-1">New Date & Time</label>
                 <input 
                   type="datetime-local" 
                   value={rescheduleDate} 
@@ -1743,7 +1743,7 @@ export default function Tasks() {
                 <button 
                   onClick={handleRescheduleSubmit} 
                   disabled={isRescheduling || !rescheduleDate} 
-                  className="w-full py-4 rounded-2xl text-sm font-black bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-600/20 disabled:opacity-50 transition-all flex items-center justify-center"
+                  className="w-full py-4 rounded-2xl text-sm font-bold bg-blue-600 text-white hover:bg-blue-700 shadow-xl shadow-blue-600/20 disabled:opacity-50 transition-all flex items-center justify-center"
                 >
                   {isRescheduling ? <RefreshCw size={18} className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
                   {isRescheduling ? 'Updating...' : 'Confirm Reschedule'}
@@ -1763,7 +1763,7 @@ export default function Tasks() {
             <div className="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertCircle size={40} />
             </div>
-            <h3 className="text-2xl font-black text-slate-800 tracking-tight mb-2">URGENT: Overdue Tasks</h3>
+            <h3 className="text-2xl font-bold text-slate-800 tracking-tight mb-2">URGENT: Overdue Tasks</h3>
             <p className="text-sm font-bold text-slate-500 mb-6">
               You have tasks that are more than 48 hours overdue. <br/><br/>
               <span className="text-rose-600">If these are not completed within the next 1 hour, your account will be suspended automatically.</span>
@@ -1774,7 +1774,7 @@ export default function Tasks() {
                 sessionStorage.setItem('dismissedOverduePopup', 'true');
                 setView('OVERDUE');
               }}
-              className="w-full py-3.5 rounded-xl text-sm font-black bg-rose-600 text-white hover:bg-rose-700 shadow-xl shadow-rose-600/20"
+              className="w-full py-3.5 rounded-xl text-sm font-bold bg-rose-600 text-white hover:bg-rose-700 shadow-xl shadow-rose-600/20"
             >
               Take Action Now
             </button>

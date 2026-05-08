@@ -500,12 +500,17 @@ export default function Inbox({ roleAccess }) {
               { id: 'OPEN', label: 'OPEN' },
               { id: 'CLOSE', label: 'CLOSE' },
               { id: 'VISITED', label: 'VISIT' },
-              { id: 'ADMISSION', label: 'ADMISSION' }
+              { id: 'ALL', label: 'All' },
+              { id: 'NEW', label: 'New' },
+              { id: 'OPEN', label: 'Open' },
+              { id: 'CLOSE', label: 'Close' },
+              { id: 'VISITED', label: 'Visit' },
+              { id: 'ADMISSION', label: 'Admission' }
             ].map(btn => (
                <button 
                   key={btn.id} 
                   onClick={() => setSidebarFilter(btn.id)}
-                  className={`py-2 px-1 rounded-xl text-[9px] sm:text-[10px] font-black tracking-tighter transition-all border shadow-sm ${
+                  className={`py-2 px-1 rounded-xl text-[9px] sm:text-[10px] font-semibold transition-all border shadow-sm ${
                     sidebarFilter === btn.id 
                     ? 'bg-[var(--theme-bg)] text-white border-[var(--theme-bg)]' 
                     : 'bg-white text-slate-500 border-slate-100 hover:border-teal-200 hover:bg-teal-50/30'
@@ -566,12 +571,12 @@ export default function Inbox({ roleAccess }) {
                           activeChat && activeChat._id === c._id ? 'text-gray-900' : 'text-gray-800'
                         }`}>{c.name}</h3>
                       {c.assignedAgentName && (
-                        <span className="text-[9px] font-black bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded border border-teal-100 flex-shrink-0">
+                        <span className="text-[9px] font-bold bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded border border-teal-100 flex-shrink-0">
                           {c.assignedAgentName}
                         </span>
                       )}
                       {/* Status Badge */}
-                      <span className={`text-[8px] font-black px-1.5 py-0.5 rounded border uppercase tracking-tighter flex-shrink-0 ${
+                      <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border capitalize flex-shrink-0 ${
                         c.status === 'NEW' || c.status === 'NEW LEAD' ? 'bg-blue-50 text-blue-600 border-blue-100' :
                         ['OPEN', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP'].includes(c.status) ? 'bg-teal-50 text-teal-600 border-teal-100' :
                         c.status === 'ADMISSION' || c.status === 'CLOSED_WON' || c.status === 'ADMITTED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
@@ -587,7 +592,7 @@ export default function Inbox({ roleAccess }) {
                     </div>
                     <div className="flex flex-col items-end">
                       {c.score > 0 && (
-                        <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-full border shadow-sm ${
+                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border shadow-sm ${
                           c.score >= 70 ? 'bg-red-50 text-red-600 border-red-100' : 
                           c.score >= 40 ? 'bg-orange-50 text-orange-600 border-orange-100' : 
                           'bg-gray-50 text-gray-500 border-gray-100'
@@ -654,7 +659,7 @@ export default function Inbox({ roleAccess }) {
                    {m.isInternal && (
                      <div className="flex items-center space-x-1 mb-1 px-1">
                        <Lock size={10} className="text-amber-600" />
-                       <span className="text-[9px] font-bold text-amber-700 uppercase tracking-widest">Internal Team Note</span>
+                       <span className="text-[9px] font-bold text-amber-700 capitalize">Internal Team Note</span>
                      </div>
                    )}
 
@@ -829,7 +834,7 @@ export default function Inbox({ roleAccess }) {
         flex-col overflow-y-auto custom-scrollbar animate-slide-in-right lg:animate-none
       `}>
         <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-30">
-          <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Lead Profile</h3>
+          <h3 className="text-sm font-bold text-slate-800 capitalize">Lead Profile</h3>
           <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
             <X size={20} className="text-slate-400" />
           </button>
@@ -977,7 +982,7 @@ export default function Inbox({ roleAccess }) {
             {showMeetingModal && (
                 <div className="mt-4 bg-white/40 backdrop-blur-md p-5 rounded-2xl border border-purple-200/50 animate-fade-in relative shadow-xl overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-purple-500/20 transition-all duration-700"></div>
-                  <h4 className="text-[11px] font-black text-purple-900 mb-4 tracking-[0.2em] uppercase flex items-center"><Calendar size={14} className="mr-2 text-purple-600"/> Schedule Meeting</h4>
+                  <h4 className="text-[11px] font-bold text-purple-900 mb-4 tracking-[0.2em] uppercase flex items-center"><Calendar size={14} className="mr-2 text-purple-600"/> Schedule Meeting</h4>
                   
                   <div className="grid grid-cols-3 gap-2 mb-4">
                      {[
@@ -1058,7 +1063,7 @@ export default function Inbox({ roleAccess }) {
                            setMeetingDate('');
                            setMeetingDescription('');
                         }} 
-                        className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-black uppercase tracking-wider px-6 py-2.5 rounded-xl shadow-lg shadow-purple-600/20 active:scale-95 transition-all"
+                        className="bg-purple-600 hover:bg-purple-700 text-white text-[10px] font-bold uppercase tracking-wider px-6 py-2.5 rounded-xl shadow-lg shadow-purple-600/20 active:scale-95 transition-all"
                      >
                         Confirm Schedule
                      </button>
@@ -1247,14 +1252,14 @@ export default function Inbox({ roleAccess }) {
               <div className="absolute top-0 right-0 p-1 bg-teal-50 rounded-bl-lg">
                 <ShieldCheck size={12} className="text-teal-600" />
               </div>
-              <h3 className="text-[10px] font-black text-teal-800 mb-4 tracking-[0.2em] uppercase flex items-center">
+              <h3 className="text-[10px] font-bold text-teal-800 mb-4 tracking-[0.2em] uppercase flex items-center">
                 Identity Records
               </h3>
               
               <div className="space-y-4">
                 {/* Secondary WhatsApp */}
                 <div>
-                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Secondary WhatsApp</label>
+                   <label className="text-[9px] font-bold text-slate-400 capitalize block mb-1.5 ml-1">Secondary WhatsApp</label>
                    <input 
                       type="tel" 
                       defaultValue={activeChat?.secondaryPhone || ''} 
@@ -1266,7 +1271,7 @@ export default function Inbox({ roleAccess }) {
 
                 {/* Alternative Mobile */}
                 <div>
-                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">Alternative Mobile</label>
+                   <label className="text-[9px] font-bold text-slate-400 capitalize block mb-1.5 ml-1">Alternative Mobile</label>
                    <input 
                       type="tel" 
                       defaultValue={activeChat?.altMobile || ''} 
@@ -1278,7 +1283,7 @@ export default function Inbox({ roleAccess }) {
 
                 {/* Address Fields */}
                 <div className="pt-2 border-t border-slate-200/50">
-                   <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-1.5 ml-1">House No & Society</label>
+                   <label className="text-[9px] font-bold text-slate-400 capitalize block mb-1.5 ml-1">House No & Society</label>
                    <div className="flex space-x-2 mb-2">
                       <input 
                          placeholder="House No"
@@ -1499,19 +1504,19 @@ export default function Inbox({ roleAccess }) {
                   <div className="pt-4 border-t border-teal-200/50 space-y-4">
                     <div className="flex items-center space-x-2 mb-2">
                        <ShieldCheck size={14} className="text-teal-600" />
-                       <span className="text-[10px] font-black text-teal-800 tracking-[0.2em] uppercase">Ownership & Team</span>
+                       <span className="text-[10px] font-bold text-teal-800 tracking-[0.2em] uppercase">Ownership & Team</span>
                     </div>
 
                     {/* Sales Rep (Telecaller) */}
                     <div>
-                       <label className="text-[9px] font-black text-teal-800/50 uppercase tracking-widest block mb-1.5 ml-1">Lead Owner</label>
+                       <label className="text-[9px] font-bold text-teal-800/50 capitalize block mb-1.5 ml-1">Lead Owner</label>
                        <div className="relative group">
                           <Users size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-teal-400 group-focus-within:text-teal-600" />
                           <select 
                              disabled={!canAssignLead}
                              value={activeChat?.assignedAgent || ''}
                              onChange={(e) => handleAction('update_contact', { assignedAgent: e.target.value })}
-                             className={`w-full bg-white pl-9 pr-3 py-2 rounded-xl border border-teal-100 text-[10px] font-black tracking-wide uppercase outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm ${!canAssignLead ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-teal-200'}`}
+                             className={`w-full bg-white pl-9 pr-3 py-2 rounded-xl border border-teal-100 text-[10px] font-bold tracking-wide uppercase outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm ${!canAssignLead ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer hover:border-teal-200'}`}
                           >
                              <option value="">Unassigned</option>
                              {agents
@@ -1525,13 +1530,13 @@ export default function Inbox({ roleAccess }) {
 
                     {/* Expert Counselor (Counsellor) */}
                     <div>
-                       <label className="text-[9px] font-black text-teal-800/50 uppercase tracking-widest block mb-1.5 ml-1">Transfer Lead to</label>
+                       <label className="text-[9px] font-bold text-teal-800/50 capitalize block mb-1.5 ml-1">Transfer Lead to</label>
                        <div className="relative group">
                           <Headphones size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 group-focus-within:text-blue-600" />
                           <select 
                              value={activeChat?.assignedCounsellor || ''}
                              onChange={(e) => handleAction('update_contact', { assignedCounsellor: e.target.value })}
-                             className="w-full bg-white pl-9 pr-3 py-2 rounded-xl border border-teal-100 text-[10px] font-black tracking-wide uppercase outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm cursor-pointer hover:border-teal-200"
+                             className="w-full bg-white pl-9 pr-3 py-2 rounded-xl border border-teal-100 text-[10px] font-bold tracking-wide uppercase outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm cursor-pointer hover:border-teal-200"
                           >
                              <option value="">Not Transferred</option>
                              {agents
