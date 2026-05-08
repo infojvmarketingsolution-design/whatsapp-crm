@@ -317,7 +317,7 @@ const performContactAction = async (req, res) => {
             Object.keys(payload).forEach(key => {
                if (!protectedFields.includes(key) && ContactSchema.path(key)) {
                   console.log(`[UpdateContact] Setting ${key} to:`, payload[key]);
-                  if (payload[key] === "" && ContactSchema.path(key).instance === 'ObjectID') {
+                  if (payload[key] === "" && ContactSchema.path(key).instance.toLowerCase() === 'objectid') {
                       contact.set(key, null);
                   } else {
                       contact.set(key, payload[key]);
