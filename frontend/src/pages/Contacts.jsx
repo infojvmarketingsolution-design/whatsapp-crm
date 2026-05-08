@@ -779,14 +779,13 @@ export default function Contacts({ roleAccess }) {
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Telecaller</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Counsellor</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Profile Identity</th>
-                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Current Phase</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Lead Health</th>
                         <th className="py-5 px-8 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Actions</th>
                      </tr>
                    </thead>
                    <tbody>
                      {filteredContacts.map((c, i) => (
-                       <tr key={c._id || i} className={`cursor-pointer group hover:bg-[#fafafa] transition-colors relative after:absolute after:left-0 after:top-0 after:bottom-0 after:w-0 group-hover:after:w-1 after:bg-[var(--theme-bg)] after:transition-all ${selectedIds.has(c._id) ? 'bg-blue-50/20 shadow-inner' : ''}`}>
+                       <tr key={c._id || i} onClick={() => handleRowClick(c)} className={`cursor-pointer group hover:bg-[#fafafa] transition-colors relative after:absolute after:left-0 after:top-0 after:bottom-0 after:w-0 group-hover:after:w-1 after:bg-[var(--theme-bg)] after:transition-all ${selectedIds.has(c._id) ? 'bg-blue-50/20 shadow-inner' : ''}`}>
                           <td className="py-5 px-6 border-b border-gray-50" onClick={(e) => e.stopPropagation()}>
                              <input 
                                type="checkbox" 
@@ -838,11 +837,7 @@ export default function Contacts({ roleAccess }) {
                                  </div>
                              </div>
                           </td>
-                          <td className="py-5 px-6 border-b border-gray-50">
-                             <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-wider ${
-                                c.pipelineStage === 'Closing' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'
-                             }`}>{c.pipelineStage || 'Discovery'}</span>
-                          </td>
+
                           <td className="py-5 px-6 border-b border-gray-50">
                              <div className="flex items-center space-x-3">
                                 <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -851,8 +846,8 @@ export default function Contacts({ roleAccess }) {
                                 <span className="text-[10px] font-black text-gray-400">{c.score || 0}%</span>
                              </div>
                           </td>
-                          <td className="py-5 px-8 border-b border-gray-50 text-right">
-                             <button className="p-2 text-gray-300 hover:text-slate-800 transition-colors"><MoreVertical size={18} /></button>
+                          <td className="py-5 px-8 border-b border-gray-50 text-right" onClick={(e) => e.stopPropagation()}>
+                             <button onClick={() => handleRowClick(c)} className="p-2 text-gray-300 hover:text-slate-800 transition-colors"><MoreVertical size={18} /></button>
                           </td>
                        </tr>
                      ))}
