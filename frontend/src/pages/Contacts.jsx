@@ -1206,16 +1206,16 @@ export default function Contacts({ roleAccess }) {
                                        <Plus size={22} />
                                     </div>
                                     <div>
-                                       <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">Activity Journal</h4>
-                                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">Strategic Notes & Observations</p>
+                                       <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">Internal Remarks</h4>
+                                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">Follow-up notes & insights</p>
                                     </div>
                                  </div>
                                  <button 
                                     onClick={() => setShowNoteModal(true)}
                                     className="px-8 py-3.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-slate-900/10 active:scale-95 hover:-translate-y-0.5 transition-all flex items-center space-x-3"
                                  >
-                                    <Edit3 size={14} />
-                                    <span>Initialize Entry</span>
+                                    <Plus size={14} />
+                                    <span>Add New Note</span>
                                  </button>
                               </div>
 
@@ -1413,16 +1413,16 @@ export default function Contacts({ roleAccess }) {
            <div className="bg-white p-10 rounded-[3rem] w-[540px] shadow-3xl animate-pop-in relative border border-white/50 overflow-hidden" onClick={e=>e.stopPropagation()}>
               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
               <button onClick={() => setShowNoteModal(false)} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-900 transition-all hover:rotate-90"><X size={26} /></button>
-              <div className="w-16 h-16 bg-teal-500 text-white rounded-3xl flex items-center justify-center shadow-glow mb-8 transform -rotate-6"><Edit3 size={28} /></div>
-              <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Strategic Entry</h2>
-              <p className="text-sm font-bold text-slate-400 mb-8 lowercase tracking-tight">Document critical interaction insights and follow-up strategies.</p>
+              <div className="w-16 h-16 bg-teal-500 text-white rounded-3xl flex items-center justify-center shadow-glow mb-8 transform -rotate-6"><Plus size={28} /></div>
+              <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Add Remark</h2>
+              <p className="text-sm font-bold text-slate-400 mb-8 lowercase tracking-tight">Type your internal follow-up note below.</p>
                <div className="space-y-6">
                   <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 shadow-inner">
                      <textarea 
                         autoFocus
                         value={noteInput} 
                         onChange={e=>setNoteInput(e.target.value)} 
-                        placeholder="Type your strategic observation here..." 
+                        placeholder="Write your note here..." 
                         className="w-full h-40 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-300 outline-none resize-none leading-relaxed"
                      />
                   </div>
@@ -1431,7 +1431,7 @@ export default function Contacts({ roleAccess }) {
                       disabled={isAddingNote || !noteInput.trim()}
                       className="w-full py-5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl shadow-3xl hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50"
                    >
-                      {isAddingNote ? "Synchronizing Entry..." : "Finalize & Save Note"}
+                      {isAddingNote ? "Saving..." : "Save Note Now"}
                    </button>
                </div>
             </div>
