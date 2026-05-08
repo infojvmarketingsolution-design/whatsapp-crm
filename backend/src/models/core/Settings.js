@@ -135,7 +135,8 @@ const SettingsSchema = new mongoose.Schema({
   },
   customization: {
     themeColor: { type: String, default: '#10b981' }, // Teal default
-    customLogin: { type: Boolean, default: false }
+    customLogin: { type: Boolean, default: false },
+    logoUrl: { type: String, default: null }
   },
   roleAccess: {
     type: Map,

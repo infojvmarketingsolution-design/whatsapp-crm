@@ -913,6 +913,7 @@ function AppLayout() {
                 setThemeColor(fColor);
                 localStorage.setItem('themeColor', fColor);
                 localStorage.setItem('customLogin', fLogin);
+                localStorage.setItem('logoUrl', data.customization.logoUrl || '');
                 setCustomization(data.customization);
              }
 

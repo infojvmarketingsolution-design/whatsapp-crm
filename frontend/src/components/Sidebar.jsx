@@ -138,9 +138,19 @@ export default function Sidebar({ whatsappConfig, roleAccess, customization, wor
       `}>
         <div className={`p-5 border-b border-teal-800/50 flex items-center ${collapsed ? 'justify-center' : 'justify-between'} relative h-[73px]`}>
           {!collapsed && (
-            <span className="text-xl font-bold tracking-wider truncate mr-10 uppercase">
-              {customization?.customLogin ? (workspace?.name || 'My Workspace') : 'WapiPulse CRM'}
-            </span>
+            <div className="flex items-center space-x-3 truncate mr-10">
+              {customization?.logoUrl ? (
+                <img src={customization.logoUrl} alt="Logo" className="h-8 w-8 object-contain" />
+              ) : (
+                <span className="text-xl font-bold tracking-wider uppercase">
+                  {customization?.customLogin ? (workspace?.name || 'My Workspace') : 'WapiPulse CRM'}
+                </span>
+              )}
+            </div>
+          )}
+          
+          {collapsed && customization?.logoUrl && (
+            <img src={customization.logoUrl} alt="Logo" className="h-8 w-8 object-contain" />
           )}
           
           {/* Mobile Close Button */}

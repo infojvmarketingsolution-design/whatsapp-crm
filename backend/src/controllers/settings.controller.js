@@ -148,3 +148,32 @@ exports.uploadImage = async (req, res) => {
     res.status(500).json({ error: 'Failed to upload image' });
   }
 };
+exports.uploadBranding = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No logo file uploaded' });
+    }
+
+    const tenantId = req.tenantId;
+    const targetDir = path.join(__dirname, '../../uploads/branding', tenantId);
+    
+    if (!fs.existsSync(targetDir)) {
+      fs.mkdirSync(targetDir, { recursive: true });
+    }
+
+    const fileExt = path.extname(req.file.originalname);
+    const fileName = `logo_${Date.now()}${fileExt}`;
+    const targetPath = path.join(targetDir, fileName);
+
+    fs.renameSync(req.file.path, targetPath);
+
+    const protocol = req.protocol === 'http' && req.get('host').includes('localhost') ? 'http' : 'https';
+    const host = req.get('host');
+    const publicUrl = `${protocol}://${host}/uploads/branding/${tenantId}/${fileName}`;
+    
+    res.json({ success: true, url: publicUrl });
+  } catch (err) {
+    console.error('Error uploading branding logo:', err);
+    res.status(500).json({ error: 'Failed to upload logo' });
+  }
+};

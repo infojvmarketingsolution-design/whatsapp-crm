@@ -15,5 +15,6 @@ router.put('/:category', settingsController.updateSettings);
 
 // Image upload for settings prompts
 router.post('/upload-image', upload.single('image'), settingsController.uploadImage);
+router.post('/upload-branding', upload.single('logo'), settingsController.uploadBranding);
 
 module.exports = router;

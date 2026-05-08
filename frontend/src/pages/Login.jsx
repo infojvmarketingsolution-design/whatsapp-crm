@@ -106,6 +106,7 @@ export default function Login() {
 
   const themeColor = localStorage.getItem('themeColor') || '#10b981';
   const customLogin = localStorage.getItem('customLogin') === 'true';
+  const logoUrl = localStorage.getItem('logoUrl');
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center p-4 selection:bg-teal-100 relative overflow-hidden">
@@ -120,7 +121,11 @@ export default function Login() {
           
           {/* Header */}
           <div className="flex flex-col items-center mb-6">
-            {!customLogin && (
+            {customLogin && logoUrl ? (
+              <motion.div whileHover={{ scale: 1.05 }} className="relative mb-6">
+                <img src={logoUrl} alt="Workspace Logo" className="h-20 w-auto relative object-contain" />
+              </motion.div>
+            ) : !customLogin && (
               <motion.div whileHover={{ scale: 1.05 }} className="relative mb-6">
                 <div className="absolute inset-0 bg-teal-400/20 blur-2xl rounded-full" />
                 <img src="/logo.png" alt="WapiPulse Logo" className="h-20 w-auto relative object-contain" />
