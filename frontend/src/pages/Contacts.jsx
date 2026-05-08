@@ -353,6 +353,8 @@ export default function Contacts({ roleAccess }) {
       delete cleanPayload.__v;
       delete cleanPayload.createdAt;
       delete cleanPayload.updatedAt;
+      delete cleanPayload.timeline;
+      delete cleanPayload.notes;
 
       const res = await fetch(`/api/chat/action`, {
         method: 'POST',
@@ -1154,13 +1156,13 @@ export default function Contacts({ roleAccess }) {
                                      <div className="pb-4">
                                         <div className="flex justify-between items-center">
                                            <div className="flex flex-col">
-                                            <p className="text-sm font-medium text-slate-700">{event.description.split(' - ')[0]}</p>
-                                            {event.description?.includes(' - ') && (
-                                               <p className="text-[11px] text-slate-500 font-bold mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 italic leading-relaxed">
-                                                  {event.description.split(' - ').slice(1).join(' - ')}
-                                               </p>
-                                            )}
-                                         </div>
+                                             <p className="text-sm font-medium text-slate-700">{event.description.split(' - ')[0]}</p>
+                                             {event.description?.includes(' - ') && (
+                                                <p className="text-[11px] text-slate-500 font-bold mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 italic leading-relaxed">
+                                                   {event.description.split(' - ').slice(1).join(' - ')}
+                                                </p>
+                                             )}
+                                          </div>
                                            <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider">{event.eventType}</span>
                                         </div>
                                         <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(event.timestamp)}</p>
@@ -1213,22 +1215,17 @@ export default function Contacts({ roleAccess }) {
                                        className="px-5 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-slate-900/10 active:scale-95 transition-all disabled:opacity-30"
                                     >
                                        {isAddingNote ? <RefreshCw size={12} className="animate-spin" /> : 'Save Entry'}
-
-                                  </div>
-
-                                  <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 shadow-inner group focus-within:bg-white focus-within:shadow-premium transition-all">
-                                     <textarea
-                                        value={noteInput}
-                                        onChange={e => setNoteInput(e.target.value)}
-                                        placeholder="Document interaction insights, follow-up strategies, and key lead observations..."
-                                        className="w-full h-40 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-300 outline-none resize-none leading-relaxed"
-                                     />
-                                  </div>
-                               </div>
                                     </button>
                                  </div>
 
-
+                                 <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 shadow-inner group focus-within:bg-white focus-within:shadow-premium transition-all">
+                                    <textarea
+                                       value={noteInput}
+                                       onChange={e => setNoteInput(e.target.value)}
+                                       placeholder="Document interaction insights, follow-up strategies, and key lead observations..."
+                                       className="w-full h-40 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-300 outline-none resize-none leading-relaxed"
+                                    />
+                                 </div>
                               </div>
 
                               <div className="space-y-4">
