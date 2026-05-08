@@ -329,7 +329,7 @@ const performContactAction = async (req, res) => {
        const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
        contact.notes.push(newNote);
-       contact.timeline.push({ eventType: 'NOTE_ADDED', description: `Note added`, timestamp: new Date() });
+       contact.timeline.push({ eventType: 'NOTE_ADDED', description: `Note added${payload.note ? ` - ${payload.note}` : ''}`, timestamp: new Date() });
     } else if (action === 'assign_agent') {
        const agentId = payload.agentId || payload.assignedAgent; // Support both keys
        contact.assignedAgent = agentId && agentId !== "" ? agentId : null;
@@ -425,7 +425,7 @@ const performContactAction = async (req, res) => {
               }
            }
 
-           contact.timeline.push({ eventType: 'TASK_COMPLETED', description: `Task completed: ${task.title}`, timestamp: new Date() });
+           contact.timeline.push({ eventType: 'TASK_COMPLETED', description: `Task completed: ${task.title}${payload.remark ? ` - ${payload.remark}` : ''}`, timestamp: new Date() });
        }
     } else if (action === 'in_progress_task') {
         if (!contact.tasks) contact.tasks = [];
