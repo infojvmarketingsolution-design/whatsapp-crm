@@ -45,6 +45,7 @@ export default function Contacts({ roleAccess }) {
   // Design states
   const [activeTab, setActiveTab] = useState('chatlog');
   const [noteInput, setNoteInput] = useState('');
+  const [showNoteModal, setShowNoteModal] = useState(false);
   const [isAddingNote, setIsAddingNote] = useState(false);
   const [isGeneratingBrief, setIsGeneratingBrief] = useState(false);
   const [strategicBrief, setStrategicBrief] = useState(null);
@@ -444,6 +445,7 @@ export default function Contacts({ roleAccess }) {
         const data = await res.json();
         setSelectedContact(data.contact);
         setNoteInput('');
+        setShowNoteModal(false);
         fetchContacts();
       }
     } catch (err) {
@@ -1019,7 +1021,7 @@ export default function Contacts({ roleAccess }) {
                                  </div>
                               </div>
                               <div className="grid grid-cols-2 gap-4">
-                                 <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-black text-slate-400 rounded-2xl flex items-center uppercase tracking-widest">India</div>
+                                 <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-black text-slate-400 rounded-2xl flex items-center uppercase trackingest">India</div>
                                  <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                               </div>
                            </div>
@@ -1198,34 +1200,23 @@ export default function Contacts({ roleAccess }) {
 
                         {activeTab === 'strategic notes' && (
                            <div className="space-y-8 animate-fade-in">
-                              <div className="space-y-8">
-                                 <div className="flex items-center justify-between px-2">
-                                    <div className="flex items-center space-x-3">
-                                       <div className="w-10 h-10 rounded-2xl bg-teal-500/10 text-teal-600 flex items-center justify-center">
-                                          <Edit3 size={18} />
-                                       </div>
-                                       <div>
-                                          <h4 className="text-[11px] font-black text-slate-800 uppercase tracking-widest">Activity Journal</h4>
-                                          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Strategic Notes & Observations</p>
-                                       </div>
+                              <div className="flex items-center justify-between px-2 bg-slate-50/50 p-6 rounded-[2.5rem] border border-slate-100 shadow-sm group hover:bg-white hover:shadow-premium transition-all">
+                                 <div className="flex items-center space-x-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-teal-500 text-white flex items-center justify-center shadow-lg shadow-teal-500/20 transform group-hover:rotate-6 transition-transform">
+                                       <Plus size={22} />
                                     </div>
-                                    <button 
-                                       onClick={() => addInternalNote(selectedContact._id)}
-                                       disabled={isAddingNote || !noteInput.trim()}
-                                       className="px-5 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-slate-900/10 active:scale-95 transition-all disabled:opacity-30"
-                                    >
-                                       {isAddingNote ? <RefreshCw size={12} className="animate-spin" /> : 'Save Entry'}
-                                    </button>
+                                    <div>
+                                       <h4 className="text-xs font-black text-slate-800 uppercase tracking-widest">Activity Journal</h4>
+                                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter mt-0.5">Strategic Notes & Observations</p>
+                                    </div>
                                  </div>
-
-                                 <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 shadow-inner group focus-within:bg-white focus-within:shadow-premium transition-all">
-                                    <textarea
-                                       value={noteInput}
-                                       onChange={e => setNoteInput(e.target.value)}
-                                       placeholder="Document interaction insights, follow-up strategies, and key lead observations..."
-                                       className="w-full h-40 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-300 outline-none resize-none leading-relaxed"
-                                    />
-                                 </div>
+                                 <button 
+                                    onClick={() => setShowNoteModal(true)}
+                                    className="px-8 py-3.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-xl shadow-slate-900/10 active:scale-95 hover:-translate-y-0.5 transition-all flex items-center space-x-3"
+                                 >
+                                    <Edit3 size={14} />
+                                    <span>Initialize Entry</span>
+                                 </button>
                               </div>
 
                               <div className="space-y-4">
@@ -1413,6 +1404,36 @@ export default function Contacts({ roleAccess }) {
                       {isSavingLead ? "Initializing Profile..." : "Establish Profile"}
                    </button>
                </form>
+            </div>
+         </div>
+       )}
+
+      {showNoteModal && (
+        <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] animate-fade-in" onClick={() => setShowNoteModal(false)}>
+           <div className="bg-white p-10 rounded-[3rem] w-[540px] shadow-3xl animate-pop-in relative border border-white/50 overflow-hidden" onClick={e=>e.stopPropagation()}>
+              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+              <button onClick={() => setShowNoteModal(false)} className="absolute top-8 right-8 p-3 text-slate-300 hover:text-slate-900 transition-all hover:rotate-90"><X size={26} /></button>
+              <div className="w-16 h-16 bg-teal-500 text-white rounded-3xl flex items-center justify-center shadow-glow mb-8 transform -rotate-6"><Edit3 size={28} /></div>
+              <h2 className="text-3xl font-black text-slate-900 mb-2 tracking-tight">Strategic Entry</h2>
+              <p className="text-sm font-bold text-slate-400 mb-8 lowercase tracking-tight">Document critical interaction insights and follow-up strategies.</p>
+               <div className="space-y-6">
+                  <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100 shadow-inner">
+                     <textarea 
+                        autoFocus
+                        value={noteInput} 
+                        onChange={e=>setNoteInput(e.target.value)} 
+                        placeholder="Type your strategic observation here..." 
+                        className="w-full h-40 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-300 outline-none resize-none leading-relaxed"
+                     />
+                  </div>
+                  <button 
+                      onClick={() => addInternalNote(selectedContact._id)}
+                      disabled={isAddingNote || !noteInput.trim()}
+                      className="w-full py-5 bg-slate-900 text-white text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl shadow-3xl hover:-translate-y-1 active:scale-95 transition-all disabled:opacity-50"
+                   >
+                      {isAddingNote ? "Synchronizing Entry..." : "Finalize & Save Note"}
+                   </button>
+               </div>
             </div>
          </div>
        )}
