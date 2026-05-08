@@ -1213,17 +1213,22 @@ export default function Contacts({ roleAccess }) {
                                        className="px-5 py-2.5 bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-lg shadow-slate-900/10 active:scale-95 transition-all disabled:opacity-30"
                                     >
                                        {isAddingNote ? <RefreshCw size={12} className="animate-spin" /> : 'Save Entry'}
+
+                                  </div>
+
+                                  <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100 shadow-inner group focus-within:bg-white focus-within:shadow-premium transition-all">
+                                     <textarea
+                                        value={noteInput}
+                                        onChange={e => setNoteInput(e.target.value)}
+                                        placeholder="Document interaction insights, follow-up strategies, and key lead observations..."
+                                        className="w-full h-40 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-300 outline-none resize-none leading-relaxed"
+                                     />
+                                  </div>
+                               </div>
                                     </button>
                                  </div>
 
-                                 <div className="bg-slate-50/50 rounded-[2.5rem] p-8 border border-slate-100 shadow-inner group focus-within:bg-white focus-within:shadow-premium transition-all">
-                                    <textarea
-                                       value={noteInput}
-                                       onChange={e => setNoteInput(e.target.value)}
-                                       placeholder="Document interaction insights, follow-up strategies, and key lead observations..."
-                                       className="w-full h-80 bg-transparent text-sm font-medium text-slate-700 placeholder-slate-300 outline-none resize-none leading-loose"
-                                    />
-                                 </div>
+
                               </div>
 
                               <div className="space-y-4">
