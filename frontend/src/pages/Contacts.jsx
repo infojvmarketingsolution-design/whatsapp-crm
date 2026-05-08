@@ -5,7 +5,7 @@ import {
   Search, Plus, X, Mail, MapPin, Phone, Users, User,
   Clock, Activity, Target, Tag, Save, Filter, 
   Briefcase, Building2, Download, MoreVertical, 
-  Flame, Sun, Snowflake, ArrowUpRight, Send, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones, ChevronDown, UserCircle, RefreshCw, Sparkles, Edit3,
+  Flame, Sun, Snowflake, ArrowUpRight, Send, Shield, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones, ChevronDown, UserCircle, RefreshCw, Sparkles, Edit3,
   Award, CheckCircle, Video, Home, School, Map, GraduationCap, Star
 } from 'lucide-react';
 
