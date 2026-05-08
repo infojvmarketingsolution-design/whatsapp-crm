@@ -326,10 +326,21 @@ const registerTenant = async (req, res) => {
 
 const updateAvailability = async (req, res) => {
   try {
-    const { isAvailable } = req.body;
+    const { isAvailable, targetUserId } = req.body;
     
-    // Find the current logged in user and update their status
-    const user = await User.findById(req.user._id);
+    let userIdToUpdate = req.user._id;
+    if (targetUserId) {
+       // Validate that requester has permission
+       const role = (req.user.role || '').toUpperCase().replace(' ', '_');
+       if (['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'MANAGER_COUNSELLOUR'].includes(role)) {
+          userIdToUpdate = targetUserId;
+       } else {
+          return res.status(403).json({ message: 'Not authorized to update other users' });
+       }
+    }
+    
+    // Find the user and update their status
+    const user = await User.findById(userIdToUpdate);
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }

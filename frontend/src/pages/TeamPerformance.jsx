@@ -58,6 +58,35 @@ export default function TeamPerformance() {
     }, 800);
   };
 
+  const toggleUserAvailability = async (memberId, currentStatus) => {
+    const newValue = !currentStatus;
+    
+    // Optimistic UI update
+    setTeamStats(prev => prev.map(m => m._id === memberId ? { ...m, isAvailable: newValue } : m));
+    
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch('/api/auth/availability', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ isAvailable: newValue, targetUserId: memberId })
+      });
+      
+      if (!res.ok) {
+        throw new Error('Failed to update');
+      }
+      toast.success(`User lead receiving status updated`);
+    } catch (error) {
+      console.error('Failed to update availability', error);
+      toast.error('Failed to update user status');
+      // Revert optimistic update
+      setTeamStats(prev => prev.map(m => m._id === memberId ? { ...m, isAvailable: currentStatus } : m));
+    }
+  };
+
   const filteredTeam = teamStats.filter(m => 
     m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     m.role.toLowerCase().includes(searchTerm.toLowerCase())
@@ -194,12 +223,16 @@ export default function TeamPerformance() {
                            </div>
                         </div>
                         <div className="flex flex-col items-end space-y-1.5">
-                           <div className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full border ${member.isAvailable ? 'bg-teal-50 border-teal-100 text-teal-600 shadow-sm' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                           <button 
+                              onClick={() => toggleUserAvailability(member._id, member.isAvailable)}
+                              className={`flex items-center space-x-1.5 px-2.5 py-1 rounded-full border transition-all hover:scale-105 active:scale-95 ${member.isAvailable ? 'bg-teal-50 border-teal-100 text-teal-600 hover:bg-teal-100 shadow-sm' : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'}`}
+                              title="Click to toggle receiving leads"
+                           >
                               <div className={`w-1.5 h-1.5 rounded-full ${member.isAvailable ? 'bg-teal-500 animate-pulse' : 'bg-slate-300'}`} />
                               <span className="text-[7px] font-black uppercase tracking-widest whitespace-nowrap">
                                  {member.isAvailable ? 'Receiving Leads' : 'Leads Paused'}
                               </span>
-                           </div>
+                           </button>
                         </div>
                      </div>
 
@@ -292,10 +325,14 @@ export default function TeamPerformance() {
                                <div>
                                   <p className="text-[13px] font-black text-slate-800 tracking-tight leading-tight mb-0.5">{member.name}</p>
                                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5">{member.email}</p>
-                                  <div className={`inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg border text-[7px] font-black uppercase tracking-widest ${member.isAvailable ? 'bg-teal-50 border-teal-100 text-teal-600' : 'bg-slate-50 border-slate-100 text-slate-400'}`}>
+                                  <button 
+                                     onClick={(e) => { e.stopPropagation(); toggleUserAvailability(member._id, member.isAvailable); }}
+                                     className={`inline-flex items-center space-x-1.5 px-2 py-0.5 rounded-lg border text-[7px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 ${member.isAvailable ? 'bg-teal-50 border-teal-100 text-teal-600 hover:bg-teal-100' : 'bg-slate-50 border-slate-100 text-slate-400 hover:bg-slate-100'}`}
+                                     title="Click to toggle receiving leads"
+                                  >
                                      <div className={`w-1 h-1 rounded-full ${member.isAvailable ? 'bg-teal-500 animate-pulse' : 'bg-slate-300'}`} />
                                      <span>{member.isAvailable ? 'Active' : 'Paused'}</span>
-                                  </div>
+                                  </button>
                                </div>
                             </div>
                          </td>
