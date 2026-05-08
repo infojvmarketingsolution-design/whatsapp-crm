@@ -445,6 +445,15 @@ const performContactAction = async (req, res) => {
         return res.status(400).json({ error: 'Invalid action type' });
      }
 
+    // Failsafe: Ensure no empty strings sneak into ObjectId fields before saving
+    ContactSchema.eachPath((pathname, schemaType) => {
+       if (schemaType.instance === 'ObjectID' || schemaType.instance === 'ObjectId') {
+          if (contact.get(pathname) === "") {
+             contact.set(pathname, null);
+          }
+       }
+    });
+
     await contact.save();
     req.app.get("io")?.to(req.tenantId).emit("contact_updated", { contactId: contact._id, contact: contact.toObject() }); res.json({ success: true, contact: contact.toObject() });
   } catch (error) {
