@@ -817,7 +817,7 @@ export default function Contacts({ roleAccess }) {
                                  </select>
                               </div>
                            </td>
-                          <td className="py-5 px-6 border-b border-gray-50" onClick={() => handleRowClick(c)}>
+                          <td className="py-5 px-6 border-b border-gray-50">
                              <div className="flex items-center space-x-4">
                                 <div className="w-10 h-10 rounded-xl bg-gray-50 text-gray-400 flex items-center justify-center font-black text-sm group-hover:bg-[var(--theme-bg)] group-hover:text-white transition-colors">
                                    {c.firstName ? c.firstName.charAt(0) : (c.name?.charAt(0) || 'U')}
@@ -842,9 +842,9 @@ export default function Contacts({ roleAccess }) {
       </div>
 
       {showProfile && selectedContact && editedContact && (
-          <div className="fixed inset-0 z-[150] flex justify-end bg-slate-900/60 backdrop-blur-md animate-fade-in" onClick={() => setShowProfile(false)}>
+          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in p-4 sm:p-6" onClick={() => setShowProfile(false)}>
             <div 
-              className="w-drawer h-full bg-white shadow-3xl flex flex-col animate-slide-left relative overflow-hidden"
+              className="w-full max-w-6xl h-full sm:h-[90vh] bg-white shadow-3xl rounded-[2.5rem] flex flex-col animate-pop-in relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
                 {/* PROFESSIONAL PREMIUM HEADER */}
