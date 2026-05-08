@@ -54,6 +54,7 @@ export default function CustomizationSettings() {
       if (res.ok) {
          setSuccess(true);
          toast.success('Branding settings saved!');
+         window.dispatchEvent(new CustomEvent('brandingUpdated', { detail: { customization: settings } }));
          setTimeout(() => setSuccess(false), 2000);
       } else {
          toast.error('Failed to save settings');

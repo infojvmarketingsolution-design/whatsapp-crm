@@ -983,20 +983,26 @@ function AppLayout() {
     });
 
     // Listen for custom event from CustomizationSettings
-    const handleThemeEvent = (e) => {
+    const handleBrandingUpdate = (e) => {
        if (e.detail?.color) {
           setThemeColor(e.detail.color);
           localStorage.setItem('themeColor', e.detail.color);
+       }
+       if (e.detail?.customization) {
+          setCustomization(e.detail.customization);
+          localStorage.setItem('customLogin', e.detail.customization.customLogin);
        }
     };
     const handleResize = () => {
        setIsMobile(window.innerWidth < 1024);
     };
-    window.addEventListener('themeChanged', handleThemeEvent);
+    window.addEventListener('themeChanged', handleBrandingUpdate);
+    window.addEventListener('brandingUpdated', handleBrandingUpdate);
     window.addEventListener('resize', handleResize);
 
     return () => {
-       window.removeEventListener('themeChanged', handleThemeEvent);
+       window.removeEventListener('themeChanged', handleBrandingUpdate);
+       window.removeEventListener('brandingUpdated', handleBrandingUpdate);
        window.removeEventListener('resize', handleResize);
        clearInterval(configInterval);
        socket.disconnect();
