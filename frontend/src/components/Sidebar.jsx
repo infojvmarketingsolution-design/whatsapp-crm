@@ -205,7 +205,24 @@ export default function Sidebar({ whatsappConfig, roleAccess, isMobileOpen, onCl
             </div>
           )}
           
-          {/* Availability toggle removed from sidebar as per request */}
+          {/* Availability toggle: Only shown to Admin and Business Head in sidebar */}
+          {['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD'].includes(userRole) && (
+            <div className="px-6 py-4 border-t border-teal-800/30">
+              <div className="flex items-center justify-between">
+                {!collapsed && (
+                  <span className="text-[10px] font-bold text-teal-200 uppercase tracking-widest">
+                    Receiving Leads
+                  </span>
+                )}
+                <button 
+                  onClick={toggleAvailability}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none ${isAvailable ? 'bg-green-500' : 'bg-teal-800'}`}
+                >
+                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${isAvailable ? 'translate-x-5' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            </div>
+          )}
 
           {deferredPrompt && (
             <button 
