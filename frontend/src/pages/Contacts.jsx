@@ -1149,28 +1149,41 @@ export default function Contacts({ roleAccess }) {
 
                      <div className="flex-1 overflow-y-auto custom-scrollbar p-resp">
                         {activeTab === 'timeline' && (
-                           <div className="space-y-6 relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100">
-                               {(selectedContact.timeline || []).filter(e => !e.description.includes('Contact details updated')).slice().reverse().map((event, idx) => (
-                                  <div key={idx} className="relative pl-8">
-                                     <div className="absolute left-0 top-1 w-[22px] h-[22px] rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center z-10 text-slate-400">
-                                        <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
-                                     </div>
-                                     <div className="pb-4">
-                                        <div className="flex justify-between items-center">
-                                           <div className="flex flex-col">
-                                             <p className="text-sm font-medium text-slate-700">{event.description.split(' - ')[0]}</p>
+                           <div className="space-y-6 relative">
+                               {(!selectedContact.timeline || selectedContact.timeline.length === 0) ? (
+                                 <div className="py-20 text-center flex flex-col items-center">
+                                    <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4">
+                                       <Activity size={24} className="text-slate-200" />
+                                    </div>
+                                    <p className="text-xs font-bold text-slate-300 capitalize">No activity recorded yet</p>
+                                 </div>
+                               ) : (
+                                 <div className="relative before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[1px] before:bg-slate-100">
+                                    {(selectedContact.timeline || []).filter(e => !e.description?.includes('Contact details updated')).slice().reverse().map((event, idx) => (
+                                       <div key={idx} className="relative pl-10 mb-8 last:mb-0">
+                                          <div className="absolute left-0 top-1 w-[22px] h-[22px] rounded-full bg-white border-2 border-slate-100 flex items-center justify-center z-10 shadow-sm">
+                                             <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                                          </div>
+                                          <div className="flex flex-col">
+                                             <div className="flex justify-between items-start gap-4">
+                                                <p className="text-sm font-bold text-slate-700 leading-tight">{event.description?.split(' - ')[0]}</p>
+                                                <span className="shrink-0 text-[8px] font-black text-slate-300 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                                                   {event.eventType?.replace('_', ' ')}
+                                                </span>
+                                             </div>
                                              {event.description?.includes(' - ') && (
-                                                <p className="text-[11px] text-slate-500 font-bold mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 italic leading-relaxed">
+                                                <p className="text-[11px] text-slate-500 font-medium mt-1.5 bg-slate-50/50 p-2 rounded-xl border border-slate-100/50 italic">
                                                    {event.description.split(' - ').slice(1).join(' - ')}
                                                 </p>
                                              )}
+                                             <p className="text-[10px] font-bold text-slate-400 mt-2 flex items-center">
+                                                <Clock size={10} className="mr-1.5 opacity-50" /> {formatDateTime(event.timestamp)}
+                                             </p>
                                           </div>
-                                           <span className="text-[9px] font-bold text-slate-300 uppercase tracking-wider">{event.eventType}</span>
-                                        </div>
-                                        <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(event.timestamp)}</p>
-                                     </div>
-                                  </div>
-                               ))}
+                                       </div>
+                                    ))}
+                                 </div>
+                               )}
                            </div>
                         )}
 

@@ -13,7 +13,15 @@ const User = require('../models/core/User');
 const createContact = async (req, res) => {
   try {
     const Contact = req.tenantDb.model('Contact', ContactSchema);
-    const newContact = await Contact.create({ ...req.body, status: req.body.status || 'NEW LEAD' });
+    const newContact = await Contact.create({ 
+      ...req.body, 
+      status: req.body.status || 'NEW LEAD',
+      timeline: [{
+        eventType: 'LEAD_ESTABLISHED',
+        description: `Lead profile established via ${req.body.source || 'Manual Entry'}`,
+        timestamp: new Date()
+      }]
+    });
     
     // Notify clients about the new lead
     req.app.get('io')?.to(req.tenantId).emit('new_message', { 
@@ -317,11 +325,25 @@ const performContactAction = async (req, res) => {
             
             Object.keys(payload).forEach(key => {
                if (!protectedFields.includes(key) && ContactSchema.path(key)) {
-                  console.log(`[UpdateContact] Setting ${key} to:`, payload[key]);
-                  if (payload[key] === "" && ContactSchema.path(key).instance.toLowerCase() === 'objectid') {
+                  const oldValue = contact.get(key);
+                  const newValue = payload[key];
+
+                  console.log(`[UpdateContact] Setting ${key} to:`, newValue);
+                  
+                  if (newValue === "" && ContactSchema.path(key).instance.toLowerCase() === 'objectid') {
                       contact.set(key, null);
                   } else {
-                      contact.set(key, payload[key]);
+                      contact.set(key, newValue);
+                  }
+
+                  // Record major changes in timeline (excluding very frequent ones if needed)
+                  const majorFields = ['firstName', 'lastName', 'phone', 'secondaryPhone', 'status', 'pipelineStage', 'selectedProgram', 'visitStatus'];
+                  if (majorFields.includes(key) && String(oldValue) !== String(newValue)) {
+                     contact.timeline.push({
+                        eventType: 'FIELD_UPDATED',
+                        description: `${key} updated from "${oldValue || 'None'}" to "${newValue || 'None'}"`,
+                        timestamp: new Date()
+                     });
                   }
                }
             });

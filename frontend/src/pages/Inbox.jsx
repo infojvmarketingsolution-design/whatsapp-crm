@@ -493,18 +493,14 @@ export default function Inbox({ roleAccess }) {
           </div>
 
           {/* Sidebar Quick Filters - Proper Button Grid */}
-          <div className="grid grid-cols-3 gap-1.5 p-3 pt-0 border-b border-gray-50 bg-white">
+          <div className="grid grid-cols-3 gap-2 p-4 pt-0 border-b border-gray-50 bg-white">
             {[
-              { id: 'ALL', label: 'ALL' },
-              { id: 'NEW', label: 'NEW' },
-              { id: 'OPEN', label: 'OPEN' },
-              { id: 'CLOSE', label: 'CLOSE' },
-              { id: 'VISITED', label: 'VISIT' },
               { id: 'ALL', label: 'All' },
               { id: 'NEW', label: 'New' },
               { id: 'OPEN', label: 'Open' },
-              { id: 'CLOSE', label: 'Close' },
-              { id: 'VISITED', label: 'Visit' },
+              { id: 'CLOSE', label: 'Closed' },
+              { id: 'VISITED', label: 'Visited' },
+              { id: 'PENDING VISIT', label: 'Pending Visit' },
               { id: 'ADMISSION', label: 'Admission' }
             ].map(btn => (
                <button 
@@ -523,11 +519,11 @@ export default function Inbox({ roleAccess }) {
         </div>
 
         {/* Global header tab */}
-        <div className="bg-[var(--theme-bg)] text-white flex items-center px-4 py-2.5 text-[10px] font-bold tracking-wider justify-between">
+        <div className="bg-[var(--theme-bg)] text-white flex items-center px-4 py-3 text-[10px] font-bold tracking-normal justify-between capitalize">
            <div className="flex space-x-4">
-             <span className="border-b-2 border-[var(--theme-border)] pb-1">ACTIVE ({contacts.length})</span>
+             <span className="border-b-2 border-white/30 pb-1">Active ({contacts.length})</span>
            </div>
-           <ChevronDown size={14} className="cursor-pointer" />
+           <ChevronDown size={14} className="cursor-pointer opacity-50 hover:opacity-100 transition-opacity" />
         </div>
 
         {/* Top small avatars representing active queues */}
@@ -639,10 +635,14 @@ export default function Inbox({ roleAccess }) {
           <div className="flex items-center space-x-2 shrink-0">
             <button 
                onClick={() => setShowProfile(!showProfile)}
-               className={`text-xs font-bold transition-colors px-3 py-1 rounded-md ${showProfile ? 'bg-teal-700 text-white' : 'text-teal-100 hover:text-white bg-teal-800/50'}`}
+               className={`text-[10px] font-bold transition-all px-4 py-1.5 rounded-lg border flex items-center gap-2 ${
+                 showProfile 
+                 ? 'bg-white text-teal-900 border-white shadow-lg' 
+                 : 'bg-teal-700/30 text-teal-50 border-teal-600/30 hover:bg-teal-700/50 hover:text-white'
+               }`}
             >
-               <span className="hidden sm:inline">Chat Profile</span>
-               <UserCircle className="sm:hidden" size={18} />
+               <span className="hidden sm:inline">Profile Details</span>
+               <UserCircle size={14} />
             </button>
           </div>
         </div>
