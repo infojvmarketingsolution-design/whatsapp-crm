@@ -743,12 +743,6 @@ export default function Contacts({ roleAccess }) {
                               )}
                            </div>
                        </div>
-                       <div className="flex items-center space-x-3 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-100">
-                          <div className="w-16 h-1.5 bg-slate-200 rounded-full overflow-hidden">
-                             <div className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)] transition-all duration-500" style={{ width: `${c.score || 0}%` }}></div>
-                          </div>
-                          <span className="text-[10px] font-black text-blue-600 tracking-tighter">{c.score || 0}%</span>
-                       </div>
                     </div>
                  </div>
               ))}
@@ -779,7 +773,6 @@ export default function Contacts({ roleAccess }) {
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Telecaller</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Counsellor</th>
                         <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Profile Identity</th>
-                        <th className="py-5 px-6 text-[10px] font-black uppercase tracking-widest text-gray-400">Lead Health</th>
                         <th className="py-5 px-8 text-right text-[10px] font-black uppercase tracking-widest text-gray-400">Actions</th>
                      </tr>
                    </thead>
@@ -835,15 +828,6 @@ export default function Contacts({ roleAccess }) {
                                    </p>
                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">{c.phone}</p>
                                  </div>
-                             </div>
-                          </td>
-
-                          <td className="py-5 px-6 border-b border-gray-50">
-                             <div className="flex items-center space-x-3">
-                                <div className="w-20 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                                   <div className={`h-full transition-all ${c.score > 70 ? 'bg-green-500 shadow-glow' : 'bg-blue-500'}`} style={{ width: `${c.score || 0}%` }}></div>
-                                </div>
-                                <span className="text-[10px] font-black text-gray-400">{c.score || 0}%</span>
                              </div>
                           </td>
                           <td className="py-5 px-8 border-b border-gray-50 text-right" onClick={(e) => e.stopPropagation()}>
