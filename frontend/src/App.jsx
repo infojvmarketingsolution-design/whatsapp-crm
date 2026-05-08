@@ -843,6 +843,8 @@ function AppLayout() {
   const [isMobile, setIsMobile] = React.useState(window.innerWidth < 1024);
   const [isNotificationsOpen, setIsNotificationsOpen] = React.useState(false);
   const [isSearchOpen, setIsSearchOpen] = React.useState(false);
+  const [customization, setCustomization] = React.useState(null);
+  const [workspace, setWorkspace] = React.useState(null);
   
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
@@ -906,17 +908,22 @@ function AppLayout() {
          });
          if (res.ok) {
             const data = await res.json();
-            const fetchedColor = data.customization?.themeColor;
-            const locallySaved = localStorage.getItem('themeColor');
-            if (fetchedColor && fetchedColor !== '#10b981') {
-               setThemeColor(fetchedColor);
-               localStorage.setItem('themeColor', fetchedColor);
-            } else if (locallySaved && fetchedColor === '#10b981') {
-               setThemeColor(locallySaved);
-            }
+             if (data.customization) {
+                const { themeColor: fColor, customLogin: fLogin } = data.customization;
+                setThemeColor(fColor);
+                localStorage.setItem('themeColor', fColor);
+                localStorage.setItem('customLogin', fLogin);
+                setCustomization(data.customization);
+             }
 
             if (data.roleAccess) {
                setRoleAccess(data.roleAccess);
+            }
+            if (data.customization) {
+               setCustomization(data.customization);
+            }
+            if (data.workspace) {
+               setWorkspace(data.workspace);
             }
          }
        } catch (e) {}
@@ -985,6 +992,7 @@ function AppLayout() {
     const handleResize = () => {
        setIsMobile(window.innerWidth < 1024);
     };
+    window.addEventListener('themeChanged', handleThemeEvent);
     window.addEventListener('resize', handleResize);
 
     return () => {
@@ -1048,6 +1056,8 @@ function AppLayout() {
           : <Sidebar 
               whatsappConfig={whatsappConfig} 
               roleAccess={roleAccess} 
+              customization={customization}
+              workspace={workspace}
               isMobileOpen={isSidebarOpen} 
               onClose={() => setIsSidebarOpen(false)} 
               isMobile={isMobile}

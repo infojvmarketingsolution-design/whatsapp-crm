@@ -104,6 +104,9 @@ export default function Login() {
     }, 800);
   };
 
+  const themeColor = localStorage.getItem('themeColor') || '#10b981';
+  const customLogin = localStorage.getItem('customLogin') === 'true';
+
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex items-center justify-center p-4 selection:bg-teal-100 relative overflow-hidden">
       <Toaster position="top-center" />
@@ -117,10 +120,12 @@ export default function Login() {
           
           {/* Header */}
           <div className="flex flex-col items-center mb-6">
-            <motion.div whileHover={{ scale: 1.05 }} className="relative mb-6">
-              <div className="absolute inset-0 bg-teal-400/20 blur-2xl rounded-full" />
-              <img src="/logo.png" alt="WapiPulse Logo" className="h-20 w-auto relative object-contain" />
-            </motion.div>
+            {!customLogin && (
+              <motion.div whileHover={{ scale: 1.05 }} className="relative mb-6">
+                <div className="absolute inset-0 bg-teal-400/20 blur-2xl rounded-full" />
+                <img src="/logo.png" alt="WapiPulse Logo" className="h-20 w-auto relative object-contain" />
+              </motion.div>
+            )}
             <h1 className="text-3xl font-black tracking-tight text-slate-900">
               {showFastLogin ? 'Welcome Back' : (isRegister ? 'New Workspace' : (loginMethod === 'PIN' ? 'Secure Sign In' : 'Access Portal'))}
             </h1>
@@ -134,6 +139,7 @@ export default function Login() {
               <button 
                 onClick={() => setLoginMethod('PIN')}
                 className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all ${loginMethod === 'PIN' ? 'bg-white text-teal-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                style={{ color: loginMethod === 'PIN' ? (themeColor === '#10b981' ? '#0d9488' : themeColor) : undefined }}
               >
                 Fast MPIN Login
               </button>
@@ -151,7 +157,7 @@ export default function Login() {
               <motion.div key="fast-login" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="space-y-6">
                  <div className="bg-slate-50/50 border border-slate-100 rounded-2xl p-6 flex flex-col items-center">
                     <div className="w-16 h-16 bg-white border-2 border-teal-500/20 rounded-full flex items-center justify-center mb-4 shadow-sm">
-                      <User className="w-8 h-8 text-teal-600" />
+                      <User className="w-8 h-8 text-teal-600" style={{ color: themeColor === '#10b981' ? '#0d9488' : themeColor }} />
                     </div>
                     <div className="text-center">
                        <p className="font-black text-slate-900 text-lg">{savedUser?.name}</p>
@@ -177,6 +183,7 @@ export default function Login() {
                     onClick={handleAuth}
                     disabled={loading || mpin.length < 6}
                     className="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-2xl shadow-lg transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+                    style={{ backgroundColor: themeColor === '#10b981' ? '#0d9488' : themeColor }}
                  >
                     {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                       <>
@@ -187,7 +194,7 @@ export default function Login() {
                  </button>
 
                  <div className="text-center">
-                    <button onClick={() => setShowFastLogin(false)} className="text-sm font-bold text-slate-400 hover:text-teal-600 underline underline-offset-4">Sign in with a different user</button>
+                    <button onClick={() => setShowFastLogin(false)} className="text-sm font-bold text-slate-400 hover:text-teal-600 underline underline-offset-4" style={{ color: themeColor === '#10b981' ? '#0d9488' : themeColor }}>Sign in with a different user</button>
                  </div>
               </motion.div>
             ) : (
@@ -242,7 +249,8 @@ export default function Login() {
 
                 <button 
                   type="submit" disabled={loading || (loginMethod === 'PIN' && mpin.length < 6)}
-                  className={`group w-full py-4 ${loginMethod === 'PIN' ? 'bg-[#114a43] hover:bg-[#0c3631]' : 'bg-[#1e293b] hover:bg-slate-900'} text-white font-black rounded-2xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center relative overflow-hidden disabled:opacity-50`}
+                  className={`group w-full py-4 text-white font-black rounded-2xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center relative overflow-hidden disabled:opacity-50`}
+                  style={{ backgroundColor: themeColor === '#10b981' ? (loginMethod === 'PIN' ? '#114a43' : '#1e293b') : themeColor }}
                 >
                   {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (
                     <>
@@ -256,16 +264,18 @@ export default function Login() {
           </AnimatePresence>
 
           <div className="mt-8 pt-6 border-t border-slate-100 flex flex-col items-center space-y-4">
-            <button onClick={() => { setIsRegister(!isRegister); setShowFastLogin(false); }} className="text-sm font-black text-teal-600 uppercase tracking-wide">
+            <button onClick={() => { setIsRegister(!isRegister); setShowFastLogin(false); }} className="text-sm font-black text-teal-600 uppercase tracking-wide" style={{ color: themeColor === '#10b981' ? '#0d9488' : themeColor }}>
               {isRegister ? 'Already have an account?' : 'New here? Create Client Account'}
             </button>
           </div>
         </div>
 
-        <div className="mt-8 flex items-center justify-center space-x-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-          <div className="flex items-center"><Shield className="w-3.5 h-3.5 mr-1.5 text-teal-500" /> Secure Encryption</div>
-          <a href="/privacy-policy" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
-        </div>
+        {!customLogin && (
+          <div className="mt-8 flex items-center justify-center space-x-6 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+            <div className="flex items-center"><Shield className="w-3.5 h-3.5 mr-1.5 text-teal-500" /> Secure Encryption</div>
+            <a href="/privacy-policy" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
+          </div>
+        )}
       </motion.div>
 
       <style jsx>{`

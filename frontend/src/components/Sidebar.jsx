@@ -22,7 +22,7 @@ import {
   X
 } from 'lucide-react';
 
-export default function Sidebar({ whatsappConfig, roleAccess, isMobileOpen, onClose, isMobile }) {
+export default function Sidebar({ whatsappConfig, roleAccess, customization, workspace, isMobileOpen, onClose, isMobile }) {
   const navigate = useNavigate();
   const [collapsed, setCollapsed] = React.useState(false);
   const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -137,7 +137,11 @@ export default function Sidebar({ whatsappConfig, roleAccess, isMobileOpen, onCl
         shrink-0 bg-[var(--theme-bg)] text-white h-screen flex flex-col shadow-lg
       `}>
         <div className={`p-5 border-b border-teal-800/50 flex items-center ${collapsed ? 'justify-center' : 'justify-between'} relative h-[73px]`}>
-          {!collapsed && <span className="text-xl font-bold tracking-wider truncate mr-10">WapiPulse CRM</span>}
+          {!collapsed && (
+            <span className="text-xl font-bold tracking-wider truncate mr-10 uppercase">
+              {customization?.customLogin ? (workspace?.name || 'My Workspace') : 'WapiPulse CRM'}
+            </span>
+          )}
           
           {/* Mobile Close Button */}
           <button 

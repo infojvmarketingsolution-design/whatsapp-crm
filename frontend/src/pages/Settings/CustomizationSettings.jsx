@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Save, Palette, Monitor } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 export default function CustomizationSettings() {
   const [loading, setLoading] = useState(true);
@@ -52,10 +53,14 @@ export default function CustomizationSettings() {
       });
       if (res.ok) {
          setSuccess(true);
+         toast.success('Branding settings saved!');
          setTimeout(() => setSuccess(false), 2000);
+      } else {
+         toast.error('Failed to save settings');
       }
     } catch (err) {
       console.error('Failed to save', err);
+      toast.error('Connection error');
     } finally {
       setSaving(false);
     }
@@ -82,14 +87,18 @@ export default function CustomizationSettings() {
                         setSettings({...settings, themeColor: color});
                         window.dispatchEvent(new CustomEvent('themeChanged', { detail: { color } }));
                     }}
-                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-transform ${settings.themeColor === color ? 'ring-2 ring-offset-2 ring-gray-800 scale-110' : 'hover:scale-105 shadow-sm border border-black/10'}`}
-                    style={{ backgroundColor: color }}
+                    className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${settings.themeColor === color ? 'ring-4 ring-offset-2 scale-110' : 'hover:scale-110 shadow-sm border border-black/10'}`}
+                    style={{ 
+                      backgroundColor: color,
+                      ringColor: color,
+                      borderColor: settings.themeColor === color ? color : 'transparent'
+                    }}
                   >
-                     {settings.themeColor === color && <div className="w-2.5 h-2.5 rounded-full bg-white"></div>}
+                     {settings.themeColor === color && <div className="w-3 h-3 rounded-full bg-white shadow-sm animate-pop-in"></div>}
                   </button>
                ))}
             </div>
-            <p className="text-xs text-gray-500 mt-3 font-medium">Select a color to replace the default Teal across the CRM platform.</p>
+            <p className="text-xs text-gray-500 mt-4 font-medium">Select a color to replace the default Teal across the CRM platform.</p>
           </div>
           
           <div className="pt-6 border-t border-gray-100">
@@ -118,16 +127,19 @@ export default function CustomizationSettings() {
           <button 
             onClick={handleSave}
             disabled={saving || success}
-            className={`flex items-center px-5 py-2.5 text-white rounded-lg text-sm font-bold transition shadow-sm disabled:opacity-50 ${success ? 'bg-green-500 hover:bg-green-600' : 'bg-[var(--theme-bg)] hover:bg-teal-700'}`}
+            className={`flex items-center px-6 py-3 text-white rounded-xl text-sm font-black uppercase tracking-widest transition-all shadow-lg disabled:opacity-50 ${success ? 'bg-green-500' : 'hover:scale-105 active:scale-95'}`}
+            style={{ 
+              backgroundColor: success ? undefined : (settings.themeColor === '#10b981' ? '#075E54' : settings.themeColor)
+            }}
           >
             {saving ? (
-               <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span>
+               <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span>
             ) : success ? (
-               <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
             ) : (
-               <Save size={16} className="mr-2" />
+               <Save size={18} className="mr-2" />
             )}
-            {success ? 'Saved Successfully!' : 'Save Branding'}
+            {success ? 'Saved!' : 'Save Branding'}
           </button>
         </div>
       </div>
