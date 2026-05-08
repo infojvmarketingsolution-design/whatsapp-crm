@@ -500,7 +500,6 @@ export default function Inbox({ roleAccess }) {
               { id: 'OPEN', label: 'Open' },
               { id: 'CLOSE', label: 'Closed' },
               { id: 'VISITED', label: 'Visited' },
-              { id: 'PENDING VISIT', label: 'Pending Visit' },
               { id: 'ADMISSION', label: 'Admission' }
             ].map(btn => (
                <button 
