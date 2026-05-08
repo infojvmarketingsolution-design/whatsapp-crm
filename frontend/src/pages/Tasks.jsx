@@ -527,7 +527,12 @@ export default function Tasks() {
      }
   };
 
-  const overdueCount = tasks.filter(t => t.status === 'PENDING' && new Date(t.dueDate) < new Date()).length;
+  const overdueCount = tasks.filter(t => {
+    const d = new Date(t.dueDate);
+    const now = new Date();
+    const isDueToday = d.toDateString() === now.toDateString();
+    return t.status === 'PENDING' && d < now && !isDueToday;
+  }).length;
   const todayCount = tasks.filter(t => {
     const d = new Date(t.dueDate);
     const today = new Date();
@@ -586,11 +591,11 @@ export default function Tasks() {
     
     // Status View Filter
     if (view === 'PENDING') {
-      if (!isPending || (isOverdue && !isDueToday)) return false;
+      if (!isPending || !isDueToday) return false;
     }
     if (view === 'COMPLETED' && !isCompleted) return false;
-    if (view === 'OVERDUE' && (!isOverdue || isDueToday)) return false;
-    if (view === 'UPCOMING' && (!isPending || !(!isOverdue && !isDueToday))) return false;
+    if (view === 'OVERDUE' && (!isPending || !isOverdue || isDueToday)) return false;
+    if (view === 'UPCOMING' && (!isPending || isOverdue || isDueToday)) return false;
 
     // Type Filter
     if (filter !== 'ALL' && t.type !== filter) return false;
