@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { 
@@ -841,8 +842,8 @@ export default function Contacts({ roleAccess }) {
           </div>
       </div>
 
-      {showProfile && selectedContact && editedContact && (
-          <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in p-4 sm:p-6" onClick={() => setShowProfile(false)}>
+      {showProfile && selectedContact && editedContact && createPortal(
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/60 backdrop-blur-md animate-fade-in p-4 sm:p-6" onClick={() => setShowProfile(false)}>
             <div 
               className="w-full max-w-6xl h-full sm:h-[90vh] bg-white shadow-3xl rounded-[2.5rem] flex flex-col animate-pop-in relative overflow-hidden"
               onClick={(e) => e.stopPropagation()}
@@ -1242,7 +1243,8 @@ export default function Contacts({ roleAccess }) {
                   </div>
                </div>
             </div>
-         </div>
+         </div>,
+         document.body
       )}
 
 
