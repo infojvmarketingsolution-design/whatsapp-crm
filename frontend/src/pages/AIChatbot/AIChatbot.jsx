@@ -152,6 +152,14 @@ export default function AIChatbot() {
     updatePrompt('programMap', newMap);
   };
 
+  const removeCategory = (qual, catName) => {
+    const newMap = { ...settings.aiPrompts.programMap };
+    if (newMap[qual] && newMap[qual][catName]) {
+       delete newMap[qual][catName];
+       updatePrompt('programMap', newMap);
+    }
+  };
+
   const handleUploadClick = (fieldKey) => {
     activeFieldRef.current = fieldKey;
     fileInputRef.current.click();
@@ -521,43 +529,56 @@ export default function AIChatbot() {
 
                              {/* PROGRAM MAPPING DETAILS */}
                              {step.type === 'PROGRAM_SELECTION' && (
-                               <div className="mt-4 p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100">
-                                  <div className="flex items-center justify-between mb-4">
-                                     <div className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Program Details Mapper</div>
-                                     <Layers size={14} className="text-indigo-300" />
+                               <div className="mt-6 p-4 sm:p-6 bg-[#f8faff] rounded-[2rem] border border-indigo-100/50">
+                                  <div className="flex items-center justify-between mb-6 px-2">
+                                     <div className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Program Details Mapper</div>
+                                     <div className="p-1.5 bg-white rounded-lg shadow-sm">
+                                        <Layers size={14} className="text-indigo-400" />
+                                     </div>
                                   </div>
                                   
-                                  <div className="space-y-4">
+                                  <div className="space-y-6">
                                      {(settings.aiPrompts.qualificationOptions || []).map(qual => (
-                                       <div key={qual} className="bg-white p-3 rounded-xl border border-indigo-50 shadow-sm">
-                                          <div className="flex items-center justify-between mb-2">
-                                             <div className="text-xs font-bold text-gray-700">{qual}</div>
+                                       <div key={qual} className="bg-white rounded-3xl border border-slate-100 p-5 sm:p-7 shadow-sm hover:shadow-md transition-shadow">
+                                          <div className="flex items-center justify-between mb-5 border-b border-slate-50 pb-4">
+                                             <div className="text-sm sm:text-base font-black text-slate-700 tracking-tight">{qual}</div>
                                              <button 
                                                onClick={() => {
-                                                  const cat = prompt('New Category Name (e.g. "Trending Programs")');
+                                                  const cat = prompt('New Category Name (e.g. "DIPLOMA PROGRAMS")');
                                                   if (cat) addCategory(qual, cat);
                                                }}
-                                               className="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 uppercase"
+                                               className="text-[9px] font-black text-indigo-600 hover:bg-indigo-50 px-3 py-1.5 rounded-xl transition-all uppercase tracking-widest flex items-center"
                                              >
-                                                + Add Category
+                                                <Plus size={10} className="mr-1.5" /> Add Category
                                              </button>
                                           </div>
-
-                                          <div className="space-y-3">
+ 
+                                          <div className="space-y-6">
                                              {Object.entries(settings.aiPrompts.programMap[qual] || {}).map(([cat, programs]) => (
-                                               <div key={cat} className="pl-2 border-l-2 border-indigo-100">
-                                                  <div className="text-[10px] font-black text-gray-400 uppercase mb-1">{cat}</div>
-                                                  <div className="flex flex-wrap gap-2">
+                                               <div key={cat} className="space-y-3 relative group/cat">
+                                                  <div className="flex items-center justify-between">
+                                                     <div className="text-[9px] font-black text-slate-400 uppercase tracking-[0.15em] flex items-center">
+                                                        <div className="w-1 h-3 bg-indigo-200 rounded-full mr-2"></div>
+                                                        {cat}
+                                                     </div>
+                                                     <button 
+                                                        onClick={() => { if(confirm(`Remove entire category "${cat}"?`)) removeCategory(qual, cat); }}
+                                                        className="opacity-0 group-hover/cat:opacity-100 text-[8px] font-bold text-rose-400 hover:text-rose-600 uppercase transition-opacity"
+                                                     >
+                                                        Remove
+                                                     </button>
+                                                  </div>
+                                                  <div className="flex flex-wrap gap-2.5">
                                                      {programs.map((p, pIdx) => (
                                                        <div key={pIdx} className="group relative">
                                                           <input 
-                                                            className="text-[11px] font-medium bg-gray-50 border-none rounded-lg py-1 px-3 w-32 focus:ring-1 focus:ring-indigo-300"
+                                                            className="text-[11px] font-bold bg-slate-50 border border-slate-100 text-slate-600 rounded-xl py-2 px-4 w-40 focus:bg-white focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500/20 outline-none transition-all"
                                                             value={p}
                                                             onChange={(e) => updateProgramMap(qual, cat, pIdx, e.target.value)}
                                                           />
                                                           <button 
                                                             onClick={() => updateProgramMap(qual, cat, pIdx, null)}
-                                                            className="absolute -top-1 -right-1 opacity-0 group-hover:opacity-100 bg-red-500 text-white rounded-full p-0.5"
+                                                            className="absolute -top-1.5 -right-1.5 opacity-0 group-hover:opacity-100 bg-rose-500 text-white rounded-full p-1 shadow-lg hover:scale-110 transition-all z-10"
                                                           >
                                                              <Plus size={8} className="rotate-45" />
                                                           </button>
@@ -565,13 +586,18 @@ export default function AIChatbot() {
                                                      ))}
                                                      <button 
                                                        onClick={() => updateProgramMap(qual, cat, -1, 'New Program')}
-                                                       className="text-[11px] font-medium text-indigo-400 hover:text-indigo-500 px-2 py-1 border border-dashed border-indigo-200 rounded-lg"
+                                                       className="text-[11px] font-bold text-indigo-500 hover:bg-indigo-50 px-4 py-2 border border-dashed border-indigo-200 rounded-xl flex items-center transition-all active:scale-95 shadow-sm"
                                                      >
-                                                        + Program
+                                                        <Plus size={12} className="mr-1.5" /> Program
                                                      </button>
                                                   </div>
                                                </div>
                                              ))}
+                                             {Object.keys(settings.aiPrompts.programMap[qual] || {}).length === 0 && (
+                                                <div className="py-4 text-center border-2 border-dashed border-slate-50 rounded-2xl">
+                                                   <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">No categories mapped for this level</p>
+                                                </div>
+                                             )}
                                           </div>
                                        </div>
                                      ))}
