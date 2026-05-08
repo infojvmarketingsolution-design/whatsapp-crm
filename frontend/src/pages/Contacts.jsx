@@ -1109,8 +1109,10 @@ export default function Contacts({ roleAccess }) {
                                     className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-amber-500/20 transition-all appearance-none pr-10"
                                  >
                                     <option value="">Assign Expert...</option>
-                                    {agents.filter(a => ['MANAGER_COUNSELLOUR', 'MANAGER_COUNSELOR', 'COUNSELLOR', 'COUNSELOR', 'MANAGER COUNSELLOUR'].includes(a.role?.toUpperCase())).map(a => (
-                                       <option key={a._id} value={a._id}>{a.name}</option>
+                                    {(agents.filter(a => ['MANAGER_COUNSELLOUR', 'MANAGER_COUNSELOR', 'COUNSELLOUR', 'COUNSELLOR', 'COUNSELOR', 'MANAGER COUNSELLOUR'].includes(a.role?.toUpperCase())).length > 0 
+                                       ? agents.filter(a => ['MANAGER_COUNSELLOUR', 'MANAGER_COUNSELOR', 'COUNSELLOUR', 'COUNSELLOR', 'COUNSELOR', 'MANAGER COUNSELLOUR'].includes(a.role?.toUpperCase())) 
+                                       : agents).map(a => (
+                                       <option key={a._id} value={a._id}>{a.name} ({a.role})</option>
                                     ))}
                                  </select>
                                  <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />

@@ -1445,8 +1445,8 @@ export default function Tasks() {
                 <div className="animate-fade-in">
                    <label className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 sm:mb-4">Lead Handover (Counsellor)</label>
                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                      {agents.filter(a => ['MANAGER_COUNSELLOUR', 'MANAGER_COUNSELOR', 'COUNSELLOR', 'COUNSELOR', 'MANAGER COUNSELLOUR'].includes(a.role?.toUpperCase())).length > 0 ? (
-                        agents.filter(a => ['MANAGER_COUNSELLOUR', 'MANAGER_COUNSELOR', 'COUNSELLOR', 'COUNSELOR', 'MANAGER COUNSELLOUR'].includes(a.role?.toUpperCase())).map(agent => (
+                      {agents.filter(a => ['MANAGER_COUNSELLOUR', 'MANAGER_COUNSELOR', 'COUNSELLOUR', 'COUNSELLOR', 'COUNSELOR', 'MANAGER COUNSELLOUR'].includes(a.role?.toUpperCase())).length > 0 ? (
+                        agents.filter(a => ['MANAGER_COUNSELLOUR', 'MANAGER_COUNSELOR', 'COUNSELLOUR', 'COUNSELLOR', 'COUNSELOR', 'MANAGER COUNSELLOUR'].includes(a.role?.toUpperCase())).map(agent => (
                            <button 
                               key={agent._id}
                               onClick={() => setAssignedCounsellorId(assignedCounsellorId === agent._id ? '' : agent._id)}
