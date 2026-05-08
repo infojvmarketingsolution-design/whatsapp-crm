@@ -277,7 +277,7 @@ const performContactAction = async (req, res) => {
           if (!brief) return res.status(400).json({ message: 'AI Brief generation failed' });
           
           return res.json({ brief });
-       } else if (action === 'update_contact') {
+        } else if (action === 'update_contact') {
           // 1. Specialized logic for Counsellor Assignment (Requires Timeline Event)
           if (payload.assignedCounsellor !== undefined) {
              const newCounsellor = payload.assignedCounsellor && payload.assignedCounsellor !== "" ? payload.assignedCounsellor : null;
@@ -293,6 +293,11 @@ const performContactAction = async (req, res) => {
                    timestamp: new Date() 
                 });
              }
+             payload.assignedCounsellor = newCounsellor;
+          }
+
+          if (payload.assignedAgent !== undefined) {
+             payload.assignedAgent = payload.assignedAgent && payload.assignedAgent !== "" ? payload.assignedAgent : null;
           }
 
           // 2. Synchronize Status with isClosed toggle
@@ -306,25 +311,20 @@ const performContactAction = async (req, res) => {
 
           // 3. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
             // Securely merge payload into existing contact
-            const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline'];
+            const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'lastMsgDoc', 'assignedAgentName', 'assignedCounsellorName', 'lastMessage', 'lastMessageType'];
             console.log("[UpdateContact] Incoming Payload Keys:", Object.keys(payload));
             
             Object.keys(payload).forEach(key => {
-               if (!protectedFields.includes(key)) {
+               if (!protectedFields.includes(key) && ContactSchema.path(key)) {
                   console.log(`[UpdateContact] Setting ${key} to:`, payload[key]);
-                  contact[key] = payload[key];
+                  if (payload[key] === "" && ContactSchema.path(key).instance === 'ObjectID') {
+                      contact.set(key, null);
+                  } else {
+                      contact.set(key, payload[key]);
+                  }
                }
             });
 
-            const updatedContact = await contact.save();
-            console.log("[UpdateContact] Save Successful. Saved Fields:", {
-               secondaryPhone: updatedContact.secondaryPhone,
-               altMobile: updatedContact.altMobile,
-               houseNo: updatedContact.houseNo,
-               societyName: updatedContact.societyName
-            });
-
-            return res.json({ message: 'Contact updated', contact: updatedContact });
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
