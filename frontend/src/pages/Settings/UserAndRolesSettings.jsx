@@ -27,6 +27,11 @@ export default function UserAndRolesSettings() {
   const [dynamicRoles, setDynamicRoles] = useState([]);
   const [showCreateRoleModal, setShowCreateRoleModal] = useState(false);
   const [newRoleName, setNewRoleName] = useState('');
+  
+  // Action Menu States
+  const [openMenuUserId, setOpenMenuUserId] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
 
   const MODULE_PERMISSIONS = [
     { id: 'dashboard', name: 'Dashboard', icon: LayoutDashboard },
@@ -171,6 +176,89 @@ export default function UserAndRolesSettings() {
       toast.error('Connection error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      
+      const res = await fetch(`/api/agents/${editingUser._id}`, {
+        method: 'PUT',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'x-tenant-id': tenantId,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(editingUser)
+      });
+
+      if (res.ok) {
+        toast.success('User updated successfully');
+        setShowEditModal(false);
+        fetchData();
+      } else {
+        const data = await res.json();
+        toast.error(data.message || 'Update failed');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Connection error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to remove this team member? This action cannot be undone.")) return;
+    
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      
+      const res = await fetch(`/api/agents/${userId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+
+      if (res.ok) {
+        toast.success('User removed');
+        fetchData();
+      } else {
+        toast.error('Failed to remove user');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Connection error');
+    }
+  };
+
+  const handleToggleStatus = async (user) => {
+    const newStatus = user.status?.toUpperCase() === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE';
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      
+      const res = await fetch(`/api/agents/${user._id}/status`, {
+        method: 'PATCH',
+        headers: { 
+          'Authorization': `Bearer ${token}`, 
+          'x-tenant-id': tenantId,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (res.ok) {
+        toast.success(`User set to ${newStatus}`);
+        fetchData();
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to update status');
     }
   };
 
@@ -369,10 +457,53 @@ export default function UserAndRolesSettings() {
                           <span className={`w-2 h-2 rounded-full mr-2 ${user.status?.toUpperCase() === 'ACTIVE' ? 'bg-green-500' : 'bg-gray-400'}`}></span> {user.status || 'Active'}
                        </span>
                     </td>
-                    <td className="px-4 py-3 text-right">
-                      <button className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors inline-block">
+                    <td className="px-4 py-3 text-right relative">
+                      <button 
+                        onClick={() => setOpenMenuUserId(openMenuUserId === (user._id || user.id) ? null : (user._id || user.id))}
+                        className="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-md transition-colors inline-block"
+                      >
                         <MoreVertical size={16} />
                       </button>
+                      
+                      {openMenuUserId === (user._id || user.id) && (
+                        <>
+                          <div className="fixed inset-0 z-[60]" onClick={() => setOpenMenuUserId(null)}></div>
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-2xl border border-gray-100 py-2 z-[70] animate-in fade-in slide-in-from-top-1 duration-200">
+                             <button 
+                               onClick={() => {
+                                 setEditingUser({...user});
+                                 setShowEditModal(true);
+                                 setOpenMenuUserId(null);
+                               }}
+                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                             >
+                               <UserCog size={14} className="mr-2 text-blue-500" />
+                               Edit Profile
+                             </button>
+                             <button 
+                               onClick={() => {
+                                 handleToggleStatus(user);
+                                 setOpenMenuUserId(null);
+                               }}
+                               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center"
+                             >
+                               <ShieldAlert size={14} className="mr-2 text-amber-500" />
+                               {user.status?.toUpperCase() === 'ACTIVE' ? 'Deactivate' : 'Activate'}
+                             </button>
+                             <div className="h-[1px] bg-gray-50 my-1"></div>
+                             <button 
+                               onClick={() => {
+                                 handleDeleteUser(user._id || user.id);
+                                 setOpenMenuUserId(null);
+                               }}
+                               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                             >
+                               <Trash2 size={14} className="mr-2" />
+                               Delete User
+                             </button>
+                          </div>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -618,6 +749,93 @@ export default function UserAndRolesSettings() {
                   className="flex-[2] px-8 py-2.5 bg-teal-600 text-white rounded-xl text-sm font-bold hover:bg-teal-700 transition shadow-lg shadow-teal-500/20"
                 >
                   Create
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {showEditModal && editingUser && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="bg-gray-50 px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-gray-900 flex items-center">
+                <UserCog size={20} className="mr-2 text-blue-600" />
+                Edit Team Member
+              </h3>
+              <button 
+                onClick={() => setShowEditModal(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <ChevronDown size={24} className="rotate-45" />
+              </button>
+            </div>
+            
+            <form onSubmit={handleUpdateUser} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Full Name</label>
+                <input 
+                  required
+                  type="text"
+                  value={editingUser.name}
+                  onChange={(e) => setEditingUser({...editingUser, name: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Email Address</label>
+                <input 
+                  required
+                  type="email"
+                  value={editingUser.email}
+                  onChange={(e) => setEditingUser({...editingUser, email: e.target.value})}
+                  className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Phone Number</label>
+                  <input 
+                    type="text"
+                    value={editingUser.phoneNumber || ''}
+                    onChange={(e) => setEditingUser({...editingUser, phoneNumber: e.target.value})}
+                    className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Designation</label>
+                  <div className="relative">
+                    <select 
+                      value={editingUser.role}
+                      onChange={(e) => setEditingUser({...editingUser, role: e.target.value})}
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all font-medium appearance-none"
+                    >
+                      {dynamicRoles.map(r => (
+                        <option key={r.id} value={r.id}>{r.name}</option>
+                      ))}
+                    </select>
+                    <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 flex space-x-3">
+                <button 
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 px-4 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit"
+                  disabled={saving}
+                  className="flex-[2] px-8 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-bold hover:bg-blue-700 transition shadow-lg shadow-blue-500/20 disabled:opacity-50 flex items-center justify-center"
+                >
+                  {saving ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div> : 'Commit Changes'}
                 </button>
               </div>
             </form>
