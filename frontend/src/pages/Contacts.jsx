@@ -1408,7 +1408,7 @@ export default function Contacts({ roleAccess }) {
          </div>
        )}
 
-      {showNoteModal && (
+      {showNoteModal && createPortal(
         <div className="fixed inset-0 z-[1100] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] animate-fade-in" onClick={() => setShowNoteModal(false)}>
            <div className="bg-white p-10 rounded-[3rem] w-[540px] shadow-3xl animate-pop-in relative border border-white/50 overflow-hidden" onClick={e=>e.stopPropagation()}>
               <div className="absolute top-0 right-0 w-32 h-32 bg-teal-500/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
@@ -1435,7 +1435,8 @@ export default function Contacts({ roleAccess }) {
                    </button>
                </div>
             </div>
-         </div>
+         </div>,
+         document.body
        )}
 
       {/* CENTERED BULK ACTION CONSOLE */}
