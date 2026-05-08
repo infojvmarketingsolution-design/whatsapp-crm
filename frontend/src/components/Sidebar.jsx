@@ -142,7 +142,7 @@ export default function Sidebar({ whatsappConfig, roleAccess, customization, wor
               {customization?.logoUrl ? (
                 <img src={customization.logoUrl} alt="Logo" className="h-8 w-8 object-contain" />
               ) : (
-                <span className="text-xl font-bold tracking-wider uppercase">
+                <span className="text-xl font-bold tracking-tight">
                   {customization?.customLogin ? (workspace?.name || 'My Workspace') : 'WapiPulse CRM'}
                 </span>
               )}

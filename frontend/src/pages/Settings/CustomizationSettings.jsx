@@ -116,16 +116,16 @@ export default function CustomizationSettings() {
 
   return (
     <div className="space-y-6">
-      <div className="bg-white rounded-[2rem] border border-gray-200 shadow-premium p-8">
-        <h2 className="text-xl font-black text-slate-900 mb-8 flex items-center">
+      <div className="bg-white rounded-[1.5rem] border border-gray-200 shadow-sm p-8">
+        <h2 className="text-xl font-bold text-slate-900 mb-8 flex items-center">
           <Palette className="mr-3 text-blue-600" size={24} />
-          Visual Branding
+          Theme & Branding
         </h2>
 
         <div className="space-y-10">
           {/* Logo Section */}
-          <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100">
-             <label className="block text-sm font-black text-slate-700 uppercase tracking-widest mb-4">Workspace Logo</label>
+          <div className="bg-slate-50/50 rounded-2xl p-6 border border-slate-100">
+             <label className="block text-sm font-semibold text-slate-700 mb-4">Workspace Logo</label>
              <div className="flex flex-col sm:flex-row items-center gap-6">
                 <div className="relative group">
                    <div className="w-24 h-24 bg-white rounded-2xl border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden shadow-inner group-hover:border-blue-400 transition-all">
@@ -173,8 +173,8 @@ export default function CustomizationSettings() {
           </div>
 
           {/* Color Section */}
-          <div className="bg-slate-50/50 rounded-3xl p-6 border border-slate-100">
-            <label className="block text-sm font-black text-slate-700 uppercase tracking-widest mb-4">Primary Brand Color</label>
+          <div className="bg-slate-50/50 rounded-2xl p-6 border border-slate-100">
+            <label className="block text-sm font-semibold text-slate-700 mb-4">Primary Brand Color</label>
             <div className="flex flex-wrap items-center gap-4">
                {colors.map(color => (
                   <button
@@ -226,18 +226,18 @@ export default function CustomizationSettings() {
                   />
                </div>
             </div>
-            <p className="text-[10px] text-slate-500 mt-6 font-bold uppercase tracking-widest">Select a palette color or choose a custom brand color.</p>
+            <p className="text-[11px] text-slate-500 mt-6 font-medium">Select a palette color or choose a custom brand color.</p>
           </div>
           
           {/* Custom Login Section */}
           <div className="pt-6 border-t border-slate-100">
-             <div className="flex items-center justify-between p-6 bg-slate-900 rounded-[2rem] shadow-premium">
+             <div className="flex items-center justify-between p-6 bg-slate-900 rounded-[1.5rem] shadow-lg">
                 <div className="flex items-start pr-4">
-                  <div className="mt-1 mr-4 p-3 bg-white/10 rounded-2xl text-blue-400 border border-white/5">
+                  <div className="mt-1 mr-4 p-3 bg-white/10 rounded-xl text-blue-400 border border-white/5">
                      <Monitor size={20} />
                   </div>
                   <div>
-                    <div className="text-base font-black text-white uppercase tracking-tight">White-label Login Page</div>
+                    <div className="text-base font-bold text-white tracking-tight">White-label login page</div>
                     <div className="text-xs text-slate-400 mt-1 leading-relaxed font-medium">Hide WapiPulse branding and show your workspace logo on the login screen.</div>
                   </div>
                 </div>
