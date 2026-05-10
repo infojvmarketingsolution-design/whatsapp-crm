@@ -328,7 +328,7 @@ const performContactAction = async (req, res) => {
           // 3. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
             // Securely merge payload into existing contact
             const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'lastMsgDoc', 'assignedAgentName', 'assignedCounsellorName', 'lastMessage', 'lastMessageType'];
-            console.log("[UpdateContact] Incoming Payload Keys:", Object.keys(payload));
+            console.log("[UpdateContact] Incoming Payload:", JSON.stringify(payload, null, 2));
             
             Object.keys(payload).forEach(key => {
                if (!protectedFields.includes(key)) {
