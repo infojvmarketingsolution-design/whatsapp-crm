@@ -201,6 +201,19 @@ const performContactAction = async (req, res) => {
     const contactId = req.params.contactId || req.body.contactId;
     const { action, payload } = req.body;
     
+    // Ensure Lead Source Granular fields are explicitly added to the schema if they are missing (prevents model caching issues)
+    if (!ContactSchema.path('leadSourceType')) {
+       ContactSchema.add({
+          leadSourceType: { type: String, enum: ['Social media', 'Referese', 'B2B agents', 'Manual Entry', 'Direct', 'Other'], default: 'Manual Entry' },
+          socialMediaSource: { type: String },
+          referenceName: { type: String },
+          referencePhone: { type: String },
+          b2bOrgName: { type: String },
+          b2bPersonName: { type: String },
+          b2bPhone: { type: String }
+       });
+    }
+
     let ContactModel = req.tenantDb.model('Contact', ContactSchema);
     let contact;
     
@@ -337,10 +350,12 @@ const performContactAction = async (req, res) => {
 
                   // Handle empty strings for ObjectId fields
                   const schemaPath = ContactSchema.path(key);
-                  if (schemaPath && schemaPath.instance.toLowerCase() === 'objectid' && newValue === "") {
+                  if (schemaPath && (schemaPath.instance === 'ObjectID' || schemaPath.instance === 'ObjectId') && newValue === "") {
                       contact.set(key, null);
                   } else {
                       contact.set(key, newValue);
+                      // Force Mongoose to recognize the change even if it thinks it's the same or field is new
+                      contact.markModified(key);
                   }
 
                   // Record major changes in timeline
@@ -349,6 +364,7 @@ const performContactAction = async (req, res) => {
                      'pipelineStage', 'selectedProgram', 'visitStatus',
                      'leadSourceType', 'socialMediaSource', 'referenceName', 'b2bOrgName'
                   ];
+                  
                   if (majorFields.includes(key) && String(oldValue) !== String(newValue)) {
                      contact.timeline.push({
                         eventType: 'FIELD_UPDATED',
@@ -361,7 +377,9 @@ const performContactAction = async (req, res) => {
                      if (contact.leadSourceType === 'Social media' && contact.socialMediaSource) summary = `Social: ${contact.socialMediaSource}`;
                      else if (contact.leadSourceType === 'Referese' && contact.referenceName) summary = `Ref: ${contact.referenceName}`;
                      else if (contact.leadSourceType === 'B2B agents' && contact.b2bOrgName) summary = `B2B: ${contact.b2bOrgName}`;
+                     
                      contact.leadSource = summary;
+                     contact.markModified('leadSource');
                   }
                }
             });
