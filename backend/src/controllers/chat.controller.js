@@ -331,26 +331,37 @@ const performContactAction = async (req, res) => {
             console.log("[UpdateContact] Incoming Payload Keys:", Object.keys(payload));
             
             Object.keys(payload).forEach(key => {
-               if (!protectedFields.includes(key) && ContactSchema.path(key)) {
+               if (!protectedFields.includes(key)) {
                   const oldValue = contact.get(key);
                   const newValue = payload[key];
 
-                  console.log(`[UpdateContact] Setting ${key} to:`, newValue);
-                  
-                  if (newValue === "" && ContactSchema.path(key).instance.toLowerCase() === 'objectid') {
+                  // Handle empty strings for ObjectId fields
+                  const schemaPath = ContactSchema.path(key);
+                  if (schemaPath && schemaPath.instance.toLowerCase() === 'objectid' && newValue === "") {
                       contact.set(key, null);
                   } else {
                       contact.set(key, newValue);
                   }
 
-                  // Record major changes in timeline (excluding very frequent ones if needed)
-                  const majorFields = ['firstName', 'lastName', 'phone', 'secondaryPhone', 'status', 'pipelineStage', 'selectedProgram', 'visitStatus'];
+                  // Record major changes in timeline
+                  const majorFields = [
+                     'firstName', 'lastName', 'phone', 'secondaryPhone', 'status', 
+                     'pipelineStage', 'selectedProgram', 'visitStatus',
+                     'leadSourceType', 'socialMediaSource', 'referenceName', 'b2bOrgName'
+                  ];
                   if (majorFields.includes(key) && String(oldValue) !== String(newValue)) {
                      contact.timeline.push({
                         eventType: 'FIELD_UPDATED',
                         description: `${key} updated from "${oldValue || 'None'}" to "${newValue || 'None'}"`,
                         timestamp: new Date()
                      });
+
+                     // Auto-sync legacy leadSource for backward compatibility
+                     let summary = contact.leadSourceType || 'Manual Entry';
+                     if (contact.leadSourceType === 'Social media' && contact.socialMediaSource) summary = `Social: ${contact.socialMediaSource}`;
+                     else if (contact.leadSourceType === 'Referese' && contact.referenceName) summary = `Ref: ${contact.referenceName}`;
+                     else if (contact.leadSourceType === 'B2B agents' && contact.b2bOrgName) summary = `B2B: ${contact.b2bOrgName}`;
+                     contact.leadSource = summary;
                   }
                }
             });
