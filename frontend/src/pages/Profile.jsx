@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   User, Mail, Shield, Clock, Camera, Save, 
   Key, LogOut, CheckCircle, MessageSquare, 
-  KanbanSquare, CheckSquare 
+  KanbanSquare, CheckSquare, PlusCircle 
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 
