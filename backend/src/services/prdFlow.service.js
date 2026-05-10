@@ -258,74 +258,79 @@ class PRDFlowService {
            let body = text;
 
            if (nodeData.isProgramSelection) {
-              const currentQual = contact.flowVariables?.qualification || contact.qualification || '';
-              const stream = contact.flowVariables?.selectedStream;
-              const tqc = aggressiveNormalize(currentQual);
-              
-              console.log(`[PRD Flow DEBUG] 🔍 CONTACT: ${contact.phone} | QUAL: "${currentQual}" | TQC: "${tqc}" | STREAM: "${stream}"`);
+               const currentQual = contact.flowVariables?.qualification || contact.qualification || '';
+               const stream = contact.flowVariables?.selectedStream;
+               const tqc = aggressiveNormalize(currentQual);
+               
+               console.log(`[PRD Flow] 🔍 Processing Program Selection for: "${currentQual}" (Normalized: "${tqc}") | Current Stream: "${stream}"`);
 
-              let qm = {};
-              
-              // 🛡️ ABSOLUTE OVERRIDE FOR 10th, 12th & Graduation (Ironclad Logic)
-              if (tqc.includes('12') || currentQual.toLowerCase().includes('12') || tqc.includes('hsc')) {
-                 console.log(`[PRD Flow DEBUG] 🔥 12th PASS OVERRIDE TRIGGERED for ${contact.phone}`);
-                 qm = {
-                    "Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation", "VFX & Game Design"],
-                    "Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"]
-                 };
-              } else if (tqc.includes('10') || currentQual.includes('10') || tqc.includes('ssc')) {
-                 console.log(`[PRD Flow DEBUG] 🎓 10th PASS OVERRIDE TRIGGERED for ${contact.phone}`);
-                 qm = {
-                    "Trending Programs": ["IT Diploma", "Animation Diploma", "Digital Marketing"],
-                    "Traditional Programs": ["Diploma in Engineering", "Vocational Courses"]
-                 };
-              } else if (tqc.includes('grad') || tqc.includes('bach') || currentQual.toLowerCase().includes('grad')) {
-                 console.log(`[PRD Flow DEBUG] 🎓 GRADUATION OVERRIDE TRIGGERED for ${contact.phone}`);
-                 qm = {
-                    "Trending Master Programs": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation", "VFX & Game Design"],
-                    "Traditional Master Programs": ["MBA", "M.Com", "MCA", "M.Sc"]
-                 };
-              } else {
-                 const keys = Object.keys(prompts.programMap || {});
-                 let qk = keys.find(k => aggressiveNormalize(k) === tqc); 
-                 if (!qk) qk = keys.find(k => aggressiveNormalize(k).startsWith(tqc) || tqc.startsWith(aggressiveNormalize(k)));
-                 qm = qk ? prompts.programMap[qk] : {};
-              }
-              
-              console.log(`[PRD Flow DEBUG] 📂 Resolved Categories: ${Object.keys(qm).join(', ')}`);
+               let qm = {};
+               
+               // 🛡️ NUCLEAR OVERRIDE: Strict matches for 10th, 12th, and Graduation
+               if (tqc.includes('12') || tqc.includes('hsc') || currentQual.includes('12')) {
+                  console.log(`[PRD Flow] 🎯 12th PASS CATEGORIES ACTIVE`);
+                  qm = {
+                     "Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation", "VFX & Game Design"],
+                     "Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"]
+                  };
+               } else if (tqc.includes('10') || tqc.includes('ssc') || currentQual.includes('10')) {
+                  console.log(`[PRD Flow] 🎯 10th PASS CATEGORIES ACTIVE`);
+                  qm = {
+                     "Trending Programs": ["IT Diploma", "Animation Diploma", "Digital Marketing"],
+                     "Traditional Programs": ["Diploma in Engineering", "Vocational Courses"]
+                  };
+               } else if (tqc.includes('grad') || tqc.includes('bach') || tqc.includes('degree')) {
+                  console.log(`[PRD Flow] 🎯 GRADUATION CATEGORIES ACTIVE`);
+                  qm = {
+                     "Trending Master Programs": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation", "VFX & Game Design"],
+                     "Traditional Master Programs": ["MBA", "M.Com", "MCA", "M.Sc"]
+                  };
+               } else {
+                  // Fallback to settings map
+                  const keys = Object.keys(prompts.programMap || {});
+                  let qk = keys.find(k => aggressiveNormalize(k) === tqc); 
+                  if (!qk) qk = keys.find(k => aggressiveNormalize(k).startsWith(tqc) || tqc.startsWith(aggressiveNormalize(k)));
+                  qm = qk ? prompts.programMap[qk] : {};
+               }
+               
+               const categories = Object.keys(qm);
 
-              if (!stream) {
-                 const categories = Object.keys(qm);
-                 if (categories.length === 1) {
-                    const autoStream = categories[0];
-                    console.log(`[PRD Flow] ⚡ Auto-selecting single category: ${autoStream}`);
-                    
-                    // Save automatically
-                    await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.selectedStream': autoStream });
-                    contact.flowVariables.selectedStream = autoStream;
+               // 🧹 SAFETY CHECK: If the current stream doesn't belong to this qualification's map, reset it
+               if (stream && !categories.includes(stream)) {
+                  console.log(`[PRD Flow] 🧹 Resetting invalid stream "${stream}" for qualification "${currentQual}"`);
+                  contact.flowVariables.selectedStream = null;
+                  await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.selectedStream': null });
+                  return this.processStep(tenantId, contact, messageText, waService, io, true); // Re-run for category selection
+               }
 
-                    // Show programs for this auto-selected stream
-                    const sk = Object.keys(qm).find(k => aggressiveNormalize(k) === aggressiveNormalize(autoStream));
-                    const val = sk ? qm[sk] : null;
-                    let progs = [];
-                    if (Array.isArray(val)) progs = val;
-                    else if (val && typeof val === 'object') Object.values(val).forEach(a => Array.isArray(a) && progs.push(...a));
-                    
-                    opts = progs.length > 0 ? progs.slice(0, 10) : ['General Inquiry'];
-                    body = `Great! Please select your preferred program under ${autoStream}:`;
-                 } else {
-                    opts = categories;
-                    body = "Please select your preferred stream/category:";
-                 }
-              } else {
-                 const sk = Object.keys(qm).find(k => aggressiveNormalize(k) === aggressiveNormalize(stream));
-                 const val = sk ? qm[sk] : null;
-                 let progs = [];
-                 if (Array.isArray(val)) progs = val;
-                 else if (val && typeof val === 'object') Object.values(val).forEach(a => Array.isArray(a) && progs.push(...a));
-                 opts = progs.length > 0 ? progs.slice(0, 10) : ['General Inquiry'];
-                 body = `Great! Now choose a program under ${stream}:`;
-              }
+               if (!contact.flowVariables?.selectedStream) {
+                  if (categories.length === 1) {
+                     const autoStream = categories[0];
+                     await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.selectedStream': autoStream });
+                     contact.flowVariables.selectedStream = autoStream;
+                     
+                     const sk = Object.keys(qm).find(k => k === autoStream);
+                     const val = qm[sk];
+                     opts = Array.isArray(val) ? val : [];
+                     body = `Great! Please select your preferred program under ${autoStream}:`;
+                  } else if (categories.length > 1) {
+                     opts = categories;
+                     body = "Please select your preferred stream/category:";
+                  } else {
+                     opts = ['General Inquiry'];
+                     body = "Please select your preferred program:";
+                  }
+               } else {
+                  const currentStream = contact.flowVariables.selectedStream;
+                  const sk = Object.keys(qm).find(k => k === currentStream);
+                  const val = qm[sk];
+                  let progs = [];
+                  if (Array.isArray(val)) progs = val;
+                  else if (val && typeof val === 'object') Object.values(val).forEach(a => Array.isArray(a) && progs.push(...a));
+                  
+                  opts = progs.length > 0 ? progs.slice(0, 10) : ['General Inquiry'];
+                  body = `Great! Now choose a program under ${currentStream}:`;
+               }
            }
 
            await waService.sendListMessage(contact.phone, { body, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
