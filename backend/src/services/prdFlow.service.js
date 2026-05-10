@@ -259,7 +259,7 @@ class PRDFlowService {
 
               let qm = {};
               
-              // 🛡️ ABSOLUTE OVERRIDE FOR 10th & 12th Pass (Ironclad Logic)
+              // 🛡️ ABSOLUTE OVERRIDE FOR 10th, 12th & Graduation (Ironclad Logic)
               if (tqc.includes('12') || currentQual.toLowerCase().includes('12') || tqc.includes('hsc')) {
                  console.log(`[PRD Flow DEBUG] 🔥 12th PASS OVERRIDE TRIGGERED for ${contact.phone}`);
                  qm = {
@@ -269,7 +269,14 @@ class PRDFlowService {
               } else if (tqc.includes('10') || currentQual.includes('10') || tqc.includes('ssc')) {
                  console.log(`[PRD Flow DEBUG] 🎓 10th PASS OVERRIDE TRIGGERED for ${contact.phone}`);
                  qm = {
-                    "Diploma Programs": ["Diploma in Engineering", "IT Diploma", "Animation Diploma"]
+                    "Trending Programs": ["IT Diploma", "Animation Diploma", "Digital Marketing"],
+                    "Traditional Programs": ["Diploma in Engineering", "Vocational Courses"]
+                 };
+              } else if (tqc.includes('grad') || tqc.includes('bach') || currentQual.toLowerCase().includes('grad')) {
+                 console.log(`[PRD Flow DEBUG] 🎓 GRADUATION OVERRIDE TRIGGERED for ${contact.phone}`);
+                 qm = {
+                    "Trending Master Programs": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation", "VFX & Game Design"],
+                    "Traditional Master Programs": ["MBA", "M.Com", "MCA", "M.Sc"]
                  };
               } else {
                  const keys = Object.keys(prompts.programMap || {});

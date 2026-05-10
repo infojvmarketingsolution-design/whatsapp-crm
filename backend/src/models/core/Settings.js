@@ -25,7 +25,8 @@ const AIPromptsSchema = new mongoose.Schema({
     type: Object,
     default: {
       '10th Pass': {
-        'Diploma Programs': ['Diploma in Engineering', 'IT Diploma', 'Animation Diploma']
+        'Trending Programs': ['IT Diploma', 'Animation Diploma', 'Digital Marketing'],
+        'Traditional Programs': ['Diploma in Engineering', 'Vocational Courses']
       },
       '12th Pass': {
         'Trending Programs': ['B.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
