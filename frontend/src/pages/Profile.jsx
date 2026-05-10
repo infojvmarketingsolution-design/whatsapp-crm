@@ -9,6 +9,7 @@ import { toast } from 'react-hot-toast';
 export default function Profile() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
   const [loading, setLoading] = useState(false);
+  const [stats, setStats] = useState({ chats: 0, tasks: 0, deals: 0 });
   const [activities, setActivities] = useState([]);
 
   useEffect(() => {
