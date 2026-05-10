@@ -1258,7 +1258,7 @@ const getPendingTasksTeam = async (req, res) => {
 
 const getLeadDetailsStats = async (req, res) => {
   try {
-    const { category } = req.query;
+    const { category, userId } = req.query;
     const Contact = req.tenantDb.model('Contact', ContactSchema);
 
     // Visibility Filtering
@@ -1275,7 +1275,13 @@ const getLeadDetailsStats = async (req, res) => {
     
     let matchQuery = { isArchived: { $ne: true } };
 
-    if (mustRestrict) {
+    if (userId) {
+       const uid = new mongoose.Types.ObjectId(userId);
+       matchQuery.$or = [
+          { assignedAgent: uid },
+          { assignedCounsellor: uid }
+       ];
+    } else if (mustRestrict) {
        const uid = new mongoose.Types.ObjectId(req.user._id);
        matchQuery.$or = [
           { assignedAgent: uid },
@@ -1313,9 +1319,9 @@ const getLeadDetailsStats = async (req, res) => {
     }
 
     const contacts = await Contact.find(matchQuery)
-      .select('name phone status lastActivity')
+      .select('name phone email status leadSourceType score heatLevel createdAt lastActivity')
       .sort({ updatedAt: -1 })
-      .limit(200);
+      .limit(1000);
 
     res.json(contacts);
   } catch (error) {

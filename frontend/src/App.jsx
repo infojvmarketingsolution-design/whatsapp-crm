@@ -55,7 +55,8 @@ import {
   Clock, 
   X, 
   Plus, 
-  CheckCircle 
+  CheckCircle,
+  Download
 } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add", onClick, isClickable }) {
@@ -185,12 +186,13 @@ function Dashboard() {
     }
   };
 
-  const fetchLeadDetails = async (category, categoryName) => {
-    setLeadDetailsModal({ show: true, category, categoryName, data: [], loading: true });
+  const fetchLeadDetails = async (category, categoryName, userId = null) => {
+    setLeadDetailsModal({ show: true, category, categoryName, data: [], loading: true, userId });
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
-      const res = await fetch(`/api/chat/stats/lead-details?category=${category}`, {
+      const url = `/api/chat/stats/lead-details?category=${category}${userId ? `&userId=${userId}` : ''}`;
+      const res = await fetch(url, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
       });
       if (res.ok) {
@@ -201,6 +203,32 @@ function Dashboard() {
       console.error('Failed to fetch lead details', e);
       setLeadDetailsModal(prev => ({ ...prev, loading: false }));
     }
+  };
+
+  const downloadCSV = (data, filename) => {
+    if (!data || data.length === 0) {
+      toast.error("No data to download");
+      return;
+    }
+    const csvRows = [];
+    const headers = Object.keys(data[0]);
+    csvRows.push(headers.join(','));
+    for (const row of data) {
+      const values = headers.map(header => {
+        const escaped = ('' + (row[header] || '')).replace(/"/g, '\\"');
+        return `"${escaped}"`;
+      });
+      csvRows.push(values.join(','));
+    }
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `${filename}.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   };
   
   // Pull active user directly from local session context
@@ -576,7 +604,11 @@ function Dashboard() {
                  ) : (
                    <div className="space-y-3">
                       {breakdownModal.data.map((user, i) => (
-                        <div key={i} className="flex items-center justify-between p-5 bg-slate-50/50 border border-slate-100 rounded-2xl hover:bg-white hover:shadow-soft transition-all group">
+                        <div 
+                          key={i} 
+                          onClick={() => fetchLeadDetails(breakdownModal.category, `${user.name}'s ${breakdownModal.categoryName}`, user.userId)}
+                          className="flex items-center justify-between p-5 bg-slate-50/50 border border-slate-100 rounded-2xl hover:bg-white hover:shadow-soft transition-all group cursor-pointer"
+                        >
                            <div className="flex items-center space-x-4">
                               <div className="w-12 h-12 rounded-xl bg-white shadow-sm flex items-center justify-center text-blue-600 font-black text-lg border border-slate-100 group-hover:scale-110 transition-transform">
                                  {user.name.charAt(0)}
@@ -586,9 +618,14 @@ function Dashboard() {
                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{user.role} • {user.email}</p>
                               </div>
                            </div>
-                           <div className="text-right">
-                              <p className="text-2xl font-black text-blue-600 leading-none">{user.count}</p>
-                              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Leads</p>
+                           <div className="text-right flex items-center space-x-6">
+                              <div className="text-right">
+                                 <p className="text-2xl font-black text-blue-600 leading-none">{user.count}</p>
+                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Leads</p>
+                              </div>
+                              <div className="p-2 bg-blue-50 text-blue-600 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
+                                 <Plus size={16} />
+                              </div>
                            </div>
                         </div>
                       ))}
@@ -596,8 +633,29 @@ function Dashboard() {
                  )}
               </div>
               
-              <div className="p-6 bg-slate-50/50 border-t border-slate-100 text-center">
-                 <button onClick={() => setBreakdownModal(prev => ({ ...prev, show: false }))} className="px-8 py-3 bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-premium">
+              <div className="p-6 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between gap-4">
+                 <button 
+                   onClick={async () => {
+                     try {
+                       const token = localStorage.getItem('token');
+                       const tenantId = localStorage.getItem('tenantId');
+                       const res = await fetch(`/api/chat/stats/lead-details?category=${breakdownModal.category}`, {
+                         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+                       });
+                       if (res.ok) {
+                         const allData = await res.json();
+                         downloadCSV(allData, `all_${breakdownModal.category}_data`);
+                       }
+                     } catch (err) {
+                       toast.error("Failed to download all data");
+                     }
+                   }} 
+                   className="flex-1 px-6 py-3 bg-white border border-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center space-x-2"
+                 >
+                    <Download size={14} />
+                    <span>Download All</span>
+                 </button>
+                 <button onClick={() => setBreakdownModal(prev => ({ ...prev, show: false }))} className="flex-1 px-8 py-3 bg-slate-800 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-premium">
                     Close Breakdown
                  </button>
               </div>
@@ -787,8 +845,15 @@ function Dashboard() {
                   )}
                </div>
                
-               <div className="p-6 bg-white border-t border-slate-100 text-center shrink-0">
-                  <button onClick={() => setLeadDetailsModal(prev => ({ ...prev, show: false }))} className="px-10 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-premium">
+               <div className="p-6 bg-white border-t border-slate-100 flex items-center justify-between gap-4 shrink-0">
+                  <button 
+                   onClick={() => downloadCSV(leadDetailsModal.data, `${leadDetailsModal.categoryName.replace(/\s+/g, '_').toLowerCase()}_report`)}
+                   className="flex-1 px-6 py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-50 transition-all flex items-center justify-center space-x-2"
+                  >
+                     <Download size={16} />
+                     <span>Download Report</span>
+                  </button>
+                  <button onClick={() => setLeadDetailsModal(prev => ({ ...prev, show: false }))} className="flex-1 px-10 py-4 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-premium">
                      Close Details
                   </button>
                </div>
