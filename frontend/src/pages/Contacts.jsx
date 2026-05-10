@@ -965,11 +965,140 @@ export default function Contacts({ roleAccess }) {
                   {/* LEFT PANEL: STRUCTURED STEP-BY-STEP FLOW */}
                   <div className="flex-1 lg:w-[460px] bg-slate-50/80 border-b lg:border-b-0 lg:border-r border-slate-100 overflow-y-auto custom-scrollbar p-4 sm:p-8 space-y-10 lg:shrink-0">
                      
-                     {/* STEP 0: LEAD SOURCE */}
+                     {/* STEP 0: BASIC INFORMATION */}
                      <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in">
                         <div className="flex items-center justify-between">
                            <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-indigo-600/20">00</div>
+                              <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-slate-900/20">00</div>
+                              <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Basic Information</h3>
+                           </div>
+                           <div className="h-[2px] flex-1 bg-slate-50 mx-6 rounded-full hidden sm:block"></div>
+                           <User size={18} className="text-slate-200" />
+                        </div>
+                        
+                        <div className="space-y-6">
+                           <div className="space-y-2">
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Legal Full Name</label>
+                              <div className="relative group">
+                                 <input 
+                                   value={editedContact.firstName || editedContact.name || ''} 
+                                   onChange={e=>handleFieldChange('firstName', e.target.value)} 
+                                   placeholder="Enter full name" 
+                                   className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 focus:ring-4 focus:ring-teal-500/5 transition-all" 
+                                 />
+                                 <Edit3 size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-200 group-focus-within:text-teal-500 transition-colors" />
+                              </div>
+                           </div>
+
+                           <div className="space-y-2">
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">WhatsApp Identity (Verified)</label>
+                              <div className="w-full bg-slate-50 border-2 border-transparent py-3.5 px-5 text-sm font-bold text-slate-500 rounded-2xl flex items-center">
+                                 <Phone size={14} className="mr-3 text-teal-500 opacity-60" /> {editedContact.phone}
+                              </div>
+                           </div>
+
+                           <div className="space-y-4 pt-4 border-t border-slate-50">
+                              <div className="flex items-center justify-between">
+                                 <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Communication Channels</label>
+                                 {(!editedContact.secondaryPhone || editedContact.secondaryPhone.trim() === '') && (
+                                    <button 
+                                       onClick={() => handleFieldChange('secondaryPhone', '+')} 
+                                       className="text-[10px] font-bold text-teal-600 flex items-center hover:bg-teal-50 px-3 py-1.5 rounded-xl transition-all"
+                                    >
+                                       <Plus size={12} className="mr-1.5" /> Add WhatsApp
+                                    </button>
+                                 )}
+                              </div>
+                              
+                              <div className="grid grid-cols-1 gap-4">
+                                 {((editedContact.secondaryPhone && editedContact.secondaryPhone.length > 0) || (editedContact.altMobile && editedContact.altMobile.length > 0)) && (
+                                    <div className="space-y-2 animate-fade-in">
+                                       <input 
+                                          value={editedContact.secondaryPhone} 
+                                          onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} 
+                                          placeholder="Secondary WhatsApp Number" 
+                                          className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 focus:ring-4 focus:ring-teal-500/5 transition-all" 
+                                       />
+                                    </div>
+                                 )}
+
+                                 <div className="space-y-2">
+                                    <input 
+                                       value={editedContact.altMobile || ''} 
+                                       onChange={e=>handleFieldChange('altMobile', e.target.value)} 
+                                       placeholder="Alternative Mobile Number" 
+                                       className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 focus:ring-4 focus:ring-teal-500/5 transition-all" 
+                                    />
+                                 </div>
+                              </div>
+                           </div>
+
+                           <div className="space-y-5 pt-4 border-t border-slate-50">
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Location Details</label>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <input value={editedContact.houseNo || ''} onChange={e=>handleFieldChange('houseNo', e.target.value)} placeholder="House No" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
+                                 <input value={editedContact.societyName || ''} onChange={e=>handleFieldChange('societyName', e.target.value)} placeholder="Society Name" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
+                              </div>
+                              <input value={editedContact.streetAddress || ''} onChange={e=>handleFieldChange('streetAddress', e.target.value)} placeholder="Street Address" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <div className="relative group">
+                                    <select value={editedContact.city || ''} onChange={e=>handleFieldChange('city', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
+                                       <option value="">Choose City</option>
+                                       {['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Mumbai', 'Pune', 'Bangalore', 'Delhi'].map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                                 </div>
+                                 <div className="relative group">
+                                    <select value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
+                                       <option value="">Choose State</option>
+                                       {['Gujarat', 'Maharashtra', 'Karnataka', 'Rajasthan', 'Madhya Pradesh', 'Delhi'].map(s => <option key={s} value={s}>{s}</option>)}
+                                    </select>
+                                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                                 </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-4">
+                                 <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-bold text-slate-400 rounded-2xl flex items-center uppercase trackingest">India</div>
+                                 <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* STEP 1: QUALIFICATION DETAILS */}
+                     <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in delay-100">
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 rounded-2xl bg-teal-500 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-teal-500/20">01</div>
+                              <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Qualification Details</h3>
+                           </div>
+                           <GraduationCap size={18} className="text-slate-200" />
+                        </div>
+
+                        <div className="space-y-6">
+                           <div className="space-y-2">
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Last Qualification</label>
+                              <div className="relative group">
+                                 <input value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="e.g. Bachelor of Commerce" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
+                              </div>
+                           </div>
+                           <div className="space-y-2">
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Selected Program</label>
+                              <div className="relative group">
+                                 <select value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
+                                    <option value="">Choose Program</option>
+                                    {['MBA Professional', 'Executive PGDM', 'Digital Marketing', 'Data Science', 'UI/UX Design'].map(p => <option key={p} value={p}>{p}</option>)}
+                                 </select>
+                                 <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                              </div>
+                           </div>
+                        </div>
+                     </div>
+
+                     {/* STEP 2: LEAD SOURCE */}
+                     <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in">
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-indigo-600/20">02</div>
                               <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Lead Source</h3>
                            </div>
                            <Globe size={18} className="text-slate-200" />
@@ -1069,135 +1198,6 @@ export default function Contacts({ roleAccess }) {
                         </div>
                      </div>
 
-                     {/* STEP 1: BASIC INFORMATION */}
-                     <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in">
-                        <div className="flex items-center justify-between">
-                           <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-slate-900/20">01</div>
-                              <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Basic Information</h3>
-                           </div>
-                           <div className="h-[2px] flex-1 bg-slate-50 mx-6 rounded-full hidden sm:block"></div>
-                           <User size={18} className="text-slate-200" />
-                        </div>
-                        
-                        <div className="space-y-6">
-                           <div className="space-y-2">
-                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Legal Full Name</label>
-                              <div className="relative group">
-                                 <input 
-                                   value={editedContact.firstName || editedContact.name || ''} 
-                                   onChange={e=>handleFieldChange('firstName', e.target.value)} 
-                                   placeholder="Enter full name" 
-                                   className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 focus:ring-4 focus:ring-teal-500/5 transition-all" 
-                                 />
-                                 <Edit3 size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-200 group-focus-within:text-teal-500 transition-colors" />
-                              </div>
-                           </div>
-
-                           <div className="space-y-2">
-                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">WhatsApp Identity (Verified)</label>
-                              <div className="w-full bg-slate-50 border-2 border-transparent py-3.5 px-5 text-sm font-bold text-slate-500 rounded-2xl flex items-center">
-                                 <Phone size={14} className="mr-3 text-teal-500 opacity-60" /> {editedContact.phone}
-                              </div>
-                           </div>
-
-                           <div className="space-y-4 pt-4 border-t border-slate-50">
-                              <div className="flex items-center justify-between">
-                                 <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Communication Channels</label>
-                                 {(!editedContact.secondaryPhone || editedContact.secondaryPhone.trim() === '') && (
-                                    <button 
-                                       onClick={() => handleFieldChange('secondaryPhone', '+')} 
-                                       className="text-[10px] font-bold text-teal-600 flex items-center hover:bg-teal-50 px-3 py-1.5 rounded-xl transition-all"
-                                    >
-                                       <Plus size={12} className="mr-1.5" /> Add WhatsApp
-                                    </button>
-                                 )}
-                              </div>
-                              
-                              <div className="grid grid-cols-1 gap-4">
-                                 {((editedContact.secondaryPhone && editedContact.secondaryPhone.length > 0) || (editedContact.altMobile && editedContact.altMobile.length > 0)) && (
-                                    <div className="space-y-2 animate-fade-in">
-                                       <input 
-                                          value={editedContact.secondaryPhone} 
-                                          onChange={e=>handleFieldChange('secondaryPhone', e.target.value)} 
-                                          placeholder="Secondary WhatsApp Number" 
-                                          className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 focus:ring-4 focus:ring-teal-500/5 transition-all" 
-                                       />
-                                    </div>
-                                 )}
-
-                                 <div className="space-y-2">
-                                    <input 
-                                       value={editedContact.altMobile || ''} 
-                                       onChange={e=>handleFieldChange('altMobile', e.target.value)} 
-                                       placeholder="Alternative Mobile Number" 
-                                       className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 focus:ring-4 focus:ring-teal-500/5 transition-all" 
-                                    />
-                                 </div>
-                              </div>
-                           </div>
-
-                           <div className="space-y-5 pt-4 border-t border-slate-50">
-                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Location Details</label>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                 <input value={editedContact.houseNo || ''} onChange={e=>handleFieldChange('houseNo', e.target.value)} placeholder="House No" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
-                                 <input value={editedContact.societyName || ''} onChange={e=>handleFieldChange('societyName', e.target.value)} placeholder="Society Name" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
-                              </div>
-                              <input value={editedContact.streetAddress || ''} onChange={e=>handleFieldChange('streetAddress', e.target.value)} placeholder="Street Address" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                 <div className="relative group">
-                                    <select value={editedContact.city || ''} onChange={e=>handleFieldChange('city', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
-                                       <option value="">Choose City</option>
-                                       {['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Mumbai', 'Pune', 'Bangalore', 'Delhi'].map(c => <option key={c} value={c}>{c}</option>)}
-                                    </select>
-                                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
-                                 </div>
-                                 <div className="relative group">
-                                    <select value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
-                                       <option value="">Choose State</option>
-                                       {['Gujarat', 'Maharashtra', 'Karnataka', 'Rajasthan', 'Madhya Pradesh', 'Delhi'].map(s => <option key={s} value={s}>{s}</option>)}
-                                    </select>
-                                    <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
-                                 </div>
-                              </div>
-                              <div className="grid grid-cols-2 gap-4">
-                                 <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-bold text-slate-400 rounded-2xl flex items-center uppercase trackingest">India</div>
-                                 <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-
-                     {/* STEP 2: QUALIFICATION DETAILS */}
-                     <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in delay-100">
-                        <div className="flex items-center justify-between">
-                           <div className="flex items-center space-x-4">
-                              <div className="w-10 h-10 rounded-2xl bg-teal-500 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-teal-500/20">02</div>
-                              <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Qualification Details</h3>
-                           </div>
-                           <GraduationCap size={18} className="text-slate-200" />
-                        </div>
-
-                        <div className="space-y-6">
-                           <div className="space-y-2">
-                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Last Qualification</label>
-                              <div className="relative group">
-                                 <input value={editedContact.qualification || ''} onChange={e=>handleFieldChange('qualification', e.target.value)} placeholder="e.g. Bachelor of Commerce" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
-                              </div>
-                           </div>
-                           <div className="space-y-2">
-                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Selected Program</label>
-                              <div className="relative group">
-                                 <select value={editedContact.selectedProgram || ''} onChange={e=>handleFieldChange('selectedProgram', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
-                                    <option value="">Choose Program</option>
-                                    {['MBA Professional', 'Executive PGDM', 'Digital Marketing', 'Data Science', 'UI/UX Design'].map(p => <option key={p} value={p}>{p}</option>)}
-                                 </select>
-                                 <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
-                              </div>
-                           </div>
-                        </div>
-                     </div>
-
                      {/* STEP 3: VISIT FORMAT */}
                      <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in delay-200">
                         <div className="flex items-center justify-between">
@@ -1267,6 +1267,7 @@ export default function Contacts({ roleAccess }) {
                            </div>
                         </div>
                      </div>
+
                   </div>
 
                   {/* RIGHT PANEL: INTERACTION HUB */}
