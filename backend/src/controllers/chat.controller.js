@@ -204,7 +204,7 @@ const performContactAction = async (req, res) => {
     // Ensure Lead Source Granular fields are explicitly added to the schema if they are missing (prevents model caching issues)
     if (!ContactSchema.path('leadSourceType')) {
        ContactSchema.add({
-          leadSourceType: { type: String, enum: ['Social media', 'Referese', 'B2B agents', 'Manual Entry', 'Direct', 'Other'], default: 'Manual Entry' },
+          leadSourceType: { type: String, enum: ['Social media', 'Reference', 'B2B agents', 'Manual Entry', 'Direct', 'Other'], default: 'Manual Entry' },
           socialMediaSource: { type: String },
           referenceName: { type: String },
           referencePhone: { type: String },
@@ -358,8 +358,17 @@ const performContactAction = async (req, res) => {
 
           // Merge payload into contact document
           Object.keys(updatePayload).forEach(key => {
+             // Skip internal Mongoose logic for these
+             if (key === 'timeline' || key === 'notes') return;
              contact[key] = updatePayload[key];
           });
+
+          // Force sync Lead Source fields to be absolutely sure
+          if (updatePayload.leadSourceType) contact.leadSourceType = updatePayload.leadSourceType;
+          if (updatePayload.socialMediaSource) contact.socialMediaSource = updatePayload.socialMediaSource;
+          if (updatePayload.referenceName) contact.referenceName = updatePayload.referenceName;
+          if (updatePayload.referencePhone) contact.referencePhone = updatePayload.referencePhone;
+          if (updatePayload.leadSource) contact.leadSource = updatePayload.leadSource;
 
           // Add timeline event
           contact.timeline.push({ 
