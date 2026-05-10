@@ -1242,7 +1242,7 @@ export default function Contacts({ roleAccess }) {
                         
                         <div className="space-y-6">
                            <div className="space-y-2">
-                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Primary Source</label>
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Primary Source (v2)</label>
                               <div className="relative group">
                                  <select 
                                    value={editedContact.leadSourceType || 'Manual Entry'} 
