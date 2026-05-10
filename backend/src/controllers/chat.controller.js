@@ -338,7 +338,7 @@ const performContactAction = async (req, res) => {
              }
           }
 
-          // 3. SECURE DATABASE UPDATE: Atomic $set to bypass potential Mongoose path stripping
+          // 3. SECURE DATABASE UPDATE: Direct Collection Update to bypass Mongoose Schema limitations
           const updatePayload = { ...payload };
           const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'assignedAgentName', 'assignedCounsellorName'];
           protectedFields.forEach(f => delete updatePayload[f]);
@@ -347,39 +347,38 @@ const performContactAction = async (req, res) => {
           const type = updatePayload.leadSourceType || contact.leadSourceType || 'Manual Entry';
           const social = updatePayload.socialMediaSource || contact.socialMediaSource || '';
           const ref = updatePayload.referenceName || contact.referenceName || '';
-          const b2b = updatePayload.b2bOrgName || contact.b2bOrgName || '';
-
+          
           let summary = type;
           if (type === 'Social media' && social) summary = `Social: ${social}`;
           else if (type === 'Reference' && ref) summary = `Ref: ${ref}`;
-          else if (type === 'B2B agents' && b2b) summary = `B2B: ${b2b}`;
           
           updatePayload.leadSource = summary;
 
-          // Force sync specific fields to be absolutely sure they are included in $set
-          if (updatePayload.leadSourceType) updatePayload.leadSourceType = updatePayload.leadSourceType;
-          if (updatePayload.socialMediaSource) updatePayload.socialMediaSource = updatePayload.socialMediaSource;
-          if (updatePayload.leadSource) updatePayload.leadSource = updatePayload.leadSource;
-
-          // Perform atomic update to ensure schema-stripping doesn't happen
-          const updatedContact = await ContactModel.findOneAndUpdate(
-             { _id: contactId },
+          // Perform direct update to ensure fields are NOT stripped by schema
+          await req.tenantDb.collection('contacts').updateOne(
+             { _id: contact._id },
              { 
-                $set: updatePayload,
+                $set: {
+                   ...updatePayload,
+                   leadSource: summary,
+                   leadSourceType: type,
+                   socialMediaSource: social,
+                   referenceName: ref
+                },
                 $push: { 
                    timeline: { 
                       eventType: 'FIELD_UPDATED', 
-                      description: `Profile details synchronized (Source: ${summary})`, 
+                      description: `Profile synchronized - Source: ${summary}`, 
                       timestamp: new Date() 
                    }
                 }
-             },
-             { new: true, validateBeforeSave: false }
+             }
           );
 
-          if (!updatedContact) return res.status(404).json({ error: 'Failed to synchronize profile' });
+          const updatedDoc = await ContactModel.findById(contactId);
+          if (!updatedDoc) return res.status(404).json({ error: 'Failed to synchronize profile' });
           
-          return res.json({ success: true, contact: updatedContact.toObject() });
+          return res.json({ success: true, contact: updatedDoc.toObject() });
 
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };
