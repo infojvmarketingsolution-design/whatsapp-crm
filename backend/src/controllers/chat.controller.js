@@ -1292,6 +1292,39 @@ const getLeadDetailsStats = async (req, res) => {
   }
 };
 
+const getPersonalActivity = async (req, res) => {
+  try {
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+    const userId = new mongoose.Types.ObjectId(req.user._id);
+
+    const activities = await Contact.aggregate([
+      { 
+        $match: { 
+          $or: [{ assignedAgent: userId }, { assignedCounsellor: userId }],
+          isArchived: { $ne: true }
+        } 
+      },
+      { $unwind: "$timeline" },
+      { $sort: { "timeline.timestamp": -1 } },
+      { $limit: 10 },
+      {
+        $project: {
+          _id: 0,
+          type: "$timeline.eventType",
+          action: "$timeline.description",
+          time: "$timeline.timestamp",
+          contactName: "$name"
+        }
+      }
+    ]);
+
+    res.json(activities);
+  } catch (error) {
+    console.error(`[GET /personal-activity] FAILED:`, error.message);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getContacts,
   getMessages,
@@ -1307,5 +1340,6 @@ module.exports = {
   getLeadAnalysis,
   getLeadDetailsStats,
   getUserBreakdownStats,
-  getPendingTasksTeam
+  getPendingTasksTeam,
+  getPersonalActivity
 };

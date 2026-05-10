@@ -24,5 +24,6 @@ router.post('/send', upload.single('media'), sendMessage);
 router.get('/agents', getAgents);
 router.post('/fcm-token', updateFcmToken);
 router.get('/summarize/:contactId', summarizeLead);
+router.get('/personal-activity', getPersonalActivity);
 
 module.exports = router;

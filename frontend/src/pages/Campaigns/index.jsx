@@ -123,11 +123,23 @@ function Campaigns() {
         </div>
         <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100">
           <p className="text-slate-400 text-[9px] font-bold capitalize">Avg Delivery</p>
-          <p className="text-2xl font-bold text-emerald-600 mt-3 tracking-tighter">98.5%</p>
+          <p className="text-2xl font-bold text-emerald-600 mt-3 tracking-tighter">
+            {(() => {
+              const totalSent = campaigns.reduce((acc, c) => acc + (c.metrics?.sent || 0), 0);
+              const totalDelivered = campaigns.reduce((acc, c) => acc + (c.metrics?.delivered || 0), 0);
+              return totalSent > 0 ? ((totalDelivered / totalSent) * 100).toFixed(1) : '0';
+            })()}%
+          </p>
         </div>
         <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100">
           <p className="text-slate-400 text-[9px] font-bold capitalize">Read Rate</p>
-          <p className="text-2xl font-bold text-blue-500 mt-3 tracking-tighter">45.2%</p>
+          <p className="text-2xl font-bold text-blue-500 mt-3 tracking-tighter">
+            {(() => {
+              const totalDelivered = campaigns.reduce((acc, c) => acc + (c.metrics?.delivered || 0), 0);
+              const totalRead = campaigns.reduce((acc, c) => acc + (c.metrics?.read || 0), 0);
+              return totalDelivered > 0 ? ((totalRead / totalDelivered) * 100).toFixed(1) : '0';
+            })()}%
+          </p>
         </div>
       </div>
 

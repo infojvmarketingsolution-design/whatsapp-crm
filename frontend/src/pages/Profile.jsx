@@ -9,20 +9,57 @@ import { toast } from 'react-hot-toast';
 export default function Profile() {
   const [user, setUser] = useState(JSON.parse(localStorage.getItem('user') || '{}'));
   const [loading, setLoading] = useState(false);
-  const [stats, setStats] = useState({
-    chats: 0,
-    tasks: 0,
-    deals: 0
-  });
+  const [activities, setActivities] = useState([]);
 
   useEffect(() => {
-    // Mock fetching personal stats
-    setStats({
-      chats: Math.floor(Math.random() * 100) + 50,
-      tasks: Math.floor(Math.random() * 20) + 5,
-      deals: Math.floor(Math.random() * 10) + 2
-    });
+    fetchProfileData();
   }, []);
+
+  const fetchProfileData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      
+      const [statsRes, activityRes] = await Promise.all([
+        fetch('/api/chat/stats', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } }),
+        fetch('/api/chat/personal-activity', { headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId } })
+      ]);
+
+      if (statsRes.ok) {
+        const data = await statsRes.json();
+        setStats({
+          chats: data.leads || 0,
+          tasks: data.pendingTasks || 0,
+          deals: data.totalAdmission || 0
+        });
+      }
+
+      if (activityRes.ok) {
+        setActivities(await activityRes.json());
+      }
+    } catch (err) {
+      console.error('Failed to fetch profile data', err);
+    }
+  };
+
+  const getRelativeTime = (timestamp) => {
+    const now = new Date();
+    const then = new Date(timestamp);
+    const diff = now - then;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins} mins ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours} hours ago`;
+    return then.toLocaleDateString();
+  };
+
+  const getActivityIcon = (type) => {
+    if (type?.includes('CHAT') || type?.includes('MESSAGE')) return MessageSquare;
+    if (type?.includes('TASK')) return CheckSquare;
+    if (type?.includes('PIPELINE') || type?.includes('ADMISSION') || type?.includes('WON')) return KanbanSquare;
+    return Clock;
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -182,26 +219,27 @@ export default function Profile() {
             </h3>
             
             <div className="space-y-6">
-              {[
-                { type: 'CHAT', action: 'Replied to John Doe', time: '10 mins ago', icon: MessageSquare, color: 'text-teal-600 bg-teal-50' },
-                { type: 'TASK', action: 'Completed Follow-up Task', time: '2 hours ago', icon: CheckSquare, color: 'text-blue-600 bg-blue-50' },
-                { type: 'DEAL', action: 'Moved Lead to "In Progress"', time: 'Yesterday', icon: KanbanSquare, color: 'text-purple-600 bg-purple-50' }
-              ].map((activity, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-white hover:shadow-soft transition-all border border-transparent hover:border-slate-100">
-                  <div className="flex items-center space-x-4">
-                    <div className={`p-3 rounded-xl ${activity.color}`}>
-                      <activity.icon size={20} />
+              {activities.length === 0 ? (
+                <div className="text-center py-10 text-slate-400 font-medium italic">No recent activity recorded</div>
+              ) : activities.map((activity, idx) => {
+                const Icon = getActivityIcon(activity.type);
+                return (
+                  <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-white hover:shadow-soft transition-all border border-transparent hover:border-slate-100">
+                    <div className="flex items-center space-x-4">
+                      <div className={`p-3 rounded-xl bg-blue-50 text-blue-600`}>
+                        <Icon size={20} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-slate-800">{activity.action}</p>
+                        <p className="text-[10px] font-medium text-slate-400">{getRelativeTime(activity.time)} • {activity.contactName}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-bold text-slate-800">{activity.action}</p>
-                      <p className="text-[10px] font-medium text-slate-400">{activity.time}</p>
+                    <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                      {activity.type?.replace(/_/g, ' ')}
                     </div>
                   </div>
-                  <div className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-                    {activity.type}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
             
             <button className="w-full mt-8 py-4 border-2 border-dashed border-slate-200 rounded-2xl text-[10px] font-black uppercase tracking-widest text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all">

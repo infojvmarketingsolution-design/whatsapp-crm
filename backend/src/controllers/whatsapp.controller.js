@@ -506,6 +506,14 @@ const getApiConfig = async (req, res) => {
        configData.openaiApiKey = 'Not Configured';
     }
 
+    // Include Bot Status from Settings
+    try {
+        const settings = await Settings.findOne({ tenantId: req.tenantId });
+        configData.botEnabled = settings?.automation?.botEnabled || false;
+    } catch (err) {
+        configData.botEnabled = false;
+    }
+
     res.json(configData);
   } catch (error) {
     res.status(500).json({ message: error.message });
