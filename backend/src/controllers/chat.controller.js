@@ -338,44 +338,46 @@ const performContactAction = async (req, res) => {
              }
           }
 
-          // 3. SECURE DATABASE UPDATE: Use Mongoose findByIdAndUpdate with strict: false
-          // This allows saving any field present in the payload while maintaining schema integrity where applicable.
-          
+          // 3. SECURE DATABASE UPDATE: Use Raw MongoDB Update for Lead Source fields to ensure persistence
           // Prepare clean update payload
           const updatePayload = { ...payload };
           const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'assignedAgentName', 'assignedCounsellorName'];
           protectedFields.forEach(f => delete updatePayload[f]);
 
           // Auto-sync legacy leadSource summary string
-          // We check the incoming payload first, then fallback to existing contact data
-          const type = updatePayload.leadSourceType !== undefined ? updatePayload.leadSourceType : contact.leadSourceType;
-          const social = updatePayload.socialMediaSource !== undefined ? updatePayload.socialMediaSource : contact.socialMediaSource;
-          const ref = updatePayload.referenceName !== undefined ? updatePayload.referenceName : contact.referenceName;
-          const b2b = updatePayload.b2bOrgName !== undefined ? updatePayload.b2bOrgName : contact.b2bOrgName;
+          const type = updatePayload.leadSourceType || contact.leadSourceType || 'Manual Entry';
+          const social = updatePayload.socialMediaSource || contact.socialMediaSource || '';
+          const ref = updatePayload.referenceName || contact.referenceName || '';
+          const b2b = updatePayload.b2bOrgName || contact.b2bOrgName || '';
 
-          let summary = type || 'Manual Entry';
+          let summary = type;
           if (type === 'Social media' && social) summary = `Social: ${social}`;
           else if (type === 'Reference' && ref) summary = `Ref: ${ref}`;
           else if (type === 'B2B agents' && b2b) summary = `B2B: ${b2b}`;
           
           updatePayload.leadSource = summary;
 
-          // Perform the update
-          const updatedDoc = await ContactModel.findByIdAndUpdate(
-             contactId,
+          // Force update these specific fields in the payload to ensure they are present
+          if (updatePayload.leadSourceType) updatePayload.leadSourceType = type;
+          if (updatePayload.socialMediaSource) updatePayload.socialMediaSource = social;
+          if (updatePayload.referenceName) updatePayload.referenceName = ref;
+
+          // Perform the update using raw collection to bypass any potential schema stripping
+          await ContactModel.collection.updateOne(
+             { _id: new mongoose.Types.ObjectId(contactId) },
              { 
                 $set: updatePayload,
                 $push: { 
                    timeline: { 
                       eventType: 'FIELD_UPDATED', 
-                      description: `Profile details synchronized`, 
+                      description: `Profile details synchronized (Source: ${summary})`, 
                       timestamp: new Date() 
                    } 
                 } 
-             },
-             { new: true, runValidators: false, strict: false }
+             }
           );
 
+          const updatedDoc = await ContactModel.findById(contactId);
           if (!updatedDoc) return res.status(404).json({ error: 'Failed to retrieve updated contact' });
           
           return res.json({ success: true, contact: updatedDoc.toObject() });
