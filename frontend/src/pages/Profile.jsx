@@ -81,9 +81,18 @@ export default function Profile() {
   return (
     <div className="p-resp bg-crm-bg min-h-full animate-fade-in-up">
       {/* Header */}
-      <div className="mb-8">
-         <h1 className="text-xs sm:text-sm font-bold text-gray-600 tracking-wider uppercase">Account Settings</h1>
-         <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manage your professional identity</p>
+      <div className="mb-8 flex justify-between items-center">
+         <div>
+            <h1 className="text-xs sm:text-sm font-bold text-gray-600 tracking-wider uppercase">Account Settings</h1>
+            <p className="text-[9px] sm:text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">Manage your professional identity</p>
+         </div>
+         <button 
+           onClick={handleLogout}
+           className="flex items-center space-x-2 px-4 py-2 bg-rose-50 text-rose-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all shadow-sm"
+         >
+           <LogOut size={14} />
+           <span className="hidden sm:inline">Logout</span>
+         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -133,14 +142,14 @@ export default function Profile() {
                     <Clock size={16} className="text-teal-500" />
                     <span className="text-slate-300">Last Login</span>
                   </div>
-                  <span className="font-bold">Today, 10:45 AM</span>
+                  <span className="font-bold">{user.lastLogin || 'Today, 10:45 AM'}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-3">
                     <CheckCircle size={16} className="text-teal-500" />
-                    <span className="text-slate-300">2FA Status</span>
+                    <span className="text-slate-300">Account Status</span>
                   </div>
-                  <span className="text-teal-500 font-bold uppercase text-[10px]">Enabled</span>
+                  <span className="text-teal-500 font-bold uppercase text-[10px]">Active</span>
                 </div>
               </div>
               <button className="w-full mt-8 py-3 bg-white/10 hover:bg-white/20 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center space-x-2">
@@ -167,8 +176,8 @@ export default function Profile() {
                   <input 
                     type="text" 
                     value={user.name}
-                    onChange={e => setUser({...user, name: e.target.value})}
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                    disabled
+                    className="w-full pl-12 pr-4 py-4 bg-slate-100 border border-slate-200 rounded-2xl text-sm font-bold text-slate-500 cursor-not-allowed transition-all"
                   />
                 </div>
               </div>
@@ -180,8 +189,8 @@ export default function Profile() {
                   <input 
                     type="email" 
                     value={user.email}
-                    onChange={e => setUser({...user, email: e.target.value})}
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-100 rounded-2xl text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
+                    disabled
+                    className="w-full pl-12 pr-4 py-4 bg-slate-100 border border-slate-200 rounded-2xl text-sm font-bold text-slate-500 cursor-not-allowed transition-all"
                   />
                 </div>
               </div>
