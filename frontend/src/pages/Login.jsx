@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast, Toaster } from 'react-hot-toast';
+import PWAInstallHandler from '../components/PWAInstallHandler';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -272,6 +273,12 @@ export default function Login() {
             <button onClick={() => { setIsRegister(!isRegister); setShowFastLogin(false); }} className="text-sm font-black text-teal-600 uppercase tracking-wide" style={{ color: themeColor === '#10b981' ? '#0d9488' : themeColor }}>
               {isRegister ? 'Already have an account?' : 'New here? Create Client Account'}
             </button>
+
+            {/* PWA Install Option on Login */}
+            <div className="w-full pt-4 border-t border-slate-100 flex flex-col items-center">
+               <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-3">Install WapiPulse App</p>
+               <PWAInstallHandler variant="login" />
+            </div>
           </div>
         </div>
 
