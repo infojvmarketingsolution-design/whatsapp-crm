@@ -338,7 +338,7 @@ const performContactAction = async (req, res) => {
              }
           }
 
-          // 3. SECURE DATABASE UPDATE: Direct Collection Update to bypass Mongoose Schema limitations
+          // 3. SECURE DATABASE UPDATE: Ultra-secure direct update
           const updatePayload = { ...payload };
           const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'assignedAgentName', 'assignedCounsellorName'];
           protectedFields.forEach(f => delete updatePayload[f]);
@@ -354,9 +354,10 @@ const performContactAction = async (req, res) => {
           
           updatePayload.leadSource = summary;
 
-          // Perform direct update to ensure fields are NOT stripped by schema
-          await req.tenantDb.collection('contacts').updateOne(
-             { _id: contact._id },
+          // Perform atomic update using the most direct path possible
+          const rawId = new mongoose.Types.ObjectId(contactId);
+          await ContactModel.collection.updateOne(
+             { _id: rawId },
              { 
                 $set: {
                    ...updatePayload,
@@ -368,18 +369,18 @@ const performContactAction = async (req, res) => {
                 $push: { 
                    timeline: { 
                       eventType: 'FIELD_UPDATED', 
-                      description: `Profile synchronized - Source: ${summary}`, 
+                      description: `Profile details forced sync - Source: ${summary}`, 
                       timestamp: new Date() 
                    }
                 }
              }
           );
 
-          // 4. VERIFY & RETURN: Use .lean() to ensure all fields (including dynamic ones) are returned
-          const updatedDoc = await ContactModel.findById(contactId).lean();
-          if (!updatedDoc) return res.status(404).json({ error: 'Failed to synchronize profile' });
+          // 4. VERIFY & RETURN: Use lean() to guarantee no schema-stripping in response
+          const freshDoc = await ContactModel.findById(contactId).lean();
+          if (!freshDoc) return res.status(404).json({ error: 'Failed to retrieve updated profile' });
           
-          return res.json({ success: true, contact: updatedDoc });
+          return res.json({ success: true, contact: freshDoc });
 
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };
