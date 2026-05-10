@@ -338,46 +338,47 @@ const performContactAction = async (req, res) => {
              }
           }
 
-          // 3. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
-            // Securely merge payload into existing contact
-            // 3. BRUTE FORCE RAW SAVE: Talk directly to MongoDB and save everything in the payload
-            const collection = req.tenantDb.collection('contacts');
-            const mongoose = require('mongoose');
-            
-            // Prepare clean DB payload (exclude protected fields that shouldn't be bulk-updated)
-            const dbPayload = { ...payload };
-            const exclude = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'assignedAgentName', 'assignedCounsellorName'];
-            exclude.forEach(f => delete dbPayload[f]);
+          // 3. SECURE DATABASE UPDATE: Use Mongoose findByIdAndUpdate with strict: false
+          // This allows saving any field present in the payload while maintaining schema integrity where applicable.
+          
+          // Prepare clean update payload
+          const updatePayload = { ...payload };
+          const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'assignedAgentName', 'assignedCounsellorName'];
+          protectedFields.forEach(f => delete updatePayload[f]);
 
-            // Auto-sync legacy leadSource
-            let summary = payload.leadSourceType || contact.leadSourceType || 'Manual Entry';
-            const social = payload.socialMediaSource || contact.socialMediaSource;
-            const ref = payload.referenceName || contact.referenceName;
-            const b2b = payload.b2bOrgName || contact.b2bOrgName;
+          // Auto-sync legacy leadSource summary string
+          // We check the incoming payload first, then fallback to existing contact data
+          const type = updatePayload.leadSourceType !== undefined ? updatePayload.leadSourceType : contact.leadSourceType;
+          const social = updatePayload.socialMediaSource !== undefined ? updatePayload.socialMediaSource : contact.socialMediaSource;
+          const ref = updatePayload.referenceName !== undefined ? updatePayload.referenceName : contact.referenceName;
+          const b2b = updatePayload.b2bOrgName !== undefined ? updatePayload.b2bOrgName : contact.b2bOrgName;
 
-            if (summary === 'Social media' && social) summary = `Social: ${social}`;
-            else if (summary === 'Referese' && ref) summary = `Ref: ${ref}`;
-            else if (summary === 'B2B agents' && b2b) summary = `B2B: ${b2b}`;
-            dbPayload.leadSource = summary;
+          let summary = type || 'Manual Entry';
+          if (type === 'Social media' && social) summary = `Social: ${social}`;
+          else if (type === 'Referese' && ref) summary = `Ref: ${ref}`;
+          else if (type === 'B2B agents' && b2b) summary = `B2B: ${b2b}`;
+          
+          updatePayload.leadSource = summary;
 
-            // Direct Update
-            await collection.updateOne(
-               { _id: new mongoose.Types.ObjectId(contactId) },
-               { 
-                  $set: dbPayload,
-                  $push: { 
-                     timeline: { 
-                        eventType: 'FIELD_UPDATED', 
-                        description: `Profile details updated`, 
-                        timestamp: new Date() 
-                     } 
-                  } 
-               }
-            );
+          // Perform the update
+          const updatedDoc = await ContactModel.findByIdAndUpdate(
+             contactId,
+             { 
+                $set: updatePayload,
+                $push: { 
+                   timeline: { 
+                      eventType: 'FIELD_UPDATED', 
+                      description: `Profile details synchronized`, 
+                      timestamp: new Date() 
+                   } 
+                } 
+             },
+             { new: true, runValidators: false, strict: false }
+          );
 
-            // Re-fetch and return as plain object
-            const finalDoc = await collection.findOne({ _id: new mongoose.Types.ObjectId(contactId) });
-            return res.json({ success: true, contact: finalDoc });
+          if (!updatedDoc) return res.status(404).json({ error: 'Failed to retrieve updated contact' });
+          
+          return res.json({ success: true, contact: updatedDoc.toObject() });
 
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };

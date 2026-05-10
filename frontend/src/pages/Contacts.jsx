@@ -364,6 +364,8 @@ export default function Contacts({ roleAccess }) {
       delete cleanPayload.timeline;
       delete cleanPayload.notes;
 
+      console.log("[Sync] Sending Payload to Server:", { contactId, action: 'update_contact', payload: cleanPayload });
+      
       const res = await fetch(`/api/chat/action`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
