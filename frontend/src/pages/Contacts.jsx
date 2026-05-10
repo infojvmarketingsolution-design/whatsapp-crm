@@ -1251,7 +1251,7 @@ export default function Contacts({ roleAccess }) {
                                  >
                                     <option value="Manual Entry">Manual Entry</option>
                                     <option value="Social media">Social media</option>
-                                    <option value="Referese">Referese</option>
+                                    <option value="Reference">Reference</option>
                                     <option value="B2B agents">B2B agents</option>
                                     <option value="Direct">Direct</option>
                                     <option value="Other">Other</option>
@@ -1277,10 +1277,10 @@ export default function Contacts({ roleAccess }) {
                               </div>
                            )}
 
-                           {editedContact.leadSourceType === 'Referese' && (
+                           {editedContact.leadSourceType === 'Reference' && (
                               <div className="grid grid-cols-1 gap-4 animate-fade-in">
                                  <div className="space-y-2">
-                                    <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Referese Name</label>
+                                    <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Reference Name</label>
                                     <input 
                                        value={editedContact.referenceName || ''} 
                                        onChange={e=>handleFieldChange('referenceName', e.target.value)} 
