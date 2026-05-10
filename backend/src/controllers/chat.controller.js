@@ -355,7 +355,7 @@ const performContactAction = async (req, res) => {
 
           let summary = type || 'Manual Entry';
           if (type === 'Social media' && social) summary = `Social: ${social}`;
-          else if (type === 'Referese' && ref) summary = `Ref: ${ref}`;
+          else if (type === 'Reference' && ref) summary = `Ref: ${ref}`;
           else if (type === 'B2B agents' && b2b) summary = `B2B: ${b2b}`;
           
           updatePayload.leadSource = summary;
@@ -595,7 +595,7 @@ const performBulkContactAction = async (req, res) => {
           }, { new: true });
           if (updated) updatedLeads.push(updated);
        }
-    } else if (action === 'update_lead_source' || action === 'leadSourceType') {
+    } else if (action === 'update_lead_source' || action === 'leadSourceType' || action === 'leadSource') {
        const sourceType = typeof payload === 'string' ? payload : (payload.sourceType || payload);
        for (const id of finalContactIds) {
           const updated = await ContactModel.findByIdAndUpdate(id, {
@@ -604,9 +604,9 @@ const performBulkContactAction = async (req, res) => {
           }, { new: true });
           if (updated) updatedLeads.push(updated);
        }
-    } else if (action === 'update_status' || action === 'status' || action === 'update_stage' || action === 'pipelineStage') {
+    } else if (action === 'update_status' || action === 'status' || action === 'update_stage' || action === 'pipelineStage' || action === 'stage') {
        let val = typeof payload === 'string' ? payload : (payload.status || payload.stage || payload);
-       const isStage = action === 'update_stage' || action === 'pipelineStage';
+       const isStage = action === 'update_stage' || action === 'pipelineStage' || action === 'stage';
        
        for (const id of finalContactIds) {
           const update = isStage ? { pipelineStage: val } : { status: val, isClosed: ['CLOSED', 'CLOSED_LOST', 'CLOSED_WON', 'ADMISSION'].includes(val) };
