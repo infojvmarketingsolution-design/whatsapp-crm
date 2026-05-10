@@ -274,10 +274,26 @@ class PRDFlowService {
                
                // 🛡️ DYNAMIC LOOKUP: Find the qualification in the program map
                const keys = Object.keys(prompts.programMap || {});
-               let qk = keys.find(k => aggressiveNormalize(k) === tqc); 
-               if (!qk) qk = keys.find(k => aggressiveNormalize(k).startsWith(tqc) || tqc.startsWith(aggressiveNormalize(k)));
+               console.log(`[PRD Flow] 🔍 Map Lookup | Target: "${tqc}" | Available Keys: [${keys.join(', ')}]`);
+
+               let qk = null;
+               if (tqc) {
+                  qk = keys.find(k => aggressiveNormalize(k) === tqc); 
+                  if (!qk) {
+                     qk = keys.find(k => {
+                        const nk = aggressiveNormalize(k);
+                        return (nk.length > 2 && tqc.length > 2) && (nk.startsWith(tqc) || tqc.startsWith(nk));
+                     });
+                  }
+               }
                
-               qm = qk ? prompts.programMap[qk] : {};
+               if (qk) {
+                  console.log(`[PRD Flow] ✅ Matched Qualification Key: "${qk}"`);
+                  qm = prompts.programMap[qk] || {};
+               } else {
+                  console.warn(`[PRD Flow] ⚠️ No exact match for qualification "${currentQual}". Trying fallback...`);
+                  qm = {};
+               }
                
                // 🧹 NORMALIZE: Ensure qm is an object of categories
                if (Array.isArray(qm)) {
