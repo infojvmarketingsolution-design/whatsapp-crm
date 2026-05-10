@@ -287,12 +287,39 @@ class PRDFlowService {
                   }
                }
                
-               if (qk) {
-                  console.log(`[PRD Flow] ✅ Matched Qualification Key: "${qk}"`);
-                  qm = prompts.programMap[qk] || {};
+               // 🛡️ NUCLEAR OVERRIDE: Set directly in logic to bypass DB inconsistencies
+               if (tqc.includes('10thpass')) {
+                  console.log(`[PRD Flow] 🎯 Hardcoded 10th Pass Map`);
+                  qm = { "DIPLOMA PROGRAMS": ["Diploma in Engineering", "IT Diploma", "Animation Diploma"] };
+               } else if (tqc.includes('12thpass')) {
+                  console.log(`[PRD Flow] 🎯 Hardcoded 12th Pass Map`);
+                  qm = {
+                     "TRENDING PROGRAMS": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Games"],
+                     "TRADITIONAL PROGRAMS": ["BBA", "B.Com", "BCA", "B.Sc"]
+                  };
+               } else if (tqc.includes('diplomacomplete')) {
+                  console.log(`[PRD Flow] 🎯 Hardcoded Diploma Complete Map`);
+                  qm = { "BACHELOR PROGRAMS": ["Electrical Engineering", "Civil Engineering", "Mechanical Engineering"] };
+               } else if (tqc.includes('grad')) {
+                  console.log(`[PRD Flow] 🎯 Hardcoded Graduation Map`);
+                  qm = {
+                     "TRENDING MASTER PROGRAMS": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Games"],
+                     "TRADITIONAL MASTER PROGRAMS": ["MBA", "M.Com", "MCA", "M.Sc"]
+                  };
+               } else if (tqc.includes('mastercomplete')) {
+                  console.log(`[PRD Flow] 🎯 Hardcoded Master Complete Map`);
+                  qm = { "PHD PROGRAMS": ["PhD in Marketing", "PhD in Civil Engineering", "PhD in IT"] };
+               } else if (tqc.includes('phdcomplete')) {
+                  console.log(`[PRD Flow] 🎯 Hardcoded PhD Complete Map`);
+                  qm = { "POST-DOC": ["Research Fellowship", "Academic Leadership"] };
                } else {
-                  console.warn(`[PRD Flow] ⚠️ No exact match for qualification "${currentQual}". Trying fallback...`);
-                  qm = {};
+                  // Dynamic Fallback
+                  if (qk) {
+                     console.log(`[PRD Flow] ✅ Matched Qualification Key: "${qk}"`);
+                     qm = prompts.programMap[qk] || {};
+                  } else {
+                     qm = {};
+                  }
                }
                
                // 🧹 NORMALIZE: Ensure qm is an object of categories
