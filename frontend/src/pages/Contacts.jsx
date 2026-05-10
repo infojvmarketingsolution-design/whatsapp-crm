@@ -1600,114 +1600,144 @@ export default function Contacts({ roleAccess }) {
          document.body
        )}
 
-       {/* CENTERED BULK COMMAND CONSOLE (POPUP) */}
+       {/* PREMIUM FLOATING COMMAND CENTER */}
        {selectedIds.size > 0 && (
-          <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-slate-900/70 backdrop-blur-md animate-fade-in" onClick={() => { setSelectedIds(new Set()); setActiveBulkMenu(null); }}>
-             <div className="bg-white p-12 rounded-[3.5rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] flex flex-col items-center space-y-10 animate-pop-in border border-white/20 w-[600px] relative overflow-hidden" onClick={e => e.stopPropagation()}>
-                {/* Visual Header Decoration */}
-                <div className="absolute top-0 right-0 w-48 h-48 bg-blue-500/10 rounded-full -mr-24 -mt-24 blur-3xl"></div>
-                <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/10 rounded-full -ml-24 -mb-24 blur-3xl"></div>
-                
-                <div className="w-24 h-24 bg-slate-900 text-white rounded-[2.5rem] flex items-center justify-center shadow-2xl mb-2 transform -rotate-6 transition-transform hover:rotate-0 duration-500">
-                   <Users size={48} />
-                </div>
-                
-                <div className="text-center space-y-2">
-                   <div className="inline-flex items-center space-x-2 px-4 py-1.5 bg-blue-50 text-blue-600 rounded-full">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                      <span className="text-[11px] font-black uppercase tracking-[0.2em]">{selectedIds.size} Leads Selected</span>
+          <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[1000] animate-fade-in w-fit max-w-[95vw]">
+             <div className="bg-slate-900/95 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] px-8 py-5 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.5)] flex items-center space-x-8 text-white">
+                {/* Counter & Status */}
+                <div className="flex items-center space-x-4 pr-8 border-r border-white/10">
+                   <div className="w-12 h-12 rounded-2xl bg-blue-600 flex items-center justify-center shadow-lg shadow-blue-600/30">
+                      <span className="text-lg font-black tracking-tighter">{selectedIds.size}</span>
                    </div>
-                   <h2 className="text-4xl font-extrabold text-slate-900 tracking-tight">Bulk Command</h2>
-                   <p className="text-slate-400 text-sm font-medium">Apply batch updates to your selected contacts</p>
+                   <div className="flex flex-col">
+                      <p className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">Selected</p>
+                      <p className="text-xs font-bold text-slate-300">Leads Ready</p>
+                   </div>
                 </div>
 
-                {/* Bulk Action Grid */}
-                <div className="w-full space-y-8">
-                   <div className="grid grid-cols-2 gap-6">
-                      {/* Assign Section */}
-                      <div className="space-y-4">
-                         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Assign Expert</label>
-                         <div className="relative group">
-                            <Users size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                            <select 
-                               value={bulkTargetAgent} 
-                               onChange={(e) => {
-                                  setBulkTargetAgent(e.target.value);
-                                  if(e.target.value) handleBulkAction('transfer_leads', e.target.value);
-                               }} 
-                               className="w-full bg-slate-50 border border-slate-100 rounded-3xl pl-12 pr-10 py-5 outline-none focus:ring-8 focus:ring-blue-500/5 focus:border-blue-500/50 text-sm font-bold text-slate-800 appearance-none cursor-pointer transition-all shadow-sm hover:bg-white"
-                            >
-                               <option value="">Select Agent...</option>
-                               {agents.map(a => <option key={a._id} value={a._id}>{a.name}</option>)}
-                            </select>
-                            <ChevronDown size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-                         </div>
-                      </div>
+                {/* Primary Actions Grid */}
+                <div className="flex items-center space-x-6">
+                   {/* Assign Dropdown */}
+                   <div className="relative group">
+                      <button 
+                         onClick={() => setActiveBulkMenu(activeBulkMenu === 'assign' ? null : 'assign')}
+                         className={`flex items-center space-x-3 px-5 py-3 rounded-2xl transition-all ${activeBulkMenu === 'assign' ? 'bg-white text-slate-900' : 'hover:bg-white/5'}`}
+                      >
+                         <Users size={18} className={activeBulkMenu === 'assign' ? 'text-blue-600' : 'text-slate-400'} />
+                         <span className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap">Assign Agent</span>
+                         <ChevronDown size={14} className={`transform transition-transform ${activeBulkMenu === 'assign' ? 'rotate-180' : ''}`} />
+                      </button>
 
-                      {/* Source Section */}
-                      <div className="space-y-4">
-                         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest ml-1">Update Source</label>
-                         <div className="relative group">
-                            <Globe size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors" />
-                            <select 
-                               onChange={(e) => {
-                                  if(e.target.value) handleBulkAction('leadSource', e.target.value);
-                               }} 
-                               className="w-full bg-slate-50 border border-slate-100 rounded-3xl pl-12 pr-10 py-5 outline-none focus:ring-8 focus:ring-blue-500/5 focus:border-blue-500/50 text-sm font-bold text-slate-800 appearance-none cursor-pointer transition-all shadow-sm hover:bg-white"
-                            >
-                               <option value="">Select Source...</option>
-                               {['Manual Entry', 'Social media', 'Referese', 'B2B agents', 'Direct', 'Other'].map(s => <option key={s} value={s}>{s}</option>)}
-                            </select>
-                            <ChevronDown size={18} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+                      {activeBulkMenu === 'assign' && (
+                         <div className="absolute bottom-full mb-6 left-0 w-64 bg-slate-900 border border-white/10 rounded-3xl shadow-3xl overflow-hidden animate-pop-in">
+                            <div className="p-4 bg-white/5 border-b border-white/5">
+                               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Select Target Expert</p>
+                            </div>
+                            <div className="max-h-64 overflow-y-auto custom-scrollbar p-2">
+                               {agents.map(a => (
+                                  <button 
+                                     key={a._id}
+                                     onClick={() => { handleBulkAction('transfer_leads', a._id); setActiveBulkMenu(null); }}
+                                     className="w-full text-left px-4 py-3 rounded-2xl hover:bg-white/5 text-slate-300 hover:text-white transition-all flex items-center space-x-3"
+                                  >
+                                     <div className="w-8 h-8 rounded-xl bg-blue-600/20 text-blue-400 flex items-center justify-center font-bold text-xs">{a.name.charAt(0)}</div>
+                                     <span className="text-xs font-bold">{a.name}</span>
+                                  </button>
+                               ))}
+                            </div>
                          </div>
-                      </div>
+                      )}
                    </div>
 
-                   {/* Action Buttons Row */}
-                   <div className="flex items-center space-x-4 pt-4 border-t border-slate-50">
+                   {/* Source Dropdown */}
+                   <div className="relative group">
                       <button 
-                         onClick={handleExportCSV}
-                         className="flex-1 py-5 bg-slate-100 text-slate-800 text-[11px] font-bold uppercase tracking-[0.2em] rounded-3xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center space-x-3 group"
+                         onClick={() => setActiveBulkMenu(activeBulkMenu === 'source' ? null : 'source')}
+                         className={`flex items-center space-x-3 px-5 py-3 rounded-2xl transition-all ${activeBulkMenu === 'source' ? 'bg-white text-slate-900' : 'hover:bg-white/5'}`}
                       >
-                         <Download size={18} className="text-slate-400 group-hover:text-slate-800 transition-colors" />
-                         <span>Export Data</span>
+                         <Globe size={18} className={activeBulkMenu === 'source' ? 'text-indigo-600' : 'text-slate-400'} />
+                         <span className="text-[11px] font-black uppercase tracking-widest whitespace-nowrap">Update Source</span>
+                         <ChevronDown size={14} className={`transform transition-transform ${activeBulkMenu === 'source' ? 'rotate-180' : ''}`} />
                       </button>
-                      <button 
-                         onClick={() => {
-                            if (window.confirm(`Permanently delete ${selectedIds.size} leads?`)) handleBulkAction('delete', '');
-                         }}
-                         className="flex-1 py-5 bg-red-50 text-red-600 text-[11px] font-bold uppercase tracking-[0.2em] rounded-3xl hover:bg-red-500 hover:text-white transition-all active:scale-95 flex items-center justify-center space-x-3 group shadow-lg shadow-red-500/5"
-                      >
-                         <Trash2 size={18} />
-                         <span>Delete Leads</span>
-                      </button>
+
+                      {activeBulkMenu === 'source' && (
+                         <div className="absolute bottom-full mb-6 left-0 w-56 bg-slate-900 border border-white/10 rounded-3xl shadow-3xl overflow-hidden animate-pop-in">
+                            <div className="p-4 bg-white/5 border-b border-white/5">
+                               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Select New Source</p>
+                            </div>
+                            <div className="p-2 space-y-1">
+                               {['Manual Entry', 'Social media', 'Referese', 'B2B agents', 'Direct', 'Other'].map(s => (
+                                  <button 
+                                     key={s}
+                                     onClick={() => { handleBulkAction('leadSource', s); setActiveBulkMenu(null); }}
+                                     className="w-full text-left px-4 py-3 rounded-2xl hover:bg-white/5 text-slate-300 hover:text-white transition-all text-xs font-bold"
+                                  >
+                                     {s}
+                                  </button>
+                               ))}
+                            </div>
+                         </div>
+                      )}
                    </div>
 
-                   {/* Advanced Dropdown Toggle */}
-                   <div className="pt-2">
+                   {/* Export */}
+                   <button 
+                      onClick={handleExportCSV}
+                      className="flex items-center space-x-3 px-5 py-3 rounded-2xl hover:bg-white/5 transition-all group"
+                   >
+                      <Download size={18} className="text-slate-400 group-hover:text-white transition-colors" />
+                      <span className="text-[11px] font-black uppercase tracking-widest text-slate-300 group-hover:text-white transition-colors">Export</span>
+                   </button>
+
+                   {/* More Actions */}
+                   <div className="relative">
                       <button 
-                         onClick={() => setActiveBulkMenu(activeBulkMenu === 'advanced' ? null : 'advanced')}
-                         className={`w-full py-5 rounded-3xl transition-all flex items-center justify-center space-x-2 border ${activeBulkMenu === 'advanced' ? 'bg-slate-900 text-white border-slate-900' : 'bg-white text-slate-400 border-slate-100 hover:bg-slate-50'}`}
+                         onClick={() => setActiveBulkMenu(activeBulkMenu === 'more' ? null : 'more')}
+                         className={`p-3 rounded-2xl transition-all ${activeBulkMenu === 'more' ? 'bg-white text-slate-900' : 'hover:bg-white/5 text-slate-400'}`}
                       >
-                         <span className="text-[10px] font-bold uppercase tracking-[0.4em] ml-2">Advanced Operations</span>
-                         <ChevronDown size={14} className={`transform transition-transform duration-300 ${activeBulkMenu === 'advanced' ? 'rotate-180' : ''}`} />
+                         <MoreHorizontal size={20} />
                       </button>
 
-                      {activeBulkMenu === 'advanced' && (
-                         <div className="grid grid-cols-3 gap-3 mt-4 animate-pop-in">
-                            <button onClick={() => handleBulkAction('archive', '')} className="p-4 bg-slate-50 text-slate-600 text-[10px] font-bold uppercase rounded-2xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all">Archive All</button>
-                            <button onClick={() => handleBulkAction('status', 'OPEN')} className="p-4 bg-slate-50 text-slate-600 text-[10px] font-bold uppercase rounded-2xl hover:bg-slate-100 border border-transparent hover:border-slate-200 transition-all">Reset Status</button>
-                            {PIPELINE_STAGES.slice(0, 4).map(stage => (
-                               <button key={stage} onClick={() => handleBulkAction('stage', stage)} className="p-4 bg-white border border-slate-100 text-slate-500 text-[10px] font-bold uppercase rounded-2xl hover:border-blue-200 hover:text-blue-600 hover:bg-blue-50 transition-all">{stage}</button>
-                            ))}
+                      {activeBulkMenu === 'more' && (
+                         <div className="absolute bottom-full mb-6 right-0 w-64 bg-slate-900 border border-white/10 rounded-3xl shadow-3xl overflow-hidden animate-pop-in">
+                            <div className="p-4 bg-white/5 border-b border-white/5 flex justify-between items-center">
+                               <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Advanced Actions</p>
+                            </div>
+                            <div className="p-3 space-y-2">
+                               <button onClick={() => handleBulkAction('archive', '')} className="w-full p-3 rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-slate-300 transition-all flex items-center space-x-3">
+                                  <Clock size={14} className="text-slate-500" />
+                                  <span>Archive All Selected</span>
+                               </button>
+                               <div className="grid grid-cols-2 gap-2 mt-2">
+                                  {PIPELINE_STAGES.slice(0, 4).map(stage => (
+                                     <button 
+                                        key={stage} 
+                                        onClick={() => handleBulkAction('stage', stage)}
+                                        className="p-2 rounded-lg border border-white/5 hover:bg-blue-600/20 hover:border-blue-600/50 text-[9px] font-bold text-slate-400 hover:text-blue-400 transition-all uppercase"
+                                     >
+                                        {stage}
+                                     </button>
+                                  ))}
+                               </div>
+                               <div className="pt-2 border-t border-white/5 mt-2">
+                                  <button 
+                                     onClick={() => { if(window.confirm('Delete selected leads permanently?')) handleBulkAction('delete', ''); }}
+                                     className="w-full p-3 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white text-xs font-bold transition-all flex items-center space-x-3"
+                                  >
+                                     <Trash2 size={14} />
+                                     <span>Delete Permanently</span>
+                                  </button>
+                               </div>
+                            </div>
                          </div>
                       )}
                    </div>
                 </div>
 
+                {/* Close Bar */}
                 <button 
                    onClick={() => { setSelectedIds(new Set()); setActiveBulkMenu(null); }}
-                   className="absolute top-10 right-10 p-3 text-slate-300 hover:text-slate-900 hover:bg-slate-50 rounded-full transition-all"
+                   className="p-2 text-slate-500 hover:text-white transition-colors ml-4 border-l border-white/10 pl-8"
                 >
                    <X size={24} />
                 </button>
