@@ -75,6 +75,7 @@ const authUser = async (req, res) => {
         role: user.role,
         tenantId: user.tenantId,
         token: generateToken(user._id),
+        lastLogin: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
@@ -152,6 +153,7 @@ const loginWithMpin = async (req, res) => {
       role: user.role,
       tenantId: user.tenantId,
       token: generateToken(user._id),
+      lastLogin: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -226,6 +228,7 @@ const verifyOTP = async (req, res) => {
       role: user.role,
       tenantId: user.tenantId,
       token: generateToken(user._id),
+      lastLogin: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -315,6 +318,7 @@ const registerTenant = async (req, res) => {
         role: user.role,
         tenantId: user.tenantId,
         token: generateToken(user._id),
+        lastLogin: new Date().toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
       });
     } else {
       res.status(400).json({ message: 'Invalid user data to create account' });
