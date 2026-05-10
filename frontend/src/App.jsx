@@ -545,8 +545,7 @@ function Dashboard() {
             <h3 className="text-sm font-black text-slate-700 tracking-widest uppercase">Market Intelligence</h3>
             <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold">Source Insights</span>
          </div>
-         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <LeadAnalysisCard title="Lifecycle Distribution" data={analysisData.statusStats} type="status" />
+         <div className="grid grid-cols-1 gap-6">
             <LeadAnalysisCard title="Lead Source Distribution" data={analysisData.sourceStats} type="source" />
          </div>
       </div>
