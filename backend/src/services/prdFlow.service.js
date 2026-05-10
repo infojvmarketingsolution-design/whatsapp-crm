@@ -152,21 +152,27 @@ class PRDFlowService {
             else if (varName === 'qualification') {
                const opts = prompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation complete', 'Master complete', 'phD complete'];
                
-               // Improved matching: try exact match, then includes, then normalized fuzzy match
-               let matched = opts.find(o => o.toLowerCase() === val.toLowerCase());
-               if (!matched) matched = opts.find(o => o.toLowerCase().includes(val.toLowerCase()) || val.toLowerCase().includes(o.toLowerCase()));
-               
-               if (!matched) {
-                  const nv = aggressiveNormalize(val);
-                  matched = opts.find(o => aggressiveNormalize(o) === nv || aggressiveNormalize(o).includes(nv) || nv.includes(aggressiveNormalize(o)));
-               }
+               const nv = aggressiveNormalize(val);
+               let matched = opts.find(o => aggressiveNormalize(o) === nv);
+               if (!matched) matched = opts.find(o => aggressiveNormalize(o).includes(nv) || nv.includes(aggressiveNormalize(o)));
                
                if (matched) {
-                  console.log(`[PRD Flow] 🎓 Qualification Matched: "${matched}" (from "${val}")`);
-                  await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.qualification': matched, qualification: matched, 'flowVariables.selectedStream': null });
-                  contact.flowVariables = { ...(contact.flowVariables || {}), qualification: matched };
+                  console.log(`[PRD Flow] 🎓 Qualification Matched: "${matched}" (NV: ${nv})`);
+                  
+                  // Atomic update to ensure state is persisted
+                  await Contact.updateOne({ phone: contact.phone }, { 
+                     $set: { 
+                        qualification: matched, 
+                        'flowVariables.qualification': matched,
+                        'flowVariables.selectedStream': null 
+                     } 
+                  });
+                  
+                  // Update in-memory object
                   contact.qualification = matched;
-                  delete contact.flowVariables.selectedStream; // Reset stream when qualification changes
+                  if (!contact.flowVariables) contact.flowVariables = {};
+                  contact.flowVariables.qualification = matched;
+                  contact.flowVariables.selectedStream = null;
                } else {
                   console.warn(`[PRD Flow] ⚠️ Failed to match qualification: "${val}"`);
                }
@@ -288,34 +294,36 @@ class PRDFlowService {
                }
                
                // 🛡️ NUCLEAR OVERRIDE: Set directly in logic to bypass DB inconsistencies
-               if (tqc.includes('10thpass')) {
-                  console.log(`[PRD Flow] 🎯 Hardcoded 10th Pass Map`);
-                  qm = { "DIPLOMA PROGRAMS": ["Diploma in Engineering", "IT Diploma", "Animation Diploma"] };
-               } else if (tqc.includes('12thpass')) {
-                  console.log(`[PRD Flow] 🎯 Hardcoded 12th Pass Map`);
+               console.log(`[PRD Flow] 🔍 BRANCHING | TQC: "${tqc}" | Qual: "${currentQual}"`);
+
+               if (tqc.includes('12') || tqc.includes('hsc')) {
+                  console.log(`[PRD Flow] 🎯 FORCE 12th Pass Map`);
                   qm = {
                      "TRENDING PROGRAMS": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Games"],
                      "TRADITIONAL PROGRAMS": ["BBA", "B.Com", "BCA", "B.Sc"]
                   };
+               } else if (tqc.includes('10') || tqc.includes('ssc')) {
+                  console.log(`[PRD Flow] 🎯 FORCE 10th Pass Map`);
+                  qm = { "DIPLOMA PROGRAMS": ["Diploma in Engineering", "IT Diploma", "Animation Diploma"] };
                } else if (tqc.includes('diplomacomplete')) {
-                  console.log(`[PRD Flow] 🎯 Hardcoded Diploma Complete Map`);
+                  console.log(`[PRD Flow] 🎯 FORCE Diploma Complete Map`);
                   qm = { "BACHELOR PROGRAMS": ["Electrical Engineering", "Civil Engineering", "Mechanical Engineering"] };
-               } else if (tqc.includes('grad')) {
-                  console.log(`[PRD Flow] 🎯 Hardcoded Graduation Map`);
+               } else if (tqc.includes('grad') || tqc.includes('bach')) {
+                  console.log(`[PRD Flow] 🎯 FORCE Graduation Map`);
                   qm = {
                      "TRENDING MASTER PROGRAMS": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Games"],
                      "TRADITIONAL MASTER PROGRAMS": ["MBA", "M.Com", "MCA", "M.Sc"]
                   };
                } else if (tqc.includes('mastercomplete')) {
-                  console.log(`[PRD Flow] 🎯 Hardcoded Master Complete Map`);
+                  console.log(`[PRD Flow] 🎯 FORCE Master Complete Map`);
                   qm = { "PHD PROGRAMS": ["PhD in Marketing", "PhD in Civil Engineering", "PhD in IT"] };
                } else if (tqc.includes('phdcomplete')) {
-                  console.log(`[PRD Flow] 🎯 Hardcoded PhD Complete Map`);
+                  console.log(`[PRD Flow] 🎯 FORCE PhD Complete Map`);
                   qm = { "POST-DOC": ["Research Fellowship", "Academic Leadership"] };
                } else {
                   // Dynamic Fallback
                   if (qk) {
-                     console.log(`[PRD Flow] ✅ Matched Qualification Key: "${qk}"`);
+                     console.log(`[PRD Flow] ✅ Dynamic Match: "${qk}"`);
                      qm = prompts.programMap[qk] || {};
                   } else {
                      qm = {};
