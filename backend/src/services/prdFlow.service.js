@@ -134,7 +134,7 @@ class PRDFlowService {
         // 🧩 STEP A: SAVE USER INPUT
         if (consumeInput && !isAutoFollowup && nodeData.variableName) {
            const varName = nodeData.variableName;
-           let val = (replyValue || messageText || '').trim();
+           let val = (replyValue && !replyValue.startsWith('list_') ? replyValue : messageText || '').trim();
            const normalizedInput = aggressiveNormalize(val);
 
            if (varName === 'name') {
@@ -149,15 +149,22 @@ class PRDFlowService {
               contact.flowVariables = { ...(contact.flowVariables || {}), name: val };
               Object.assign(contact, updates);
            } 
-           else if (varName === 'qualification') {
-              const opts = prompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation complete', 'Master complete', 'phD complete'];
-              const matched = opts.find(o => o.toLowerCase().includes(val.toLowerCase()) || val.toLowerCase().includes(o.toLowerCase()) || o === val);
-              if (matched) {
-                 await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.qualification': matched, qualification: matched });
-                 contact.flowVariables = { ...(contact.flowVariables || {}), qualification: matched };
-                 contact.qualification = matched;
-              }
-           } 
+            else if (varName === 'qualification') {
+               const opts = prompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation complete', 'Master complete', 'phD complete'];
+               // Improved matching: try exact match first, then includes
+               let matched = opts.find(o => o.toLowerCase() === val.toLowerCase());
+               if (!matched) matched = opts.find(o => o.toLowerCase().includes(val.toLowerCase()) || val.toLowerCase().includes(o.toLowerCase()));
+               
+               if (matched) {
+                  console.log(`[PRD Flow] 🎓 Qualification Matched: "${matched}" (from "${val}")`);
+                  await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.qualification': matched, qualification: matched, 'flowVariables.selectedStream': null });
+                  contact.flowVariables = { ...(contact.flowVariables || {}), qualification: matched };
+                  contact.qualification = matched;
+                  delete contact.flowVariables.selectedStream; // Reset stream when qualification changes
+               } else {
+                  console.warn(`[PRD Flow] ⚠️ Failed to match qualification: "${val}"`);
+               }
+            } 
            else if (varName === 'program' && nodeData.isProgramSelection) {
               const currentQual = contact.flowVariables?.qualification;
               const targetQualCode = aggressiveNormalize(currentQual);
