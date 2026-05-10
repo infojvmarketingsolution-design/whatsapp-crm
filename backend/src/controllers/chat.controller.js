@@ -340,8 +340,9 @@ const performContactAction = async (req, res) => {
 
           // 3. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
             // Securely merge payload into existing contact
+            // 3. DIRECT DATABASE WRITE: Use updateOne to bypass any potential Mongoose model/schema caching issues
             const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'lastMsgDoc', 'assignedAgentName', 'assignedCounsellorName', 'lastMessage', 'lastMessageType'];
-            console.log("[UpdateContact] Incoming Payload:", JSON.stringify(payload, null, 2));
+            const updatePayload = {};
             
             Object.keys(payload).forEach(key => {
                if (!protectedFields.includes(key)) {
@@ -351,11 +352,9 @@ const performContactAction = async (req, res) => {
                   // Handle empty strings for ObjectId fields
                   const schemaPath = ContactSchema.path(key);
                   if (schemaPath && (schemaPath.instance === 'ObjectID' || schemaPath.instance === 'ObjectId') && newValue === "") {
-                      contact.set(key, null);
+                      updatePayload[key] = null;
                   } else {
-                      contact.set(key, newValue);
-                      // Force Mongoose to recognize the change even if it thinks it's the same or field is new
-                      contact.markModified(key);
+                      updatePayload[key] = newValue;
                   }
 
                   // Record major changes in timeline
@@ -373,16 +372,29 @@ const performContactAction = async (req, res) => {
                      });
 
                      // Auto-sync legacy leadSource for backward compatibility
-                     let summary = contact.leadSourceType || 'Manual Entry';
-                     if (contact.leadSourceType === 'Social media' && contact.socialMediaSource) summary = `Social: ${contact.socialMediaSource}`;
-                     else if (contact.leadSourceType === 'Referese' && contact.referenceName) summary = `Ref: ${contact.referenceName}`;
-                     else if (contact.leadSourceType === 'B2B agents' && contact.b2bOrgName) summary = `B2B: ${contact.b2bOrgName}`;
+                     let summary = (key === 'leadSourceType' ? newValue : (contact.leadSourceType || 'Manual Entry'));
+                     const currentSocial = (key === 'socialMediaSource' ? newValue : contact.socialMediaSource);
+                     const currentRef = (key === 'referenceName' ? newValue : contact.referenceName);
+                     const currentB2B = (key === 'b2bOrgName' ? newValue : contact.b2bOrgName);
+
+                     if (summary === 'Social media' && currentSocial) summary = `Social: ${currentSocial}`;
+                     else if (summary === 'Referese' && currentRef) summary = `Ref: ${currentRef}`;
+                     else if (summary === 'B2B agents' && currentB2B) summary = `B2B: ${currentB2B}`;
                      
-                     contact.leadSource = summary;
-                     contact.markModified('leadSource');
+                     updatePayload.leadSource = summary;
                   }
                }
             });
+
+            // Perform the hard update
+            await ContactModel.updateOne({ _id: contactId }, { $set: updatePayload });
+            
+            // Re-fetch the latest state into the contact object for the final save (timeline only)
+            const freshContact = await ContactModel.findById(contactId);
+            if (freshContact) {
+               freshContact.timeline = contact.timeline;
+               contact = freshContact;
+            }
 
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };
