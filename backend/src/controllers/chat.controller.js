@@ -375,10 +375,11 @@ const performContactAction = async (req, res) => {
              }
           );
 
-          const updatedDoc = await ContactModel.findById(contactId);
+          // 4. VERIFY & RETURN: Use .lean() to ensure all fields (including dynamic ones) are returned
+          const updatedDoc = await ContactModel.findById(contactId).lean();
           if (!updatedDoc) return res.status(404).json({ error: 'Failed to synchronize profile' });
           
-          return res.json({ success: true, contact: updatedDoc.toObject() });
+          return res.json({ success: true, contact: updatedDoc });
 
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };
