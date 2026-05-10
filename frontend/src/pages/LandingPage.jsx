@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   ArrowRight, ShieldCheck, CheckCircle2, Phone, Mail, MapPin, 
-  Send, Bot, BarChart3, Users, PlayCircle, Star, Triangle, Circle, Square, MessageCircle, Menu, X
+  Send, Bot, BarChart3, Users, PlayCircle, Star, Triangle, Circle, Square, MessageCircle, Menu, X,
+  Download, Smartphone, Monitor, Laptop, Apple
 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
 
 const LandingPage = () => {
   const navigate = useNavigate();
@@ -18,6 +20,31 @@ const LandingPage = () => {
   }, []);
 
   const handleLoginClick = () => navigate('/login');
+  
+  const handleDownload = () => {
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+    
+    // Windows detection
+    if (userAgent.indexOf("Win") !== -1) {
+      window.location.href = "/downloads/WapiPulse_Setup.exe";
+    } 
+    // Mac detection
+    else if (userAgent.indexOf("Mac") !== -1) {
+      window.location.href = "/downloads/WapiPulse.dmg";
+    }
+    // Android detection
+    else if (/android/i.test(userAgent)) {
+      window.location.href = "/downloads/WapiPulse.apk";
+    }
+    // iOS detection
+    else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+      window.open("https://apps.apple.com/app/wapipulse", "_blank");
+    }
+    // Fallback
+    else {
+      toast("Platform not detected. Please select manually.", { icon: "ℹ️" });
+    }
+  };
 
   return (
     <div className="font-sans bg-white selection:bg-[#25D366] selection:text-white overflow-x-hidden text-gray-800">
@@ -101,7 +128,7 @@ const LandingPage = () => {
               </p>
               <div className="flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <button onClick={handleLoginClick} className="w-full sm:w-auto bg-[#1DA851] hover:bg-[#15803d] text-white font-extrabold text-lg py-4 px-10 rounded-xl shadow-[0_8px_30px_rgb(37,211,102,0.3)] hover:-translate-y-1 transition-transform border border-[#16a34a] flex items-center justify-center">
-                  Start free trial <ArrowRight className="ml-2" size={20} />
+                  Start Free Trial / Login <ArrowRight className="ml-2" size={20} />
                 </button>
                 <div className="flex items-center space-x-2 text-sm font-bold text-gray-500">
                    <CheckCircle2 size={18} className="text-[#25D366]" />
@@ -121,6 +148,47 @@ const LandingPage = () => {
                />
             </motion.div>
           </div>
+        </div>
+      </section>
+      
+      {/* App Download Section */}
+      <section className="py-12 bg-[#f9fafb] border-y border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+           <div className="bg-white rounded-[2.5rem] p-8 md:p-12 shadow-premium flex flex-col md:flex-row items-center justify-between gap-8 border border-slate-100 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-teal-50 rounded-full -mr-32 -mt-32 blur-3xl opacity-50"></div>
+              
+              <div className="relative z-10 text-center md:text-left">
+                 <h2 className="text-3xl font-black text-slate-800 mb-3 tracking-tight">Manage Business on the Go</h2>
+                 <p className="text-slate-500 font-bold text-sm md:text-base max-w-md">Download our native application for desktop and mobile for a seamless CRM experience.</p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
+                 <button 
+                   onClick={handleDownload}
+                   className="bg-slate-900 text-white font-black py-4 px-10 rounded-2xl shadow-glow flex items-center space-x-3 hover:scale-105 transition-all group"
+                 >
+                    <Download size={20} className="group-hover:animate-bounce" />
+                    <span>Download App</span>
+                 </button>
+                 
+                 <div className="flex items-center space-x-4">
+                    <div className="flex flex-col items-center">
+                       <Smartphone size={20} className="text-slate-400 mb-1" />
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Mobile</span>
+                    </div>
+                    <div className="w-px h-8 bg-slate-200"></div>
+                    <div className="flex flex-col items-center">
+                       <Monitor size={20} className="text-slate-400 mb-1" />
+                       <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Desktop</span>
+                    </div>
+                    <div className="w-px h-8 bg-slate-200"></div>
+                    <div className="flex items-center space-x-2 text-slate-300">
+                       <Apple size={16} />
+                       <Laptop size={16} />
+                    </div>
+                 </div>
+              </div>
+           </div>
         </div>
       </section>
 
