@@ -98,7 +98,7 @@ export default function PWAInstallHandler({
               </div>
               <div className="flex items-start space-x-4 p-4 bg-slate-50 rounded-2xl border border-slate-100">
                 <div className="w-8 h-8 bg-white border border-slate-200 rounded-xl flex items-center justify-center text-xs font-black shrink-0 shadow-sm text-blue-600">3</div>
-                <p className="leading-tight pt-1">The **WapiPulse** icon will appear on your home screen!</p>
+                <p className="leading-tight pt-1">The <span className="font-black text-blue-600">WapiPulse</span> icon will appear on your home screen!</p>
               </div>
             </div>
 
