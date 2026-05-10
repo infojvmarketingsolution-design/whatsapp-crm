@@ -386,15 +386,16 @@ const performContactAction = async (req, res) => {
                }
             });
 
-            // Perform atomic update and get fresh document
+            // Perform atomic update and get fresh document as a PLAIN object (lean)
+            // This prevents Mongoose from stripping fields that it might think aren't in the schema
             const updatedDoc = await ContactModel.findOneAndUpdate(
                { _id: contactId },
                { $set: { ...updatePayload, timeline: contact.timeline } },
-               { new: true, runValidators: false }
+               { new: true, runValidators: false, lean: true }
             );
 
             if (updatedDoc) {
-               contact = updatedDoc;
+               return res.json({ success: true, contact: updatedDoc });
             }
 
             return res.json({ success: true, contact: contact.toObject() });
