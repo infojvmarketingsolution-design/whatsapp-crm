@@ -340,22 +340,15 @@ const performContactAction = async (req, res) => {
 
           // 3. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
             // Securely merge payload into existing contact
-            // 3. DIRECT DATABASE WRITE: Use findOneAndUpdate for atomic update and retrieval
+            // 3. DIRECT DATABASE WRITE: Bypassing Mongoose entirely to talk to the raw MongoDB driver
             const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'lastMsgDoc', 'assignedAgentName', 'assignedCounsellorName', 'lastMessage', 'lastMessageType'];
             const updatePayload = {};
             
             Object.keys(payload).forEach(key => {
                if (!protectedFields.includes(key)) {
-                  const oldValue = contact.get(key);
+                  const oldValue = contact.get ? contact.get(key) : contact[key];
                   const newValue = payload[key];
-
-                  // Handle empty strings for ObjectId fields
-                  const schemaPath = ContactSchema.path(key);
-                  if (schemaPath && (schemaPath.instance === 'ObjectID' || schemaPath.instance === 'ObjectId') && newValue === "") {
-                      updatePayload[key] = null;
-                  } else {
-                      updatePayload[key] = newValue;
-                  }
+                  updatePayload[key] = newValue;
 
                   // Record major changes in timeline
                   const majorFields = [
@@ -371,7 +364,7 @@ const performContactAction = async (req, res) => {
                         timestamp: new Date()
                      });
 
-                     // Auto-sync legacy leadSource for backward compatibility
+                     // Auto-sync legacy leadSource
                      let summary = (key === 'leadSourceType' ? newValue : (contact.leadSourceType || 'Manual Entry'));
                      const currentSocial = (key === 'socialMediaSource' ? newValue : contact.socialMediaSource);
                      const currentRef = (key === 'referenceName' ? newValue : contact.referenceName);
@@ -386,19 +379,18 @@ const performContactAction = async (req, res) => {
                }
             });
 
-            // Perform atomic update and get fresh document as a PLAIN object (lean)
-            // This prevents Mongoose from stripping fields that it might think aren't in the schema
-            const updatedDoc = await ContactModel.findOneAndUpdate(
-               { _id: contactId },
-               { $set: { ...updatePayload, timeline: contact.timeline } },
-               { new: true, runValidators: false, lean: true }
+            // RAW MONGODB UPDATE (Bypasses all schema logic)
+            const collection = req.tenantDb.collection('contacts');
+            const mongoose = require('mongoose');
+            
+            await collection.updateOne(
+               { _id: new mongoose.Types.ObjectId(contactId) },
+               { $set: { ...updatePayload, timeline: contact.timeline } }
             );
 
-            if (updatedDoc) {
-               return res.json({ success: true, contact: updatedDoc });
-            }
-
-            return res.json({ success: true, contact: contact.toObject() });
+            // Fetch the final state back as a plain object
+            const finalDoc = await collection.findOne({ _id: new mongoose.Types.ObjectId(contactId) });
+            return res.json({ success: true, contact: finalDoc });
 
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };
