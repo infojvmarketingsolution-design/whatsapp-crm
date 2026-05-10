@@ -338,13 +338,12 @@ const performContactAction = async (req, res) => {
              }
           }
 
-          // 3. SECURE DATABASE UPDATE: Use Raw MongoDB Update for Lead Source fields to ensure persistence
-          // Prepare clean update payload
+          // 3. SECURE DATABASE UPDATE: Use Document Merge & Save to ensure full parity
           const updatePayload = { ...payload };
           const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'assignedAgentName', 'assignedCounsellorName'];
           protectedFields.forEach(f => delete updatePayload[f]);
 
-          // Auto-sync legacy leadSource summary string
+          // Sync leadSource summary
           const type = updatePayload.leadSourceType || contact.leadSourceType || 'Manual Entry';
           const social = updatePayload.socialMediaSource || contact.socialMediaSource || '';
           const ref = updatePayload.referenceName || contact.referenceName || '';
@@ -357,30 +356,22 @@ const performContactAction = async (req, res) => {
           
           updatePayload.leadSource = summary;
 
-          // Force update these specific fields in the payload to ensure they are present
-          if (updatePayload.leadSourceType) updatePayload.leadSourceType = type;
-          if (updatePayload.socialMediaSource) updatePayload.socialMediaSource = social;
-          if (updatePayload.referenceName) updatePayload.referenceName = ref;
+          // Merge payload into contact document
+          Object.keys(updatePayload).forEach(key => {
+             contact[key] = updatePayload[key];
+          });
 
-          // Perform the update using raw collection to bypass any potential schema stripping
-          await ContactModel.collection.updateOne(
-             { _id: new mongoose.Types.ObjectId(contactId) },
-             { 
-                $set: updatePayload,
-                $push: { 
-                   timeline: { 
-                      eventType: 'FIELD_UPDATED', 
-                      description: `Profile details synchronized (Source: ${summary})`, 
-                      timestamp: new Date() 
-                   } 
-                } 
-             }
-          );
+          // Add timeline event
+          contact.timeline.push({ 
+             eventType: 'FIELD_UPDATED', 
+             description: `Profile details synchronized (Source: ${summary})`, 
+             timestamp: new Date() 
+          });
 
-          const updatedDoc = await ContactModel.findById(contactId);
-          if (!updatedDoc) return res.status(404).json({ error: 'Failed to retrieve updated contact' });
+          // Save with validation disabled to allow flexible field updates
+          await contact.save({ validateBeforeSave: false });
           
-          return res.json({ success: true, contact: updatedDoc.toObject() });
+          return res.json({ success: true, contact: contact.toObject() });
 
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };
