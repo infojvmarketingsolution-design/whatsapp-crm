@@ -645,6 +645,51 @@ const performBulkContactAction = async (req, res) => {
          }
        );
        return res.json({ success: true, message: `${contactIds.length} leads moved to ${stage}` });
+    } else if (action === 'update_lead_source' || action === 'leadSourceType') {
+       const sourceType = typeof payload === 'string' ? payload : (payload.sourceType || payload);
+       
+       // Bulk update leadSourceType
+       await ContactModel.updateMany(
+         { _id: { $in: finalContactIds } },
+         { 
+           $set: { 
+              leadSourceType: sourceType,
+              leadSource: sourceType // For bulk, we set the summary to the type name for simplicity
+           },
+           $push: { 
+             timeline: { 
+               eventType: 'FIELD_UPDATED', 
+               description: `Lead source updated to ${sourceType} in bulk`, 
+               timestamp: new Date() 
+             } 
+           }
+         }
+       );
+       return res.json({ success: true, message: `${finalContactIds.length} leads source updated` });
+    } else if (action === 'update_status' || action === 'status') {
+       let status = typeof payload === 'string' ? payload : (payload.status || payload);
+       
+       // Map frontend values
+       if (status === 'CLOSE') status = 'CLOSED';
+       if (status === 'PENDING VISIT') status = 'PENDING_VISIT';
+
+       await ContactModel.updateMany(
+         { _id: { $in: finalContactIds } },
+         { 
+           $set: { 
+              status: status,
+              isClosed: ['CLOSED', 'CLOSED_LOST', 'CLOSED_WON', 'ADMISSION'].includes(status)
+           },
+           $push: { 
+             timeline: { 
+               eventType: 'STATUS_UPDATED', 
+               description: `Status updated to ${status} in bulk`, 
+               timestamp: new Date() 
+             } 
+           }
+         }
+       );
+       return res.json({ success: true, message: `${finalContactIds.length} leads status updated` });
     } else if (action === 'hard_delete_leads') {
       await MessageModel.deleteMany({ contactId: { $in: contactIds } });
       await ContactModel.deleteMany({ _id: { $in: contactIds } });
