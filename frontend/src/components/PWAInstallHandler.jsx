@@ -22,7 +22,7 @@ export default function PWAInstallHandler({
     // 2. iOS Detection (Robust)
     const ua = window.navigator.userAgent;
     const isIosDevice = /iPad|iPhone|iPod/.test(ua) || 
-                       (window.navigator.platform === 'MacIntel' && window.navigator.maxTouchPoints > 1);
+                       (window.navigator.userAgent.includes('Mac') && window.navigator.maxTouchPoints > 1);
     setIsIos(isIosDevice);
 
     // 3. Android / Browser Prompt Listener
