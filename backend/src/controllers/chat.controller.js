@@ -340,7 +340,7 @@ const performContactAction = async (req, res) => {
 
           // 3. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
             // Securely merge payload into existing contact
-            // 3. DIRECT DATABASE WRITE: Use updateOne to bypass any potential Mongoose model/schema caching issues
+            // 3. DIRECT DATABASE WRITE: Use findOneAndUpdate for atomic update and retrieval
             const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'lastMsgDoc', 'assignedAgentName', 'assignedCounsellorName', 'lastMessage', 'lastMessageType'];
             const updatePayload = {};
             
@@ -386,15 +386,18 @@ const performContactAction = async (req, res) => {
                }
             });
 
-            // Perform the hard update
-            await ContactModel.updateOne({ _id: contactId }, { $set: updatePayload });
-            
-            // Re-fetch the latest state into the contact object for the final save (timeline only)
-            const freshContact = await ContactModel.findById(contactId);
-            if (freshContact) {
-               freshContact.timeline = contact.timeline;
-               contact = freshContact;
+            // Perform atomic update and get fresh document
+            const updatedDoc = await ContactModel.findOneAndUpdate(
+               { _id: contactId },
+               { $set: { ...updatePayload, timeline: contact.timeline } },
+               { new: true, runValidators: false }
+            );
+
+            if (updatedDoc) {
+               contact = updatedDoc;
             }
+
+            return res.json({ success: true, contact: contact.toObject() });
 
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };
