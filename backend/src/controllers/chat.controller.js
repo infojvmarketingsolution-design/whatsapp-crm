@@ -358,6 +358,10 @@ const performContactAction = async (req, res) => {
 
           // Perform atomic update using the raw MongoDB driver for 100% reliability
           const rawId = new mongoose.Types.ObjectId(contactId);
+          
+          // Diagnostic: Create a string of the received fields to see in the timeline
+          const diagnostic = `Keys: ${Object.keys(updatePayload).join(', ')} | Type: ${type} | Social: ${social}`;
+          
           await ContactModel.collection.updateOne(
              { _id: rawId },
              { 
@@ -373,7 +377,7 @@ const performContactAction = async (req, res) => {
                 $push: { 
                    timeline: { 
                       eventType: 'FIELD_UPDATED', 
-                      description: `Profile synchronized - Source: ${summary}`, 
+                      description: `Profile Sync [${diagnostic}]`, 
                       timestamp: new Date() 
                    }
                 }
