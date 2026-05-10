@@ -338,12 +338,12 @@ const performContactAction = async (req, res) => {
              }
           }
 
-          // 3. SECURE DATABASE UPDATE: Use Document Merge & Save to ensure full parity
+          // 3. SECURE DATABASE UPDATE: Atomic $set to bypass potential Mongoose path stripping
           const updatePayload = { ...payload };
           const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'assignedAgentName', 'assignedCounsellorName'];
           protectedFields.forEach(f => delete updatePayload[f]);
 
-          // Sync leadSource summary
+          // Sync leadSource summary with careful fallbacks
           const type = updatePayload.leadSourceType || contact.leadSourceType || 'Manual Entry';
           const social = updatePayload.socialMediaSource || contact.socialMediaSource || '';
           const ref = updatePayload.referenceName || contact.referenceName || '';
@@ -356,31 +356,30 @@ const performContactAction = async (req, res) => {
           
           updatePayload.leadSource = summary;
 
-          // Merge payload into contact document
-          Object.keys(updatePayload).forEach(key => {
-             // Skip internal Mongoose logic for these
-             if (key === 'timeline' || key === 'notes') return;
-             contact[key] = updatePayload[key];
-          });
+          // Force sync specific fields to be absolutely sure they are included in $set
+          if (updatePayload.leadSourceType) updatePayload.leadSourceType = updatePayload.leadSourceType;
+          if (updatePayload.socialMediaSource) updatePayload.socialMediaSource = updatePayload.socialMediaSource;
+          if (updatePayload.leadSource) updatePayload.leadSource = updatePayload.leadSource;
 
-          // Force sync Lead Source fields to be absolutely sure
-          if (updatePayload.leadSourceType) contact.leadSourceType = updatePayload.leadSourceType;
-          if (updatePayload.socialMediaSource) contact.socialMediaSource = updatePayload.socialMediaSource;
-          if (updatePayload.referenceName) contact.referenceName = updatePayload.referenceName;
-          if (updatePayload.referencePhone) contact.referencePhone = updatePayload.referencePhone;
-          if (updatePayload.leadSource) contact.leadSource = updatePayload.leadSource;
+          // Perform atomic update to ensure schema-stripping doesn't happen
+          const updatedContact = await ContactModel.findOneAndUpdate(
+             { _id: contactId },
+             { 
+                $set: updatePayload,
+                $push: { 
+                   timeline: { 
+                      eventType: 'FIELD_UPDATED', 
+                      description: `Profile details synchronized (Source: ${summary})`, 
+                      timestamp: new Date() 
+                   }
+                }
+             },
+             { new: true, validateBeforeSave: false }
+          );
 
-          // Add timeline event
-          contact.timeline.push({ 
-             eventType: 'FIELD_UPDATED', 
-             description: `Profile details synchronized (Source: ${summary})`, 
-             timestamp: new Date() 
-          });
-
-          // Save with validation disabled to allow flexible field updates
-          await contact.save({ validateBeforeSave: false });
+          if (!updatedContact) return res.status(404).json({ error: 'Failed to synchronize profile' });
           
-          return res.json({ success: true, contact: contact.toObject() });
+          return res.json({ success: true, contact: updatedContact.toObject() });
 
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };
