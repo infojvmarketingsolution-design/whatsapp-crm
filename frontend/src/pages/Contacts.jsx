@@ -1602,7 +1602,7 @@ export default function Contacts({ roleAccess }) {
 
        {/* MODERN FLOATING BULK ACTION TOOLBAR */}
        {selectedIds.size > 0 && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[1000] animate-in slide-in-from-bottom-10 duration-300">
+          <div className="fixed bottom-12 left-1/2 -translate-x-1/2 z-[9999] animate-fade-in">
              <div className="bg-slate-900/90 backdrop-blur-xl border border-slate-700/50 rounded-[2rem] px-8 py-4 shadow-2xl flex items-center space-x-8 text-white min-w-[600px] max-w-[95vw]">
                 {/* Selection Counter */}
                 <div className="flex items-center space-x-3 pr-8 border-r border-slate-700/50">
@@ -1629,7 +1629,7 @@ export default function Contacts({ roleAccess }) {
                       </button>
                       
                       {activeBulkMenu === 'assign' && (
-                         <div className="absolute bottom-full mb-4 left-0 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                         <div className="absolute bottom-full mb-4 left-0 w-64 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-pop-in">
                             <div className="p-4 bg-slate-50 border-b border-slate-100">
                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Select Agent</p>
                             </div>
@@ -1669,7 +1669,7 @@ export default function Contacts({ roleAccess }) {
                       </button>
 
                       {activeBulkMenu === 'source' && (
-                         <div className="absolute bottom-full mb-4 left-0 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                         <div className="absolute bottom-full mb-4 left-0 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-pop-in">
                             <div className="p-4 bg-slate-50 border-b border-slate-100">
                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Update Source</p>
                             </div>
@@ -1723,7 +1723,7 @@ export default function Contacts({ roleAccess }) {
                       </button>
 
                       {activeBulkMenu === 'more' && (
-                         <div className="absolute bottom-full mb-4 right-0 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                         <div className="absolute bottom-full mb-4 right-0 w-56 bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden animate-pop-in">
                             <div className="p-4 bg-slate-50 border-b border-slate-100">
                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Advanced Actions</p>
                             </div>
