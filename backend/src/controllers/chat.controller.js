@@ -338,23 +338,25 @@ const performContactAction = async (req, res) => {
              }
           }
 
-          // 3. SECURE DATABASE UPDATE: Ultra-secure direct update
+          // 3. SECURE DATABASE UPDATE: Hyper-explicit mapping for Lead Source
           const updatePayload = { ...payload };
           const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'assignedAgentName', 'assignedCounsellorName'];
           protectedFields.forEach(f => delete updatePayload[f]);
 
-          // Sync leadSource summary with careful fallbacks
+          // Extract values for explicit persistence
           const type = updatePayload.leadSourceType || contact.leadSourceType || 'Manual Entry';
           const social = updatePayload.socialMediaSource || contact.socialMediaSource || '';
           const ref = updatePayload.referenceName || contact.referenceName || '';
-          
+          const b2b = updatePayload.b2bOrgName || contact.b2bOrgName || '';
+
           let summary = type;
           if (type === 'Social media' && social) summary = `Social: ${social}`;
           else if (type === 'Reference' && ref) summary = `Ref: ${ref}`;
+          else if (type === 'B2B agents' && b2b) summary = `B2B: ${b2b}`;
           
           updatePayload.leadSource = summary;
 
-          // Perform atomic update using the most direct path possible
+          // Perform atomic update using the raw MongoDB driver for 100% reliability
           const rawId = new mongoose.Types.ObjectId(contactId);
           await ContactModel.collection.updateOne(
              { _id: rawId },
@@ -364,12 +366,14 @@ const performContactAction = async (req, res) => {
                    leadSource: summary,
                    leadSourceType: type,
                    socialMediaSource: social,
-                   referenceName: ref
+                   referenceName: ref,
+                   referencePhone: updatePayload.referencePhone || contact.referencePhone || '',
+                   b2bOrgName: b2b
                 },
                 $push: { 
                    timeline: { 
                       eventType: 'FIELD_UPDATED', 
-                      description: `Profile details forced sync - Source: ${summary}`, 
+                      description: `Profile synchronized - Source: ${summary}`, 
                       timestamp: new Date() 
                    }
                 }
@@ -382,6 +386,9 @@ const performContactAction = async (req, res) => {
           
           return res.json({ success: true, contact: freshDoc });
 
+        } else if (action === 'update_profile') {
+           // Alias for update_contact to handle variations in frontend requests
+           return performContactAction({ ...req, body: { ...req.body, action: 'update_contact' } }, res);
         } else if (action === 'add_note') {
        const newNote = { content: payload.note, createdBy: req.user?.name || req.user?._id || 'System', createdAt: new Date() };
        if (!contact.notes) contact.notes = [];
