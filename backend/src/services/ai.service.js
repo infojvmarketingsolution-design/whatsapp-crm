@@ -68,7 +68,7 @@ class AIService {
       if (fieldType === 'NAME') {
         prompt = "Extract the person's name from this message. If not found, reply with the original message. Reply with ONLY the name.";
       } else if (fieldType === 'QUALIFICATION') {
-        prompt = "User is asked for qualification. Based on their reply, pick one: '10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'. If unclear, reply with the original message.";
+        prompt = "User is asked for qualification. Based on their reply, pick one: '10th Pass', '12th Pass', 'Diploma Complete', 'Graduation Complete', 'Master Complete', 'PhD Complete'. If unclear, reply with the original message.";
       }
 
       const response = await this.openai.chat.completions.create({

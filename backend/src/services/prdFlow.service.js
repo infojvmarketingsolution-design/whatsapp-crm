@@ -151,9 +151,15 @@ class PRDFlowService {
            } 
             else if (varName === 'qualification') {
                const opts = prompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation complete', 'Master complete', 'phD complete'];
-               // Improved matching: try exact match first, then includes
+               
+               // Improved matching: try exact match, then includes, then normalized fuzzy match
                let matched = opts.find(o => o.toLowerCase() === val.toLowerCase());
                if (!matched) matched = opts.find(o => o.toLowerCase().includes(val.toLowerCase()) || val.toLowerCase().includes(o.toLowerCase()));
+               
+               if (!matched) {
+                  const nv = aggressiveNormalize(val);
+                  matched = opts.find(o => aggressiveNormalize(o) === nv || aggressiveNormalize(o).includes(nv) || nv.includes(aggressiveNormalize(o)));
+               }
                
                if (matched) {
                   console.log(`[PRD Flow] 🎓 Qualification Matched: "${matched}" (from "${val}")`);
@@ -266,37 +272,25 @@ class PRDFlowService {
 
                let qm = {};
                
-               // 🛡️ NUCLEAR OVERRIDE: Strict matches for 10th, 12th, and Graduation
-               if (tqc.includes('12') || tqc.includes('hsc') || currentQual.includes('12')) {
-                  console.log(`[PRD Flow] 🎯 12th PASS CATEGORIES ACTIVE`);
-                  qm = {
-                     "Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation", "VFX & Game Design"],
-                     "Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"]
-                  };
-               } else if (tqc.includes('10') || tqc.includes('ssc') || currentQual.includes('10')) {
-                  console.log(`[PRD Flow] 🎯 10th PASS CATEGORIES ACTIVE`);
-                  qm = {
-                     "Trending Programs": ["IT Diploma", "Animation Diploma", "Digital Marketing"],
-                     "Traditional Programs": ["Diploma in Engineering", "Vocational Courses"]
-                  };
-               } else if (tqc.includes('grad') || tqc.includes('bach') || tqc.includes('degree')) {
-                  console.log(`[PRD Flow] 🎯 GRADUATION CATEGORIES ACTIVE`);
-                  qm = {
-                     "Trending Master Programs": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation", "VFX & Game Design"],
-                     "Traditional Master Programs": ["MBA", "M.Com", "MCA", "M.Sc"]
-                  };
-               } else {
-                  // Fallback to settings map
-                  const keys = Object.keys(prompts.programMap || {});
-                  let qk = keys.find(k => aggressiveNormalize(k) === tqc); 
-                  if (!qk) qk = keys.find(k => aggressiveNormalize(k).startsWith(tqc) || tqc.startsWith(aggressiveNormalize(k)));
-                  qm = qk ? prompts.programMap[qk] : {};
+               // 🛡️ DYNAMIC LOOKUP: Find the qualification in the program map
+               const keys = Object.keys(prompts.programMap || {});
+               let qk = keys.find(k => aggressiveNormalize(k) === tqc); 
+               if (!qk) qk = keys.find(k => aggressiveNormalize(k).startsWith(tqc) || tqc.startsWith(aggressiveNormalize(k)));
+               
+               qm = qk ? prompts.programMap[qk] : {};
+               
+               // 🧹 NORMALIZE: Ensure qm is an object of categories
+               if (Array.isArray(qm)) {
+                  qm = { "Programs": qm }; // Convert simple array to a single category
                }
                
                const categories = Object.keys(qm);
 
                // 🧹 SAFETY CHECK: If the current stream doesn't belong to this qualification's map, reset it
-               if (stream && !categories.includes(stream)) {
+               const normalizedCategories = categories.map(c => aggressiveNormalize(c));
+               const isStreamValid = stream && normalizedCategories.includes(aggressiveNormalize(stream));
+
+               if (stream && !isStreamValid) {
                   console.log(`[PRD Flow] 🧹 Resetting invalid stream "${stream}" for qualification "${currentQual}"`);
                   contact.flowVariables.selectedStream = null;
                   await Contact.findOneAndUpdate({ phone: contact.phone }, { 'flowVariables.selectedStream': null });
