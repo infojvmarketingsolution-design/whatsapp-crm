@@ -513,7 +513,7 @@ function Dashboard() {
       )}
 
       {isAdminOrSuperAdmin && (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
           <DashboardCard title="Reply Bots" value={loading && !wabaConfig ? "..." : (wabaConfig?.botEnabled ? "ACTIVE" : "INACTIVE")} subtext={wabaConfig?.botEnabled ? "Automation Engine LIVE" : "Bot currently disabled"} icon={Bot} />
           <DashboardCard 
              title="Ad Budget Credit" 
@@ -524,19 +524,32 @@ function Dashboard() {
              actionLabel="Add"
           />
           <DashboardCard 
-            title="WABA Daily Limit" 
-            value={loading && !wabaConfig ? "..." : (limitNum === Infinity ? 'Unlimited' : limitNum.toLocaleString())}
-            subtext={wabaConfig?.limitTier || 'Not Configured'} 
-            icon={Database} 
+             title="WABA Daily Limit" 
+             value={loading && !wabaConfig ? "..." : (limitNum === Infinity ? 'Unlimited' : limitNum.toLocaleString())}
+             subtext={wabaConfig?.limitTier || 'Not Configured'} 
+             icon={Database} 
           />
           <DashboardCard 
-            title="Daily Remaining" 
-            value={loading && !wabaConfig ? "..." : (remainingNum === Infinity ? 'Unlimited' : remainingNum.toLocaleString())}
-            subtext={`Sent Today: ${sentToday}`} 
-            icon={Database} 
+             title="Daily Remaining" 
+             value={loading && !wabaConfig ? "..." : (remainingNum === Infinity ? 'Unlimited' : remainingNum.toLocaleString())}
+             subtext={`Sent Today: ${sentToday}`} 
+             icon={Database} 
           />
         </div>
       )}
+
+      {/* Market Intelligence Section */}
+      <div className="mt-12 mb-8 animate-fade-in-up">
+         <div className="flex items-center space-x-2 mb-6">
+            <div className="w-1.5 h-6 bg-indigo-600 rounded-full"></div>
+            <h3 className="text-sm font-black text-slate-700 tracking-widest uppercase">Market Intelligence</h3>
+            <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold">Source Insights</span>
+         </div>
+         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <LeadAnalysisCard title="Lifecycle Distribution" data={analysisData.statusStats} type="status" />
+            <LeadAnalysisCard title="Lead Source Distribution" data={analysisData.sourceStats} type="source" />
+         </div>
+      </div>
       </div>
 
       {/* User Breakdown Modal */}

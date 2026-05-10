@@ -125,7 +125,14 @@ export default function Contacts({ roleAccess }) {
                      visitStatus: updated.visitStatus || 'Not Done',
                      visitType: updated.visitType || '',
                      assignedCounsellor: updated.assignedCounsellor || '',
-                     closeReason: updated.closeReason || ''
+                     closeReason: updated.closeReason || '',
+                     leadSourceType: updated.leadSourceType || 'Manual Entry',
+                     socialMediaSource: updated.socialMediaSource || '',
+                     referenceName: updated.referenceName || '',
+                     referencePhone: updated.referencePhone || '',
+                     b2bOrgName: updated.b2bOrgName || '',
+                     b2bPersonName: updated.b2bPersonName || '',
+                     b2bPhone: updated.b2bPhone || ''
                   });
                }
             }
@@ -390,7 +397,14 @@ export default function Contacts({ roleAccess }) {
            visitStatus: freshContact.visitStatus || 'Not Done',
            visitType: freshContact.visitType || '',
            assignedCounsellor: freshContact.assignedCounsellor || '',
-           closeReason: freshContact.closeReason || ''
+           closeReason: freshContact.closeReason || '',
+           leadSourceType: freshContact.leadSourceType || 'Manual Entry',
+           socialMediaSource: freshContact.socialMediaSource || '',
+           referenceName: freshContact.referenceName || '',
+           referencePhone: freshContact.referencePhone || '',
+           b2bOrgName: freshContact.b2bOrgName || '',
+           b2bPersonName: freshContact.b2bPersonName || '',
+           b2bPhone: freshContact.b2bPhone || ''
         });
         
         setShowSaveFab(false);
@@ -559,7 +573,29 @@ export default function Contacts({ roleAccess }) {
 
   const handleRowClick = (contact) => {
      setSelectedContact(contact);
-     setEditedContact({ ...contact, secondaryPhone: contact.secondaryPhone || "", altMobile: contact.altMobile || "", houseNo: contact.houseNo || "", societyName: contact.societyName || "", streetAddress: contact.streetAddress || "", city: contact.city || "", state: contact.state || "", pincode: contact.pincode || "", qualification: contact.qualification || "", selectedProgram: contact.selectedProgram || "", visitStatus: contact.visitStatus || "Not Done", visitType: contact.visitType || "", assignedCounsellor: contact.assignedCounsellor || "" });
+     setEditedContact({ 
+        ...contact, 
+        secondaryPhone: contact.secondaryPhone || "", 
+        altMobile: contact.altMobile || "", 
+        houseNo: contact.houseNo || "", 
+        societyName: contact.societyName || "", 
+        streetAddress: contact.streetAddress || "", 
+        city: contact.city || "", 
+        state: contact.state || "", 
+        pincode: contact.pincode || "", 
+        qualification: contact.qualification || "", 
+        selectedProgram: contact.selectedProgram || "", 
+        visitStatus: contact.visitStatus || "Not Done", 
+        visitType: contact.visitType || "", 
+        assignedCounsellor: contact.assignedCounsellor || "",
+        leadSourceType: contact.leadSourceType || "Manual Entry",
+        socialMediaSource: contact.socialMediaSource || "",
+        referenceName: contact.referenceName || "",
+        referencePhone: contact.referencePhone || "",
+        b2bOrgName: contact.b2bOrgName || "",
+        b2bPersonName: contact.b2bPersonName || "",
+        b2bPhone: contact.b2bPhone || ""
+     });
      setShowProfile(true);
      fetchRecentMessages(contact._id);
      setShowSaveFab(false);
@@ -929,6 +965,110 @@ export default function Contacts({ roleAccess }) {
                   {/* LEFT PANEL: STRUCTURED STEP-BY-STEP FLOW */}
                   <div className="flex-1 lg:w-[460px] bg-slate-50/80 border-b lg:border-b-0 lg:border-r border-slate-100 overflow-y-auto custom-scrollbar p-4 sm:p-8 space-y-10 lg:shrink-0">
                      
+                     {/* STEP 0: LEAD SOURCE */}
+                     <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in">
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center space-x-4">
+                              <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white text-xs flex items-center justify-center font-bold shadow-lg shadow-indigo-600/20">00</div>
+                              <h3 className="text-[11px] font-bold text-slate-800 uppercase tracking-[0.2em]">Lead Source</h3>
+                           </div>
+                           <Globe size={18} className="text-slate-200" />
+                        </div>
+                        
+                        <div className="space-y-6">
+                           <div className="space-y-2">
+                              <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Primary Source</label>
+                              <div className="relative group">
+                                 <select 
+                                   value={editedContact.leadSourceType || 'Manual Entry'} 
+                                   onChange={e=>handleFieldChange('leadSourceType', e.target.value)}
+                                   className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-indigo-500/20 transition-all appearance-none pr-10"
+                                 >
+                                    <option value="Manual Entry">Manual Entry</option>
+                                    <option value="Social media">Social media</option>
+                                    <option value="Referese">Referese</option>
+                                    <option value="B2B agents">B2B agents</option>
+                                    <option value="Direct">Direct</option>
+                                    <option value="Other">Other</option>
+                                 </select>
+                                 <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                              </div>
+                           </div>
+
+                           {editedContact.leadSourceType === 'Social media' && (
+                              <div className="space-y-2 animate-fade-in">
+                                 <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Platform</label>
+                                 <div className="relative group">
+                                    <select 
+                                      value={editedContact.socialMediaSource || ''} 
+                                      onChange={e=>handleFieldChange('socialMediaSource', e.target.value)}
+                                      className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-blue-500/20 transition-all appearance-none pr-10"
+                                    >
+                                       <option value="">Choose Platform</option>
+                                       {['Instagram', 'Snapchat', 'YouTube', 'Jio Hotstar', 'Google Ads', 'Whatsapp Marketing'].map(p => <option key={p} value={p}>{p}</option>)}
+                                    </select>
+                                    <ChevronDown size={14} className="absolute right-5 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                                 </div>
+                              </div>
+                           )}
+
+                           {editedContact.leadSourceType === 'Referese' && (
+                              <div className="grid grid-cols-1 gap-4 animate-fade-in">
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Referese Name</label>
+                                    <input 
+                                       value={editedContact.referenceName || ''} 
+                                       onChange={e=>handleFieldChange('referenceName', e.target.value)} 
+                                       placeholder="Person who referred" 
+                                       className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-indigo-500/20 transition-all" 
+                                    />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Mobile Number</label>
+                                    <input 
+                                       value={editedContact.referencePhone || ''} 
+                                       onChange={e=>handleFieldChange('referencePhone', e.target.value)} 
+                                       placeholder="Contact number" 
+                                       className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-indigo-500/20 transition-all" 
+                                    />
+                                 </div>
+                              </div>
+                           )}
+
+                           {editedContact.leadSourceType === 'B2B agents' && (
+                              <div className="grid grid-cols-1 gap-4 animate-fade-in">
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Organization Name</label>
+                                    <input 
+                                       value={editedContact.b2bOrgName || ''} 
+                                       onChange={e=>handleFieldChange('b2bOrgName', e.target.value)} 
+                                       placeholder="Name of agency/company" 
+                                       className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-indigo-500/20 transition-all" 
+                                    />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Person Name</label>
+                                    <input 
+                                       value={editedContact.b2bPersonName || ''} 
+                                       onChange={e=>handleFieldChange('b2bPersonName', e.target.value)} 
+                                       placeholder="Agent name" 
+                                       className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-indigo-500/20 transition-all" 
+                                    />
+                                 </div>
+                                 <div className="space-y-2">
+                                    <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Mobile Number</label>
+                                    <input 
+                                       value={editedContact.b2bPhone || ''} 
+                                       onChange={e=>handleFieldChange('b2bPhone', e.target.value)} 
+                                       placeholder="Contact number" 
+                                       className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-indigo-500/20 transition-all" 
+                                    />
+                                 </div>
+                              </div>
+                           )}
+                        </div>
+                     </div>
+
                      {/* STEP 1: BASIC INFORMATION */}
                      <div className="bg-white rounded-[2.5rem] border border-slate-100 p-6 sm:p-10 shadow-premium space-y-8 animate-fade-in">
                         <div className="flex items-center justify-between">

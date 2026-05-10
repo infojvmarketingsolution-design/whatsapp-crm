@@ -58,6 +58,14 @@ const ContactSchema = new mongoose.Schema({
   estimatedValue: { type: Number, default: 0 },
   leadSource: { type: String, default: 'Manual Entry' },
   nextFollowUp: { type: Date },
+  // Lead Source Granular Details
+  leadSourceType: { type: String, enum: ['Social media', 'Referese', 'B2B agents', 'Manual Entry', 'Direct', 'Other'], default: 'Manual Entry' },
+  socialMediaSource: { type: String }, // Instagram, Snapchat, etc.
+  referenceName: { type: String },
+  referencePhone: { type: String },
+  b2bOrgName: { type: String },
+  b2bPersonName: { type: String },
+  b2bPhone: { type: String },
   // Counselling & Admission Tracking
   visitStatus: { type: String, default: 'Not Done' }, // 'Done', 'Not Done'
   visitType: { type: String }, // 'University Visit', 'Campus Visit'

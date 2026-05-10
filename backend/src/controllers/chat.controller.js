@@ -153,7 +153,14 @@ const getContacts = async (req, res) => {
           closeReason: 1,
           meetingType: 1,
           meetingRemark: 1,
-          notes: 1
+          notes: 1,
+          leadSourceType: 1,
+          socialMediaSource: 1,
+          referenceName: 1,
+          referencePhone: 1,
+          b2bOrgName: 1,
+          b2bPersonName: 1,
+          b2bPhone: 1
         }
       },
       { $sort: { lastMessageAt: -1 } }
@@ -1058,7 +1065,7 @@ const getLeadAnalysis = async (req, res) => {
     // Aggregate by Source with fallback to empty array
     const sourceStats = (await Contact.aggregate([
       { $match: { isArchived: { $ne: true } } },
-      { $group: { _id: "$leadSource", count: { $sum: 1 } } },
+      { $group: { _id: "$leadSourceType", count: { $sum: 1 } } },
       { $sort: { count: -1 } }
     ])) || [];
 
