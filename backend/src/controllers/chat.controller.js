@@ -556,149 +556,82 @@ const performBulkContactAction = async (req, res) => {
        }
     }
 
+    // Process Actions with real-time updates
+    const updatedLeads = [];
+    
     if (action === 'archive_leads') {
-      await ContactModel.updateMany(
-        { _id: { $in: finalContactIds } },
-        { 
-          $set: { isArchived: true },
-          $push: { 
-            timeline: { 
-              eventType: 'LEAD_ARCHIVED', 
-              description: 'Lead archived in bulk', 
-              timestamp: new Date() 
-            } 
-          }
-        }
-      );
-      return res.json({ success: true, message: `${finalContactIds.length} leads archived` });
+       for (const id of finalContactIds) {
+          const updated = await ContactModel.findByIdAndUpdate(id, {
+             $set: { isArchived: true },
+             $push: { timeline: { eventType: 'LEAD_ARCHIVED', description: 'Lead archived in bulk', timestamp: new Date() } }
+          }, { new: true });
+          if (updated) updatedLeads.push(updated);
+       }
     } else if (action === 'transfer_leads' || action === 'assignedAgent') {
-      const agentId = typeof payload === 'string' ? payload : (payload.agentId || payload);
-      let agentName = 'Unassigned';
-      if (agentId && agentId !== "") {
-         const agent = await User.findById(agentId);
-         agentName = agent ? agent.name : 'Unknown Agent';
-      }
-
-      await ContactModel.updateMany(
-        { _id: { $in: contactIds } },
-        { 
-          $set: { assignedAgent: agentId && agentId !== "" ? agentId : null },
-          $push: { 
-            timeline: { 
-              eventType: 'AGENT_ASSIGNED', 
-              description: agentId ? `Assigned to ${agentName} in bulk` : 'Lead unassigned in bulk', 
-              timestamp: new Date() 
-            } 
-          }
-        }
-      );
-
-      // Emit socket updates for real-time visibility
-      const updatedContacts = await ContactModel.find({ _id: { $in: contactIds } });
-      updatedContacts.forEach(c => {
-         req.app.get("io")?.to(req.tenantId).emit("contact_updated", { contactId: c._id, contact: c.toObject() });
-      });
-
-      return res.json({ success: true, message: `${contactIds.length} leads transferred to ${agentName}` });
-    } else if (action === 'transfer_counsellor') {
-      const counsellorId = typeof payload === 'string' ? payload : (payload.counsellorId || payload);
-      let counsellorName = 'Unassigned';
-      if (counsellorId && counsellorId !== "") {
-         const counsellor = await User.findById(counsellorId);
-         counsellorName = counsellor ? counsellor.name : 'Unknown Counsellor';
-      }
-
-      await ContactModel.updateMany(
-        { _id: { $in: contactIds } },
-        { 
-          $set: { assignedCounsellor: counsellorId && counsellorId !== "" ? counsellorId : null },
-          $push: { 
-            timeline: { 
-              eventType: 'COUNSELLOR_ASSIGNED', 
-              description: counsellorId ? `Enquiry Expert assigned to ${counsellorName} in bulk` : 'Counsellor unassigned in bulk', 
-              timestamp: new Date() 
-            } 
-          }
-        }
-      );
-
-      // Emit socket updates
-      const updatedCounsellorContacts = await ContactModel.find({ _id: { $in: contactIds } });
-      updatedCounsellorContacts.forEach(c => {
-         req.app.get("io")?.to(req.tenantId).emit("contact_updated", { contactId: c._id, contact: c.toObject() });
-      });
-
-      return res.json({ success: true, message: `${contactIds.length} leads assigned to counsellor ${counsellorName}` });
-    } else if (action === 'update_stage' || action === 'pipelineStage') {
-       const stage = typeof payload === 'string' ? payload : (payload.stage || payload);
-       await ContactModel.updateMany(
-         { _id: { $in: contactIds } },
-         { 
-           $set: { pipelineStage: stage },
-           $push: { 
-             timeline: { 
-               eventType: 'PIPELINE_MOVE', 
-               description: `Moved to ${stage} stage in bulk`, 
-               timestamp: new Date() 
-             } 
-           }
-         }
-       );
-       return res.json({ success: true, message: `${contactIds.length} leads moved to ${stage}` });
+       const agentId = typeof payload === 'string' ? payload : (payload.agentId || payload);
+       let agentName = 'Unassigned';
+       if (agentId && agentId !== "") {
+          const agent = await User.findById(agentId);
+          agentName = agent ? agent.name : 'Unknown Agent';
+       }
+       for (const id of finalContactIds) {
+          const updated = await ContactModel.findByIdAndUpdate(id, {
+             $set: { assignedAgent: agentId && agentId !== "" ? agentId : null },
+             $push: { timeline: { eventType: 'AGENT_ASSIGNED', description: agentId ? `Assigned to ${agentName} in bulk` : 'Lead unassigned in bulk', timestamp: new Date() } }
+          }, { new: true });
+          if (updated) updatedLeads.push(updated);
+       }
+    } else if (action === 'transfer_counsellor' || action === 'assignedCounsellor') {
+       const counsellorId = typeof payload === 'string' ? payload : (payload.counsellorId || payload);
+       let counsellorName = 'Unassigned';
+       if (counsellorId && counsellorId !== "") {
+          const counsellor = await User.findById(counsellorId);
+          counsellorName = counsellor ? counsellor.name : 'Unknown Counsellor';
+       }
+       for (const id of finalContactIds) {
+          const updated = await ContactModel.findByIdAndUpdate(id, {
+             $set: { assignedCounsellor: counsellorId && counsellorId !== "" ? counsellorId : null },
+             $push: { timeline: { eventType: 'COUNSELLOR_ASSIGNED', description: counsellorId ? `Enquiry Expert assigned to ${counsellorName} in bulk` : 'Counsellor unassigned in bulk', timestamp: new Date() } }
+          }, { new: true });
+          if (updated) updatedLeads.push(updated);
+       }
     } else if (action === 'update_lead_source' || action === 'leadSourceType') {
        const sourceType = typeof payload === 'string' ? payload : (payload.sourceType || payload);
+       for (const id of finalContactIds) {
+          const updated = await ContactModel.findByIdAndUpdate(id, {
+             $set: { leadSourceType: sourceType, leadSource: sourceType },
+             $push: { timeline: { eventType: 'FIELD_UPDATED', description: `Lead source updated to ${sourceType} in bulk`, timestamp: new Date() } }
+          }, { new: true });
+          if (updated) updatedLeads.push(updated);
+       }
+    } else if (action === 'update_status' || action === 'status' || action === 'update_stage' || action === 'pipelineStage') {
+       let val = typeof payload === 'string' ? payload : (payload.status || payload.stage || payload);
+       const isStage = action === 'update_stage' || action === 'pipelineStage';
        
-       // Bulk update leadSourceType
-       await ContactModel.updateMany(
-         { _id: { $in: finalContactIds } },
-         { 
-           $set: { 
-              leadSourceType: sourceType,
-              leadSource: sourceType // For bulk, we set the summary to the type name for simplicity
-           },
-           $push: { 
-             timeline: { 
-               eventType: 'FIELD_UPDATED', 
-               description: `Lead source updated to ${sourceType} in bulk`, 
-               timestamp: new Date() 
-             } 
-           }
-         }
-       );
-       return res.json({ success: true, message: `${finalContactIds.length} leads source updated` });
-    } else if (action === 'update_status' || action === 'status') {
-       let status = typeof payload === 'string' ? payload : (payload.status || payload);
-       
-       // Map frontend values
-       if (status === 'CLOSE') status = 'CLOSED';
-       if (status === 'PENDING VISIT') status = 'PENDING_VISIT';
-
-       await ContactModel.updateMany(
-         { _id: { $in: finalContactIds } },
-         { 
-           $set: { 
-              status: status,
-              isClosed: ['CLOSED', 'CLOSED_LOST', 'CLOSED_WON', 'ADMISSION'].includes(status)
-           },
-           $push: { 
-             timeline: { 
-               eventType: 'STATUS_UPDATED', 
-               description: `Status updated to ${status} in bulk`, 
-               timestamp: new Date() 
-             } 
-           }
-         }
-       );
-       return res.json({ success: true, message: `${finalContactIds.length} leads status updated` });
+       for (const id of finalContactIds) {
+          const update = isStage ? { pipelineStage: val } : { status: val, isClosed: ['CLOSED', 'CLOSED_LOST', 'CLOSED_WON', 'ADMISSION'].includes(val) };
+          const updated = await ContactModel.findByIdAndUpdate(id, {
+             $set: update,
+             $push: { timeline: { eventType: isStage ? 'PIPELINE_MOVE' : 'STATUS_UPDATED', description: `${isStage ? 'Stage' : 'Status'} updated to ${val} in bulk`, timestamp: new Date() } }
+          }, { new: true });
+          if (updated) updatedLeads.push(updated);
+       }
     } else if (action === 'hard_delete_leads') {
-      await MessageModel.deleteMany({ contactId: { $in: contactIds } });
-      await ContactModel.deleteMany({ _id: { $in: contactIds } });
-      return res.json({ success: true, message: `${contactIds.length} leads and their messages permanently deleted` });
-    } else {
-      return res.status(400).json({ error: 'Invalid bulk action type' });
+       await MessageModel.deleteMany({ contactId: { $in: contactIds } });
+       await ContactModel.deleteMany({ _id: { $in: contactIds } });
+       return res.json({ success: true, message: `${contactIds.length} leads permanently deleted` });
     }
+
+    // Emit Socket Updates for all updated leads
+    updatedLeads.forEach(lead => {
+       req.app.get("io")?.to(req.tenantId).emit("contact_updated", { contactId: lead._id, contact: lead.toObject() });
+    });
+
+    return res.json({ success: true, message: `Successfully updated ${updatedLeads.length} leads` });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('[Bulk Action Error]:', error);
+    res.status(500).json({ error: error.message });
+  }
   }
 };
 
@@ -910,7 +843,10 @@ const sendMessage = async (req, res) => {
     res.json(newMessage);
   } catch (error) {
      console.error(`[POST /send] FAILED! Error:`, error);
-     res.status(500).json({ message: error.message });
+     console.error('[Bulk Action Error]:', error);
+     console.error('[Bulk Action Error]:', error);
+     console.error('[Bulk Action Error]:', error);
+     res.status(500).json({ error: error.message });
   }
 };
 
