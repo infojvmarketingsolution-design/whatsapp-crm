@@ -340,55 +340,42 @@ const performContactAction = async (req, res) => {
 
           // 3. DIRECT DATABASE WRITE: Bypasses manual mapping for all other fields
             // Securely merge payload into existing contact
-            // 3. DIRECT DATABASE WRITE: Bypassing Mongoose entirely to talk to the raw MongoDB driver
-            const protectedFields = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'lastMsgDoc', 'assignedAgentName', 'assignedCounsellorName', 'lastMessage', 'lastMessageType'];
-            const updatePayload = {};
-            
-            Object.keys(payload).forEach(key => {
-               if (!protectedFields.includes(key)) {
-                  const oldValue = contact.get ? contact.get(key) : contact[key];
-                  const newValue = payload[key];
-                  updatePayload[key] = newValue;
-
-                  // Record major changes in timeline
-                  const majorFields = [
-                     'firstName', 'lastName', 'phone', 'secondaryPhone', 'status', 
-                     'pipelineStage', 'selectedProgram', 'visitStatus',
-                     'leadSourceType', 'socialMediaSource', 'referenceName', 'b2bOrgName'
-                  ];
-                  
-                  if (majorFields.includes(key) && String(oldValue) !== String(newValue)) {
-                     contact.timeline.push({
-                        eventType: 'FIELD_UPDATED',
-                        description: `${key} updated from "${oldValue || 'None'}" to "${newValue || 'None'}"`,
-                        timestamp: new Date()
-                     });
-
-                     // Auto-sync legacy leadSource
-                     let summary = (key === 'leadSourceType' ? newValue : (contact.leadSourceType || 'Manual Entry'));
-                     const currentSocial = (key === 'socialMediaSource' ? newValue : contact.socialMediaSource);
-                     const currentRef = (key === 'referenceName' ? newValue : contact.referenceName);
-                     const currentB2B = (key === 'b2bOrgName' ? newValue : contact.b2bOrgName);
-
-                     if (summary === 'Social media' && currentSocial) summary = `Social: ${currentSocial}`;
-                     else if (summary === 'Referese' && currentRef) summary = `Ref: ${currentRef}`;
-                     else if (summary === 'B2B agents' && currentB2B) summary = `B2B: ${currentB2B}`;
-                     
-                     updatePayload.leadSource = summary;
-                  }
-               }
-            });
-
-            // RAW MONGODB UPDATE (Bypasses all schema logic)
+            // 3. BRUTE FORCE RAW SAVE: Talk directly to MongoDB and save everything in the payload
             const collection = req.tenantDb.collection('contacts');
             const mongoose = require('mongoose');
             
+            // Prepare clean DB payload (exclude protected fields that shouldn't be bulk-updated)
+            const dbPayload = { ...payload };
+            const exclude = ['_id', '__v', 'createdAt', 'updatedAt', 'tasks', 'notes', 'timeline', 'assignedAgentName', 'assignedCounsellorName'];
+            exclude.forEach(f => delete dbPayload[f]);
+
+            // Auto-sync legacy leadSource
+            let summary = payload.leadSourceType || contact.leadSourceType || 'Manual Entry';
+            const social = payload.socialMediaSource || contact.socialMediaSource;
+            const ref = payload.referenceName || contact.referenceName;
+            const b2b = payload.b2bOrgName || contact.b2bOrgName;
+
+            if (summary === 'Social media' && social) summary = `Social: ${social}`;
+            else if (summary === 'Referese' && ref) summary = `Ref: ${ref}`;
+            else if (summary === 'B2B agents' && b2b) summary = `B2B: ${b2b}`;
+            dbPayload.leadSource = summary;
+
+            // Direct Update
             await collection.updateOne(
                { _id: new mongoose.Types.ObjectId(contactId) },
-               { $set: { ...updatePayload, timeline: contact.timeline } }
+               { 
+                  $set: dbPayload,
+                  $push: { 
+                     timeline: { 
+                        eventType: 'FIELD_UPDATED', 
+                        description: `Profile details updated`, 
+                        timestamp: new Date() 
+                     } 
+                  } 
+               }
             );
 
-            // Fetch the final state back as a plain object
+            // Re-fetch and return as plain object
             const finalDoc = await collection.findOne({ _id: new mongoose.Types.ObjectId(contactId) });
             return res.json({ success: true, contact: finalDoc });
 
