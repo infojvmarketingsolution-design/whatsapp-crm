@@ -552,7 +552,7 @@ const performBulkContactAction = async (req, res) => {
        }).select('_id');
        finalContactIds = visibleContacts.map(c => c._id);
        if (finalContactIds.length === 0) {
-          return res.status(403).json({ message: 'Access denied: None of these leads are assigned to you.' });
+          return res.status(403).json({ error: 'Access denied: None of these leads are assigned to you.' });
        }
     }
 
