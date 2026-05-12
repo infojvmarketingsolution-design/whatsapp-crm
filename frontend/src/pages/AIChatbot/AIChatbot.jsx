@@ -256,6 +256,56 @@ export default function AIChatbot() {
      });
   };
 
+  const addStepButton = (stepId) => {
+    setSettings(prev => ({
+       ...prev,
+       aiPrompts: {
+          ...prev.aiPrompts,
+          prdFlowSteps: (prev.aiPrompts.prdFlowSteps || []).map(s => {
+             if (s.id === stepId) {
+                const buttons = s.buttons || [];
+                return { ...s, buttons: [...buttons, { type: 'reply', label: 'New Option', value: 'new_option' }] };
+             }
+             return s;
+          })
+       }
+    }));
+  };
+
+  const updateStepButton = (stepId, btnIndex, field, value) => {
+    setSettings(prev => ({
+       ...prev,
+       aiPrompts: {
+          ...prev.aiPrompts,
+          prdFlowSteps: (prev.aiPrompts.prdFlowSteps || []).map(s => {
+             if (s.id === stepId) {
+                const buttons = [...(s.buttons || [])];
+                buttons[btnIndex] = { ...buttons[btnIndex], [field]: value };
+                return { ...s, buttons };
+             }
+             return s;
+          })
+       }
+    }));
+  };
+
+  const removeStepButton = (stepId, btnIndex) => {
+    setSettings(prev => ({
+       ...prev,
+       aiPrompts: {
+          ...prev.aiPrompts,
+          prdFlowSteps: (prev.aiPrompts.prdFlowSteps || []).map(s => {
+             if (s.id === stepId) {
+                const buttons = [...(s.buttons || [])];
+                buttons.splice(btnIndex, 1);
+                return { ...s, buttons };
+             }
+             return s;
+          })
+       }
+    }));
+  };
+
   const NodeLine = () => (
     <div className="flex flex-col items-center py-2">
       <div className="w-0.5 h-8 bg-gray-200"></div>
@@ -506,7 +556,7 @@ export default function AIChatbot() {
                          </div>
 
                          <div className="grid grid-cols-1 gap-4">
-                            {(step.type === 'GREETING' || step.type === 'SUCCESS_PROOF') && (
+                            {(step.type !== 'PROGRAM_SELECTION' && step.type !== 'QUALIFICATION' && step.type !== 'CALL_TIME') && (
                                <NodeInput 
                                   label="Image Attachment" 
                                   value={step.image}
@@ -526,6 +576,58 @@ export default function AIChatbot() {
                                 hint="Use {{name}} for user name."
                                 icon={MessageSquare}
                              />
+
+                             {/* CTA Buttons Builder */}
+                             <div className="mt-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center justify-between">
+                                   <span>Interactive Buttons (CTAs)</span>
+                                   <button 
+                                      onClick={() => addStepButton(step.id)}
+                                      className="text-teal-600 hover:text-teal-700 bg-teal-50 px-2 py-1 rounded flex items-center transition"
+                                   >
+                                      <Plus size={12} className="mr-1" /> Add Button
+                                   </button>
+                                </div>
+                                <div className="space-y-3">
+                                   {(step.buttons || []).map((btn, bIdx) => (
+                                      <div key={bIdx} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group/btn">
+                                         <select 
+                                           className="bg-slate-50 border border-slate-200 text-xs font-bold text-slate-600 rounded-lg py-1.5 px-2 outline-none focus:ring-1 focus:ring-teal-500"
+                                           value={btn.type || 'reply'}
+                                           onChange={(e) => updateStepButton(step.id, bIdx, 'type', e.target.value)}
+                                         >
+                                            <option value="reply">Quick Reply</option>
+                                            <option value="url">URL Link</option>
+                                            <option value="call">Phone Call</option>
+                                         </select>
+                                         <input 
+                                           placeholder="Button Text"
+                                           className="flex-1 bg-transparent border-b border-dashed border-slate-300 text-sm font-medium text-slate-800 p-1 focus:border-teal-500 outline-none"
+                                           value={btn.label || ''}
+                                           onChange={(e) => updateStepButton(step.id, bIdx, 'label', e.target.value)}
+                                           maxLength={20}
+                                         />
+                                         {(btn.type === 'url' || btn.type === 'call') && (
+                                            <input 
+                                              placeholder={btn.type === 'url' ? "https://..." : "+91..."}
+                                              className="flex-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600 p-1.5 outline-none focus:ring-1 focus:ring-teal-500"
+                                              value={btn.value || ''}
+                                              onChange={(e) => updateStepButton(step.id, bIdx, 'value', e.target.value)}
+                                            />
+                                         )}
+                                         <button 
+                                           onClick={() => removeStepButton(step.id, bIdx)}
+                                           className="opacity-0 group-hover/btn:opacity-100 text-rose-400 hover:text-rose-600 transition p-1"
+                                         >
+                                            <AlertCircle size={14} />
+                                         </button>
+                                      </div>
+                                   ))}
+                                   {!(step.buttons && step.buttons.length > 0) && (
+                                      <p className="text-[10px] text-slate-400 italic">No buttons added. User will need to type their response manually.</p>
+                                   )}
+                                </div>
+                             </div>
 
                              {/* PROGRAM MAPPING DETAILS */}
                              {step.type === 'PROGRAM_SELECTION' && (

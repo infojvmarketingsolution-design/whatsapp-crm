@@ -630,9 +630,9 @@ const performBulkContactAction = async (req, res) => {
           if (updated) updatedLeads.push(updated);
        }
     } else if (action === 'hard_delete_leads') {
-       await MessageModel.deleteMany({ contactId: { $in: contactIds } });
-       await ContactModel.deleteMany({ _id: { $in: contactIds } });
-       return res.json({ success: true, message: `${contactIds.length} leads permanently deleted` });
+       await MessageModel.deleteMany({ contactId: { $in: finalContactIds } });
+       await ContactModel.deleteMany({ _id: { $in: finalContactIds } });
+       return res.json({ success: true, message: `${finalContactIds.length} leads permanently deleted` });
     }
 
     // Emit Socket Updates for all updated leads

@@ -230,12 +230,20 @@ app.get('*', (req, res, next) => {
 });
 
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
-  const tenantId = socket.handshake.query.tenantId;
-  if(tenantId) socket.join(tenantId);
+  const { tenantId, isWidget } = socket.handshake.query;
+  console.log(`[Socket] Connected: ${socket.id} | Tenant: ${tenantId} | Widget: ${isWidget}`);
+  
+  if (tenantId) socket.join(tenantId);
+  
+  if (isWidget) {
+    const widgetController = require('./src/controllers/widget.controller');
+    socket.on('widget_message', (data) => {
+      widgetController.handleSocketMessage(io, socket, data);
+    });
+  }
   
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    console.log('[Socket] Disconnected:', socket.id);
   });
 });
 

@@ -56,13 +56,18 @@ class PRDFlowService {
       // Normalize flow steps to executable format
       const flowSteps = flowStepsRaw.map(step => {
         if (step.data) return step;
-        let nodeData = { text: step.message, msgType: 'TEXT' };
-        if (step.type === 'GREETING') { nodeData.msgType = step.image ? 'IMAGE' : 'TEXT'; nodeData.mediaUrl = step.image; }
+        let nodeData = { text: step.message, msgType: 'TEXT', buttons: step.buttons };
+        if (step.type === 'GREETING') { 
+           nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : (step.image ? 'IMAGE' : 'TEXT'); 
+           nodeData.mediaUrl = step.image; 
+        }
         else if (step.type === 'NAME_CAPTURE') { nodeData.msgType = 'QUESTION'; nodeData.variableName = 'name'; }
         else if (step.type === 'QUALIFICATION') { nodeData.msgType = 'LIST_MESSAGE'; nodeData.variableName = 'qualification'; nodeData.listOptions = qualificationOptions; }
         else if (step.type === 'PROGRAM_SELECTION') { nodeData.msgType = 'LIST_MESSAGE'; nodeData.variableName = 'program'; nodeData.isProgramSelection = true; }
-        else if (step.type === 'CALL_TIME') { nodeData.msgType = 'INTERACTIVE'; nodeData.variableName = 'time'; nodeData.buttons = step.options || ['Morning', 'Afternoon', 'Evening']; }
-        else if (step.type === 'CUSTOM_QUESTION') { nodeData.msgType = 'QUESTION'; nodeData.variableName = `custom_${step.id}`; }
+        else if (step.type === 'CALL_TIME') { nodeData.msgType = 'INTERACTIVE'; nodeData.variableName = 'time'; nodeData.buttons = step.buttons || step.options || ['Morning', 'Afternoon', 'Evening']; }
+        else if (step.type === 'CUSTOM_MESSAGE') { nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : (step.image ? 'IMAGE' : 'TEXT'); nodeData.mediaUrl = step.image; }
+        else if (step.type === 'CUSTOM_QUESTION') { nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : 'QUESTION'; nodeData.variableName = `custom_${step.id}`; }
+        else if (step.type === 'SUCCESS_PROOF') { nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : (step.image ? 'IMAGE' : 'TEXT'); nodeData.mediaUrl = step.image; }
         return { id: step.id, type: 'messageNode', data: nodeData };
       });
 
@@ -263,10 +268,27 @@ class PRDFlowService {
         }
         else if (nodeData.msgType === 'INTERACTIVE') {
           const btns = nodeData.buttons || ['Morning', 'Afternoon', 'Evening'];
-          await waService.sendInteractiveButtonMessage(contact.phone, { body: text, buttons: btns.slice(0, 3) });
-          await saveAndEmit('interactive', text, null);
-          await Contact.updateOne({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
-          return;
+          const parsedBtns = btns.map(b => typeof b === 'string' ? { type: 'reply', label: b, value: b } : b);
+          const hasUrlOrCall = parsedBtns.find(b => b.type === 'url' || b.type === 'call');
+
+          if (media) {
+             // Send media separately first if there's media on an interactive node
+             await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, '', /^\d+$/.test(media) ? null : media);
+          }
+
+          if (hasUrlOrCall) {
+            const res = await waService.sendCtaMessage(contact.phone, { type: hasUrlOrCall.type, body: text, title: hasUrlOrCall.label, value: hasUrlOrCall.value });
+            await saveAndEmit('interactive', text, res);
+          } else {
+            const replyLabels = parsedBtns.map(b => b.label);
+            const res = await waService.sendInteractiveButtonMessage(contact.phone, { body: text, buttons: replyLabels.slice(0, 3) });
+            await saveAndEmit('interactive', text, res);
+          }
+          
+          if (nodeData.variableName) {
+            await Contact.updateOne({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
+            return;
+          }
         }
         else {
           const res = await waService.sendTextMessage(contact.phone, text);

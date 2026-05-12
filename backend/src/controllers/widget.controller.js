@@ -2,6 +2,9 @@ const Widget = require('../models/core/Widget');
 const LeadSchema = require('../models/crm/Lead');
 const Settings = require('../models/core/Settings');
 const { getTenantConnection } = require('../config/db');
+const ContactSchema = require('../models/tenant/Contact');
+const MessageSchema = require('../models/tenant/Message');
+const prdFlowService = require('../services/prdFlow.service');
 const assignmentService = require('../services/assignment.service');
 const notificationService = require('../services/notification.service');
 
@@ -135,4 +138,65 @@ const submitWidgetLead = async (req, res) => {
   }
 };
 
-module.exports = { getWidgetConfig, updateWidgetConfig, getPublicWidget, submitWidgetLead };
+const handleSocketMessage = async (io, socket, { tenantId, text }) => {
+  try {
+    const tenantDb = getTenantConnection(tenantId);
+    const Contact = tenantDb.model('Contact', ContactSchema);
+    const Message = tenantDb.model('Message', MessageSchema);
+
+    // 1. Find or Create a "Guest" Contact for this socket session
+    let contact = await Contact.findOne({ phone: `web_${socket.id}` });
+    if (!contact) {
+      contact = await Contact.create({
+        tenantId,
+        name: 'Website Visitor',
+        phone: `web_${socket.id}`,
+        source: 'web_widget',
+        status: 'NEW'
+      });
+    }
+
+    // 2. Save Inbound Message
+    await Message.create({
+      contactId: contact._id,
+      direction: 'INBOUND',
+      type: 'text',
+      content: text,
+      status: 'RECEIVED'
+    });
+
+    // 3. Mock WA Service for the Flow Engine
+    const mockWaService = {
+      sendTextMessage: async (to, msg) => {
+        socket.emit('widget_response', { text: msg });
+        return { messages: [{ id: `web_out_${Date.now()}` }] };
+      },
+      sendMedia: async (to, type, id, caption, link) => {
+        socket.emit('widget_response', { text: caption, mediaUrl: link || id, type });
+        return { messages: [{ id: `web_out_${Date.now()}` }] };
+      },
+      sendInteractiveButtonMessage: async (to, { body, buttons }) => {
+        socket.emit('widget_response', { text: body, buttons });
+        return { messages: [{ id: `web_out_${Date.now()}` }] };
+      },
+      sendListMessage: async (to, { body, sections }) => {
+        const options = sections[0].rows.map(r => r.title);
+        socket.emit('widget_response', { text: body, buttons: options });
+        return { messages: [{ id: `web_out_${Date.now()}` }] };
+      },
+      sendCtaMessage: async (to, { body, title, value }) => {
+        socket.emit('widget_response', { text: body, cta: { title, value } });
+        return { messages: [{ id: `web_out_${Date.now()}` }] };
+      }
+    };
+
+    // 4. Process Flow
+    await prdFlowService.processStep(tenantId, contact, text, mockWaService, io);
+
+  } catch (error) {
+    console.error('[Widget Socket Error]:', error);
+    socket.emit('widget_response', { text: "Sorry, I'm having trouble connecting to the brain." });
+  }
+};
+
+module.exports = { getWidgetConfig, updateWidgetConfig, getPublicWidget, submitWidgetLead, handleSocketMessage };
