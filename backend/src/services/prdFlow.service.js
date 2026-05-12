@@ -1,5 +1,6 @@
 const MessageSchema = require('../models/tenant/Message');
 const ContactSchema = require('../models/tenant/Contact');
+const SuccessStorySchema = require('../models/tenant/SuccessStory');
 const LeadSchema = require('../models/crm/Lead');
 const { getTenantConnection } = require('../config/db');
 const AIService = require('./ai.service');
@@ -56,6 +57,7 @@ class PRDFlowService {
       const Contact = tenantDb.model('Contact', ContactSchema);
       const Message = tenantDb.model('Message', MessageSchema);
       const Lead = tenantDb.model('Lead', LeadSchema);
+      const SuccessStory = tenantDb.model('SuccessStory', SuccessStorySchema);
 
       const settings = await Settings.findOne({ tenantId });
       const aiPrompts = settings?.automation?.aiPrompts || {};
@@ -78,7 +80,7 @@ class PRDFlowService {
         else if (step.type === 'CALL_TIME') { nodeData.msgType = 'INTERACTIVE'; nodeData.variableName = 'time'; nodeData.buttons = step.buttons || step.options || ['Morning', 'Afternoon', 'Evening']; }
         else if (step.type === 'CUSTOM_MESSAGE') { nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : (step.image ? 'IMAGE' : 'TEXT'); nodeData.mediaUrl = step.image; }
         else if (step.type === 'CUSTOM_QUESTION') { nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : 'QUESTION'; nodeData.variableName = `custom_${step.id}`; }
-        else if (step.type === 'SUCCESS_PROOF') { nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : (step.image ? 'IMAGE' : 'TEXT'); nodeData.mediaUrl = step.image; }
+        else if (step.type === 'SUCCESS_PROOF') { nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : (step.image ? 'IMAGE' : 'TEXT'); nodeData.mediaUrl = step.image; nodeData.isSuccessProof = true; }
         return { id: step.id, type: 'messageNode', data: nodeData };
       });
 
@@ -238,7 +240,15 @@ class PRDFlowService {
         }
 
         // --- PHASE C: EXECUTE CURRENT STEP (SEND) ---
-        const text = replaceVars(nodeData.text || '');
+        let text = replaceVars(nodeData.text || '');
+        if (nodeData.isSuccessProof) {
+          const stories = await SuccessStory.find({ status: 'ACTIVE' }).limit(3);
+          if (stories.length > 0) {
+            const storyText = stories.map(s => `🎓 *${s.studentName}*\nPlaced at: *${s.company}*\nPackage: *${s.package}*\n_"${s.quote}"_`).join('\n\n');
+            text = `${text}\n\n${storyText}`;
+          }
+        }
+        
         const media = this.makeAbsolute(nodeData.mediaUrl || '');
 
         if (nodeData.msgType === 'IMAGE' && media) {

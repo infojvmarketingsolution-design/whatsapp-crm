@@ -4,27 +4,18 @@ import {
   Bot, 
   MessageSquare, 
   User, 
-  GraduationCap, 
-  PhoneCall, 
-  Headphones, 
-  HelpCircle, 
-  Upload, 
-  Play, 
-  ArrowRight,
-  Plus,
-  Image as ImageIcon,
-  CheckCircle2,
-  AlertCircle,
-  Layers,
-  ShieldCheck,
-  Calendar,
-  Mail
+  Bot, Save, Plus, Trash2, Edit3, Image as ImageIcon, ChevronRight, Settings, 
+  Target, MessageSquare, HelpCircle, PhoneCall, ExternalLink, Award, Share2, 
+  UserCircle, LayoutGrid, Network, Upload, Play, ArrowRight, CheckCircle2,
+  AlertCircle, Layers, ShieldCheck, Calendar, Mail, User, GraduationCap, Headphones
 } from 'lucide-react';
+import FlowCanvas from '../../components/AIChatbot/FlowCanvas';
 import { toast } from 'react-hot-toast';
 
 export default function AIChatbot() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('builder'); 
   const [settings, setSettings] = useState({
     botEnabled: false,
     botMode: 'PRD',
@@ -39,7 +30,10 @@ export default function AIChatbot() {
       successProofImage: '',
       callTimePrompt: '',
       agentTransferPrompt: '',
-      fallbackMessage: ''
+      fallbackMessage: '',
+      prdFlowSteps: [],
+      programMap: {},
+      qualificationOptions: []
     }
   });
 
@@ -135,10 +129,8 @@ export default function AIChatbot() {
     if (!newMap[qual][category]) return;
     
     if (newVal === null) {
-       // Delete
        newMap[qual][category].splice(pIndex, 1);
     } else {
-       // Edit or Add
        if (pIndex === -1) newMap[qual][category].push(newVal);
        else newMap[qual][category][pIndex] = newVal;
     }
@@ -210,8 +202,6 @@ export default function AIChatbot() {
     }
   };
 
-  // --- Dynamic Flow Step Handlers ---
-  
   const updateStep = (id, field, value) => {
     setSettings(prev => ({
        ...prev,
@@ -244,16 +234,6 @@ export default function AIChatbot() {
            prdFlowSteps: (prev.aiPrompts?.prdFlowSteps || []).filter(s => s.id !== id)
         }
      }));
-  };
-
-  const moveStep = (index, direction) => {
-     setSettings(prev => {
-        const steps = [...(prev.aiPrompts.prdFlowSteps || [])];
-        const newIndex = index + direction;
-        if (newIndex < 0 || newIndex >= steps.length) return prev;
-        [steps[index], steps[newIndex]] = [steps[newIndex], steps[index]];
-        return { ...prev, aiPrompts: { ...prev.aiPrompts, prdFlowSteps: steps } };
-     });
   };
 
   const addStepButton = (stepId) => {
@@ -306,13 +286,6 @@ export default function AIChatbot() {
     }));
   };
 
-  const NodeLine = () => (
-    <div className="flex flex-col items-center py-2">
-      <div className="w-0.5 h-8 bg-gray-200"></div>
-      <div className="w-2 h-2 rounded-full bg-teal-500 -mt-1"></div>
-    </div>
-  );
-
   const FlowNode = ({ title, icon: Icon, colorClass, children, id }) => (
     <div id={id} className={`w-full max-w-2xl bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden animate-fade-in-up transition-all hover:shadow-md hover:border-teal-200`}>
       <div className={`px-5 py-3 ${colorClass} flex items-center justify-between border-b border-black/5`}>
@@ -321,9 +294,6 @@ export default function AIChatbot() {
             <Icon size={18} className="text-white" />
           </div>
           <span className="text-sm font-bold text-white uppercase tracking-wider">{title}</span>
-        </div>
-        <div className="flex items-center space-x-2">
-           <div className="bg-white/20 px-2 py-0.5 rounded text-[10px] font-bold text-white uppercase">AI Optimized</div>
         </div>
       </div>
       <div className="p-6 space-y-5">
@@ -339,12 +309,6 @@ export default function AIChatbot() {
              {Icon && <Icon size={12} className="mr-1.5 text-teal-600" />}
              {label}
           </label>
-          {isImage && (
-             <div className="text-[10px] font-medium text-teal-600 flex items-center">
-                <ImageIcon size={10} className="mr-1" />
-                Image Attachment
-             </div>
-          )}
        </div>
        <div className="relative group">
           <textarea 
@@ -355,27 +319,12 @@ export default function AIChatbot() {
           />
           {isImage && (
              <div className="absolute right-3 bottom-3 flex items-center space-x-2">
-                {value && (
-                  <div className="relative group/preview h-10 w-10 border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm flex items-center justify-center">
-                     <img src={value} alt="Preview" className="h-full w-full object-cover" />
-                     <button onClick={() => window.open(value, '_blank')} className="absolute inset-0 bg-black/40 opacity-0 group-hover/preview:opacity-100 flex items-center justify-center transition-opacity text-white">
-                        <Play size={14} />
-                     </button>
-                  </div>
-                )}
                 <button 
                   onClick={() => handleUploadClick(fieldKey)}
-                  disabled={uploading === (typeof fieldKey === 'object' ? `${fieldKey.stepId}_${fieldKey.field}` : fieldKey)}
-                  className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-teal-600 hover:border-teal-200 transition-all shadow-sm font-bold"
+                  className="flex items-center space-x-2 px-3 py-2 bg-white border border-gray-200 rounded-lg text-gray-600 hover:text-teal-600 transition-all shadow-sm font-bold"
                 >
-                  {uploading === (typeof fieldKey === 'object' ? `${fieldKey.stepId}_${fieldKey.field}` : fieldKey) ? (
-                    <span className="w-4 h-4 border-2 border-teal-500/30 border-t-teal-500 rounded-full animate-spin"></span>
-                  ) : (
-                    <>
-                      <Upload size={14} />
-                      <span className="text-[10px] uppercase">Upload</span>
-                    </>
-                  )}
+                  <Upload size={14} />
+                  <span className="text-[10px] uppercase">Upload</span>
                 </button>
              </div>
           )}
@@ -392,251 +341,20 @@ export default function AIChatbot() {
   );
 
   return (
-    <div className="p-4 sm:p-8 bg-slate-50 min-h-screen animate-fade-in-up">
+    <div className="p-4 sm:p-8 bg-slate-50 min-h-screen">
       <div className="max-w-6xl mx-auto">
-         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8 sm:mb-10">
-          <div className="w-full sm:w-auto">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 flex items-center uppercase tracking-tight">
+         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-2xl font-black text-slate-900 flex items-center uppercase tracking-tight">
               <Bot className="mr-3 text-blue-600" size={28} />
-              AI Chatbot <span className="hidden sm:inline ml-2">Configuration</span>
+              AI Chatbot Configuration
             </h1>
-            <p className="text-[10px] sm:text-sm text-slate-500 mt-1 font-bold uppercase tracking-widest">Real-time automation engine</p>
+            <p className="text-xs text-slate-500 mt-1 font-bold uppercase tracking-widest">Real-time automation engine</p>
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
-             <button 
-               onClick={() => setSettings({ ...settings, botEnabled: !settings.botEnabled })}
-               className={`w-full sm:w-auto px-6 py-3.5 rounded-2xl flex items-center justify-center space-x-3 border transition-all active:scale-95 ${settings.botEnabled ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-slate-100 border-slate-200 text-slate-500'}`}
-             >
-                <div className={`w-2.5 h-2.5 rounded-full ${settings.botEnabled ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`}></div>
-                <span className="text-[10px] font-black uppercase tracking-widest">{settings.botEnabled ? 'Bot Active' : 'Bot Disabled'}</span>
-             </button>
+          <div className="flex gap-3">
              <button 
                onClick={handleSave}
                disabled={saving}
-               className="w-full sm:w-auto px-10 py-3.5 bg-slate-900 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition shadow-glow flex items-center justify-center disabled:opacity-50 active:scale-95"
-             >
-               {saving ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2"></span> : <Save size={16} className="mr-2" />}
-               Save Logic
-             </button>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-5 sm:p-8 mb-8">
-           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div>
-                 <h2 className="text-lg font-black text-slate-800 tracking-tight flex items-center">
-                    <Layers className="mr-2 text-blue-500" size={20} /> AI Strategy Mode
-                 </h2>
-                 <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-widest leading-relaxed">Toggle between system templates or custom logic.</p>
-              </div>
-              <div className="w-full md:w-auto">
-                 <div className="flex bg-slate-50 p-1.5 rounded-2xl w-full border border-slate-100">
-                    <button 
-                      onClick={() => setSettings({ ...settings, botMode: 'PRD' })}
-                      className={`flex-1 sm:px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${settings.botMode === 'PRD' ? 'bg-white text-blue-600 shadow-soft border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                      Education
-                    </button>
-                    <button 
-                      onClick={() => setSettings({ ...settings, botMode: 'CUSTOM' })}
-                      className={`flex-1 sm:px-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${settings.botMode === 'CUSTOM' ? 'bg-white text-blue-600 shadow-soft border border-slate-100' : 'text-slate-400 hover:text-slate-600'}`}
-                    >
-                      Custom Flow
-                    </button>
-                 </div>
-              </div>
-           </div>
-        </div>
-
-        {settings.botMode === 'CUSTOM' && (
-           <div className="bg-gradient-to-br from-teal-50 to-blue-50 border border-teal-100 rounded-2xl p-8 mb-8 flex flex-col items-center text-center shadow-inner">
-              <div className="w-16 h-16 bg-white rounded-2xl border border-teal-200 shadow flex items-center justify-center mb-6">
-                 <Bot className="text-teal-500" size={32} />
-              </div>
-              <h2 className="text-2xl font-black text-gray-800 mb-2">Advanced Custom Automation</h2>
-              <p className="text-gray-600 max-w-lg mb-8">
-                 You have selected Custom Freedom mode. Your bot will now completely ignore the default Education prompts and instead map incoming users to your visual reactive flow.
-              </p>
-              
-              <div className="w-full max-w-md bg-white p-5 border border-teal-100 rounded-2xl shadow-sm text-left mb-6">
-                 <label className="block text-xs font-bold text-teal-600 uppercase tracking-widest mb-2">Select Active Greeting Flow</label>
-                 <select 
-                   className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm font-bold text-gray-800 outline-none focus:ring-2 focus:ring-teal-500"
-                   value={settings.customGreetingFlowId || ''}
-                   onChange={(e) => setSettings({ ...settings, customGreetingFlowId: e.target.value })}
-                 >
-                   <option value="">-- Choose Custom Flow --</option>
-                   {flows.map(f => (
-                     <option key={f._id} value={f._id}>{f.name}</option>
-                   ))}
-                 </select>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                 <a href="/flows" target="_blank" className="px-6 py-3 bg-white border border-gray-200 text-gray-700 font-bold rounded-xl shadow-sm hover:border-teal-300 hover:text-teal-600 transition-colors uppercase text-sm tracking-wider">
-                    Open Visual Builder
-                 </a>
-              </div>
-           </div>
-        )}
-
-        {settings.botMode === 'PRD' && (
-          <div className="flex flex-col items-center space-y-2 pb-20">
-          
-          <FlowNode title="Start Trigger" icon={Play} colorClass="bg-emerald-500" id="node-start">
-             <div className="flex items-center justify-between text-xs font-bold text-gray-500 uppercase tracking-widest">
-                <span>Every Incoming Message</span>
-                <span className="bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded">Any Keyword</span>
-             </div>
-          </FlowNode>
-
-          {(settings.aiPrompts.prdFlowSteps || []).map((step, index) => {
-            let colorClass = "bg-gray-400";
-            let icon = MessageSquare;
-
-            switch(step.type) {
-              case 'GREETING': colorClass = "bg-blue-600"; icon = MessageSquare; break;
-              case 'NAME_CAPTURE': colorClass = "bg-teal-600"; icon = User; break;
-              case 'QUALIFICATION': colorClass = "bg-indigo-600"; icon = GraduationCap; break;
-              case 'PROGRAM_SELECTION': colorClass = "bg-purple-600"; icon = Layers; break;
-              case 'SUCCESS_PROOF': colorClass = "bg-rose-500"; icon = ShieldCheck; break;
-              case 'CALL_TIME': colorClass = "bg-emerald-600"; icon = Calendar; break;
-              case 'CUSTOM_MESSAGE': colorClass = "bg-amber-500"; icon = Mail; break;
-              case 'CUSTOM_QUESTION': colorClass = "bg-cyan-600"; icon = HelpCircle; break;
-            }
-
-            return (
-              <React.Fragment key={step.id}>
-                 <div className="flex flex-col items-center group/add relative">
-                     <div className="w-0.5 h-8 bg-gray-200 group-hover/add:bg-indigo-300 transition-colors"></div>
-                     <button 
-                       onClick={() => addStep(index - 1)}
-                       className="absolute top-1/2 -translate-y-1/2 opacity-0 group-hover/add:opacity-100 flex items-center bg-indigo-600 text-white rounded-full p-1 shadow-lg hover:scale-110 transition z-10"
-                     >
-                        <Plus size={14} />
-                     </button>
-                     <div className="w-0.5 h-8 bg-gray-200 group-hover/add:bg-indigo-300 transition-colors"></div>
-                 </div>
-
-                 <FlowNode 
-                   title={step.title} 
-                   icon={icon} 
-                   colorClass={colorClass}
-                   id={step.id}
-                 >
-                    <div className="relative group">
-                      <button 
-                        onClick={() => removeStep(step.id)}
-                        className="absolute -right-2 -top-12 opacity-0 group-hover:opacity-100 p-2 text-red-400 hover:text-red-500 transition-all bg-white rounded-full shadow-sm border border-red-50"
-                      >
-                         <Plus size={16} className="rotate-45" />
-                      </button>
-
-                      <div className="space-y-4">
-                         <div className="flex items-center space-x-3">
-                            <select 
-                              className="bg-gray-50 border-none text-[10px] font-black text-gray-400 uppercase tracking-widest focus:ring-0 rounded-lg py-1 px-2"
-                              value={step.type}
-                              onChange={(e) => updateStep(step.id, 'type', e.target.value)}
-                            >
-                               <option value="GREETING">Greeting Node</option>
-                               <option value="NAME_CAPTURE">Name Capture</option>
-                               <option value="QUALIFICATION">Qualification Choice</option>
-                               <option value="PROGRAM_SELECTION">Program Branching</option>
-                               <option value="SUCCESS_PROOF">Success/Media Proof</option>
-                               <option value="CALL_TIME">Call Scheduling</option>
-                               <option value="CUSTOM_MESSAGE">Simple Message</option>
-                               <option value="CUSTOM_QUESTION">Simple Question</option>
-                            </select>
-                            <input 
-                              className="flex-1 bg-transparent border-none text-xs font-black text-gray-800 uppercase focus:ring-0 p-0"
-                              value={step.title}
-                              onChange={(e) => updateStep(step.id, 'title', e.target.value)}
-                            />
-                         </div>
-
-                         <div className="grid grid-cols-1 gap-4">
-                            {(step.type !== 'PROGRAM_SELECTION' && step.type !== 'QUALIFICATION' && step.type !== 'CALL_TIME') && (
-                               <NodeInput 
-                                  label="Image Attachment" 
-                                  value={step.image}
-                                  isImage={true}
-                                  fieldKey={{ stepId: step.id, field: 'image' }}
-                                  onChange={(val) => updateStep(step.id, 'image', val)}
-                                  placeholder="Upload or paste URL"
-                                  icon={ImageIcon}
-                               />
-                            )}
-                            
-                             <NodeInput 
-                                label="Message Body" 
-                                value={step.message}
-                                onChange={(val) => updateStep(step.id, 'message', val)}
-                                placeholder="Type your message here..."
-                                hint="Use {{name}} for user name."
-                                icon={MessageSquare}
-                             />
-
-                             {/* CTA Buttons Builder */}
-                             <div className="mt-4 p-4 bg-slate-50 border border-slate-100 rounded-2xl">
-                                <div className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 flex items-center justify-between">
-                                   <span>Interactive Buttons (CTAs)</span>
-                                   <button 
-                                      onClick={() => addStepButton(step.id)}
-                                      className="text-teal-600 hover:text-teal-700 bg-teal-50 px-2 py-1 rounded flex items-center transition"
-                                   >
-                                      <Plus size={12} className="mr-1" /> Add Button
-                                   </button>
-                                </div>
-                                <div className="space-y-3">
-                                   {(step.buttons || []).map((btn, bIdx) => (
-                                      <div key={bIdx} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-white p-3 rounded-xl border border-slate-200 shadow-sm relative group/btn">
-                                         <select 
-                                           className="bg-slate-50 border border-slate-200 text-xs font-bold text-slate-600 rounded-lg py-1.5 px-2 outline-none focus:ring-1 focus:ring-teal-500"
-                                           value={btn.type || 'reply'}
-                                           onChange={(e) => updateStepButton(step.id, bIdx, 'type', e.target.value)}
-                                         >
-                                            <option value="reply">Quick Reply</option>
-                                            <option value="url">URL Link</option>
-                                            <option value="call">Phone Call</option>
-                                            <option value="handoff">Talk to Agent</option>
-                                         </select>
-                                         <input 
-                                           placeholder="Button Text"
-                                           className="flex-1 bg-transparent border-b border-dashed border-slate-300 text-sm font-medium text-slate-800 p-1 focus:border-teal-500 outline-none"
-                                           value={btn.label || ''}
-                                           onChange={(e) => updateStepButton(step.id, bIdx, 'label', e.target.value)}
-                                           maxLength={20}
-                                         />
-                                         {(btn.type === 'url' || btn.type === 'call') && (
-                                            <input 
-                                              placeholder={btn.type === 'url' ? "https://..." : "+91..."}
-                                              className="flex-1 bg-slate-50 border border-slate-200 rounded-lg text-xs font-mono text-slate-600 p-1.5 outline-none focus:ring-1 focus:ring-teal-500"
-                                              value={btn.value || ''}
-                                              onChange={(e) => updateStepButton(step.id, bIdx, 'value', e.target.value)}
-                                            />
-                                         )}
-                                         <button 
-                                           onClick={() => removeStepButton(step.id, bIdx)}
-                                           className="opacity-0 group-hover/btn:opacity-100 text-rose-400 hover:text-rose-600 transition p-1"
-                                         >
-                                            <AlertCircle size={14} />
-                                         </button>
-                                      </div>
-                                   ))}
-                                   {!(step.buttons && step.buttons.length > 0) && (
-                                      <p className="text-[10px] text-slate-400 italic">No buttons added. User will need to type their response manually.</p>
-                                   )}
-                                </div>
-                             </div>
-
-                             {/* PROGRAM MAPPING DETAILS */}
-                             {step.type === 'PROGRAM_SELECTION' && (
-                               <div className="mt-6 p-4 sm:p-6 bg-[#f8faff] rounded-[2rem] border border-indigo-100/50">
-                                  <div className="flex items-center justify-between mb-6 px-2">
-                                     <div className="text-[10px] font-black text-indigo-400 uppercase tracking-[0.2em]">Program Details Mapper</div>
-                                     <div className="p-1.5 bg-white rounded-lg shadow-sm">
-                                        <Layers size={14} className="text-indigo-400" />
                                      </div>
                                   </div>
                                   
