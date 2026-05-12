@@ -1,5 +1,6 @@
 const User = require('../models/core/User');
 const ContactSchema = require('../models/tenant/Contact');
+const BotAnalyticsSchema = require('../models/tenant/BotAnalytics');
 const mongoose = require('mongoose');
 
 /**
@@ -18,7 +19,6 @@ const getTeamStats = async (req, res) => {
 
     // 2. Aggregate stats for each member
     const stats = await Promise.all(teamMembers.map(async (member) => {
-      // Expanded Metrics
       const newLeads = await Contact.countDocuments({
         $or: [{ assignedAgent: member._id }, { assignedCounsellor: member._id }],
         status: 'NEW LEAD',
@@ -62,12 +62,8 @@ const getTeamStats = async (req, res) => {
       const collectionTotal = collections.length > 0 ? collections[0].total : 0;
       const collectionPending = collections.length > 0 ? collections[0].pending : 0;
 
-      // Count Tasks
       const contactsWithTasks = await Contact.find({
-        $or: [
-          { assignedAgent: member._id },
-          { assignedCounsellor: member._id }
-        ],
+        $or: [{ assignedAgent: member._id }, { assignedCounsellor: member._id }],
         'tasks.0': { $exists: true }
       }).select('tasks');
 
@@ -83,7 +79,6 @@ const getTeamStats = async (req, res) => {
         });
       });
 
-      // Get Status Breakdown for this user
       const statusBreakdown = await Contact.aggregate([
         { 
           $match: { 
@@ -122,9 +117,28 @@ const getTeamStats = async (req, res) => {
 
     res.json(stats);
   } catch (error) {
-    console.error('Get Team Stats Error:', error);
     res.status(500).json({ message: error.message });
   }
 };
 
-module.exports = { getTeamStats };
+const getBotStats = async (req, res) => {
+  try {
+    const BotAnalytics = req.tenantDb.model('BotAnalytics', BotAnalyticsSchema);
+    
+    const stats = await BotAnalytics.aggregate([
+      { $match: { tenantId: req.tenantId } },
+      { $group: { 
+          _id: "$nodeId", 
+          views: { $sum: 1 },
+          conversions: { $sum: { $cond: [{ $eq: ["$eventType", "CONVERSION"] }, 1, 0] } }
+      } },
+      { $sort: { views: -1 } }
+    ]);
+
+    res.json(stats);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { getTeamStats, getBotStats };

@@ -1,6 +1,7 @@
 const MessageSchema = require('../models/tenant/Message');
 const ContactSchema = require('../models/tenant/Contact');
 const SuccessStorySchema = require('../models/tenant/SuccessStory');
+const BotAnalyticsSchema = require('../models/tenant/BotAnalytics');
 const LeadSchema = require('../models/crm/Lead');
 const { getTenantConnection } = require('../config/db');
 const AIService = require('./ai.service');
@@ -8,6 +9,9 @@ const Settings = require('../models/core/Settings');
 const mongoose = require('mongoose');
 const assignmentService = require('./assignment.service');
 const notificationService = require('./notification.service');
+const schedulingService = require('./scheduling.service');
+const integrationService = require('./integration.service');
+const { aggressiveNormalize } = require('../utils/text.utils');
 
 class PRDFlowService {
   constructor() {
@@ -239,7 +243,25 @@ class PRDFlowService {
           }
         }
 
-        // --- PHASE C: EXECUTE CURRENT STEP (SEND) ---
+        // --- PHASE C: LOG ANALYTICS ---
+        const BotAnalytics = tenantDb.model('BotAnalytics', BotAnalyticsSchema);
+        await BotAnalytics.create({
+          tenantId,
+          contactId: contact._id,
+          nodeId: currentNode.id,
+          nodeType: currentNode.type,
+          eventType: (currentNode.type === 'SUCCESS_PROOF' || currentNode.type === 'CALL_TIME') ? 'CONVERSION' : 'VIEW'
+        });
+
+        if (currentNode.type === 'SUCCESS_PROOF' || currentNode.type === 'CALL_TIME') {
+           integrationService.triggerWebhook(tenantId, 'BOT_CONVERSION', {
+              contact: { id: contact._id, phone: contact.phone, name: contact.name },
+              node: currentNode.id,
+              type: currentNode.type
+           });
+        }
+
+        // --- PHASE D: EXECUTE CURRENT STEP (SEND) ---
         let text = replaceVars(nodeData.text || '');
         if (nodeData.isSuccessProof) {
           const stories = await SuccessStory.find({ status: 'ACTIVE' }).limit(3);
