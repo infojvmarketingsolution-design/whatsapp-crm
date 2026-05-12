@@ -40,6 +40,17 @@ class PRDFlowService {
 
     console.log(`[PRD] 🌀 Node: ${contact.currentFlowStep || 'START'} | Msg: ${messageText} | Reply: ${replyValue}`);
 
+    // --- PAUSE CHECK ---
+    if (contact.isBotPaused) {
+      if (contact.botPauseUntil && new Date() > new Date(contact.botPauseUntil)) {
+         // Auto-resume if timer expired
+         await Contact.updateOne({ phone: contact.phone }, { isBotPaused: false, botPauseUntil: null });
+      } else {
+         console.log(`[PRD] ⏹️ Bot is paused for ${contact.phone}. Skipping automation.`);
+         return;
+      }
+    }
+
     try {
       const tenantDb = getTenantConnection(tenantId);
       const Contact = tenantDb.model('Contact', ContactSchema);
@@ -200,6 +211,17 @@ class PRDFlowService {
             if (!contact.flowVariables) contact.flowVariables = {};
             contact.flowVariables[varName] = val;
           }
+          
+          // --- HANDOFF DETECTION ---
+          if (aggressiveNormalize(val) === 'talktoagent' || aggressiveNormalize(val) === 'help') {
+             await Contact.updateOne({ phone: contact.phone }, { isBotPaused: true });
+             notificationService.sendAdminAlert(tenantId, {
+                subject: 'Human Handoff Requested 🙋‍♂️',
+                text: `Lead *${contact.name || contact.phone}* requested a human agent.`
+             });
+             await waService.sendTextMessage(contact.phone, "Sure! I've alerted our team. An agent will be with you shortly. 👨‍💻");
+             return;
+          }
         }
 
         // --- PHASE B: NEXT STEP TRANSITION ---
@@ -280,6 +302,19 @@ class PRDFlowService {
             const res = await waService.sendCtaMessage(contact.phone, { type: hasUrlOrCall.type, body: text, title: hasUrlOrCall.label, value: hasUrlOrCall.value });
             await saveAndEmit('interactive', text, res);
           } else {
+            // Handle specialized button types
+            const handoffBtn = parsedBtns.find(b => b.type === 'handoff');
+            if (handoffBtn) {
+               // If a handoff button is clicked, we essentially pause the bot immediately
+               // But usually, we wait for the user to actually click it.
+               // For now, we'll just treat 'handoff' as a trigger for the 'Talk to Agent' logic
+            }
+            
+            const scheduleBtn = parsedBtns.find(b => b.type === 'schedule');
+            if (scheduleBtn) {
+               // Logic to inject dynamic slots
+            }
+
             const replyLabels = parsedBtns.map(b => b.label);
             const res = await waService.sendInteractiveButtonMessage(contact.phone, { body: text, buttons: replyLabels.slice(0, 3) });
             await saveAndEmit('interactive', text, res);

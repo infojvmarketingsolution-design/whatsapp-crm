@@ -24,6 +24,8 @@ const ContactSchema = new mongoose.Schema({
   currentFlowId: { type: mongoose.Schema.Types.ObjectId, ref: 'Flow' }, // [RENAMED from lastFlowId]
   flowVariables: { type: mongoose.Schema.Types.Mixed, default: {} },
   isFlowActive: { type: Boolean, default: false },
+  isBotPaused: { type: Boolean, default: false },
+  botPauseUntil: { type: Date },
   flowVersion: { type: Number, default: 1 },
   lastProcessedMessageId: { type: String },
   lastExecutedNode: { type: String }, // Node ID for session tracking (prevents duplicate sends)

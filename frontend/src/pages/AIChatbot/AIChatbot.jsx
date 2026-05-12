@@ -599,6 +599,7 @@ export default function AIChatbot() {
                                             <option value="reply">Quick Reply</option>
                                             <option value="url">URL Link</option>
                                             <option value="call">Phone Call</option>
+                                            <option value="handoff">Talk to Agent</option>
                                          </select>
                                          <input 
                                            placeholder="Button Text"
