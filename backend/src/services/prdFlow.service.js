@@ -340,11 +340,10 @@ class PRDFlowService {
              const buttonText = isCourseLevel ? 'View Courses' : 'Select Option';
              const sectionTitle = isCourseLevel ? (contact.selectedStream || contact.flowVariables?.selectedStream) : 'Available Options';
              const listBody = isCourseLevel ? 'Please select your preferred course' : body;
-             const headerText = isCourseLevel ? (contact.selectedStream || contact.flowVariables?.selectedStream) : undefined;
              
-             console.log(`[PRD] Sending List Message: Header: ${headerText}, Section: ${sectionTitle}, Items:`, opts);
+             console.log(`[PRD] Sending List Message: Section: ${sectionTitle}, Items:`, opts);
 
-             const res = await waService.sendListMessage(contact.phone, { header: headerText, body: listBody, buttonText: buttonText, sections: [{ title: sectionTitle.substring(0, 24), rows: opts.slice(0, 10).map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
+             const res = await waService.sendListMessage(contact.phone, { body: listBody, buttonText: buttonText, sections: [{ title: sectionTitle.substring(0, 24), rows: opts.slice(0, 10).map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
              await saveAndEmit('interactive', body, res);
           }
 
