@@ -153,10 +153,6 @@ class PRDFlowService {
              let qm = {};
              if (tqc.includes('12') || tqc.includes('hsc')) {
                qm = { "🚀 Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"] };
-             } else if (tqc.includes('10') || tqc.includes('ssc')) {
-               qm = { "DIPLOMA PROGRAMS": ["Diploma in Engineering", "IT Diploma", "Animation Diploma"] };
-             } else if (tqc.includes('diplomacomplete') || tqc.includes('diploma completed')) {
-               qm = { "BACHELOR PROGRAMS": ["Electrical Engineering", "Civil Engineering", "Mechanical Engineering"] };
              } else if (tqc.includes('grad') || tqc.includes('bach')) {
                qm = { "🎯 Trending Master Programs": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Master Programs": ["MBA", "M.Com", "MCA", "M.Sc"] };
              } else if (tqc.includes('mastercomplete') || tqc.includes('master completed')) {
@@ -305,8 +301,6 @@ class PRDFlowService {
             
             let qm = {};
              if (tqc.includes('12') || tqc.includes('hsc')) { qm = { "🚀 Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"] }; }
-             else if (tqc.includes('10') || tqc.includes('ssc')) { qm = { "DIPLOMA PROGRAMS": ["Diploma in Engineering", "IT Diploma", "Animation Diploma"] }; }
-             else if (tqc.includes('diplomacomplete') || tqc.includes('diploma completed')) { qm = { "BACHELOR PROGRAMS": ["Electrical Engineering", "Civil Engineering", "Mechanical Engineering"] }; }
              else if (tqc.includes('grad') || tqc.includes('bach')) { qm = { "🎯 Trending Master Programs": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Master Programs": ["MBA", "M.Com", "MCA", "M.Sc"] }; }
              else if (tqc.includes('mastercomplete') || tqc.includes('master completed')) { qm = { "PHD PROGRAMS": ["PhD in Marketing", "PhD in Civil Engineering", "PhD in IT"] }; }
              else if (tqc.includes('phdcomplete')) { qm = { "POST-DOC": ["Research Fellowship", "Academic Leadership"] }; }

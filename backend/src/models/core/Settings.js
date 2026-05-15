@@ -10,17 +10,7 @@ const AIPromptsSchema = new mongoose.Schema({
   callTimePrompt: { type: String, default: '{{name}}, what is your preferred time for our counsellor to call you? 📞' },
   agentTransferPrompt: { type: String, default: 'Transferring you to a human agent... 👨‍💻' },
   fallbackMessage: { type: String, default: "I'm sorry, I didn't quite get that. Could you please rephrase?" },
-  qualificationOptions: {
-    type: [String],
-    default: [
-      '10th Pass', 
-      '12th Pass', 
-      'Diploma Complete', 
-      'Graduation Complete', 
-      'Master Complete',
-      'PhD Complete'
-    ]
-  },
+  qualificationOptions: { type: [String], default: ['12th Pass', 'Graduation Complete', 'Master Complete', 'PhD Complete'] },
   programMap: {
     type: Object,
     default: {
