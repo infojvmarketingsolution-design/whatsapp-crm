@@ -127,7 +127,7 @@ class PRDFlowService {
 
         // --- PHASE A: HANDLE INPUT ---
         if (consumeInput && varName) {
-          let val = (replyValue && !replyValue.startsWith('list_') ? replyValue : messageText || '').trim();
+          let val = (replyValue && !replyValue.startsWith('list_') && !replyValue.startsWith('btn_') ? replyValue : messageText || '').trim();
           const nv = aggressiveNormalize(val);
 
           if (varName === 'name') {
@@ -155,7 +155,6 @@ class PRDFlowService {
              const currentQual = contact.qualification || contact.flowVariables?.qualification || '';
              const tqc = aggressiveNormalize(currentQual);
              
-             // 🎯 DEFINE MAPPINGS
              let qm = {};
              const qk = Object.keys(programMap).find(k => aggressiveNormalize(k) === tqc || (tqc && aggressiveNormalize(k).includes(tqc)));
              qm = qk ? programMap[qk] : {};
@@ -164,21 +163,27 @@ class PRDFlowService {
              const categories = Object.keys(qm);
              const stream = contact.selectedStream || contact.flowVariables?.selectedStream;
 
-             // Logic: If user selected a category, save it and show programs. Otherwise save program.
-             const matchedCategory = categories.find(c => aggressiveNormalize(c) === nv || aggressiveNormalize(c).includes(nv));
-             if (matchedCategory) {
-                await Contact.updateOne({ phone: contact.phone }, { $set: { selectedStream: matchedCategory, 'flowVariables.selectedStream': matchedCategory } });
-                contact.selectedStream = matchedCategory;
-                contact.flowVariables.selectedStream = matchedCategory;
-                forceStay = true;
-             } else if (categories.length > 1) {
-                // If they gave an invalid category but categories exist, force them to stay to see the categories again
-                forceStay = true;
+             if (!stream) {
+                 const matchedCategory = categories.find(c => aggressiveNormalize(c) === nv || aggressiveNormalize(c).includes(nv));
+                 if (matchedCategory) {
+                    await Contact.updateOne({ phone: contact.phone }, { $set: { selectedStream: matchedCategory, 'flowVariables.selectedStream': matchedCategory } });
+                    contact.selectedStream = matchedCategory;
+                    if (!contact.flowVariables) contact.flowVariables = {};
+                    contact.flowVariables.selectedStream = matchedCategory;
+                    forceStay = true;
+                 } else if (categories.length > 1) {
+                    forceStay = true;
+                 } else {
+                    await Contact.updateOne({ phone: contact.phone }, { $set: { selectedProgram: val, 'flowVariables.program': val } });
+                    contact.selectedProgram = val;
+                    if (!contact.flowVariables) contact.flowVariables = {};
+                    contact.flowVariables.program = val;
+                 }
              } else {
-                await Contact.updateOne({ phone: contact.phone }, { $set: { selectedProgram: val, 'flowVariables.program': val, 'flowVariables.selectedStream': null } });
-                contact.selectedProgram = val;
-                contact.flowVariables.program = val;
-                contact.flowVariables.selectedStream = null;
+                 await Contact.updateOne({ phone: contact.phone }, { $set: { selectedProgram: val, 'flowVariables.program': val } });
+                 contact.selectedProgram = val;
+                 if (!contact.flowVariables) contact.flowVariables = {};
+                 contact.flowVariables.program = val;
              }
           }
           else {
