@@ -128,7 +128,7 @@ class PRDFlowService {
           if (varName === 'name') {
             const extName = await AIService.extractData(val, 'NAME');
             val = (extName && extName.length < 50) ? extName : val;
-            await Contact.updateOne({ phone: contact.phone }, { name: val, 'flowVariables.name': val });
+            await Contact.updateOne({ phone: contact.phone }, { $set: { name: val, 'flowVariables.name': val } });
             contact.name = val;
             if (!contact.flowVariables) contact.flowVariables = {};
             contact.flowVariables.name = val;
@@ -138,7 +138,7 @@ class PRDFlowService {
             if (!matched) matched = qualificationOptions.find(o => aggressiveNormalize(o).includes(nv) || nv.includes(aggressiveNormalize(o)));
             
             if (matched) {
-              await Contact.updateOne({ phone: contact.phone }, { qualification: matched, 'flowVariables.qualification': matched, 'flowVariables.selectedStream': null });
+              await Contact.updateOne({ phone: contact.phone }, { $set: { qualification: matched, 'flowVariables.qualification': matched, 'flowVariables.selectedStream': null } });
               contact.qualification = matched;
               if (!contact.flowVariables) contact.flowVariables = {};
               contact.flowVariables.qualification = matched;
@@ -161,11 +161,11 @@ class PRDFlowService {
              // Logic: If user selected a category, save it and show programs. Otherwise save program.
              const matchedCategory = categories.find(c => aggressiveNormalize(c) === nv || aggressiveNormalize(c).includes(nv));
              if (matchedCategory) {
-                await Contact.updateOne({ phone: contact.phone }, { 'flowVariables.selectedStream': matchedCategory });
+                await Contact.updateOne({ phone: contact.phone }, { $set: { 'flowVariables.selectedStream': matchedCategory } });
                 contact.flowVariables.selectedStream = matchedCategory;
                 forceStay = true;
              } else {
-                await Contact.updateOne({ phone: contact.phone }, { selectedProgram: val, 'flowVariables.program': val, 'flowVariables.selectedStream': null });
+                await Contact.updateOne({ phone: contact.phone }, { $set: { selectedProgram: val, 'flowVariables.program': val, 'flowVariables.selectedStream': null } });
                 contact.selectedProgram = val;
                 contact.flowVariables.program = val;
                 contact.flowVariables.selectedStream = null;
@@ -299,7 +299,7 @@ class PRDFlowService {
             if (!stream) {
               if (categories.length === 1) {
                 const auto = categories[0];
-                await Contact.updateOne({ phone: contact.phone }, { 'flowVariables.selectedStream': auto });
+                await Contact.updateOne({ phone: contact.phone }, { $set: { 'flowVariables.selectedStream': auto } });
                 contact.flowVariables.selectedStream = auto;
                 opts = Array.isArray(qm[auto]) ? qm[auto] : [];
                 if (tqc.includes('10')) body = `Great choice {{name}}! 🎓\n\nHere are Diploma programs for you:`;
