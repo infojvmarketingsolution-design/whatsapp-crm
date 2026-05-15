@@ -39,6 +39,7 @@ const ContactSchema = new mongoose.Schema({
   state: { type: String },
   // AI Bot & PRD Specific explicit fields
   qualification: { type: String },
+  selectedStream: { type: String },
   selectedProgram: { type: String },
   preferredCallTime: { type: String },
   score: { type: Number, default: 0 },

@@ -138,15 +138,16 @@ class PRDFlowService {
             if (!matched) matched = qualificationOptions.find(o => aggressiveNormalize(o).includes(nv) || nv.includes(aggressiveNormalize(o)));
             
             if (matched) {
-              await Contact.updateOne({ phone: contact.phone }, { $set: { qualification: matched, 'flowVariables.qualification': matched, 'flowVariables.selectedStream': null } });
+              await Contact.updateOne({ phone: contact.phone }, { $set: { qualification: matched, selectedStream: null, 'flowVariables.qualification': matched, 'flowVariables.selectedStream': null } });
               contact.qualification = matched;
+              contact.selectedStream = null;
               if (!contact.flowVariables) contact.flowVariables = {};
               contact.flowVariables.qualification = matched;
               contact.flowVariables.selectedStream = null;
             }
           } 
           else if (varName === 'program' && nodeData.isProgramSelection) {
-             const currentQual = contact.flowVariables?.qualification || '';
+             const currentQual = contact.qualification || contact.flowVariables?.qualification || '';
              const tqc = aggressiveNormalize(currentQual);
              
              // 🎯 DEFINE MAPPINGS
@@ -156,12 +157,13 @@ class PRDFlowService {
 
              if (Array.isArray(qm)) qm = { "Programs": qm };
              const categories = Object.keys(qm);
-             const stream = contact.flowVariables?.selectedStream;
+             const stream = contact.selectedStream || contact.flowVariables?.selectedStream;
 
              // Logic: If user selected a category, save it and show programs. Otherwise save program.
              const matchedCategory = categories.find(c => aggressiveNormalize(c) === nv || aggressiveNormalize(c).includes(nv));
              if (matchedCategory) {
-                await Contact.updateOne({ phone: contact.phone }, { $set: { 'flowVariables.selectedStream': matchedCategory } });
+                await Contact.updateOne({ phone: contact.phone }, { $set: { selectedStream: matchedCategory, 'flowVariables.selectedStream': matchedCategory } });
+                contact.selectedStream = matchedCategory;
                 contact.flowVariables.selectedStream = matchedCategory;
                 forceStay = true;
              } else {
@@ -285,8 +287,8 @@ class PRDFlowService {
           let body = text;
 
           if (nodeData.isProgramSelection) {
-            const currentQual = contact.flowVariables?.qualification || '';
-            const stream = contact.flowVariables?.selectedStream;
+            const currentQual = contact.qualification || contact.flowVariables?.qualification || '';
+            const stream = contact.selectedStream || contact.flowVariables?.selectedStream;
             const tqc = aggressiveNormalize(currentQual);
             
             let qm = {};
@@ -299,7 +301,8 @@ class PRDFlowService {
             if (!stream) {
               if (categories.length === 1) {
                 const auto = categories[0];
-                await Contact.updateOne({ phone: contact.phone }, { $set: { 'flowVariables.selectedStream': auto } });
+                await Contact.updateOne({ phone: contact.phone }, { $set: { selectedStream: auto, 'flowVariables.selectedStream': auto } });
+                contact.selectedStream = auto;
                 contact.flowVariables.selectedStream = auto;
                 opts = Array.isArray(qm[auto]) ? qm[auto] : [];
                 if (tqc.includes('10')) body = `Great choice {{name}}! 🎓\n\nHere are Diploma programs for you:`;
