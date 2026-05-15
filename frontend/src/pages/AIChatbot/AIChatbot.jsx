@@ -312,6 +312,7 @@ export default function AIChatbot() {
                   </>
                   )}
                 </div>
+              </div>
 
                 <div className="flex justify-center -mb-3 relative z-10">
                    <button onClick={() => addStep(index)} className="bg-white p-2 rounded-full border border-slate-200 shadow-md hover:scale-110 transition-transform text-blue-600">
