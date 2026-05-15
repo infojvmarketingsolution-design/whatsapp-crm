@@ -16,16 +16,16 @@ const { aggressiveNormalize } = require('../utils/text.utils');
 class PRDFlowService {
   constructor() {
     this.DEFAULT_PRD_FLOW_STEPS = [
-      { id: 'greeting', type: 'messageNode', data: { msgType: 'IMAGE', text: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀', mediaUrl: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' } },
-      { id: 'ask_name', type: 'messageNode', data: { msgType: 'QUESTION', text: 'May I know your name?', variableName: 'name' } },
-      { id: 'qualification', type: 'messageNode', data: { msgType: 'LIST_MESSAGE', text: 'Nice to meet you, {{name}} 😊\n\n{{name}}, please select your last qualification 👇', variableName: 'qualification', listOptions: ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'] } },
-      { id: 'program', type: 'messageNode', data: { msgType: 'LIST_MESSAGE', text: 'Great choice {{name}}! 🎓\n\nHere are programs for you:', variableName: 'program', isProgramSelection: true } },
-      { id: 'urgency', type: 'messageNode', data: { msgType: 'TEXT', text: '⚠️ Hurry {{name}}!\n\nOnly limited seats available 🚀\nAdmissions closing soon.' } },
-      { id: 'scholarship', type: 'messageNode', data: { msgType: 'TEXT', text: '🎁 Good News {{name}}!\n\nYou may be eligible for up to 30% Scholarship 🎓' } },
-      { id: 'social_proof', type: 'messageNode', data: { msgType: 'IMAGE', text: '🎉 Our students are already placed in top companies!\n\nYou could be next, {{name}} 🚀', isSuccessProof: true, mediaUrl: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' } },
-      { id: 'call_time', type: 'messageNode', data: { msgType: 'INTERACTIVE', text: '{{name}}, when should our counsellor call you? 📞', variableName: 'time', buttons: ['Morning (10-1)', 'Afternoon (1-5)', 'Evening (5-8)'] } },
-      { id: 'thank_you', type: 'messageNode', data: { msgType: 'TEXT', text: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counsellor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' } },
-      { id: 'additional_help', type: 'messageNode', data: { msgType: 'INTERACTIVE', text: 'May I help you with anything else?', variableName: 'additionalHelp', buttons: ['Yes', 'No'] } }
+      { id: 'greeting', type: 'GREETING', title: 'Greeting Message', message: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+      { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Name Request', message: 'May I know your name?' },
+      { id: 'qualification', type: 'QUALIFICATION', title: 'Qualification Choice', message: 'Nice to meet you, {{name}} 😊\n\n{{name}}, please select your last qualification 👇' },
+      { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Great choice {{name}}! 🎓\n\nHere are programs for you:' },
+      { id: 'urgency', type: 'CUSTOM_MESSAGE', title: 'Urgency Push', message: '⚠️ Hurry {{name}}!\n\nOnly limited seats available 🚀\nAdmissions closing soon.' },
+      { id: 'scholarship', type: 'CUSTOM_MESSAGE', title: 'Scholarship Offer', message: '🎁 Good News {{name}}!\n\nYou may be eligible for up to 30% Scholarship 🎓' },
+      { id: 'social_proof', type: 'SUCCESS_PROOF', title: 'Success & Proof', message: '🎉 Our students are already placed in top companies!\n\nYou could be next, {{name}} 🚀', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+      { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: '{{name}}, when should our counsellor call you? 📞', buttons: ['Morning (10-1)', 'Afternoon (1-5)', 'Evening (5-8)'] },
+      { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counsellor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' },
+      { id: 'additional_help', type: 'CUSTOM_QUESTION', title: 'Additional Help', message: 'May I help you with anything else?', buttons: ['Yes', 'No'] }
     ];
     this.activeProcesses = new Set();
   }
@@ -67,9 +67,9 @@ class PRDFlowService {
       const settings = await Settings.findOne({ tenantId });
       const aiPrompts = settings?.automation?.aiPrompts || {};
       
-      const qualificationOptions = ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
-      const programMap = {};
-      const flowStepsRaw = this.DEFAULT_PRD_FLOW_STEPS;
+      const qualificationOptions = aiPrompts.qualificationOptions && aiPrompts.qualificationOptions.length > 0 ? aiPrompts.qualificationOptions : ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
+      const programMap = aiPrompts.programMap || {};
+      const flowStepsRaw = (aiPrompts.prdFlowSteps && aiPrompts.prdFlowSteps.length > 0) ? aiPrompts.prdFlowSteps : this.DEFAULT_PRD_FLOW_STEPS;
 
       // Normalize flow steps to executable format
       const flowSteps = flowStepsRaw.map(step => {
