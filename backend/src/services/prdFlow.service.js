@@ -67,9 +67,9 @@ class PRDFlowService {
       const settings = await Settings.findOne({ tenantId });
       const aiPrompts = settings?.automation?.aiPrompts || {};
       
-      const qualificationOptions = aiPrompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
-      const programMap = aiPrompts.programMap || {};
-      const flowStepsRaw = (aiPrompts.prdFlowSteps && aiPrompts.prdFlowSteps.length > 0) ? aiPrompts.prdFlowSteps : this.DEFAULT_PRD_FLOW_STEPS;
+      const qualificationOptions = ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
+      const programMap = {};
+      const flowStepsRaw = this.DEFAULT_PRD_FLOW_STEPS;
 
       // Normalize flow steps to executable format
       const flowSteps = flowStepsRaw.map(step => {
