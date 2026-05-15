@@ -17,10 +17,20 @@ const DEFAULT_PRD_FLOW_STEPS = [
 ];
 
 async function forceUpdate() {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/whatsapp-crm');
+    // FIX: Using the correct CORE database connection URI
+    const coreUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/jv_cloud_crm_core';
+    console.log("Connecting to:", coreUri);
+    
+    await mongoose.connect(coreUri);
     const Settings = mongoose.model('Settings', SettingsSchema.schema || SettingsSchema);
     
     const allDocs = await Settings.find({});
+    console.log(`Found ${allDocs.length} settings documents.`);
+    
+    if (allDocs.length === 0) {
+        console.log("WARNING: No documents found! Make sure you are pointing to the correct database.");
+    }
+
     for (let doc of allDocs) {
         if (!doc.automation) doc.automation = {};
         if (!doc.automation.aiPrompts) doc.automation.aiPrompts = {};
@@ -28,10 +38,10 @@ async function forceUpdate() {
         doc.automation.aiPrompts.prdFlowSteps = DEFAULT_PRD_FLOW_STEPS;
         doc.automation.aiPrompts.qualificationOptions = ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
         
-        doc.markModified('automation.aiPrompts.prdFlowSteps');
-        doc.markModified('automation.aiPrompts.qualificationOptions');
+        doc.markModified('automation');
         
         await doc.save();
+        console.log(`Updated tenant: ${doc.tenantId}`);
     }
     console.log("FORCE UPDATED! ALL SETTINGS OVERWRITTEN.");
     process.exit(0);
