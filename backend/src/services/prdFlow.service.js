@@ -16,15 +16,16 @@ const { aggressiveNormalize } = require('../utils/text.utils');
 class PRDFlowService {
   constructor() {
     this.DEFAULT_PRD_FLOW_STEPS = [
-      { id: 'greeting', type: 'messageNode', data: { msgType: 'IMAGE', text: 'Hello 👋 Welcome to JV Group!', mediaUrl: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' } },
-      { id: 'ask_name', type: 'messageNode', data: { msgType: 'QUESTION', text: 'Great! May I know your name?', variableName: 'name' } },
-      { id: 'profession', type: 'messageNode', data: { msgType: 'QUESTION', text: '{{name}}, what is your current profession? 💼', variableName: 'profession' } },
-      { id: 'qualification', type: 'messageNode', data: { msgType: 'LIST_MESSAGE', text: '{{name}}, please select your last qualification 👇', variableName: 'qualification', listOptions: ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation complete', 'Master complete', 'phD complete'] } },
-      { id: 'program', type: 'messageNode', data: { msgType: 'LIST_MESSAGE', text: 'Great {{name}}! Please select your preferred program:', variableName: 'program' } },
-      { id: 'budget', type: 'messageNode', data: { msgType: 'INTERACTIVE', text: '{{name}}, what is your estimated budget for the course? 💰', variableName: 'budget', buttons: ['Under 50k', '50k - 1 Lakh', 'Above 1 Lakh'] } },
-      { id: 'careerGoal', type: 'messageNode', data: { msgType: 'QUESTION', text: '{{name}}, what is your long-term career goal? 🎯', variableName: 'careerGoal' } },
-      { id: 'call_time', type: 'messageNode', data: { msgType: 'INTERACTIVE', text: '{{name}}, what is your preferred time for a call? 📞', variableName: 'time', buttons: ['Morning', 'Afternoon', 'Evening'] } },
-      { id: 'thank_you', type: 'messageNode', data: { msgType: 'TEXT', text: 'Thank you {{name}} 🙌\n🎓 Qual: {{qualification}}\n📘 Prog: {{program}}\n💰 Budget: {{budget}}\n⏰ Time: {{time}}' } }
+      { id: 'greeting', type: 'messageNode', data: { msgType: 'IMAGE', text: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀', mediaUrl: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' } },
+      { id: 'ask_name', type: 'messageNode', data: { msgType: 'QUESTION', text: 'May I know your name?', variableName: 'name' } },
+      { id: 'qualification', type: 'messageNode', data: { msgType: 'LIST_MESSAGE', text: 'Nice to meet you, {{name}} 😊\n\n{{name}}, please select your last qualification 👇', variableName: 'qualification', listOptions: ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'] } },
+      { id: 'program', type: 'messageNode', data: { msgType: 'LIST_MESSAGE', text: 'Great choice {{name}}! 🎓\n\nHere are programs for you:', variableName: 'program', isProgramSelection: true } },
+      { id: 'urgency', type: 'messageNode', data: { msgType: 'TEXT', text: '⚠️ Hurry {{name}}!\n\nOnly limited seats available 🚀\nAdmissions closing soon.' } },
+      { id: 'scholarship', type: 'messageNode', data: { msgType: 'TEXT', text: '🎁 Good News {{name}}!\n\nYou may be eligible for up to 30% Scholarship 🎓' } },
+      { id: 'social_proof', type: 'messageNode', data: { msgType: 'IMAGE', text: '🎉 Our students are already placed in top companies!\n\nYou could be next, {{name}} 🚀', isSuccessProof: true, mediaUrl: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' } },
+      { id: 'call_time', type: 'messageNode', data: { msgType: 'INTERACTIVE', text: '{{name}}, when should our counsellor call you? 📞', variableName: 'time', buttons: ['Morning (10-1)', 'Afternoon (1-5)', 'Evening (5-8)'] } },
+      { id: 'thank_you', type: 'messageNode', data: { msgType: 'TEXT', text: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counsellor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' } },
+      { id: 'additional_help', type: 'messageNode', data: { msgType: 'INTERACTIVE', text: 'May I help you with anything else?', variableName: 'additionalHelp', buttons: ['Yes', 'No'] } }
     ];
     this.activeProcesses = new Set();
   }
@@ -66,7 +67,7 @@ class PRDFlowService {
       const settings = await Settings.findOne({ tenantId });
       const aiPrompts = settings?.automation?.aiPrompts || {};
       
-      const qualificationOptions = aiPrompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Complete', 'Graduation complete', 'Master complete', 'phD complete'];
+      const qualificationOptions = aiPrompts.qualificationOptions || ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
       const programMap = aiPrompts.programMap || {};
       const flowStepsRaw = (aiPrompts.prdFlowSteps && aiPrompts.prdFlowSteps.length > 0) ? aiPrompts.prdFlowSteps : this.DEFAULT_PRD_FLOW_STEPS;
 
@@ -96,7 +97,8 @@ class PRDFlowService {
         const name = vars.name || contact.name || 'Friend';
         return str.replace(/\{{1,2}name\}{1,2}/gi, name)
                   .replace(/\{{1,2}qualification\}{1,2}/gi, vars.qualification || 'qualification')
-                  .replace(/\{{1,2}program\}{1,2}/gi, vars.program || 'program');
+                  .replace(/\{{1,2}program\}{1,2}/gi, vars.program || 'program')
+                  .replace(/\{{1,2}time\}{1,2}/gi, vars.time || 'time');
       };
 
       const saveAndEmit = async (type, payload, waResult) => {
@@ -150,14 +152,14 @@ class PRDFlowService {
              // 🎯 DEFINE MAPPINGS
              let qm = {};
              if (tqc.includes('12') || tqc.includes('hsc')) {
-               qm = { "TRENDING PROGRAMS": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Games"], "TRADITIONAL PROGRAMS": ["BBA", "B.Com", "BCA", "B.Sc"] };
+               qm = { "🚀 Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"] };
              } else if (tqc.includes('10') || tqc.includes('ssc')) {
                qm = { "DIPLOMA PROGRAMS": ["Diploma in Engineering", "IT Diploma", "Animation Diploma"] };
-             } else if (tqc.includes('diplomacomplete')) {
+             } else if (tqc.includes('diplomacomplete') || tqc.includes('diploma completed')) {
                qm = { "BACHELOR PROGRAMS": ["Electrical Engineering", "Civil Engineering", "Mechanical Engineering"] };
              } else if (tqc.includes('grad') || tqc.includes('bach')) {
-               qm = { "TRENDING MASTER PROGRAMS": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Games"], "TRADITIONAL MASTER PROGRAMS": ["MBA", "M.Com", "MCA", "M.Sc"] };
-             } else if (tqc.includes('mastercomplete')) {
+               qm = { "🎯 Trending Master Programs": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Master Programs": ["MBA", "M.Com", "MCA", "M.Sc"] };
+             } else if (tqc.includes('mastercomplete') || tqc.includes('master completed')) {
                qm = { "PHD PROGRAMS": ["PhD in Marketing", "PhD in Civil Engineering", "PhD in IT"] };
              } else if (tqc.includes('phdcomplete')) {
                qm = { "POST-DOC": ["Research Fellowship", "Academic Leadership"] };
@@ -216,6 +218,21 @@ class PRDFlowService {
             await Contact.updateOne({ phone: contact.phone }, { $set: dbUpdates });
             if (!contact.flowVariables) contact.flowVariables = {};
             contact.flowVariables[varName] = val;
+
+            if (varName === 'additionalHelp') {
+                if (aggressiveNormalize(val) === 'yes') {
+                   await waService.sendTextMessage(contact.phone, "Connecting you to our expert agent 👨‍💼");
+                   await Contact.updateOne({ phone: contact.phone }, { isBotPaused: true });
+                   notificationService.sendAdminAlert(tenantId, {
+                      subject: 'Human Handoff Requested 🙋‍♂️',
+                      text: `Lead *${contact.name || contact.phone}* requested a human agent.`
+                   });
+                   return;
+                } else {
+                   await waService.sendTextMessage(contact.phone, `Thank you ${contact.flowVariables.name || contact.name || ''}, have a great day! 🌟`);
+                   return;
+                }
+            }
           }
           
           // --- HANDOFF DETECTION ---
@@ -287,11 +304,11 @@ class PRDFlowService {
             const tqc = aggressiveNormalize(currentQual);
             
             let qm = {};
-             if (tqc.includes('12') || tqc.includes('hsc')) { qm = { "TRENDING PROGRAMS": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Games"], "TRADITIONAL PROGRAMS": ["BBA", "B.Com", "BCA", "B.Sc"] }; }
+             if (tqc.includes('12') || tqc.includes('hsc')) { qm = { "🚀 Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"] }; }
              else if (tqc.includes('10') || tqc.includes('ssc')) { qm = { "DIPLOMA PROGRAMS": ["Diploma in Engineering", "IT Diploma", "Animation Diploma"] }; }
-             else if (tqc.includes('diplomacomplete')) { qm = { "BACHELOR PROGRAMS": ["Electrical Engineering", "Civil Engineering", "Mechanical Engineering"] }; }
-             else if (tqc.includes('grad') || tqc.includes('bach')) { qm = { "TRENDING MASTER PROGRAMS": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Games"], "TRADITIONAL MASTER PROGRAMS": ["MBA", "M.Com", "MCA", "M.Sc"] }; }
-             else if (tqc.includes('mastercomplete')) { qm = { "PHD PROGRAMS": ["PhD in Marketing", "PhD in Civil Engineering", "PhD in IT"] }; }
+             else if (tqc.includes('diplomacomplete') || tqc.includes('diploma completed')) { qm = { "BACHELOR PROGRAMS": ["Electrical Engineering", "Civil Engineering", "Mechanical Engineering"] }; }
+             else if (tqc.includes('grad') || tqc.includes('bach')) { qm = { "🎯 Trending Master Programs": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Master Programs": ["MBA", "M.Com", "MCA", "M.Sc"] }; }
+             else if (tqc.includes('mastercomplete') || tqc.includes('master completed')) { qm = { "PHD PROGRAMS": ["PhD in Marketing", "PhD in Civil Engineering", "PhD in IT"] }; }
              else if (tqc.includes('phdcomplete')) { qm = { "POST-DOC": ["Research Fellowship", "Academic Leadership"] }; }
              else { const qk = Object.keys(programMap).find(k => aggressiveNormalize(k) === tqc || aggressiveNormalize(k).includes(tqc)); qm = qk ? programMap[qk] : {}; }
 
@@ -304,10 +321,13 @@ class PRDFlowService {
                 await Contact.updateOne({ phone: contact.phone }, { 'flowVariables.selectedStream': auto });
                 contact.flowVariables.selectedStream = auto;
                 opts = Array.isArray(qm[auto]) ? qm[auto] : [];
-                body = `Select your program under ${auto}:`;
+                if (tqc.includes('10')) body = `Great choice {{name}}! 🎓\n\nHere are Diploma programs for you:`;
+                else body = `Select your program under ${auto}:`;
               } else {
                 opts = categories.length > 0 ? categories : ['General Inquiry'];
-                body = "Select your preferred stream:";
+                if (tqc.includes('12')) body = `📊 *Top Career Demand Programs* 🔥\n\nAI, Cyber Security & Cloud fields are booming in 2026 💼\n\nChoose your interest, {{name}} 👇`;
+                else if (tqc.includes('grad') || tqc.includes('bach')) body = `🎯 *Top Master Programs* 🔥\n\nChoose your interest, {{name}} 👇`;
+                else body = "Select your preferred stream:";
               }
             } else {
               opts = qm[stream] || ['General Inquiry'];

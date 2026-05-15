@@ -368,10 +368,13 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
     // 🎓 AI STRATEGY MODE (EDUCATION TEMPLATE)
     if (settings?.automation?.botMode === 'PRD' && settings?.automation?.botEnabled) {
        console.log(`[Flow Engine] 🏛️ Strategy Mode: PRD (Education Template). Routing message...`);
-       if (activeContact.currentFlowStep || messageText.toLowerCase().match(/hi|hello|hey|start|menu/)) {
+       
+       const hasCompletedFlow = activeContact.flowVariables && activeContact.flowVariables.program;
+
+       if (activeContact.currentFlowStep || !hasCompletedFlow) {
            return PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io, false, replyValue);
        } else {
-           console.log(`[Flow Engine] ⚠️ PRD Mode active, but message is not a greeting and flow has not started.`);
+           console.log(`[Flow Engine] ⚠️ PRD Mode active, but flow completed. Falling through to AI Fallback.`);
            // Fall through to AI Fallback below if not matched
        }
     }
