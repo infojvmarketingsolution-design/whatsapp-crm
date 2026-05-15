@@ -248,8 +248,39 @@ export default function AIChatbot() {
                   </div>
 
                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    <div className="flex justify-between items-center mb-4">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Interactive Buttons</label>
+                    {step.type === 'QUALIFICATION' ? (
+                      <div>
+                        <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2 block">Qualification Options (Comma Separated)</label>
+                        <textarea 
+                           className="w-full text-xs p-3 rounded-xl border border-amber-200 outline-none focus:ring-2 focus:ring-amber-500/20"
+                           placeholder="10th Pass, 12th Pass, Diploma, Graduation..."
+                           value={(settings.aiPrompts.qualificationOptions || []).join(', ')}
+                           onChange={(e) => setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, qualificationOptions: e.target.value.split(',').map(s=>s.trim())}}))}
+                        />
+                        <p className="text-[10px] text-slate-400 mt-2">These options will be sent to the user as an interactive list.</p>
+                      </div>
+                    ) : step.type === 'PROGRAM_SELECTION' ? (
+                      <div>
+                        <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block">Dynamic Program Mapping (JSON)</label>
+                        <p className="text-xs text-blue-800 mb-2">Programs are automatically mapped based on the selected qualification. Edit the raw JSON mapping below:</p>
+                        <textarea 
+                           className="w-full text-[10px] p-3 rounded-xl border border-blue-200 outline-none h-48 font-mono focus:ring-2 focus:ring-blue-500/20"
+                           defaultValue={JSON.stringify(settings.aiPrompts.programMap || {}, null, 2)}
+                           onBlur={(e) => {
+                              try {
+                                const parsed = JSON.parse(e.target.value);
+                                setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, programMap: parsed}}));
+                                toast.success('Program mapping updated');
+                              } catch(err) {
+                                toast.error('Invalid JSON format');
+                              }
+                           }}
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex justify-between items-center mb-4">
+                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Interactive Buttons</label>
                       <button onClick={() => addStepButton(step.id)} className="text-[10px] font-black text-blue-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:bg-blue-50 transition-all flex items-center">
                         <Plus size={12} className="mr-1" /> Add Button
                       </button>
@@ -278,7 +309,8 @@ export default function AIChatbot() {
                         </div>
                       ))}
                     </div>
-                  </div>
+                  </>
+                  )}
                 </div>
 
                 <div className="flex justify-center -mb-3 relative z-10">
