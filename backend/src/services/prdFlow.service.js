@@ -341,9 +341,11 @@ class PRDFlowService {
              const sectionTitle = isCourseLevel ? (contact.selectedStream || contact.flowVariables?.selectedStream) : 'Available Options';
              const listBody = isCourseLevel ? 'Please select your preferred course' : body;
              const headerText = isCourseLevel ? (contact.selectedStream || contact.flowVariables?.selectedStream) : undefined;
+             
+             console.log(`[PRD] Sending List Message: Header: ${headerText}, Section: ${sectionTitle}, Items:`, opts);
 
-             await waService.sendListMessage(contact.phone, { header: headerText, body: listBody, buttonText: buttonText, sections: [{ title: sectionTitle, rows: opts.slice(0, 10).map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
-             await saveAndEmit('interactive', body, null);
+             const res = await waService.sendListMessage(contact.phone, { header: headerText, body: listBody, buttonText: buttonText, sections: [{ title: sectionTitle.substring(0, 24), rows: opts.slice(0, 10).map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
+             await saveAndEmit('interactive', body, res);
           }
 
           await Contact.updateOne({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
