@@ -61,4 +61,45 @@ const startTaskSuspensionWorker = () => {
     }, 10 * 60 * 1000); // 10 minutes
 };
 
-module.exports = { startTaskSuspensionWorker };
+const startInactivityFollowupWorker = () => {
+    setInterval(async () => {
+        try {
+            const clients = await Client.find({ status: 'ACTIVE' });
+            const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+
+            for (const client of clients) {
+                try {
+                    const tenantDb = await getTenantConnection(client.tenantId);
+                    const Contact = tenantDb.model('Contact', ContactSchema);
+
+                    const inactiveContacts = await Contact.find({
+                        currentFlowStep: { $exists: true, $ne: null },
+                        lastMessageAt: { $lt: thirtyMinsAgo }
+                    });
+
+                    if (inactiveContacts.length > 0) {
+                        const waService = require('../services/whatsapp.service');
+                        // Using Meta Graph API requires credentials from the client, assuming client model has them
+                        const ws = new waService({ phoneNumberId: client.metaPhoneNumberId, accessToken: client.metaAccessToken });
+                        
+                        for (const contact of inactiveContacts) {
+                            try {
+                                await ws.sendTextMessage(contact.phone, "Would you like to continue your admission inquiry?");
+                                // Clear current flow step so we don't send it again
+                                await Contact.updateOne({ _id: contact._id }, { $unset: { currentFlowStep: '' } });
+                            } catch (err) {
+                                console.error(`[InactivityWorker] Error sending to ${contact.phone}`, err);
+                            }
+                        }
+                    }
+                } catch (tenantErr) {
+                    console.error(`[InactivityWorker] Error processing tenant ${client.tenantId}:`, tenantErr);
+                }
+            }
+        } catch (error) {
+            console.error('[InactivityWorker] Error:', error);
+        }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+};
+
+module.exports = { startTaskSuspensionWorker, startInactivityFollowupWorker };

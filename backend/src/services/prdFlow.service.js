@@ -16,16 +16,11 @@ const { aggressiveNormalize } = require('../utils/text.utils');
 class PRDFlowService {
   constructor() {
     this.DEFAULT_PRD_FLOW_STEPS = [
-      { id: 'greeting', type: 'GREETING', title: 'Greeting Message', message: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
-      { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Name Request', message: 'May I know your name?' },
-      { id: 'qualification', type: 'QUALIFICATION', title: 'Qualification Choice', message: 'Nice to meet you, {{name}} 😊\n\n{{name}}, please select your last qualification 👇' },
-      { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Great choice {{name}}! 🎓\n\nHere are programs for you:' },
-      { id: 'urgency', type: 'CUSTOM_MESSAGE', title: 'Urgency Push', message: '⚠️ Hurry {{name}}!\n\nOnly limited seats available 🚀\nAdmissions closing soon.' },
-      { id: 'scholarship', type: 'CUSTOM_MESSAGE', title: 'Scholarship Offer', message: '🎁 Good News {{name}}!\n\nYou may be eligible for up to 30% Scholarship 🎓' },
-      { id: 'social_proof', type: 'SUCCESS_PROOF', title: 'Success & Proof', message: '🎉 Our students are already placed in top companies!\n\nYou could be next, {{name}} 🚀', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
-      { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: '{{name}}, when should our counsellor call you? 📞', buttons: ['Morning (10-1)', 'Afternoon (1-5)', 'Evening (5-8)'] },
-      { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counsellor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' },
-      { id: 'additional_help', type: 'CUSTOM_QUESTION', title: 'Additional Help', message: 'May I help you with anything else?', buttons: ['Yes', 'No'] }
+      { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Greeting & Name Request', message: 'Welcome to Gandhinagar University 🎓\n\nWe’re excited to help you choose the right career path.\n\nMay I know your name?', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+      { id: 'qualification', type: 'QUALIFICATION', title: 'Qualification Request', message: 'Nice to meet you {{name}} 😊\n\nPlease select your qualification.' },
+      { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Please select your preferred program category.' },
+      { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: 'Excellent choice 🚀\n\nWhen should our counselor contact you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
+      { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counselor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' }
     ];
     this.activeProcesses = new Set();
   }
@@ -67,8 +62,18 @@ class PRDFlowService {
       const settings = await Settings.findOne({ tenantId });
       const aiPrompts = settings?.automation?.aiPrompts || {};
       
-      const qualificationOptions = aiPrompts.qualificationOptions && aiPrompts.qualificationOptions.length > 0 ? aiPrompts.qualificationOptions : ['10th Pass', '12th Pass', 'Diploma Completed', 'Graduation Completed', 'Master Completed'];
-      const programMap = aiPrompts.programMap || {};
+      const defaultProgramMap = {
+        "10th Pass": { "Diploma Programs": ["Diploma in IT", "Diploma in Computer", "Diploma in Civil"] },
+        "12th Pass": {
+          "Trending Programs": ["B.Sc Cyber Security", "B.Sc AI & ML", "B.Sc Animation", "B.Sc Cloud Automation", "B.Sc Software Development", "B.Sc Blockchain Technology", "B.Sc Data Analytics"],
+          "Traditional Programs": ["B.Com", "B.Tech", "BBA"]
+        },
+        "Graduate": { "Master Programs": ["MCA", "MBA", "M.Tech"] },
+        "Working Professional": { "Executive Programs": ["Executive MBA", "Part-time M.Tech"] }
+      };
+
+      const qualificationOptions = aiPrompts.qualificationOptions && aiPrompts.qualificationOptions.length > 0 ? aiPrompts.qualificationOptions : ['10th Pass', '12th Pass', 'Graduate', 'Working Professional'];
+      const programMap = (aiPrompts.programMap && Object.keys(aiPrompts.programMap).length > 0) ? aiPrompts.programMap : defaultProgramMap;
       const flowStepsRaw = (aiPrompts.prdFlowSteps && aiPrompts.prdFlowSteps.length > 0) ? aiPrompts.prdFlowSteps : this.DEFAULT_PRD_FLOW_STEPS;
 
       // Normalize flow steps to executable format
@@ -312,9 +317,9 @@ class PRDFlowService {
                 else body = `Select your program under ${auto}:`;
               } else {
                 opts = categories.length > 0 ? categories : ['General Inquiry'];
-                if (tqc.includes('12')) body = `📊 *Top Career Demand Programs* 🔥\n\nAI, Cyber Security & Cloud fields are booming in 2026 💼\n\nChoose your interest, {{name}} 👇`;
+                if (tqc.includes('12')) body = `Please select your preferred program category.`;
                 else if (tqc.includes('grad') || tqc.includes('bach')) body = `🎯 *Top Master Programs* 🔥\n\nChoose your interest, {{name}} 👇`;
-                else body = "Select your preferred stream:";
+                else body = "Please select your preferred program category.";
               }
             } else {
               opts = qm[stream] || ['General Inquiry'];
@@ -322,8 +327,20 @@ class PRDFlowService {
             }
           }
 
-          await waService.sendListMessage(contact.phone, { body, buttonText: 'Select Option', sections: [{ title: 'Available Options', rows: opts.slice(0, 10).map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
-          await saveAndEmit('interactive', body, null);
+          if (nodeData.isProgramSelection && !contact.selectedStream && !contact.flowVariables?.selectedStream && opts.length > 0 && opts.length <= 3) {
+             const res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: opts.slice(0, 3) });
+             await saveAndEmit('interactive', body, res);
+          } else {
+             const isCourseLevel = nodeData.isProgramSelection && (contact.selectedStream || contact.flowVariables?.selectedStream);
+             const buttonText = isCourseLevel ? 'View Courses' : 'Select Option';
+             const sectionTitle = isCourseLevel ? (contact.selectedStream || contact.flowVariables?.selectedStream) : 'Available Options';
+             const listBody = isCourseLevel ? 'Please select your preferred course' : body;
+             const headerText = isCourseLevel ? (contact.selectedStream || contact.flowVariables?.selectedStream) : undefined;
+
+             await waService.sendListMessage(contact.phone, { header: headerText, body: listBody, buttonText: buttonText, sections: [{ title: sectionTitle, rows: opts.slice(0, 10).map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
+             await saveAndEmit('interactive', body, null);
+          }
+
           await Contact.updateOne({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
           return;
         }
