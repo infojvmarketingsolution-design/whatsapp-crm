@@ -151,18 +151,8 @@ class PRDFlowService {
              
              // 🎯 DEFINE MAPPINGS
              let qm = {};
-             if (tqc.includes('12') || tqc.includes('hsc')) {
-               qm = { "🚀 Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"] };
-             } else if (tqc.includes('grad') || tqc.includes('bach')) {
-               qm = { "🎯 Trending Master Programs": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Master Programs": ["MBA", "M.Com", "MCA", "M.Sc"] };
-             } else if (tqc.includes('mastercomplete') || tqc.includes('master completed')) {
-               qm = { "PHD PROGRAMS": ["PhD in Marketing", "PhD in Civil Engineering", "PhD in IT"] };
-             } else if (tqc.includes('phdcomplete')) {
-               qm = { "POST-DOC": ["Research Fellowship", "Academic Leadership"] };
-             } else {
-                const qk = Object.keys(programMap).find(k => aggressiveNormalize(k) === tqc || aggressiveNormalize(k).includes(tqc));
-                qm = qk ? programMap[qk] : {};
-             }
+             const qk = Object.keys(programMap).find(k => aggressiveNormalize(k) === tqc || (tqc && aggressiveNormalize(k).includes(tqc)));
+             qm = qk ? programMap[qk] : {};
 
              if (Array.isArray(qm)) qm = { "Programs": qm };
              const categories = Object.keys(qm);
@@ -300,11 +290,8 @@ class PRDFlowService {
             const tqc = aggressiveNormalize(currentQual);
             
             let qm = {};
-             if (tqc.includes('12') || tqc.includes('hsc')) { qm = { "🚀 Trending Programs": ["B.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Programs": ["BBA", "B.Com", "BCA", "B.Sc"] }; }
-             else if (tqc.includes('grad') || tqc.includes('bach')) { qm = { "🎯 Trending Master Programs": ["M.Sc IT (Cyber Security)", "AI & ML", "Cloud Automation", "Animation, VFX & Game Design"], "📘 Traditional Master Programs": ["MBA", "M.Com", "MCA", "M.Sc"] }; }
-             else if (tqc.includes('mastercomplete') || tqc.includes('master completed')) { qm = { "PHD PROGRAMS": ["PhD in Marketing", "PhD in Civil Engineering", "PhD in IT"] }; }
-             else if (tqc.includes('phdcomplete')) { qm = { "POST-DOC": ["Research Fellowship", "Academic Leadership"] }; }
-             else { const qk = Object.keys(programMap).find(k => aggressiveNormalize(k) === tqc || aggressiveNormalize(k).includes(tqc)); qm = qk ? programMap[qk] : {}; }
+            const qk = Object.keys(programMap).find(k => aggressiveNormalize(k) === tqc || (tqc && aggressiveNormalize(k).includes(tqc)));
+            qm = qk ? programMap[qk] : {};
 
             if (Array.isArray(qm)) qm = { "Programs": qm };
             const categories = Object.keys(qm);
