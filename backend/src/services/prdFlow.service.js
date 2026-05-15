@@ -365,8 +365,14 @@ class PRDFlowService {
           }
         }
         else {
-          const res = await waService.sendTextMessage(contact.phone, text);
-          await saveAndEmit('text', text, res);
+          let res;
+          if (media) {
+             res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, text, /^\d+$/.test(media) ? null : media);
+             await saveAndEmit('image', text, res);
+          } else {
+             res = await waService.sendTextMessage(contact.phone, text);
+             await saveAndEmit('text', text, res);
+          }
           if (nodeData.msgType === 'QUESTION') {
             await Contact.updateOne({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
             return;

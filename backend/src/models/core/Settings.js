@@ -10,46 +10,33 @@ const AIPromptsSchema = new mongoose.Schema({
   callTimePrompt: { type: String, default: '{{name}}, what is your preferred time for our counsellor to call you? 📞' },
   agentTransferPrompt: { type: String, default: 'Transferring you to a human agent... 👨‍💻' },
   fallbackMessage: { type: String, default: "I'm sorry, I didn't quite get that. Could you please rephrase?" },
-  qualificationOptions: { type: [String], default: ['12th Pass', 'Graduation Complete', 'Master Complete', 'PhD Complete'] },
+  qualificationOptions: { type: [String], default: ['10th Pass', '12th Pass', 'Graduate', 'Working Professional'] },
   programMap: {
     type: Object,
     default: {
       '10th Pass': {
-        'Trending Programs': ['IT Diploma', 'Animation Diploma', 'Digital Marketing'],
-        'Traditional Programs': ['Diploma in Engineering', 'Vocational Courses']
+        'Diploma Programs': ['IT Diploma', 'Mechanical Diploma', 'Civil Diploma']
       },
       '12th Pass': {
-        'Trending Programs': ['B.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
-        'Traditional Programs': ['BBA', 'B.Com', 'BCA', 'B.Sc']
+        'Trending Programs': ['B.Sc Cyber Security', 'B.Sc AI & ML', 'B.Sc Animation', 'B.Sc Cloud Automation', 'B.Sc Software Development', 'B.Sc Blockchain Technology', 'B.Sc Data Analytics'],
+        'Traditional Programs': ['B.Com', 'B.Tech', 'BBA']
       },
-      'Diploma Complete': {
-        'Bachelor Programs': ['Electrical Engineering', 'Civil Engineering', 'Mechanical Engineering']
+      'Graduate': {
+        'Master Programs': ['MBA', 'MCA', 'M.Tech', 'M.Sc']
       },
-      'Graduation Complete': {
-        'Trending Master Programs': ['M.Sc IT (Cyber Security)', 'AI & ML', 'Cloud Automation', 'Animation, VFX & Game Design'],
-        'Traditional Master Programs': ['MBA', 'M.Com', 'MCA', 'M.Sc']
-      },
-      'Master Complete': {
-        'PhD Programs': ['PhD in Marketing', 'PhD in Civil Engineering', 'PhD in IT']
-      },
-      'PhD Complete': {
-        'Post-Doc': ['Research Fellowship', 'Academic Leadership']
+      'Working Professional': {
+        'Executive Programs': ['Executive MBA', 'Certification Courses']
       }
     }
   },
   prdFlowSteps: { 
     type: [mongoose.Schema.Types.Mixed], 
     default: [
-      { id: 'greeting', type: 'GREETING', title: 'Greeting Message', message: 'Hello 👋 Welcome to JV Marketing Education Support!\n\nWe help you choose the best career path 🚀', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
-      { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Name Request', message: 'May I know your name?' },
-      { id: 'qualification', type: 'QUALIFICATION', title: 'Qualification Choice', message: 'Nice to meet you, {{name}} 😊\n\n{{name}}, please select your last qualification 👇' },
-      { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Great choice {{name}}! 🎓\n\nHere are programs for you:' },
-      { id: 'urgency', type: 'CUSTOM_MESSAGE', title: 'Urgency Push', message: '⚠️ Hurry {{name}}!\n\nOnly limited seats available 🚀\nAdmissions closing soon.' },
-      { id: 'scholarship', type: 'CUSTOM_MESSAGE', title: 'Scholarship Offer', message: '🎁 Good News {{name}}!\n\nYou may be eligible for up to 30% Scholarship 🎓' },
-      { id: 'social_proof', type: 'SUCCESS_PROOF', title: 'Success & Proof', message: '🎉 Our students are already placed in top companies!\n\nYou could be next, {{name}} 🚀', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
-      { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: '{{name}}, when should our counsellor call you? 📞', buttons: ['Morning (10-1)', 'Afternoon (1-5)', 'Evening (5-8)'] },
-      { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counsellor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' },
-      { id: 'additional_help', type: 'CUSTOM_QUESTION', title: 'Additional Help', message: 'May I help you with anything else?', buttons: ['Yes', 'No'] }
+      { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Greeting & Name', message: 'Welcome to Gandhinagar University 🎓\nWe’re excited to help you choose the right career path.\nFirst, may I know your name?', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+      { id: 'qualification', type: 'QUALIFICATION', title: 'Qualification Choice', message: 'Nice to meet you {{name}} 😊\nPlease select your qualification.' },
+      { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Please select your preferred program category.' },
+      { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: 'Great choice 🚀\nWhen should our counselor call you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
+      { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counsellor will call you at your preferred time 📞' }
     ] 
   }
 });
