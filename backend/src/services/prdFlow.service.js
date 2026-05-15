@@ -166,6 +166,9 @@ class PRDFlowService {
                 contact.selectedStream = matchedCategory;
                 contact.flowVariables.selectedStream = matchedCategory;
                 forceStay = true;
+             } else if (categories.length > 1) {
+                // If they gave an invalid category but categories exist, force them to stay to see the categories again
+                forceStay = true;
              } else {
                 await Contact.updateOne({ phone: contact.phone }, { $set: { selectedProgram: val, 'flowVariables.program': val, 'flowVariables.selectedStream': null } });
                 contact.selectedProgram = val;
@@ -319,7 +322,7 @@ class PRDFlowService {
             }
           }
 
-          await waService.sendListMessage(contact.phone, { body, buttonText: 'Options', sections: [{ title: 'Options', rows: opts.slice(0, 10).map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
+          await waService.sendListMessage(contact.phone, { body, buttonText: 'Select Option', sections: [{ title: 'Available Options', rows: opts.slice(0, 10).map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
           await saveAndEmit('interactive', body, null);
           await Contact.updateOne({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
           return;
