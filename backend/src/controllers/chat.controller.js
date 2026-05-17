@@ -1561,8 +1561,14 @@ const getLeadReport = async (req, res) => {
     let sortConfig = { createdAt: -1 };
     if (sortBy === 'oldest') sortConfig = { createdAt: 1 };
     else if (sortBy === 'status') sortConfig = { status: 1 };
+    else if (sortBy === 'score_desc') sortConfig = { score: -1 };
+    else if (sortBy === 'activity_desc') sortConfig = { lastActivity: -1 };
+
+    console.log(`[LeadReport Debug] User ID: ${req.user?._id}, Role: ${req.user?.role}, mustRestrict: ${mustRestrict}`);
+    console.log(`[LeadReport Debug] matchQuery:`, JSON.stringify(matchQuery, null, 2));
 
     let leads = await Contact.find(matchQuery).sort(sortConfig).lean();
+    console.log(`[LeadReport Debug] Leads fetched: ${leads.length}`);
 
     // In-memory sorting for priority
     if (sortBy === 'priority') {
