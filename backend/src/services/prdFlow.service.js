@@ -143,8 +143,8 @@ class PRDFlowService {
           }
         });
 
-        // 1. Display Welcome Image & Welcome Message
-        const welcomeMsg = "Welcome to ABC Institute Admission Assistant 👋\nI’m here to help you choose the right program.";
+        // 1. Display Welcome Image & Welcome Message + Name Request in a single unified post!
+        const welcomeMsg = "Welcome to ABC Institute Admission Assistant 👋\nI’m here to help you choose the right program.\n\nPlease enter your full name.";
         const media = this.makeAbsolute(greetingImage);
         let resGreeting;
         if (media) {
@@ -160,14 +160,6 @@ class PRDFlowService {
           resGreeting = await waService.sendTextMessage(contact.phone, welcomeMsg);
           await saveAndEmit('text', welcomeMsg, resGreeting);
         }
-
-        // 2. Sequence preservation sleep
-        await this.sleep(1500);
-
-        // 3. Ask student name
-        const nameQuestion = "Please enter your full name.";
-        const resNameQ = await waService.sendTextMessage(contact.phone, nameQuestion);
-        await saveAndEmit('text', nameQuestion, resNameQ);
         
         this.activeProcesses.delete(lockKey);
         return;
