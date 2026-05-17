@@ -150,6 +150,30 @@ class PRDFlowService {
 
         // 1. Display Welcome Image & Welcome Message + Name Request in a single unified post!
         let welcomeMsg = greetingStep?.message || greetingStep?.text || "Welcome to ABC Institute Admission Assistant 👋\nI’m here to help you choose the right program.";
+        
+        // Append visual interactive buttons dynamically as beautiful clickable links inside the caption
+        if (greetingStep?.buttons && greetingStep.buttons.length > 0) {
+          const formattedButtons = greetingStep.buttons.map(btn => {
+            if (btn.type === 'url') {
+              let url = (btn.label || '').trim();
+              if (url && !url.startsWith('http')) {
+                url = `https://${url}`;
+              }
+              return `🌐 Website: ${url}`;
+            } else if (btn.type === 'call') {
+              return `📞 Call: ${btn.label}`;
+            } else if (btn.type === 'reply') {
+              return `💬 Option: ${btn.label}`;
+            } else {
+              return `${btn.label}`;
+            }
+          }).filter(Boolean);
+
+          if (formattedButtons.length > 0) {
+            welcomeMsg = `${welcomeMsg.trim()}\n\n${formattedButtons.join('\n')}`;
+          }
+        }
+
         if (!welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
           welcomeMsg = `${welcomeMsg.trim()}\n\nPlease enter your full name.`;
         }
