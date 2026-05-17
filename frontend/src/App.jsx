@@ -1490,6 +1490,81 @@ function Dashboard() {
                                      </div>
                                   </div>
 
+                                  {/* STEP 5: LEAD TAGS */}
+                                  <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-6">
+                                     <div className="flex items-center justify-between border-b border-slate-50 pb-3">
+                                        <div className="flex items-center space-x-3">
+                                           <div className="w-8 h-8 rounded-xl bg-teal-500 text-white text-[10px] flex items-center justify-center font-bold shadow-md">05</div>
+                                           <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Lead Tags</h3>
+                                        </div>
+                                        <Tag size={16} className="text-slate-300" />
+                                     </div>
+
+                                     <div className="space-y-4">
+                                        <div className="flex justify-between items-center">
+                                           <label className="text-[9px] font-bold text-slate-400 capitalize">Active Tags</label>
+                                           <button 
+                                              type="button"
+                                              onClick={() => setShowTagInput(!showTagInput)} 
+                                              className="text-[9px] font-black text-teal-600 hover:text-teal-800 uppercase tracking-wider bg-teal-50 px-2 py-1 rounded-lg border border-teal-100 transition-colors"
+                                           >
+                                              {showTagInput ? 'Hide Panel' : '+ Add'}
+                                           </button>
+                                        </div>
+
+                                        {showTagInput && (
+                                           <div className="space-y-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 animate-fade-in">
+                                              <div className="flex space-x-2">
+                                                 <input 
+                                                    type="text" 
+                                                    value={newTagName} 
+                                                    onChange={e => setNewTagName(e.target.value)} 
+                                                    placeholder="Custom tag name..." 
+                                                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold outline-none focus:border-teal-300 shadow-sm"
+                                                 />
+                                                 <button 
+                                                    type="button"
+                                                    onClick={() => { if(newTagName.trim()) handleLeadTagAction('add_tag', newTagName.trim()); }}
+                                                    className="bg-teal-600 text-white text-xs font-black px-4 py-2 rounded-xl hover:bg-teal-700 active:scale-95 transition-all shadow-sm"
+                                                 >
+                                                    Add
+                                                 </button>
+                                              </div>
+                                              
+                                              <div className="flex flex-wrap gap-1">
+                                                 {['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'].map(t => (
+                                                    <button 
+                                                       type="button"
+                                                       key={t}
+                                                       onClick={() => handleLeadTagAction('add_tag', t)}
+                                                       className="px-2.5 py-1 bg-white text-slate-600 border border-slate-100 rounded-lg text-[9px] font-bold hover:bg-teal-50 hover:text-teal-600 hover:border-teal-100 transition-colors shadow-sm"
+                                                    >
+                                                       + {t}
+                                                    </button>
+                                                 ))}
+                                              </div>
+                                           </div>
+                                        )}
+
+                                        <div className="flex flex-wrap gap-1.5 min-h-[40px] items-center p-3 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
+                                           {(selectedLead.tags || []).length > 0 ? (
+                                              selectedLead.tags.map((tag, i) => (
+                                                 <span key={i} className="px-3 py-1.5 bg-teal-50 text-teal-700 rounded-lg text-[10px] font-extrabold tracking-wide flex items-center space-x-1.5 border border-teal-200 shadow-sm transition-all hover:border-teal-300">
+                                                    <span>{tag}</span>
+                                                    <X 
+                                                       size={12} 
+                                                       className="ml-1 opacity-60 hover:opacity-100 hover:text-rose-600 cursor-pointer transition-all" 
+                                                       onClick={() => handleLeadTagAction('remove_tag', tag)}
+                                                    />
+                                                 </span>
+                                              ))
+                                           ) : (
+                                              <span className="text-[10px] text-slate-400 italic font-bold">No tags added yet.</span>
+                                           )}
+                                        </div>
+                                     </div>
+                                  </div>
+
                                </div>
 
                             {/* RIGHT PANEL: INTERACTION HUB */}
