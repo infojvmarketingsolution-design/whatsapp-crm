@@ -78,7 +78,9 @@ class PRDFlowService {
 
       const settings = await Settings.findOne({ tenantId });
       const aiPrompts = settings?.automation?.aiPrompts || {};
-      let greetingImage = aiPrompts.greetingImage || '';
+      const steps = aiPrompts.prdFlowSteps || [];
+      const greetingStep = steps.find(s => s.type === 'GREETING');
+      let greetingImage = greetingStep?.image || aiPrompts.greetingImage || '';
       if (!greetingImage || greetingImage.includes('tenant_demo_001') || greetingImage.includes('prompt_1774743344804')) {
         greetingImage = 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80';
       }
@@ -147,7 +149,10 @@ class PRDFlowService {
         });
 
         // 1. Display Welcome Image & Welcome Message + Name Request in a single unified post!
-        const welcomeMsg = "Welcome to ABC Institute Admission Assistant 👋\nI’m here to help you choose the right program.\n\nPlease enter your full name.";
+        let welcomeMsg = greetingStep?.message || greetingStep?.text || "Welcome to ABC Institute Admission Assistant 👋\nI’m here to help you choose the right program.";
+        if (!welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
+          welcomeMsg = `${welcomeMsg.trim()}\n\nPlease enter your full name.`;
+        }
         const media = this.makeAbsolute(greetingImage);
         let resGreeting;
         if (media) {
