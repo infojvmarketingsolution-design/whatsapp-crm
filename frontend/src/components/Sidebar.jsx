@@ -61,6 +61,7 @@ export default function Sidebar({ whatsappConfig, roleAccess, customization, wor
     { id: 'pipeline', name: 'Pipeline', icon: KanbanSquare, path: '/pipeline' },
     { id: 'chat', name: 'Chat', icon: MessageSquare, path: '/inbox' },
     { id: 'contacts', name: 'Contacts', icon: Users, path: '/contacts' },
+    { id: 'lead-report', name: 'Lead Report', icon: FileText, path: '/lead-report' },
     { id: 'team-performance', name: 'Team Performance', icon: Shield, path: '/team-performance' },
     { id: 'campaigns', name: 'Campaigns', icon: Megaphone, path: '/campaigns' },
     { id: 'ai-chatbot', name: 'AI Chatbot', icon: Bot, path: '/ai-chatbot' },
@@ -73,6 +74,9 @@ export default function Sidebar({ whatsappConfig, roleAccess, customization, wor
   ];
 
   const menuItems = allMenuItems.filter(item => {
+    // Lead Report is accessible to all authorized system roles
+    if (item.id === 'lead-report') return true;
+
     // FORCE: Always show Team Performance to Business Head
     if (userRole === 'BUSINESS_HEAD' && item.id === 'team-performance') return true;
 

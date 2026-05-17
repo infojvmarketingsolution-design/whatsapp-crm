@@ -645,7 +645,6 @@ const performBulkContactAction = async (req, res) => {
     console.error('[Bulk Action Error]:', error);
     res.status(500).json({ error: error.message });
   }
-  }
 };
 
 const getMessages = async (req, res) => {
@@ -1357,6 +1356,369 @@ const getPersonalActivity = async (req, res) => {
   }
 };
 
+const getLeadReport = async (req, res) => {
+  try {
+    const { presetDate, startDate, endDate, month, year, status, source, agents, search, sortBy } = req.query;
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+
+    // 1. User Security & Visibility Settings
+    const settings = await Settings.findOne({ tenantId: req.tenantId });
+    const userRole = (req.user?.role || 'AGENT').toUpperCase();
+    const normalizedRole = userRole.replace(/\s/g, '_');
+    const roleAccess = settings?.roleAccess instanceof Map ? 
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
+
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER'].includes(userRole);
+    const mustRestrict = !isHighLevel && (!roleAccess || roleAccess.allAccess !== true);
+
+    // 2. Date Filtering Helper
+    let dateFilter = {};
+    const now = new Date();
+
+    if (presetDate && presetDate !== 'all') {
+      switch (presetDate) {
+        case 'today': {
+          const start = new Date();
+          start.setHours(0, 0, 0, 0);
+          const end = new Date();
+          end.setHours(23, 59, 59, 999);
+          dateFilter = { createdAt: { $gte: start, $lte: end } };
+          break;
+        }
+        case 'yesterday': {
+          const start = new Date();
+          start.setDate(start.getDate() - 1);
+          start.setHours(0, 0, 0, 0);
+          const end = new Date();
+          end.setDate(end.getDate() - 1);
+          end.setHours(23, 59, 59, 999);
+          dateFilter = { createdAt: { $gte: start, $lte: end } };
+          break;
+        }
+        case 'this_week': {
+          const start = new Date();
+          const day = start.getDay();
+          start.setDate(start.getDate() - day);
+          start.setHours(0, 0, 0, 0);
+          dateFilter = { createdAt: { $gte: start } };
+          break;
+        }
+        case 'this_month': {
+          const start = new Date(now.getFullYear(), now.getMonth(), 1);
+          dateFilter = { createdAt: { $gte: start } };
+          break;
+        }
+        case 'current_year': {
+          const start = new Date(now.getFullYear(), 0, 1);
+          dateFilter = { createdAt: { $gte: start } };
+          break;
+        }
+        case 'previous_year': {
+          const start = new Date(now.getFullYear() - 1, 0, 1);
+          const end = new Date(now.getFullYear() - 1, 11, 31, 23, 59, 59, 999);
+          dateFilter = { createdAt: { $gte: start, $lte: end } };
+          break;
+        }
+        case 'custom': {
+          if (startDate || endDate) {
+            const range = {};
+            if (startDate) range.$gte = new Date(startDate);
+            if (endDate) {
+              const end = new Date(endDate);
+              end.setHours(23, 59, 59, 999);
+              range.$lte = end;
+            }
+            dateFilter = { createdAt: range };
+          }
+          break;
+        }
+      }
+    }
+
+    // Explicit Month/Year overrides
+    if (year && year !== 'all') {
+      const yr = parseInt(year);
+      let start, end;
+      if (month && month !== 'all') {
+        const m = parseInt(month) - 1; // 0-indexed
+        start = new Date(yr, m, 1);
+        end = new Date(yr, m + 1, 0, 23, 59, 59, 999);
+      } else {
+        start = new Date(yr, 0, 1);
+        end = new Date(yr, 11, 31, 23, 59, 59, 999);
+      }
+      dateFilter = { createdAt: { $gte: start, $lte: end } };
+    } else if (month && month !== 'all') {
+      const m = parseInt(month) - 1;
+      const yr = now.getFullYear();
+      const start = new Date(yr, m, 1);
+      const end = new Date(yr, m + 1, 0, 23, 59, 59, 999);
+      dateFilter = { createdAt: { $gte: start, $lte: end } };
+    }
+
+    // 3. Assemble Query Match Stage
+    const matchQuery = { isArchived: { $ne: true }, ...dateFilter };
+
+    if (mustRestrict) {
+      const uid = new mongoose.Types.ObjectId(req.user._id);
+      matchQuery.$or = [
+        { assignedAgent: uid },
+        { assignedCounsellor: uid }
+      ];
+    }
+
+    // Agent filter (Admin/Manager allowed to scope, or agent within their boundary)
+    if (agents && agents !== 'all') {
+      const agentIds = agents.split(',').map(id => {
+        try {
+          return new mongoose.Types.ObjectId(id.trim());
+        } catch(e) {
+          return null;
+        }
+      }).filter(Boolean);
+
+      if (agentIds.length > 0) {
+        if (mustRestrict) {
+          const myUid = new mongoose.Types.ObjectId(req.user._id);
+          matchQuery.$and = [
+            { $or: [{ assignedAgent: myUid }, { assignedCounsellor: myUid }] },
+            { $or: [{ assignedAgent: { $in: agentIds } }, { assignedCounsellor: { $in: agentIds } }] }
+          ];
+        } else {
+          matchQuery.$or = [
+            { assignedAgent: { $in: agentIds } },
+            { assignedCounsellor: { $in: agentIds } }
+          ];
+        }
+      }
+    }
+
+    // Status Filter
+    if (status && status !== 'all') {
+      const statusList = status.split(',').map(s => {
+        let st = s.trim();
+        if (st === 'CLOSE') st = 'CLOSED';
+        if (st === 'PENDING VISIT') st = 'PENDING_VISIT';
+        return st;
+      });
+      matchQuery.status = { $in: statusList };
+    }
+
+    // Source Filter
+    if (source && source !== 'all') {
+      const sourceList = source.split(',').map(s => s.trim());
+      matchQuery.leadSourceType = { $in: sourceList };
+    }
+
+    // Search Querying
+    if (search) {
+      const searchRegex = new RegExp(search, 'i');
+      const orConditions = [
+        { name: searchRegex },
+        { phone: searchRegex },
+        { email: searchRegex },
+        { companyName: searchRegex }
+      ];
+      if (mongoose.Types.ObjectId.isValid(search)) {
+        orConditions.push({ _id: new mongoose.Types.ObjectId(search) });
+      }
+
+      if (matchQuery.$and) {
+        matchQuery.$and.push({ $or: orConditions });
+      } else if (matchQuery.$or) {
+        const existingOr = matchQuery.$or;
+        delete matchQuery.$or;
+        matchQuery.$and = [
+          { $or: existingOr },
+          { $or: orConditions }
+        ];
+      } else {
+        matchQuery.$or = orConditions;
+      }
+    }
+
+    // 4. Fetch and sort leads
+    let sortConfig = { createdAt: -1 };
+    if (sortBy === 'oldest') sortConfig = { createdAt: 1 };
+    else if (sortBy === 'status') sortConfig = { status: 1 };
+
+    let leads = await Contact.find(matchQuery).sort(sortConfig).lean();
+
+    // In-memory sorting for priority
+    if (sortBy === 'priority') {
+      const priorityWeight = { 'Hot': 3, 'Warm': 2, 'Cold': 1 };
+      leads.sort((a, b) => {
+        const wA = priorityWeight[a.heatLevel] || 0;
+        const wB = priorityWeight[b.heatLevel] || 0;
+        return wB - wA; // Hot first
+      });
+    }
+
+    // Enrich with names of assigned agents and counsellors
+    const userIds = new Set();
+    leads.forEach(c => {
+      if (c.assignedAgent) userIds.add(c.assignedAgent.toString());
+      if (c.assignedCounsellor) userIds.add(c.assignedCounsellor.toString());
+    });
+
+    let userMap = {};
+    if (userIds.size > 0) {
+      const users = await User.find({ _id: { $in: Array.from(userIds) } }).select('name role email');
+      userMap = users.reduce((acc, u) => {
+        acc[u._id.toString()] = { name: u.name, role: u.role, email: u.email };
+        return acc;
+      }, {});
+    }
+
+    leads = leads.map(c => ({
+      ...c,
+      assignedAgentName: c.assignedAgent ? (userMap[c.assignedAgent.toString()]?.name || 'Unknown Agent') : 'Unassigned',
+      assignedCounsellorName: c.assignedCounsellor ? (userMap[c.assignedCounsellor.toString()]?.name || 'Unknown Counsellor') : 'Unassigned'
+    }));
+
+    // 5. Generate Overview Cover Stats & KPI Metrics
+    let totalLeads = leads.length;
+    let convertedLeads = 0;
+    let pendingLeads = 0;
+    let lostLeads = 0;
+    let newLeads = 0;
+    let followupsPending = 0;
+    let completedFollowups = 0;
+    let totalFollowups = 0;
+
+    leads.forEach(lead => {
+      const st = lead.status;
+      if (st === 'CLOSED_WON' || st === 'ADMISSION') {
+        convertedLeads++;
+      } else if (st === 'CLOSED_LOST' || st === 'CLOSED' || st === 'CLOSE') {
+        lostLeads++;
+      } else {
+        pendingLeads++;
+      }
+
+      if (st === 'NEW' || st === 'NEW LEAD') {
+        newLeads++;
+      }
+
+      if (lead.tasks && lead.tasks.length > 0) {
+        lead.tasks.forEach(task => {
+          if (task.type === 'FOLLOW_UP') {
+            totalFollowups++;
+            if (task.status === 'PENDING' || task.status === 'IN_PROGRESS') {
+              followupsPending++;
+            } else if (task.status === 'COMPLETED') {
+              completedFollowups++;
+            }
+          }
+        });
+      }
+    });
+
+    const conversionRatio = totalLeads > 0 ? parseFloat(((convertedLeads / totalLeads) * 100).toFixed(1)) : 0;
+    const followupCompletionRate = totalFollowups > 0 ? Math.round((completedFollowups / totalFollowups) * 100) : 0;
+
+    // 6. Leads by Source Distribution (Chart data)
+    const sourceMap = {};
+    leads.forEach(lead => {
+      const src = lead.leadSourceType || 'Manual Entry';
+      sourceMap[src] = (sourceMap[src] || 0) + 1;
+    });
+    const leadsBySource = Object.keys(sourceMap).map(key => ({
+      label: key,
+      value: sourceMap[key]
+    })).sort((a,b) => b.value - a.value);
+
+    // 7. Monthly Lead Trend (Chart data)
+    const trendMap = {};
+    leads.forEach(lead => {
+      const date = new Date(lead.createdAt);
+      const key = date.toLocaleString('default', { month: 'short', year: '2-digit' });
+      trendMap[key] = (trendMap[key] || 0) + 1;
+    });
+    const monthlyLeadTrend = Object.keys(trendMap).map(key => ({
+      label: key,
+      value: trendMap[key]
+    }));
+
+    // 8. Team Performance Breakdown (Chart and Cover data)
+    const teamMembers = await User.find({
+      tenantId: req.tenantId,
+      status: 'ACTIVE',
+      role: { $in: ['TELECALLER', 'COUNSELLOR', 'COUNSELLOUR', 'AGENT', 'MANAGER', 'ADMIN', 'OWNER'] }
+    }).select('name role email');
+
+    const teamPerformance = await Promise.all(teamMembers.map(async (member) => {
+      const mId = member._id.toString();
+      
+      const memberLeads = leads.filter(l => l.assignedAgent === mId || l.assignedCounsellor === mId);
+      const mTotal = memberLeads.length;
+      
+      let mConverted = 0;
+      let mPendingFollowups = 0;
+      let mCompletedFollowups = 0;
+      let mTotalFollowups = 0;
+
+      memberLeads.forEach(lead => {
+        const st = lead.status;
+        if (st === 'CLOSED_WON' || st === 'ADMISSION') mConverted++;
+        
+        if (lead.tasks && lead.tasks.length > 0) {
+          lead.tasks.forEach(task => {
+            if (task.type === 'FOLLOW_UP') {
+              mTotalFollowups++;
+              if (task.status === 'PENDING' || task.status === 'IN_PROGRESS') {
+                mPendingFollowups++;
+              } else if (task.status === 'COMPLETED') {
+                mCompletedFollowups++;
+              }
+            }
+          });
+        }
+      });
+
+      return {
+        userId: member._id,
+        name: member.name,
+        role: member.role,
+        email: member.email,
+        totalLeads: mTotal,
+        convertedLeads: mConverted,
+        conversionRate: mTotal > 0 ? parseFloat(((mConverted / mTotal) * 100).toFixed(1)) : 0,
+        pendingFollowups: mPendingFollowups,
+        followupCompletionRate: mTotalFollowups > 0 ? Math.round((mCompletedFollowups / mTotalFollowups) * 100) : 0
+      };
+    }));
+
+    const activeTeamPerformance = teamPerformance.filter(t => t.totalLeads > 0).sort((a,b) => b.totalLeads - a.totalLeads);
+
+    res.json({
+      summary: {
+        totalLeads,
+        convertedLeads,
+        pendingLeads,
+        lostLeads,
+        newLeads,
+        followupsPending,
+        conversionRatio,
+        followupCompletionRate,
+        generatedAt: new Date(),
+        generatedBy: req.user?.name || 'Verified System User'
+      },
+      analytics: {
+        leadsBySource,
+        monthlyLeadTrend,
+        teamPerformance: activeTeamPerformance
+      },
+      leads
+    });
+
+  } catch (error) {
+    console.error(`[getLeadReport Error]:`, error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getContacts,
   getMessages,
@@ -1373,5 +1735,7 @@ module.exports = {
   getLeadDetailsStats,
   getUserBreakdownStats,
   getPendingTasksTeam,
-  getPersonalActivity
+  getPersonalActivity,
+  getLeadReport
 };
+

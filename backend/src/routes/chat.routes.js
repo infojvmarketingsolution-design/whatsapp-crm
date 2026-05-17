@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getContacts, getMessages, sendMessage, performContactAction, performBulkContactAction, createContact, getDashboardStats, getContactStats, getAgents, updateFcmToken, summarizeLead, getLeadAnalysis, getUserBreakdownStats, getPendingTasksTeam, getLeadDetailsStats, getPersonalActivity } = require('../controllers/chat.controller');
+const { getContacts, getMessages, sendMessage, performContactAction, performBulkContactAction, createContact, getDashboardStats, getContactStats, getAgents, updateFcmToken, summarizeLead, getLeadAnalysis, getUserBreakdownStats, getPendingTasksTeam, getLeadDetailsStats, getPersonalActivity, getLeadReport } = require('../controllers/chat.controller');
 const tenantMiddleware = require('../middleware/tenant');
 const { protect } = require('../middleware/auth');
 const multer = require('multer');
@@ -18,6 +18,7 @@ router.get('/stats/contacts', getContactStats);
 router.get('/stats/user-breakdown', getUserBreakdownStats);
 router.get('/stats/lead-details', getLeadDetailsStats);
 router.get('/stats/pending-tasks', getPendingTasksTeam);
+router.get('/stats/lead-report', getLeadReport);
 router.get('/analysis', getLeadAnalysis);
 router.get('/messages/:contactId', getMessages);
 router.post('/send', upload.single('media'), sendMessage);

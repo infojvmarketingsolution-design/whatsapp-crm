@@ -35,6 +35,7 @@ import Maintenance from './pages/Maintenance';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import AdBudgetRefill from './components/AdBudgetRefill';
 import TeamPerformance from './pages/TeamPerformance';
+import LeadReport from './pages/LeadReport';
 import AutoLogout from './components/AutoLogout';
 import UserActivityDashboard from './pages/Admin/UserActivityDashboard';
 import OAuthCallback from './pages/OAuthCallback';
@@ -1170,6 +1171,7 @@ function AppLayout() {
             <Route path="/settings" element={<Settings roleAccess={roleAccess} />} />
             <Route path="/ai-chatbot" element={<AIChatbot />} />
             <Route path="/team-performance" element={<TeamPerformance />} />
+            <Route path="/lead-report" element={<LeadReport />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/oauth/callback" element={<OAuthCallback />} />
