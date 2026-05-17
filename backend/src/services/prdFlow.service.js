@@ -11,7 +11,6 @@ const assignmentService = require('./assignment.service');
 const notificationService = require('./notification.service');
 const schedulingService = require('./scheduling.service');
 const integrationService = require('./integration.service');
-const { aggressiveNormalize } = require('../utils/text.utils');
 
 class PRDFlowService {
   constructor() {
