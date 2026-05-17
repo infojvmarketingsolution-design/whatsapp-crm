@@ -132,6 +132,19 @@ class PRDFlowService {
       }
 
       // ==========================================
+      // STATE: CUSTOM STEP RESUMING
+      // ==========================================
+      const customStepIndex = steps.findIndex(s => s.id === currentState);
+      if (customStepIndex !== -1) {
+        console.log(`[PRD Flow] 📥 User replied to custom step: "${steps[customStepIndex].title}"`);
+        const fresh = await ContactModel.findOne({ phone: contact.phone });
+        const nameVal = fresh.flowVariables?.name || fresh.name || 'Student';
+        await this.transitionToNextStepAfter(currentState, contact, ContactModel, steps, settings, waService, nameVal, io);
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
       // STATE: START (GREETING SCREEN)
       // ==========================================
       if (currentState === 'START') {
@@ -697,19 +710,13 @@ class PRDFlowService {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               selectedProgram: selectedProg,
-              'flowVariables.program': selectedProg,
-              currentFlowStep: 'ask_call_time'
+              'flowVariables.program': selectedProg
             }
           });
 
-          const callTimeMsg = "What would be the best time for our counsellor to call you?";
-          await sendInteractiveOptions(callTimeMsg, [
-            'Immediate',
-            'Within 2 hours',
-            'Morning (9am - 12pm)',
-            'Afternoon (12pm - 4pm)',
-            'Evening (4pm - 7pm)'
-          ]);
+          const fresh = await ContactModel.findOne({ phone: contact.phone });
+          const nameVal = fresh.flowVariables?.name || fresh.name || 'Student';
+          await this.transitionToNextStepAfter('PROGRAM_SELECTION', contact, ContactModel, steps, settings, waService, nameVal, io);
         }
 
         this.activeProcesses.delete(lockKey);
@@ -756,19 +763,13 @@ class PRDFlowService {
         await ContactModel.updateOne({ phone: contact.phone }, {
           $set: {
             selectedProgram: selectedProg,
-            'flowVariables.program': selectedProg,
-            currentFlowStep: 'ask_call_time'
+            'flowVariables.program': selectedProg
           }
         });
 
-        const callTimeMsg = "What would be the best time for our counsellor to call you?";
-        await sendInteractiveOptions(callTimeMsg, [
-          'Immediate',
-          'Within 2 hours',
-          'Morning (9am - 12pm)',
-          'Afternoon (12pm - 4pm)',
-          'Evening (4pm - 7pm)'
-        ]);
+        const fresh = await ContactModel.findOne({ phone: contact.phone });
+        const nameVal = fresh.flowVariables?.name || fresh.name || 'Student';
+        await this.transitionToNextStepAfter('PROGRAM_SELECTION', contact, ContactModel, steps, settings, waService, nameVal, io);
 
         this.activeProcesses.delete(lockKey);
         return;
@@ -812,19 +813,13 @@ class PRDFlowService {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               selectedProgram: selectedProg,
-              'flowVariables.program': selectedProg,
-              currentFlowStep: 'ask_call_time'
+              'flowVariables.program': selectedProg
             }
           });
 
-          const callTimeMsg = "What would be the best time for our counsellor to call you?";
-          await sendInteractiveOptions(callTimeMsg, [
-            'Immediate',
-            'Within 2 hours',
-            'Morning (9am - 12pm)',
-            'Afternoon (12pm - 4pm)',
-            'Evening (4pm - 7pm)'
-          ]);
+          const fresh = await ContactModel.findOne({ phone: contact.phone });
+          const nameVal = fresh.flowVariables?.name || fresh.name || 'Student';
+          await this.transitionToNextStepAfter('PROGRAM_SELECTION', contact, ContactModel, steps, settings, waService, nameVal, io);
         }
 
         this.activeProcesses.delete(lockKey);
@@ -871,19 +866,13 @@ class PRDFlowService {
         await ContactModel.updateOne({ phone: contact.phone }, {
           $set: {
             selectedProgram: selectedProg,
-            'flowVariables.program': selectedProg,
-            currentFlowStep: 'ask_call_time'
+            'flowVariables.program': selectedProg
           }
         });
 
-        const callTimeMsg = "What would be the best time for our counsellor to call you?";
-        await sendInteractiveOptions(callTimeMsg, [
-          'Immediate',
-          'Within 2 hours',
-          'Morning (9am - 12pm)',
-          'Afternoon (12pm - 4pm)',
-          'Evening (4pm - 7pm)'
-        ]);
+        const fresh = await ContactModel.findOne({ phone: contact.phone });
+        const nameVal = fresh.flowVariables?.name || fresh.name || 'Student';
+        await this.transitionToNextStepAfter('PROGRAM_SELECTION', contact, ContactModel, steps, settings, waService, nameVal, io);
 
         this.activeProcesses.delete(lockKey);
         return;
@@ -988,10 +977,29 @@ class PRDFlowService {
             }
           });
 
-          // 4. Send Thank You Message
-          const thankYouMsg = `Thank you ${name} 😊\n\nYour counselling request has been submitted successfully.\nOur counsellor will contact you at your preferred time.`;
-          const resTY = await waService.sendTextMessage(contact.phone, thankYouMsg);
-          await saveAndEmit('text', thankYouMsg, resTY);
+          // 4. Send Thank You Message (Dynamic from builder steps)
+          const thankYouStep = steps.find(s => s.id === 'thank_you' || s.type === 'CUSTOM_MESSAGE');
+          let thankYouMsg = thankYouStep?.message || thankYouStep?.text || `Thank you ${name} 😊\n\nYour counselling request has been submitted successfully.\nOur counsellor will contact you at your preferred time.`;
+          thankYouMsg = thankYouMsg.replace(/\{\{name\}\}/gi, name)
+                                   .replace(/\{\{contact\}\}/gi, contact.phone)
+                                   .replace(/\{\{qualification\}\}/gi, qual)
+                                   .replace(/\{\{program\}\}/gi, prog)
+                                   .replace(/\{\{time\}\}/gi, time);
+
+          const thankYouMedia = thankYouStep?.image ? this.makeAbsolute(thankYouStep.image) : '';
+          let resTY;
+          if (thankYouMedia) {
+            try {
+              resTY = await waService.sendMedia(contact.phone, 'image', null, thankYouMsg, thankYouMedia);
+              await saveAndEmit('image', thankYouMsg, resTY);
+            } catch (tyErr) {
+              resTY = await waService.sendTextMessage(contact.phone, thankYouMsg);
+              await saveAndEmit('text', thankYouMsg, resTY);
+            }
+          } else {
+            resTY = await waService.sendTextMessage(contact.phone, thankYouMsg);
+            await saveAndEmit('text', thankYouMsg, resTY);
+          }
 
           // 5. Sequence preservation sleep
           await this.sleep(1500);
@@ -1081,6 +1089,153 @@ class PRDFlowService {
       console.error(`[PRD State Machine] ❌ Error in processStep:`, err);
     } finally {
       this.activeProcesses.delete(lockKey);
+    }
+  }
+
+  async transitionToNextStepAfter(completedTypeOrId, contact, ContactModel, steps, settings, waService, nameVal, io = null) {
+    const MessageSchema = require('../models/tenant/Message');
+    const { getTenantConnection } = require('../config/db');
+
+    // 1. Find index of completed step
+    let completedIdx = steps.findIndex(s => s.id === completedTypeOrId || s.type === completedTypeOrId);
+    if (completedIdx === -1) {
+      if (completedTypeOrId.includes('program')) {
+        completedIdx = steps.findIndex(s => s.type === 'PROGRAM_SELECTION');
+      } else if (completedTypeOrId.includes('qualification')) {
+        completedIdx = steps.findIndex(s => s.type === 'QUALIFICATION');
+      } else if (completedTypeOrId.includes('name')) {
+        completedIdx = steps.findIndex(s => s.type === 'NAME_CAPTURE');
+      } else if (completedTypeOrId.includes('call_time')) {
+        completedIdx = steps.findIndex(s => s.type === 'CALL_TIME');
+      }
+    }
+
+    const nextStep = (completedIdx !== -1 && completedIdx + 1 < steps.length) ? steps[completedIdx + 1] : null;
+
+    if (!nextStep) {
+      // Fallbacks if no next step exists in visual builder
+      if (completedTypeOrId.includes('program') || completedTypeOrId === 'PROGRAM_SELECTION') {
+        await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_call_time' } });
+        const callTimeMsg = "What would be the best time for our counsellor to call you?";
+        await this.sendInteractiveOptionsHelper(contact, waService, callTimeMsg, [
+          'Immediate', 'Within 2 hours', 'Morning (9am - 12pm)', 'Afternoon (12pm - 4pm)', 'Evening (4pm - 7pm)'
+        ]);
+        return;
+      }
+      
+      // Default to ask_confirmation
+      await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_confirmation' } });
+      const fresh = await ContactModel.findOne({ phone: contact.phone });
+      const name = fresh.flowVariables?.name || fresh.name || 'Student';
+      const qual = fresh.flowVariables?.qualification || fresh.qualification || '';
+      const prog = fresh.flowVariables?.program || fresh.selectedProgram || '';
+      const timeVal = fresh.flowVariables?.time || fresh.preferredCallTime || '';
+      const summaryMsg = `Please confirm your details:\n\nName: ${name}\nQualification: ${qual}\nProgram: ${prog}\nPreferred Call Time: ${timeVal}\n\nIs this correct?`;
+      await this.sendInteractiveOptionsHelper(contact, waService, summaryMsg, ['Yes', 'Edit']);
+      return;
+    }
+
+    console.log(`[PRD Flow] 🔀 Transitioning dynamically from "${completedTypeOrId}" to "${nextStep.title}" (Type: ${nextStep.type}, ID: ${nextStep.id})`);
+
+    if (nextStep.type === 'CALL_TIME') {
+      await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_call_time' } });
+      const callTimeMsg = nextStep.message || nextStep.text || "What would be the best time for our counsellor to call you?";
+      const buttons = (nextStep.buttons && nextStep.buttons.length > 0) ? nextStep.buttons : [
+        'Immediate', 'Within 2 hours', 'Morning (9am - 12pm)', 'Afternoon (12pm - 4pm)', 'Evening (4pm - 7pm)'
+      ];
+      await this.sendInteractiveOptionsHelper(contact, waService, callTimeMsg, buttons);
+    }
+    else if (nextStep.type === 'CUSTOM_MESSAGE' || nextStep.type === 'SUCCESS_PROOF') {
+      await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: nextStep.id } });
+
+      let msg = nextStep.message || nextStep.text || '';
+      msg = msg.replace(/\{\{name\}\}/gi, nameVal).replace(/\{\{contact\}\}/gi, contact.phone);
+
+      // Construct fresh values if available
+      const fresh = await ContactModel.findOne({ phone: contact.phone });
+      const qualVal = fresh.flowVariables?.qualification || fresh.qualification || '';
+      const progVal = fresh.flowVariables?.program || fresh.selectedProgram || '';
+      const timeVal = fresh.flowVariables?.time || fresh.preferredCallTime || '';
+
+      msg = msg.replace(/\{\{qualification\}\}/gi, qualVal)
+               .replace(/\{\{program\}\}/gi, progVal)
+               .replace(/\{\{time\}\}/gi, timeVal);
+
+      const image = nextStep.image || '';
+      const media = this.makeAbsolute(image);
+
+      const saveAndEmit = async (type, payload, waResult) => {
+        const tenantDb = getTenantConnection(settings.tenantId);
+        const MessageModel = tenantDb.model('Message', MessageSchema);
+        const msgId = waResult?.messages?.[0]?.id || `out_${Date.now()}`;
+        const msgDoc = await MessageModel.create({ 
+          contactId: contact._id, 
+          messageId: msgId, 
+          direction: 'OUTBOUND', 
+          type, 
+          content: payload, 
+          status: 'SENT' 
+        });
+        if (io) io.to(settings.tenantId).emit('new_message', { ...msgDoc._doc, contact });
+      };
+
+      let resMsg;
+      if (media) {
+        try {
+          resMsg = await waService.sendMedia(contact.phone, 'image', null, msg, media);
+          await saveAndEmit('image', msg, resMsg);
+        } catch (mediaErr) {
+          resMsg = await waService.sendTextMessage(contact.phone, msg);
+          await saveAndEmit('text', msg, resMsg);
+        }
+      } else {
+        resMsg = await waService.sendTextMessage(contact.phone, msg);
+        await saveAndEmit('text', msg, resMsg);
+      }
+
+      // If the custom step has interactive buttons, send them! Otherwise send a "Continue" button or wait for any text reply
+      if (nextStep.buttons && nextStep.buttons.length > 0) {
+        const buttonLabels = nextStep.buttons.map(b => typeof b === 'string' ? b : b.label);
+        await this.sendInteractiveOptionsHelper(contact, waService, "Please select an option:", buttonLabels);
+      } else {
+        await this.sendInteractiveOptionsHelper(contact, waService, "Press below to proceed:", ["Continue ➡️"]);
+      }
+    }
+    else if (nextStep.type === 'QUALIFICATION') {
+      await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_qualification' } });
+      const qualMsg = nextStep.message || nextStep.text || `Please select your qualification.`;
+      let options = settings?.automation?.aiPrompts?.qualificationOptions || ['12th Pass', 'Graduation', 'Other'];
+      await this.sendInteractiveOptionsHelper(contact, waService, qualMsg, options);
+    }
+    else if (nextStep.type === 'PROGRAM_SELECTION') {
+      const fresh = await ContactModel.findOne({ phone: contact.phone });
+      const q = fresh.qualification || '12th Pass';
+      const isGrad = q.toLowerCase().includes('grad') || q.toLowerCase().includes('bachelor');
+      await ContactModel.updateOne({ phone: contact.phone }, { 
+        $set: { currentFlowStep: isGrad ? 'ask_program_category_grad' : 'ask_program_category_12th' } 
+      });
+      const catMsg = nextStep.message || nextStep.text || "Please select program category.";
+      await this.sendInteractiveOptionsHelper(contact, waService, catMsg, isGrad ? ['Master Traditional Program', 'Master Trending Program'] : ['Traditional Program', 'Trending Program']);
+    }
+    else {
+      await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_additional_help' } });
+      const thankYouMsg = `Thank you ${nameVal} 😊\n\nYour request has been submitted. Our counselor will contact you.`;
+      await waService.sendTextMessage(contact.phone, thankYouMsg);
+    }
+  }
+
+  async sendInteractiveOptionsHelper(contact, waService, body, options) {
+    if (options.length <= 3) {
+      await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: options });
+    } else {
+      await waService.sendListMessage(contact.phone, {
+        body,
+        buttonText: 'View Options',
+        sections: [{
+          title: 'Available Options',
+          rows: options.slice(0, 10).map((opt, i) => ({ id: `list_${i}`, title: opt.substring(0, 24) }))
+        }]
+      });
     }
   }
 
