@@ -300,8 +300,13 @@ class PRDFlowService {
         });
 
         const callTimeMsg = "What would be the best time for our counsellor to call you?";
-        const res = await waService.sendTextMessage(contact.phone, callTimeMsg);
-        await saveAndEmit('text', callTimeMsg, res);
+        await sendInteractiveOptions(callTimeMsg, [
+          'Immediate',
+          'Within 2 hours',
+          'Morning (9am - 12pm)',
+          'Afternoon (12pm - 4pm)',
+          'Evening (4pm - 7pm)'
+        ]);
 
         this.activeProcesses.delete(lockKey);
         return;
@@ -436,8 +441,13 @@ class PRDFlowService {
           });
 
           const callTimeMsg = "What would be the best time for our counsellor to call you?";
-          const res = await waService.sendTextMessage(contact.phone, callTimeMsg);
-          await saveAndEmit('text', callTimeMsg, res);
+          await sendInteractiveOptions(callTimeMsg, [
+            'Immediate',
+            'Within 2 hours',
+            'Morning (9am - 12pm)',
+            'Afternoon (12pm - 4pm)',
+            'Evening (4pm - 7pm)'
+          ]);
         }
 
         this.activeProcesses.delete(lockKey);
@@ -474,8 +484,13 @@ class PRDFlowService {
         });
 
         const callTimeMsg = "What would be the best time for our counsellor to call you?";
-        const res = await waService.sendTextMessage(contact.phone, callTimeMsg);
-        await saveAndEmit('text', callTimeMsg, res);
+        await sendInteractiveOptions(callTimeMsg, [
+          'Immediate',
+          'Within 2 hours',
+          'Morning (9am - 12pm)',
+          'Afternoon (12pm - 4pm)',
+          'Evening (4pm - 7pm)'
+        ]);
 
         this.activeProcesses.delete(lockKey);
         return;
@@ -516,8 +531,13 @@ class PRDFlowService {
           });
 
           const callTimeMsg = "What would be the best time for our counsellor to call you?";
-          const res = await waService.sendTextMessage(contact.phone, callTimeMsg);
-          await saveAndEmit('text', callTimeMsg, res);
+          await sendInteractiveOptions(callTimeMsg, [
+            'Immediate',
+            'Within 2 hours',
+            'Morning (9am - 12pm)',
+            'Afternoon (12pm - 4pm)',
+            'Evening (4pm - 7pm)'
+          ]);
         }
 
         this.activeProcesses.delete(lockKey);
@@ -554,8 +574,13 @@ class PRDFlowService {
         });
 
         const callTimeMsg = "What would be the best time for our counsellor to call you?";
-        const res = await waService.sendTextMessage(contact.phone, callTimeMsg);
-        await saveAndEmit('text', callTimeMsg, res);
+        await sendInteractiveOptions(callTimeMsg, [
+          'Immediate',
+          'Within 2 hours',
+          'Morning (9am - 12pm)',
+          'Afternoon (12pm - 4pm)',
+          'Evening (4pm - 7pm)'
+        ]);
 
         this.activeProcesses.delete(lockKey);
         return;
@@ -565,7 +590,21 @@ class PRDFlowService {
       // STATE: ASK_CALL_TIME
       // ==========================================
       if (currentState === 'ask_call_time') {
-        const timeVal = messageText.trim();
+        const callTimeOpts = [
+          'Immediate',
+          'Within 2 hours',
+          'Morning (9am - 12pm)',
+          'Afternoon (12pm - 4pm)',
+          'Evening (4pm - 7pm)'
+        ];
+        let timeVal = messageText.trim();
+
+        if (replyValue && replyValue.startsWith('list_')) {
+          const idx = parseInt(replyValue.split('_')[1]);
+          if (idx >= 0 && idx < callTimeOpts.length) {
+            timeVal = callTimeOpts[idx];
+          }
+        }
 
         // Fetch fresh contact details to construct summary
         const fresh = await ContactModel.findOne({ phone: contact.phone });
