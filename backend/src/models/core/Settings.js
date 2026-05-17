@@ -38,7 +38,13 @@ const AIPromptsSchema = new mongoose.Schema({
       { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: 'Great choice 🚀\nWhen should our counselor call you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
       { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counsellor will call you at your preferred time 📞' }
     ] 
-  }
+  },
+  aiSystemInstructions: { type: String, default: '' },
+  aiPlacementInfo: { type: String, default: '' },
+  aiHostelInfo: { type: String, default: '' },
+  aiScholarshipInfo: { type: String, default: '' },
+  aiFeeInfo: { type: String, default: '' },
+  aiBrochureUrl: { type: String, default: '' }
 });
 
 

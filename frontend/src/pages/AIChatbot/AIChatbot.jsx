@@ -222,7 +222,10 @@ export default function AIChatbot() {
                 <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 mr-2">Strategy Mode:</span>
                 <div className="flex bg-slate-200 p-0.5 rounded-xl border border-slate-300/40">
                    <button
-                      onClick={() => setSettings(prev => ({ ...prev, botMode: 'PRD' }))}
+                      onClick={() => {
+                         setSettings(prev => ({ ...prev, botMode: 'PRD' }));
+                         if (activeTab === 'ai_agent') setActiveTab('builder');
+                      }}
                       className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${settings.botMode === 'PRD' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
                    >
                       PRD Form
@@ -254,13 +257,143 @@ export default function AIChatbot() {
               <Network size={14} />
               <span>Visual Journey</span>
            </button>
+           {settings.botMode === 'AI' && (
+             <button 
+               onClick={() => setActiveTab('ai_agent')}
+               className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center space-x-2 ${activeTab === 'ai_agent' ? 'bg-white text-amber-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+             >
+                <Bot size={14} />
+                <span>🧠 AI Agent Settings</span>
+             </button>
+           )}
         </div>
 
-        {activeTab === 'visual' ? (
+        {activeTab === 'visual' && (
            <div className="mb-12 animate-fade-in">
               <FlowCanvas steps={settings.aiPrompts.prdFlowSteps} />
            </div>
-        ) : (
+        )}
+
+        {activeTab === 'ai_agent' && (
+          <div className="space-y-6 pb-20 animate-fade-in">
+            {/* 🧠 Core system guidelines */}
+            <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm animate-fade-in">
+              <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <ShieldCheck size={18} className="text-amber-500" />
+                AI Agent Core Guidelines & Persona
+              </h3>
+              <p className="text-xs text-slate-400 mb-6 font-bold uppercase tracking-wider">
+                Instruct the AI on how to speak, its persona, and any special admissions rules.
+              </p>
+              
+              <textarea 
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500 transition-all h-36"
+                placeholder="e.g. Speak warmly like a top academic counsellor named Sarah from Gandhinagar University. Keep answers concise, highly polite, and recommend B.Sc Trending courses."
+                value={settings.aiPrompts.aiSystemInstructions || ''}
+                onChange={(e) => setSettings(prev => ({
+                  ...prev,
+                  aiPrompts: {
+                    ...prev.aiPrompts,
+                    aiSystemInstructions: e.target.value
+                  }
+                }))}
+              />
+            </div>
+
+            {/* 📚 FAQ & Knowledge Base */}
+            <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm animate-fade-in">
+              <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <Layers size={18} className="text-blue-500" />
+                AI Knowledge Base & FAQs
+              </h3>
+              <p className="text-xs text-slate-400 mb-6 font-bold uppercase tracking-wider">
+                Define the dynamic institutional facts that the AI agent uses to answer student questions.
+              </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Placements */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Placement Information</label>
+                  <textarea 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 h-32"
+                    placeholder="e.g. Over 90% placement rates, top packages exceeding 12 Lakhs..."
+                    value={settings.aiPrompts.aiPlacementInfo || ''}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      aiPrompts: { ...prev.aiPrompts, aiPlacementInfo: e.target.value }
+                    }))}
+                  />
+                </div>
+
+                {/* Hostel */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Hostel & Campus Facilities</label>
+                  <textarea 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 h-32"
+                    placeholder="e.g. Clean AC & Non-AC rooms, Wi-Fi, gym, mess food..."
+                    value={settings.aiPrompts.aiHostelInfo || ''}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      aiPrompts: { ...prev.aiPrompts, aiHostelInfo: e.target.value }
+                    }))}
+                  />
+                </div>
+
+                {/* Scholarships */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Scholarship Schemes</label>
+                  <textarea 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 h-32"
+                    placeholder="e.g. Up to 50% waiver based on academic performance/financial needs..."
+                    value={settings.aiPrompts.aiScholarshipInfo || ''}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      aiPrompts: { ...prev.aiPrompts, aiScholarshipInfo: e.target.value }
+                    }))}
+                  />
+                </div>
+
+                {/* Fees */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">Fee Details</label>
+                  <textarea 
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 h-32"
+                    placeholder="e.g. B.Sc Trending courses are ~85k/year, Traditional courses ~45k/year..."
+                    value={settings.aiPrompts.aiFeeInfo || ''}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      aiPrompts: { ...prev.aiPrompts, aiFeeInfo: e.target.value }
+                    }))}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* 📄 Admission Brochure */}
+            <div className="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm animate-fade-in">
+              <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider mb-2 flex items-center gap-2">
+                <Mail size={18} className="text-emerald-500" />
+                Dynamic Brochure PDF Share Link
+              </h3>
+              <p className="text-xs text-slate-400 mb-6 font-bold uppercase tracking-wider">
+                Upload or paste the URL of the prospectus brochure. The AI will automatically share this file when requested!
+              </p>
+
+              <input 
+                type="text"
+                className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-emerald-500/10 focus:border-emerald-500"
+                placeholder="https://example.com/brochure.pdf"
+                value={settings.aiPrompts.aiBrochureUrl || ''}
+                onChange={(e) => setSettings(prev => ({
+                  ...prev,
+                  aiPrompts: { ...prev.aiPrompts, aiBrochureUrl: e.target.value }
+                }))}
+              />
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'builder' && (
           <div className="space-y-6 pb-20 animate-fade-in">
             {(settings.aiPrompts.prdFlowSteps || []).map((step, index) => (
               <div key={step.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">

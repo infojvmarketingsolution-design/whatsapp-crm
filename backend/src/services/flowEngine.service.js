@@ -511,7 +511,7 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
 
        // 8. If brochure sharing triggered, automatically send the brochure document link
        if (aiResult.brochureToShare) {
-          const brochureUrl = 'https://wapipulse.com/uploads/brochures/general_admission_brochure.pdf';
+          const brochureUrl = settings?.automation?.aiPrompts?.aiBrochureUrl || 'https://wapipulse.com/uploads/brochures/general_admission_brochure.pdf';
           await waService.sendTextMessage(activeContact.phone, `Here is our official brochure for your review: 📄 ${brochureUrl}`);
        }
 

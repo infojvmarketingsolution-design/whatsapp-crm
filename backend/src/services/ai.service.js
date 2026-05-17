@@ -265,6 +265,20 @@ class AIService {
     }
 
     try {
+      // Load dynamic settings from DB
+      const Settings = require('../models/core/Settings');
+      const settings = await Settings.findOne({ tenantId });
+      const customAi = settings?.automation?.aiPrompts || {};
+
+      const placement = customAi.aiPlacementInfo || `${universityName} has over 90% placement rates, with top packages exceeding 12 Lakhs per annum. Recruiting partners include TCS, Infosys, and top startups.`;
+      const hostel = customAi.aiHostelInfo || `Clean and premium hostels with AC/Non-AC options, hot water, Wi-Fi, and nutritious mess food.`;
+      const scholarship = customAi.aiScholarshipInfo || `Up to 50% waiver based on merit (12th Board / Graduation GPA) or financial needs.`;
+      const fees = customAi.aiFeeInfo || `B.Sc Trending courses are ~85k/year, Traditional courses ~45k/year. M.Sc courses are ~95k/year.`;
+      
+      const customPromptInstructions = customAi.aiSystemInstructions 
+        ? `CORE CUSTOM WORKSPACE INSTRUCTIONS:\n${customAi.aiSystemInstructions}\n` 
+        : '';
+
       // 1. Compile recent message history for context-awareness
       const historyStr = messages.slice(-8).map(m => `${m.direction === 'INBOUND' ? 'Student' : 'Counsellor'}: ${m.content}`).join("\n");
 
@@ -273,6 +287,8 @@ class AIService {
 You are the highly intelligent Advanced AI Admission Counsellor for ${universityName}.
 Your objective is to consult students naturally, understand their needs, suggest matching programs, answer FAQs, and score leads dynamically.
 
+${customPromptInstructions}
+
 CAPABILITIES:
 1. NATURAL MULTILINGUAL CONVERSATION: Warm, empathetic, and human-like. Silently understand and correct spelling mistakes. Respond in the language used by the student (English, Hindi, Gujarati, or a mixed blend like Hinglish / Gujlish).
 2. DYNAMIC WORKFLOW & RECOMMENDATIONS:
@@ -280,10 +296,10 @@ CAPABILITIES:
    - If they select Cyber Security: Suggest "B.Sc IT in Cyber Security & Digital Forensics" or "M.Sc IT in Cyber Security & Digital Forensics".
    - If they select Animation: Suggest VFX, Gaming, 3D Design, or Film Editing.
 3. SMART FAQ KNOWLEDGE:
-   - Placement: ABC Institute has over 90% placement rates, with top packages exceeding 12 Lakhs per annum. Recruiting partners include TCS, Infosys, and startups.
-   - Hostel: Clean hostels with AC/Non-AC options, hot water, Wi-Fi, and nutritious mess food.
-   - Scholarships: Up to 50% waiver based on merit (12th Board/Graduation GPA) or financial needs.
-   - Fees: B.Sc Trending courses are ~85k/year, Traditional courses ~45k/year. M.Sc courses are ~95k/year.
+   - Placement: ${placement}
+   - Hostel: ${hostel}
+   - Scholarships: ${scholarship}
+   - Fees: ${fees}
 4. SENTIMENT & COUUNSELLOR TRANSFER: Detect user sentiments (confused, frustrated, interested, urgent). Trigger human counsellor transfer (shouldTransfer = true) if the user is frustrated, highly confused, or directly asks to talk to a person/counsellor.
 5. LEAD SCORING RULES:
    - Interested in trending program (e.g. Cyber Security, Cloud, Data Analytics, AI & ML): +20 points
