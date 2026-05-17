@@ -370,8 +370,13 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
        console.log(`[Flow Engine] 🏛️ Strategy Mode: PRD (Education Template). Routing message...`);
        
        const hasCompletedFlow = activeContact.flowVariables && activeContact.flowVariables.program;
+       const isGreeting = messageText.toLowerCase().trim().match(/^(hi|hello|hey|start|menu|counselor|counsellor)$/i);
 
-       if (activeContact.currentFlowStep || !hasCompletedFlow) {
+       if (activeContact.currentFlowStep || !hasCompletedFlow || isGreeting) {
+           // If it's a greeting and we are starting fresh, make sure currentFlowStep is reset to force the welcome greeting
+           if (isGreeting && !activeContact.currentFlowStep) {
+              activeContact.currentFlowStep = 'START';
+           }
            return PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io, false, replyValue);
        } else {
            console.log(`[Flow Engine] ⚠️ PRD Mode active, but flow completed. Falling through to AI Fallback.`);

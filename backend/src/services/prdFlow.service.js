@@ -33,12 +33,28 @@ class PRDFlowService {
     return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
   }
 
+  async clearPRDFlowSession(tenantId, phone, Contact) {
+    await Contact.updateOne(
+      { phone },
+      {
+        $set: {
+          currentFlowStep: null,
+          currentFlowId: null,
+          isFlowActive: false,
+          flowVariables: {},
+          selectedStream: null
+        }
+      }
+    );
+  }
+
   async processStep(tenantId, contact, messageText, waService, io, isAutoFollowup = false, replyValue = null) {
     const lockKey = `${tenantId}_${contact.phone}`;
     if (this.activeProcesses.has(lockKey) && !isAutoFollowup) return;
     this.activeProcesses.add(lockKey);
 
-    console.log(`[PRD] 🌀 Node: ${contact.currentFlowStep || 'START'} | Msg: ${messageText} | Reply: ${replyValue}`);
+    const currentState = contact.currentFlowStep || 'START';
+    console.log(`[PRD State Machine] 🌀 State: ${currentState} | Msg: "${messageText}" | ReplyValue: "${replyValue}"`);
 
     // --- PAUSE CHECK ---
     if (contact.isBotPaused) {
@@ -47,373 +63,647 @@ class PRDFlowService {
          await Contact.updateOne({ phone: contact.phone }, { isBotPaused: false, botPauseUntil: null });
       } else {
          console.log(`[PRD] ⏹️ Bot is paused for ${contact.phone}. Skipping automation.`);
+         this.activeProcesses.delete(lockKey);
          return;
       }
     }
 
     try {
       const tenantDb = getTenantConnection(tenantId);
-      const Contact = tenantDb.model('Contact', ContactSchema);
-      const Message = tenantDb.model('Message', MessageSchema);
-      const Lead = tenantDb.model('Lead', LeadSchema);
-      const SuccessStory = tenantDb.model('SuccessStory', SuccessStorySchema);
+      const ContactModel = tenantDb.model('Contact', ContactSchema);
+      const MessageModel = tenantDb.model('Message', MessageSchema);
+      const LeadModel = tenantDb.model('Lead', LeadSchema);
+      const SuccessStoryModel = tenantDb.model('SuccessStory', SuccessStorySchema);
+      const BotAnalyticsModel = tenantDb.model('BotAnalytics', BotAnalyticsSchema);
 
       const settings = await Settings.findOne({ tenantId });
       const aiPrompts = settings?.automation?.aiPrompts || {};
-      
-      const defaultProgramMap = {
-        "10th Pass": { "Diploma Programs": ["Diploma in IT", "Diploma in Computer", "Diploma in Civil"] },
-        "12th Pass": {
-          "Trending Programs": ["B.Sc Cyber Security", "B.Sc AI & ML", "B.Sc Animation", "B.Sc Cloud Automation", "B.Sc Software Development", "B.Sc Blockchain Technology", "B.Sc Data Analytics"],
-          "Traditional Programs": ["B.Com", "B.Tech", "BBA"]
-        },
-        "Graduate": { "Master Programs": ["MCA", "MBA", "M.Tech"] },
-        "Working Professional": { "Executive Programs": ["Executive MBA", "Part-time M.Tech"] }
-      };
-
-      const qualificationOptions = aiPrompts.qualificationOptions && aiPrompts.qualificationOptions.length > 0 ? aiPrompts.qualificationOptions : ['10th Pass', '12th Pass', 'Graduate', 'Working Professional'];
-      const programMap = (aiPrompts.programMap && Object.keys(aiPrompts.programMap).length > 0) ? aiPrompts.programMap : defaultProgramMap;
-      const flowStepsRaw = (aiPrompts.prdFlowSteps && aiPrompts.prdFlowSteps.length > 0) ? aiPrompts.prdFlowSteps : this.DEFAULT_PRD_FLOW_STEPS;
-
-      // Normalize flow steps to executable format
-      const flowSteps = flowStepsRaw.map(step => {
-        if (step.data) return step;
-        let nodeData = { text: step.message, msgType: 'TEXT', buttons: step.buttons };
-        if (step.type === 'GREETING') { 
-           nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : (step.image ? 'IMAGE' : 'TEXT'); 
-           nodeData.mediaUrl = step.image; 
-        }
-        else if (step.type === 'NAME_CAPTURE') { nodeData.msgType = 'QUESTION'; nodeData.variableName = 'name'; }
-        else if (step.type === 'QUALIFICATION') { nodeData.msgType = 'LIST_MESSAGE'; nodeData.variableName = 'qualification'; nodeData.listOptions = qualificationOptions; }
-        else if (step.type === 'PROGRAM_SELECTION') { nodeData.msgType = 'LIST_MESSAGE'; nodeData.variableName = 'program'; nodeData.isProgramSelection = true; }
-        else if (step.type === 'CALL_TIME') { nodeData.msgType = 'INTERACTIVE'; nodeData.variableName = 'time'; nodeData.buttons = step.buttons || step.options || ['Morning', 'Afternoon', 'Evening']; }
-        else if (step.type === 'CUSTOM_MESSAGE') { nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : (step.image ? 'IMAGE' : 'TEXT'); nodeData.mediaUrl = step.image; }
-        else if (step.type === 'CUSTOM_QUESTION') { nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : 'QUESTION'; nodeData.variableName = `custom_${step.id}`; }
-        else if (step.type === 'SUCCESS_PROOF') { nodeData.msgType = (step.buttons && step.buttons.length) ? 'INTERACTIVE' : (step.image ? 'IMAGE' : 'TEXT'); nodeData.mediaUrl = step.image; nodeData.isSuccessProof = true; }
-        return { id: step.id, type: 'messageNode', data: nodeData };
-      });
-
-      const aggressiveNormalize = (s) => (s || '').toString().toLowerCase().replace(/[^a-z0-9]/g, '');
-
-      const replaceVars = (str) => {
-        if (!str) return '';
-        const vars = contact.flowVariables || {};
-        const name = vars.name || contact.name || 'Friend';
-        return str.replace(/\{{1,2}name\}{1,2}/gi, name)
-                  .replace(/\{{1,2}qualification\}{1,2}/gi, vars.qualification || 'qualification')
-                  .replace(/\{{1,2}program\}{1,2}/gi, vars.program || 'program')
-                  .replace(/\{{1,2}time\}{1,2}/gi, vars.time || 'time');
-      };
+      const greetingImage = aiPrompts.greetingImage || 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg';
 
       const saveAndEmit = async (type, payload, waResult) => {
         const msgId = waResult?.messages?.[0]?.id || `out_${Date.now()}`;
-        const msg = await Message.create({ contactId: contact._id, messageId: msgId, direction: 'OUTBOUND', type, content: payload, status: 'SENT' });
-        if (io) io.to(tenantId).emit('current_chat_message', { ...msg._doc, contact });
+        const msg = await MessageModel.create({ 
+          contactId: contact._id, 
+          messageId: msgId, 
+          direction: 'OUTBOUND', 
+          type, 
+          content: payload, 
+          status: 'SENT' 
+        });
+        if (io) io.to(tenantId).emit('new_message', { ...msg._doc, contact });
       };
 
-      // Find current node
-      let currentStepId = contact.currentFlowStep || flowSteps[0]?.id;
-      let stepToProcess = flowSteps.find(s => s.id === currentStepId) || flowSteps[0];
-      
-      let consumeInput = !!contact.currentFlowStep && !isAutoFollowup;
-      let iterations = 0;
-
-      while (stepToProcess && iterations < 10) {
-        iterations++;
-        const nodeData = stepToProcess.data || {};
-        const varName = nodeData.variableName;
-        let forceStay = false;
-
-        // --- PHASE A: HANDLE INPUT ---
-        if (consumeInput && varName) {
-          let val = (replyValue && !replyValue.startsWith('list_') && !replyValue.startsWith('btn_') ? replyValue : messageText || '').trim();
-          const nv = aggressiveNormalize(val);
-
-          if (varName === 'name') {
-            const extName = await AIService.extractData(val, 'NAME');
-            val = (extName && extName.length < 50) ? extName : val;
-            await Contact.updateOne({ phone: contact.phone }, { $set: { name: val, 'flowVariables.name': val } });
-            contact.name = val;
-            if (!contact.flowVariables) contact.flowVariables = {};
-            contact.flowVariables.name = val;
-          } 
-          else if (varName === 'qualification') {
-            let matched = qualificationOptions.find(o => aggressiveNormalize(o) === nv);
-            if (!matched) matched = qualificationOptions.find(o => aggressiveNormalize(o).includes(nv) || nv.includes(aggressiveNormalize(o)));
-            
-            if (matched) {
-              await Contact.updateOne({ phone: contact.phone }, { $set: { qualification: matched, selectedStream: null, 'flowVariables.qualification': matched, 'flowVariables.selectedStream': null } });
-              contact.qualification = matched;
-              contact.selectedStream = null;
-              if (!contact.flowVariables) contact.flowVariables = {};
-              contact.flowVariables.qualification = matched;
-              contact.flowVariables.selectedStream = null;
-            }
-          } 
-          else if (varName === 'program' && nodeData.isProgramSelection) {
-             const currentQual = contact.qualification || contact.flowVariables?.qualification || '';
-             const tqc = aggressiveNormalize(currentQual);
-             
-             let qm = {};
-             const qk = Object.keys(programMap).find(k => aggressiveNormalize(k) === tqc || (tqc && aggressiveNormalize(k).includes(tqc)));
-             qm = qk ? programMap[qk] : {};
-
-             if (Array.isArray(qm)) qm = { "Programs": qm };
-             const categories = Object.keys(qm);
-             const stream = contact.selectedStream || contact.flowVariables?.selectedStream;
-
-             if (!stream) {
-                 const matchedCategory = categories.find(c => aggressiveNormalize(c) === nv || aggressiveNormalize(c).includes(nv));
-                 if (matchedCategory) {
-                    await Contact.updateOne({ phone: contact.phone }, { $set: { selectedStream: matchedCategory, 'flowVariables.selectedStream': matchedCategory } });
-                    contact.selectedStream = matchedCategory;
-                    if (!contact.flowVariables) contact.flowVariables = {};
-                    contact.flowVariables.selectedStream = matchedCategory;
-                    forceStay = true;
-                 } else if (categories.length > 1) {
-                    forceStay = true;
-                 } else {
-                    await Contact.updateOne({ phone: contact.phone }, { $set: { selectedProgram: val, 'flowVariables.program': val } });
-                    contact.selectedProgram = val;
-                    if (!contact.flowVariables) contact.flowVariables = {};
-                    contact.flowVariables.program = val;
-                 }
-             } else {
-                 await Contact.updateOne({ phone: contact.phone }, { $set: { selectedProgram: val, 'flowVariables.program': val } });
-                 contact.selectedProgram = val;
-                 if (!contact.flowVariables) contact.flowVariables = {};
-                 contact.flowVariables.program = val;
-             }
-          }
-          else {
-            const dbUpdates = { [`flowVariables.${varName}`]: val };
-            if (varName === 'profession') dbUpdates.profession = val;
-            else if (varName === 'budget') dbUpdates.budget = val;
-            else if (varName === 'time') {
-               dbUpdates.preferredCallTime = val;
-               
-               // AUTO LEAD GENERATION
-               try {
-                  let assignedAgentId = null;
-                  if (settings?.crm?.autoAssignment) assignedAgentId = await assignmentService.getNextAgentForTenant(tenantId);
-
-                  await Lead.create({ 
-                     tenantId, 
-                     name: contact.flowVariables.name, 
-                     phone: contact.phone, 
-                     qualification: contact.flowVariables.qualification, 
-                     selectedProgram: contact.flowVariables.program, 
-                     status: 'QUALIFIED',
-                     assignedAgent: assignedAgentId,
-                     leadSource: 'AI Qualified'
-                  });
-
-                  notificationService.sendAdminAlert(tenantId, {
-                     subject: 'New AI Qualified Lead 🎓',
-                     text: `Lead *${contact.flowVariables.name}* (${contact.phone}) qualified.\nQual: ${contact.flowVariables.qualification}\nProg: ${contact.flowVariables.program}`
-                  });
-               } catch (e) { console.error("[PRD] Lead Error:", e); }
-            }
-
-            await Contact.updateOne({ phone: contact.phone }, { $set: dbUpdates });
-            if (!contact.flowVariables) contact.flowVariables = {};
-            contact.flowVariables[varName] = val;
-
-            if (varName === 'additionalHelp') {
-                if (aggressiveNormalize(val) === 'yes') {
-                   await waService.sendTextMessage(contact.phone, "Connecting you to our expert agent 👨‍💼");
-                   await Contact.updateOne({ phone: contact.phone }, { isBotPaused: true });
-                   notificationService.sendAdminAlert(tenantId, {
-                      subject: 'Human Handoff Requested 🙋‍♂️',
-                      text: `Lead *${contact.name || contact.phone}* requested a human agent.`
-                   });
-                   return;
-                } else {
-                   await waService.sendTextMessage(contact.phone, `Thank you ${contact.flowVariables.name || contact.name || ''}, have a great day! 🌟`);
-                   return;
-                }
-            }
-          }
-          
-          // --- HANDOFF DETECTION ---
-          if (aggressiveNormalize(val) === 'talktoagent' || aggressiveNormalize(val) === 'help') {
-             await Contact.updateOne({ phone: contact.phone }, { isBotPaused: true });
-             notificationService.sendAdminAlert(tenantId, {
-                subject: 'Human Handoff Requested 🙋‍♂️',
-                text: `Lead *${contact.name || contact.phone}* requested a human agent.`
-             });
-             await waService.sendTextMessage(contact.phone, "Sure! I've alerted our team. An agent will be with you shortly. 👨‍💻");
-             return;
-          }
+      const sendInteractiveOptions = async (body, options) => {
+        if (options.length <= 3) {
+          const res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: options });
+          await saveAndEmit('interactive', body, res);
+        } else {
+          const res = await waService.sendListMessage(contact.phone, {
+            body,
+            buttonText: 'View Options',
+            sections: [{
+              title: 'Available Options',
+              rows: options.slice(0, 10).map((opt, i) => ({ id: `list_${i}`, title: opt.substring(0, 24) }))
+            }]
+          });
+          await saveAndEmit('interactive', body, res);
         }
+      };
 
-        // --- PHASE B: NEXT STEP TRANSITION ---
-        if (consumeInput && !forceStay) {
-          const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);
-          if (idx !== -1 && flowSteps[idx+1]) {
-            stepToProcess = flowSteps[idx+1];
-            consumeInput = false;
-            continue;
-          } else {
-            await Contact.updateOne({ phone: contact.phone }, { $unset: { currentFlowStep: '' } });
-            break;
-          }
-        }
+      const normalizedInput = (replyValue || messageText || '').trim().toLowerCase();
 
-        // --- PHASE C: LOG ANALYTICS ---
-        const BotAnalytics = tenantDb.model('BotAnalytics', BotAnalyticsSchema);
-        await BotAnalytics.create({
+      // --- LOG ANALYTICS ---
+      try {
+        await BotAnalyticsModel.create({
           tenantId,
           contactId: contact._id,
-          nodeId: currentNode.id,
-          nodeType: currentNode.type,
-          eventType: (currentNode.type === 'SUCCESS_PROOF' || currentNode.type === 'CALL_TIME') ? 'CONVERSION' : 'VIEW'
+          nodeId: currentState,
+          nodeType: 'PRD_STATE',
+          eventType: 'VIEW'
+        });
+      } catch (analyticsErr) {
+        console.error('[PRD] Analytics Log Error:', analyticsErr);
+      }
+
+      // ==========================================
+      // STATE: START (GREETING SCREEN)
+      // ==========================================
+      if (currentState === 'START') {
+        // Reset and initialize session
+        await ContactModel.updateOne({ phone: contact.phone }, {
+          $set: {
+            currentFlowStep: 'ask_name',
+            isFlowActive: true,
+            flowVariables: {},
+            qualification: null,
+            selectedStream: null,
+            selectedProgram: null,
+            preferredCallTime: null
+          }
         });
 
-        if (currentNode.type === 'SUCCESS_PROOF' || currentNode.type === 'CALL_TIME') {
-           integrationService.triggerWebhook(tenantId, 'BOT_CONVERSION', {
-              contact: { id: contact._id, phone: contact.phone, name: contact.name },
-              node: currentNode.id,
-              type: currentNode.type
-           });
+        // 1. Display Welcome Image & Welcome Message
+        const welcomeMsg = "Welcome to ABC Institute Admission Assistant 👋\nI’m here to help you choose the right program.";
+        const media = this.makeAbsolute(greetingImage);
+        let resGreeting;
+        if (media) {
+          resGreeting = await waService.sendMedia(contact.phone, 'image', null, welcomeMsg, media);
+          await saveAndEmit('image', welcomeMsg, resGreeting);
+        } else {
+          resGreeting = await waService.sendTextMessage(contact.phone, welcomeMsg);
+          await saveAndEmit('text', welcomeMsg, resGreeting);
         }
 
-        // --- PHASE D: EXECUTE CURRENT STEP (SEND) ---
-        let text = replaceVars(nodeData.text || '');
-        if (nodeData.isSuccessProof) {
-          const stories = await SuccessStory.find({ status: 'ACTIVE' }).limit(3);
-          if (stories.length > 0) {
-            const storyText = stories.map(s => `🎓 *${s.studentName}*\nPlaced at: *${s.company}*\nPackage: *${s.package}*\n_"${s.quote}"_`).join('\n\n');
-            text = `${text}\n\n${storyText}`;
-          }
-        }
+        // 2. Sequence preservation sleep
+        await this.sleep(1500);
+
+        // 3. Ask student name
+        const nameQuestion = "Please enter your full name.";
+        const resNameQ = await waService.sendTextMessage(contact.phone, nameQuestion);
+        await saveAndEmit('text', nameQuestion, resNameQ);
         
-        const media = this.makeAbsolute(nodeData.mediaUrl || '');
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
 
-        if (nodeData.msgType === 'IMAGE' && media) {
-          const res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, text, /^\d+$/.test(media) ? null : media);
-          await saveAndEmit('image', text, res);
-        }
-        else if (nodeData.msgType === 'LIST_MESSAGE') {
-          let opts = nodeData.listOptions || [];
-          let body = text;
-
-          if (nodeData.isProgramSelection) {
-            const currentQual = contact.qualification || contact.flowVariables?.qualification || '';
-            const stream = contact.selectedStream || contact.flowVariables?.selectedStream;
-            const tqc = aggressiveNormalize(currentQual);
-            
-            let qm = {};
-            const qk = Object.keys(programMap).find(k => aggressiveNormalize(k) === tqc || (tqc && aggressiveNormalize(k).includes(tqc)));
-            qm = qk ? programMap[qk] : {};
-
-            if (Array.isArray(qm)) qm = { "Programs": qm };
-            const categories = Object.keys(qm);
-
-            if (!stream) {
-              if (categories.length === 1) {
-                const auto = categories[0];
-                await Contact.updateOne({ phone: contact.phone }, { $set: { selectedStream: auto, 'flowVariables.selectedStream': auto } });
-                contact.selectedStream = auto;
-                contact.flowVariables.selectedStream = auto;
-                opts = Array.isArray(qm[auto]) ? qm[auto] : [];
-                if (tqc.includes('10')) body = `Great choice {{name}}! 🎓\n\nHere are Diploma programs for you:`;
-                else body = `Select your program under ${auto}:`;
-              } else {
-                opts = categories.length > 0 ? categories : ['General Inquiry'];
-                if (tqc.includes('12')) body = `Please select your preferred program category.`;
-                else if (tqc.includes('grad') || tqc.includes('bach')) body = `🎯 *Top Master Programs* 🔥\n\nChoose your interest, {{name}} 👇`;
-                else body = "Please select your preferred program category.";
-              }
-            } else {
-              opts = qm[stream] || ['General Inquiry'];
-              body = `Choose a program in ${stream}:`;
-            }
-          }
-
-          if (nodeData.isProgramSelection && !contact.selectedStream && !contact.flowVariables?.selectedStream && opts.length > 0 && opts.length <= 3) {
-             const res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: opts.slice(0, 3) });
-             await saveAndEmit('interactive', body, res);
-          } else {
-             const isCourseLevel = nodeData.isProgramSelection && (contact.selectedStream || contact.flowVariables?.selectedStream);
-             const buttonText = isCourseLevel ? 'View Courses' : 'Select Option';
-             const sectionTitle = isCourseLevel ? (contact.selectedStream || contact.flowVariables?.selectedStream) : 'Available Options';
-             const listBody = isCourseLevel ? 'Please select your preferred course' : body;
-             
-             console.log(`[PRD] Sending List Message: Section: ${sectionTitle}, Items:`, opts);
-
-             const res = await waService.sendListMessage(contact.phone, { body: listBody, buttonText: buttonText, sections: [{ title: sectionTitle.substring(0, 24), rows: opts.slice(0, 10).map((o, i) => ({ id: `list_${i}`, title: String(o).substring(0, 24) })) }] });
-             await saveAndEmit('interactive', body, res);
-          }
-
-          await Contact.updateOne({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
+      // ==========================================
+      // STATE: ASK_NAME
+      // ==========================================
+      if (currentState === 'ask_name') {
+        const nameInput = messageText.trim();
+        if (nameInput.length < 2) {
+          const errMsg = "Please enter a valid full name (minimum 2 characters).";
+          const resErr = await waService.sendTextMessage(contact.phone, errMsg);
+          await saveAndEmit('text', errMsg, resErr);
+          this.activeProcesses.delete(lockKey);
           return;
         }
-        else if (nodeData.msgType === 'INTERACTIVE') {
-          const btns = nodeData.buttons || ['Morning', 'Afternoon', 'Evening'];
-          const parsedBtns = btns.map(b => typeof b === 'string' ? { type: 'reply', label: b, value: b } : b);
-          const hasUrlOrCall = parsedBtns.find(b => b.type === 'url' || b.type === 'call');
 
-          if (media) {
-             // Send media separately first if there's media on an interactive node
-             await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, '', /^\d+$/.test(media) ? null : media);
+        // Clean & Save Name
+        let extractedName = nameInput;
+        try {
+          extractedName = await AIService.extractData(nameInput, 'NAME');
+          if (!extractedName || extractedName.length > 50) extractedName = nameInput;
+        } catch (e) {
+          console.error('[PRD] AI Extraction Name Failed:', e.message);
+        }
+
+        await ContactModel.updateOne({ phone: contact.phone }, {
+          $set: {
+            name: extractedName,
+            'flowVariables.name': extractedName,
+            currentFlowStep: 'ask_qualification'
           }
+        });
 
-          if (hasUrlOrCall) {
-            const res = await waService.sendCtaMessage(contact.phone, { type: hasUrlOrCall.type, body: text, title: hasUrlOrCall.label, value: hasUrlOrCall.value });
-            await saveAndEmit('interactive', text, res);
-          } else {
-            // Handle specialized button types
-            const handoffBtn = parsedBtns.find(b => b.type === 'handoff');
-            if (handoffBtn) {
-               // If a handoff button is clicked, we essentially pause the bot immediately
-               // But usually, we wait for the user to actually click it.
-               // For now, we'll just treat 'handoff' as a trigger for the 'Talk to Agent' logic
+        // Prompt Qualification
+        const qualMsg = `Nice to meet you ${extractedName} 😊\n\nPlease select your qualification.`;
+        await sendInteractiveOptions(qualMsg, ['12th Pass', 'Graduation', 'Other']);
+        
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_QUALIFICATION
+      // ==========================================
+      if (currentState === 'ask_qualification') {
+        if (normalizedInput.includes('12') || normalizedInput.includes('twelfth') || normalizedInput.includes('12th pass') || replyValue === 'btn_12th' || replyValue?.toLowerCase().includes('12th')) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              qualification: '12th Pass',
+              'flowVariables.qualification': '12th Pass',
+              currentFlowStep: 'ask_program_category_12th'
             }
-            
-            const scheduleBtn = parsedBtns.find(b => b.type === 'schedule');
-            if (scheduleBtn) {
-               // Logic to inject dynamic slots
-            }
+          });
 
-            const replyLabels = parsedBtns.map(b => b.label);
-            const res = await waService.sendInteractiveButtonMessage(contact.phone, { body: text, buttons: replyLabels.slice(0, 3) });
-            await saveAndEmit('interactive', text, res);
-          }
-          
-          if (nodeData.variableName) {
-            await Contact.updateOne({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
-            return;
-          }
+          const catMsg = "Please select program category.";
+          await sendInteractiveOptions(catMsg, ['Traditional Program', 'Trending Program']);
+        }
+        else if (normalizedInput.includes('grad') || normalizedInput.includes('bachelor') || normalizedInput.includes('degree') || replyValue === 'btn_grad' || replyValue?.toLowerCase().includes('grad')) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              qualification: 'Graduation',
+              'flowVariables.qualification': 'Graduation',
+              currentFlowStep: 'ask_program_category_grad'
+            }
+          });
+
+          const catMsg = "Please select program category.";
+          await sendInteractiveOptions(catMsg, ['Master Traditional Program', 'Master Trending Program']);
+        }
+        else if (normalizedInput.includes('other') || replyValue === 'btn_other' || replyValue?.toLowerCase().includes('other')) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              qualification: 'Other',
+              'flowVariables.qualification': 'Other',
+              currentFlowStep: 'ask_custom_qualification'
+            }
+          });
+
+          const customQualMsg = "Please type your qualification.";
+          const res = await waService.sendTextMessage(contact.phone, customQualMsg);
+          await saveAndEmit('text', customQualMsg, res);
         }
         else {
-          let res;
-          if (media) {
-             res = await waService.sendMedia(contact.phone, 'image', /^\d+$/.test(media) ? media : null, text, /^\d+$/.test(media) ? null : media);
-             await saveAndEmit('image', text, res);
-          } else {
-             res = await waService.sendTextMessage(contact.phone, text);
-             await saveAndEmit('text', text, res);
+          const qualMsg = "Please select a valid option. Please select your qualification:";
+          await sendInteractiveOptions(qualMsg, ['12th Pass', 'Graduation', 'Other']);
+        }
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_CUSTOM_QUALIFICATION
+      // ==========================================
+      if (currentState === 'ask_custom_qualification') {
+        const customQual = messageText.trim();
+        await ContactModel.updateOne({ phone: contact.phone }, {
+          $set: {
+            qualification: customQual,
+            'flowVariables.qualification': customQual,
+            currentFlowStep: 'ask_custom_program'
           }
-          if (nodeData.msgType === 'QUESTION') {
-            await Contact.updateOne({ phone: contact.phone }, { currentFlowStep: stepToProcess.id });
-            return;
+        });
+
+        const customProgMsg = "Please type your preferred program.";
+        const res = await waService.sendTextMessage(contact.phone, customProgMsg);
+        await saveAndEmit('text', customProgMsg, res);
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_CUSTOM_PROGRAM
+      // ==========================================
+      if (currentState === 'ask_custom_program') {
+        const customProg = messageText.trim();
+        await ContactModel.updateOne({ phone: contact.phone }, {
+          $set: {
+            selectedProgram: customProg,
+            'flowVariables.program': customProg,
+            currentFlowStep: 'ask_call_time'
+          }
+        });
+
+        const callTimeMsg = "What would be the best time for our counsellor to call you?";
+        const res = await waService.sendTextMessage(contact.phone, callTimeMsg);
+        await saveAndEmit('text', callTimeMsg, res);
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_PROGRAM_CATEGORY_12TH
+      // ==========================================
+      if (currentState === 'ask_program_category_12th') {
+        if (normalizedInput.includes('traditional') || replyValue?.toLowerCase().includes('traditional')) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              selectedStream: 'Traditional Program',
+              'flowVariables.selectedStream': 'Traditional Program',
+              currentFlowStep: 'ask_program_traditional_12th'
+            }
+          });
+
+          const progMsg = "Please select your preferred program.";
+          await sendInteractiveOptions(progMsg, ['B.Com', 'BBA', 'B.Tech', 'B.Sc', 'Other']);
+        }
+        else if (normalizedInput.includes('trending') || replyValue?.toLowerCase().includes('trending')) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              selectedStream: 'Trending Program',
+              'flowVariables.selectedStream': 'Trending Program',
+              currentFlowStep: 'ask_program_trending_12th'
+            }
+          });
+
+          const progMsg = "Please select your preferred program.";
+          await sendInteractiveOptions(progMsg, [
+            'B.Sc IT in Cyber Security & Digital Forensics',
+            'B.Sc IT in Cloud Automation',
+            'B.Sc IT in Data Analytics',
+            'B.Sc IT in Animation, VFX & Game Design',
+            'B.Sc IT in Blockchain Technology',
+            'B.Sc IT in Software & Mobile App Development'
+          ]);
+        }
+        else {
+          const errMsg = "Invalid option. Please select program category:";
+          await sendInteractiveOptions(errMsg, ['Traditional Program', 'Trending Program']);
+        }
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_PROGRAM_CATEGORY_GRAD
+      // ==========================================
+      if (currentState === 'ask_program_category_grad') {
+        if (normalizedInput.includes('traditional') || replyValue?.toLowerCase().includes('traditional')) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              selectedStream: 'Master Traditional Program',
+              'flowVariables.selectedStream': 'Master Traditional Program',
+              currentFlowStep: 'ask_program_traditional_grad'
+            }
+          });
+
+          const progMsg = "Please select your preferred master program.";
+          await sendInteractiveOptions(progMsg, ['M.Com', 'MBA', 'M.Tech', 'M.Sc', 'Other']);
+        }
+        else if (normalizedInput.includes('trending') || replyValue?.toLowerCase().includes('trending')) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              selectedStream: 'Master Trending Program',
+              'flowVariables.selectedStream': 'Master Trending Program',
+              currentFlowStep: 'ask_program_trending_grad'
+            }
+          });
+
+          const progMsg = "Please select your preferred master program.";
+          await sendInteractiveOptions(progMsg, [
+            'M.Sc IT in Cyber Security & Digital Forensics',
+            'M.Sc IT in Cloud Automation',
+            'M.Sc IT in Data Analytics',
+            'M.Sc IT in Animation, VFX & Game Design',
+            'M.Sc IT in Blockchain Technology',
+            'M.Sc IT in Software & Mobile App Development'
+          ]);
+        }
+        else {
+          const errMsg = "Invalid option. Please select program category:";
+          await sendInteractiveOptions(errMsg, ['Master Traditional Program', 'Master Trending Program']);
+        }
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_PROGRAM_TRADITIONAL_12TH
+      // ==========================================
+      if (currentState === 'ask_program_traditional_12th') {
+        const traditional12thOpts = ['B.Com', 'BBA', 'B.Tech', 'B.Sc', 'Other'];
+        let selectedProg = messageText.trim();
+
+        if (replyValue && replyValue.startsWith('list_')) {
+          const idx = parseInt(replyValue.split('_')[1]);
+          if (idx >= 0 && idx < traditional12thOpts.length) {
+            selectedProg = traditional12thOpts[idx];
           }
         }
 
-        // Advance to next step for purely informational nodes
-        const idx = flowSteps.findIndex(s => s.id === stepToProcess.id);
-        if (idx !== -1 && flowSteps[idx+1]) {
-          stepToProcess = flowSteps[idx+1];
-          consumeInput = false;
-          await this.sleep(1000);
-        } else {
-          await Contact.updateOne({ phone: contact.phone }, { $unset: { currentFlowStep: '' } });
-          break;
+        if (selectedProg.toLowerCase() === 'other' || normalizedInput === 'other' || replyValue?.toLowerCase().includes('other')) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              currentFlowStep: 'ask_custom_program'
+            }
+          });
+
+          const customProgMsg = "Please type your preferred program.";
+          const res = await waService.sendTextMessage(contact.phone, customProgMsg);
+          await saveAndEmit('text', customProgMsg, res);
         }
+        else {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              selectedProgram: selectedProg,
+              'flowVariables.program': selectedProg,
+              currentFlowStep: 'ask_call_time'
+            }
+          });
+
+          const callTimeMsg = "What would be the best time for our counsellor to call you?";
+          const res = await waService.sendTextMessage(contact.phone, callTimeMsg);
+          await saveAndEmit('text', callTimeMsg, res);
+        }
+
+        this.activeProcesses.delete(lockKey);
+        return;
       }
+
+      // ==========================================
+      // STATE: ASK_PROGRAM_TRENDING_12TH
+      // ==========================================
+      if (currentState === 'ask_program_trending_12th') {
+        const trending12thOpts = [
+          'B.Sc IT in Cyber Security & Digital Forensics',
+          'B.Sc IT in Cloud Automation',
+          'B.Sc IT in Data Analytics',
+          'B.Sc IT in Animation, VFX & Game Design',
+          'B.Sc IT in Blockchain Technology',
+          'B.Sc IT in Software & Mobile App Development'
+        ];
+        let selectedProg = messageText.trim();
+
+        if (replyValue && replyValue.startsWith('list_')) {
+          const idx = parseInt(replyValue.split('_')[1]);
+          if (idx >= 0 && idx < trending12thOpts.length) {
+            selectedProg = trending12thOpts[idx];
+          }
+        }
+
+        await ContactModel.updateOne({ phone: contact.phone }, {
+          $set: {
+            selectedProgram: selectedProg,
+            'flowVariables.program': selectedProg,
+            currentFlowStep: 'ask_call_time'
+          }
+        });
+
+        const callTimeMsg = "What would be the best time for our counsellor to call you?";
+        const res = await waService.sendTextMessage(contact.phone, callTimeMsg);
+        await saveAndEmit('text', callTimeMsg, res);
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_PROGRAM_TRADITIONAL_GRAD
+      // ==========================================
+      if (currentState === 'ask_program_traditional_grad') {
+        const traditionalGradOpts = ['M.Com', 'MBA', 'M.Tech', 'M.Sc', 'Other'];
+        let selectedProg = messageText.trim();
+
+        if (replyValue && replyValue.startsWith('list_')) {
+          const idx = parseInt(replyValue.split('_')[1]);
+          if (idx >= 0 && idx < traditionalGradOpts.length) {
+            selectedProg = traditionalGradOpts[idx];
+          }
+        }
+
+        if (selectedProg.toLowerCase() === 'other' || normalizedInput === 'other' || replyValue?.toLowerCase().includes('other')) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              currentFlowStep: 'ask_custom_program'
+            }
+          });
+
+          const customProgMsg = "Please type your preferred master program.";
+          const res = await waService.sendTextMessage(contact.phone, customProgMsg);
+          await saveAndEmit('text', customProgMsg, res);
+        }
+        else {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              selectedProgram: selectedProg,
+              'flowVariables.program': selectedProg,
+              currentFlowStep: 'ask_call_time'
+            }
+          });
+
+          const callTimeMsg = "What would be the best time for our counsellor to call you?";
+          const res = await waService.sendTextMessage(contact.phone, callTimeMsg);
+          await saveAndEmit('text', callTimeMsg, res);
+        }
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_PROGRAM_TRENDING_GRAD
+      // ==========================================
+      if (currentState === 'ask_program_trending_grad') {
+        const trendingGradOpts = [
+          'M.Sc IT in Cyber Security & Digital Forensics',
+          'M.Sc IT in Cloud Automation',
+          'M.Sc IT in Data Analytics',
+          'M.Sc IT in Animation, VFX & Game Design',
+          'M.Sc IT in Blockchain Technology',
+          'M.Sc IT in Software & Mobile App Development'
+        ];
+        let selectedProg = messageText.trim();
+
+        if (replyValue && replyValue.startsWith('list_')) {
+          const idx = parseInt(replyValue.split('_')[1]);
+          if (idx >= 0 && idx < trendingGradOpts.length) {
+            selectedProg = trendingGradOpts[idx];
+          }
+        }
+
+        await ContactModel.updateOne({ phone: contact.phone }, {
+          $set: {
+            selectedProgram: selectedProg,
+            'flowVariables.program': selectedProg,
+            currentFlowStep: 'ask_call_time'
+          }
+        });
+
+        const callTimeMsg = "What would be the best time for our counsellor to call you?";
+        const res = await waService.sendTextMessage(contact.phone, callTimeMsg);
+        await saveAndEmit('text', callTimeMsg, res);
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_CALL_TIME
+      // ==========================================
+      if (currentState === 'ask_call_time') {
+        const timeVal = messageText.trim();
+
+        // Fetch fresh contact details to construct summary
+        const fresh = await ContactModel.findOne({ phone: contact.phone });
+        const name = fresh.flowVariables?.name || fresh.name || 'Student';
+        const qual = fresh.flowVariables?.qualification || fresh.qualification || '';
+        const prog = fresh.flowVariables?.program || fresh.selectedProgram || '';
+
+        await ContactModel.updateOne({ phone: contact.phone }, {
+          $set: {
+            preferredCallTime: timeVal,
+            'flowVariables.time': timeVal,
+            currentFlowStep: 'ask_confirmation'
+          }
+        });
+
+        const summaryMsg = `Please confirm your details:\n\nName: ${name}\nQualification: ${qual}\nProgram: ${prog}\nPreferred Call Time: ${timeVal}\n\nIs this correct?`;
+        await sendInteractiveOptions(summaryMsg, ['Yes', 'Edit']);
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_CONFIRMATION
+      // ==========================================
+      if (currentState === 'ask_confirmation') {
+        if (normalizedInput === 'yes' || replyValue?.toLowerCase().includes('yes')) {
+          const fresh = await ContactModel.findOne({ phone: contact.phone });
+          const name = fresh.flowVariables?.name || fresh.name;
+          const qual = fresh.flowVariables?.qualification || fresh.qualification;
+          const prog = fresh.flowVariables?.program || fresh.selectedProgram;
+          const time = fresh.flowVariables?.time || fresh.preferredCallTime;
+
+          // 1. Assign Counsellor / Telecaller automatically if configured
+          let assignedAgentId = null;
+          if (settings?.crm?.autoAssignment) {
+            try {
+              assignedAgentId = await assignmentService.getNextAgentForTenant(tenantId);
+            } catch (err) {
+              console.error('[PRD] Handoff assignment failed:', err);
+            }
+          }
+
+          // 2. Insert Lead record into the dynamic tenant CRM DB
+          try {
+            await LeadModel.create({
+              name,
+              phone: contact.phone,
+              qualification: qual,
+              selectedProgram: prog,
+              preferredCallTime: time,
+              status: 'QUALIFIED',
+              assignedAgent: assignedAgentId,
+              leadSource: 'AI Qualified'
+            });
+
+            // Trigger Real-time notifications and Alerts
+            notificationService.sendAdminAlert(tenantId, {
+              subject: 'New AI Qualified Lead 🎓',
+              text: `Lead *${name}* (${contact.phone}) qualified.\nQual: ${qual}\nProg: ${prog}\nTime: ${time}`
+            });
+          } catch (leadErr) {
+            console.error('[PRD] Failed to save Lead to CRM DB:', leadErr);
+          }
+
+          // 3. Update Contact fields
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              status: 'NEW LEAD',
+              qualification: qual,
+              selectedStream: fresh.selectedStream,
+              selectedProgram: prog,
+              preferredCallTime: time,
+              currentFlowStep: 'ask_additional_help'
+            }
+          });
+
+          // 4. Send Thank You Message
+          const thankYouMsg = `Thank you ${name} 😊\n\nYour counselling request has been submitted successfully.\nOur counsellor will contact you at your preferred time.`;
+          const resTY = await waService.sendTextMessage(contact.phone, thankYouMsg);
+          await saveAndEmit('text', thankYouMsg, resTY);
+
+          // 5. Sequence preservation sleep
+          await this.sleep(1500);
+
+          // 6. Ask Additional Help question
+          const helpMsg = "Do you need any other help?";
+          await sendInteractiveOptions(helpMsg, ['Yes', 'No']);
+        }
+        else if (normalizedInput === 'edit' || replyValue?.toLowerCase().includes('edit')) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              currentFlowStep: 'ask_qualification'
+            }
+          });
+
+          const editMsg = "Let's re-enter your details. Please select your qualification.";
+          await sendInteractiveOptions(editMsg, ['12th Pass', 'Graduation', 'Other']);
+        }
+        else {
+          // Construct confirmation summary again on invalid input
+          const fresh = await ContactModel.findOne({ phone: contact.phone });
+          const name = fresh.flowVariables?.name || fresh.name || 'Student';
+          const qual = fresh.flowVariables?.qualification || fresh.qualification || '';
+          const prog = fresh.flowVariables?.program || fresh.selectedProgram || '';
+          const time = fresh.flowVariables?.time || fresh.preferredCallTime || '';
+
+          const summaryMsg = `Invalid option. Please confirm your details:\n\nName: ${name}\nQualification: ${qual}\nProgram: ${prog}\nPreferred Call Time: ${time}\n\nIs this correct?`;
+          await sendInteractiveOptions(summaryMsg, ['Yes', 'Edit']);
+        }
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_ADDITIONAL_HELP
+      // ==========================================
+      if (currentState === 'ask_additional_help') {
+        if (normalizedInput === 'yes' || replyValue?.toLowerCase().includes('yes')) {
+          const connectMsg = "Connecting you with our counsellor…";
+          const res = await waService.sendTextMessage(contact.phone, connectMsg);
+          await saveAndEmit('text', connectMsg, res);
+
+          // Pause chatbot so live agent takes over
+          await ContactModel.updateOne({ phone: contact.phone }, { $set: { isBotPaused: true } });
+
+          // Send admin handoff alert
+          notificationService.sendAdminAlert(tenantId, {
+            subject: 'Human Handoff Requested 🙋‍♂️',
+            text: `Lead *${contact.name || contact.phone}* requested a human agent.`
+          });
+
+          // Reset flow session
+          await this.clearPRDFlowSession(tenantId, contact.phone, ContactModel);
+        }
+        else if (normalizedInput === 'no' || replyValue?.toLowerCase().includes('no')) {
+          const goodbyeMsg = "Thank you for contacting ABC Institute.\nHave a great day!";
+          const res = await waService.sendTextMessage(contact.phone, goodbyeMsg);
+          await saveAndEmit('text', goodbyeMsg, res);
+
+          // Reset flow session
+          await this.clearPRDFlowSession(tenantId, contact.phone, ContactModel);
+        }
+        else {
+          const helpMsg = "Invalid option. Do you need any other help?";
+          await sendInteractiveOptions(helpMsg, ['Yes', 'No']);
+        }
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
     } catch (err) {
-      console.error(`[PRD] ❌ Error:`, err);
+      console.error(`[PRD State Machine] ❌ Error in processStep:`, err);
     } finally {
       this.activeProcesses.delete(lockKey);
     }
