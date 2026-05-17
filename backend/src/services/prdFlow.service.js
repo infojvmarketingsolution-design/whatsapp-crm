@@ -264,9 +264,21 @@ class PRDFlowService {
           }
         });
 
-        // Prompt Qualification
-        const qualMsg = `Nice to meet you ${extractedName} 😊\n\nPlease select your qualification.`;
-        await sendInteractiveOptions(qualMsg, ['12th Pass', 'Graduation', 'Other']);
+        // Prompt Qualification dynamically from visual builder
+        const Settings = require('../models/core/Settings');
+        const settings = await Settings.findOne({ tenantId });
+        const prdFlowSteps = settings?.automation?.aiPrompts?.prdFlowSteps || [];
+        const qualStep = prdFlowSteps.find(s => s.type === 'QUALIFICATION');
+        
+        let qualMsg = qualStep?.message || qualStep?.text || `Nice to meet you ${extractedName} 😊\n\nPlease select your qualification.`;
+        qualMsg = qualMsg.replace(/\{\{name\}\}/gi, extractedName).replace(/\{\{contact\}\}/gi, contact.phone);
+
+        let options = settings?.automation?.aiPrompts?.qualificationOptions || ['12th Pass', 'Graduation', 'Other'];
+        if (!options || options.length === 0 || (options.length === 1 && !options[0])) {
+          options = ['12th Pass', 'Graduation', 'Other'];
+        }
+
+        await sendInteractiveOptions(qualMsg, options);
         
         this.activeProcesses.delete(lockKey);
         return;
@@ -276,15 +288,63 @@ class PRDFlowService {
       // STATE: ASK_QUALIFICATION
       // ==========================================
       if (currentState === 'ask_qualification') {
-        const is12th = normalizedInput.includes('12') || normalizedInput.includes('twelfth') || normalizedInput.includes('12th pass') || normalizedReply === 'btn_0' || normalizedReply.includes('12th');
-        const isGrad = normalizedInput.includes('grad') || normalizedInput.includes('bachelor') || normalizedInput.includes('degree') || normalizedReply === 'btn_1' || normalizedReply.includes('grad');
-        const isOther = normalizedInput.includes('other') || normalizedReply === 'btn_2' || normalizedReply.includes('other');
+        const Settings = require('../models/core/Settings');
+        const settings = await Settings.findOne({ tenantId });
+        let options = settings?.automation?.aiPrompts?.qualificationOptions || ['12th Pass', 'Graduation', 'Other'];
+        if (!options || options.length === 0 || (options.length === 1 && !options[0])) {
+          options = ['12th Pass', 'Graduation', 'Other'];
+        }
+
+        // 1. Resolve selected option based on replyValue or manual input match
+        let selectedOption = '';
+        if (replyValue) {
+          const matchBtn = replyValue.match(/btn_(\d+)/i);
+          const matchLst = replyValue.match(/list_(\d+)/i);
+          const idx = matchBtn ? parseInt(matchBtn[1]) : (matchLst ? parseInt(matchLst[1]) : -1);
+          if (idx >= 0 && idx < options.length) {
+            selectedOption = options[idx];
+          }
+        }
+
+        // Try to match by text comparison
+        if (!selectedOption) {
+          const matchIdx = options.findIndex(opt => {
+            const cleanOpt = opt.toLowerCase().trim();
+            return normalizedInput === cleanOpt || normalizedInput.includes(cleanOpt);
+          });
+          if (matchIdx !== -1) {
+            selectedOption = options[matchIdx];
+          }
+        }
+
+        // Dynamic fallbacks
+        if (!selectedOption) {
+          if (normalizedInput.includes('12') || normalizedInput.includes('twelfth')) {
+            selectedOption = options.find(o => o.toLowerCase().includes('12')) || '12th Pass';
+          } else if (normalizedInput.includes('grad') || normalizedInput.includes('bachelor') || normalizedInput.includes('degree')) {
+            selectedOption = options.find(o => o.toLowerCase().includes('grad') || o.toLowerCase().includes('bach')) || 'Graduation';
+          } else if (normalizedInput.includes('diploma')) {
+            selectedOption = options.find(o => o.toLowerCase().includes('diploma')) || 'Diploma Completed';
+          } else if (normalizedInput.includes('master') || normalizedInput.includes('postgrad')) {
+            selectedOption = options.find(o => o.toLowerCase().includes('master')) || 'Master Completed';
+          } else if (normalizedInput.includes('10') || normalizedInput.includes('tenth') || normalizedInput.includes('ssc')) {
+            selectedOption = options.find(o => o.toLowerCase().includes('10')) || '10th Pass';
+          }
+        }
+
+        // Ultimate default
+        if (!selectedOption) {
+          selectedOption = options.find(o => o.toLowerCase().includes('other')) || options[0] || '12th Pass';
+        }
+
+        const is12th = selectedOption.toLowerCase().includes('12') || selectedOption.toLowerCase().includes('twelfth') || selectedOption.toLowerCase().includes('10') || selectedOption.toLowerCase().includes('tenth');
+        const isGrad = selectedOption.toLowerCase().includes('grad') || selectedOption.toLowerCase().includes('bachelor') || selectedOption.toLowerCase().includes('master') || selectedOption.toLowerCase().includes('degree') || selectedOption.toLowerCase().includes('postgrad');
 
         if (is12th) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
-              qualification: '12th Pass',
-              'flowVariables.qualification': '12th Pass',
+              qualification: selectedOption,
+              'flowVariables.qualification': selectedOption,
               currentFlowStep: 'ask_program_category_12th'
             }
           });
@@ -295,8 +355,8 @@ class PRDFlowService {
         else if (isGrad) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
-              qualification: 'Graduation',
-              'flowVariables.qualification': 'Graduation',
+              qualification: selectedOption,
+              'flowVariables.qualification': selectedOption,
               currentFlowStep: 'ask_program_category_grad'
             }
           });
@@ -304,22 +364,18 @@ class PRDFlowService {
           const catMsg = "Please select program category.";
           await sendInteractiveOptions(catMsg, ['Master Traditional Program', 'Master Trending Program']);
         }
-        else if (isOther) {
+        else {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
-              qualification: 'Other',
-              'flowVariables.qualification': 'Other',
+              qualification: selectedOption,
+              'flowVariables.qualification': selectedOption,
               currentFlowStep: 'ask_custom_qualification'
             }
           });
 
-          const customQualMsg = "Please type your qualification.";
+          const customQualMsg = `You selected: ${selectedOption}. Please type your preferred program or stream.`;
           const res = await waService.sendTextMessage(contact.phone, customQualMsg);
           await saveAndEmit('text', customQualMsg, res);
-        }
-        else {
-          const qualMsg = "Please select a valid option. Please select your qualification:";
-          await sendInteractiveOptions(qualMsg, ['12th Pass', 'Graduation', 'Other']);
         }
 
         this.activeProcesses.delete(lockKey);
@@ -765,8 +821,15 @@ class PRDFlowService {
             }
           });
 
+          const Settings = require('../models/core/Settings');
+          const settings = await Settings.findOne({ tenantId });
+          let options = settings?.automation?.aiPrompts?.qualificationOptions || ['12th Pass', 'Graduation', 'Other'];
+          if (!options || options.length === 0 || (options.length === 1 && !options[0])) {
+            options = ['12th Pass', 'Graduation', 'Other'];
+          }
+
           const editMsg = "Let's re-enter your details. Please select your qualification.";
-          await sendInteractiveOptions(editMsg, ['12th Pass', 'Graduation', 'Other']);
+          await sendInteractiveOptions(editMsg, options);
         }
         else {
           // Construct confirmation summary again on invalid input
