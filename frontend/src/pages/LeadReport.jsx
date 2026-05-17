@@ -212,6 +212,7 @@ export default function LeadReport() {
   // --- Export Functionalities ---
   
   // 1. CSV / Excel Export
+  // 1. CSV / Excel Export
   const handleExportCSV = () => {
     if (!reportData || !reportData.leads || reportData.leads.length === 0) {
       toast.error('No lead records available to export.');
@@ -219,38 +220,112 @@ export default function LeadReport() {
     }
 
     const headers = [
-      'Lead ID', 'Name', 'Phone', 'Email', 'Company', 'Source Type', 'Source Summary',
-      'Assigned Agent', 'Assigned Counsellor', 'Status', 'Heat Level', 'Created At', 'Last Update'
+      'Lead ID', 'Name', 'Phone', 'Email', 'Status', 'Heat Level', 'Score',
+      'Source Type', 'Source Summary', 'Social Media Source', 'Reference Name', 'Reference Phone',
+      'B2B Org Name', 'B2B Person Name', 'B2B Phone', 'Assigned Agent', 'Assigned Counsellor',
+      'Pipeline Stage', 'Estimated Value', 'Qualification', 'Selected Stream', 'Selected Program',
+      'Preferred Call Time', 'Budget', 'Purchase Timeline', 'Decision Maker Status', 'Profession',
+      'Company Name', 'LinkedIn URL', 'Address', 'City', 'State', 'Pincode',
+      'Visit Status', 'Visit Type', 'Admission Status', 'Collection Amount', 'Pending Collection Amount',
+      'Close Reason', 'Meeting Type', 'Meeting Remark', 'Next Follow Up', 'Total Tasks', 'Pending Tasks',
+      'Last Activity', 'Created At', 'Last Update', 'Tags', 'Notes Log', 'Timeline Milestones'
     ];
 
-    const rows = reportData.leads.map(lead => [
-      lead._id,
-      lead.name || '',
-      lead.phone || '',
-      lead.email || '',
-      lead.companyName || '',
-      lead.leadSourceType || 'Manual Entry',
-      lead.leadSource || '',
-      lead.assignedAgentName || 'Unassigned',
-      lead.assignedCounsellorName || 'Unassigned',
-      lead.status || '',
-      lead.heatLevel || 'Cold',
-      lead.createdAt ? new Date(lead.createdAt).toISOString() : '',
-      lead.updatedAt ? new Date(lead.updatedAt).toISOString() : ''
-    ]);
+    const rows = reportData.leads.map(lead => {
+      // Concatenate notes safely
+      const notesLog = lead.notes && lead.notes.length > 0 
+        ? lead.notes.map(n => `[${n.createdBy || 'System'} at ${n.createdAt ? new Date(n.createdAt).toLocaleDateString('en-IN') : 'N/A'}]: ${n.content}`).join(' | ')
+        : 'No Notes';
 
-    // Escape CSV fields
-    const csvContent = "data:text/csv;charset=utf-8," 
-      + [headers.join(','), ...rows.map(e => e.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))].join('\n');
-    
-    const encodedUri = encodeURI(csvContent);
+      // Concatenate timeline events safely
+      const timelineMilestones = lead.timeline && lead.timeline.length > 0
+        ? lead.timeline.map(e => `[${e.timestamp ? new Date(e.timestamp).toLocaleString('en-IN') : 'N/A'}] ${e.description} (${e.eventType || 'EVENT'})`).join(' | ')
+        : 'No Timeline Activity';
+
+      // Format next follow-up date
+      const nextFollowUpStr = lead.nextFollowUp 
+        ? new Date(lead.nextFollowUp).toLocaleDateString('en-IN') 
+        : 'N/A';
+
+      // Format last activity date
+      const lastActivityStr = lead.lastActivity 
+        ? new Date(lead.lastActivity).toLocaleString('en-IN') 
+        : 'N/A';
+
+      return [
+        lead._id,
+        lead.name || '',
+        lead.phone || '',
+        lead.email || '',
+        lead.status || 'NEW LEAD',
+        lead.heatLevel || 'Cold',
+        lead.score || 0,
+        lead.leadSourceType || 'Manual Entry',
+        lead.leadSource || '',
+        lead.socialMediaSource || '',
+        lead.referenceName || '',
+        lead.referencePhone || '',
+        lead.b2bOrgName || '',
+        lead.b2bPersonName || '',
+        lead.b2bPhone || '',
+        lead.assignedAgentName || 'Unassigned',
+        lead.assignedCounsellorName || 'Unassigned',
+        lead.pipelineStage || 'Discovery',
+        lead.estimatedValue || 0,
+        lead.qualification || '',
+        lead.selectedStream || '',
+        lead.selectedProgram || '',
+        lead.preferredCallTime || '',
+        lead.budget || '',
+        lead.purchaseTimeline || '',
+        lead.decisionMakerStatus || '',
+        lead.profession || '',
+        lead.companyName || '',
+        lead.linkedinUrl || '',
+        lead.address || '',
+        lead.city || '',
+        lead.state || '',
+        lead.pincode || '',
+        lead.visitStatus || 'Not Done',
+        lead.visitType || '',
+        lead.admissionStatus || 'None',
+        lead.collectionAmount || 0,
+        lead.pendingCollectionAmount || 0,
+        lead.closeReason || '',
+        lead.meetingType || '',
+        lead.meetingRemark || '',
+        nextFollowUpStr,
+        lead.tasks ? lead.tasks.length : 0,
+        lead.tasks ? lead.tasks.filter(t => t.status === 'PENDING').length : 0,
+        lastActivityStr,
+        lead.createdAt ? new Date(lead.createdAt).toISOString() : '',
+        lead.updatedAt ? new Date(lead.updatedAt).toISOString() : '',
+        lead.tags && lead.tags.length > 0 ? lead.tags.join(', ') : '',
+        notesLog,
+        timelineMilestones
+      ];
+    });
+
+    // High-fidelity Blob-based CSV Generation to avoid URL-encoding limits
+    const csvString = [
+      headers.join(','), 
+      ...rows.map(row => row.map(val => {
+        const strVal = val === null || val === undefined ? '' : String(val);
+        return `"${strVal.replace(/"/g, '""')}"`;
+      }).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `lead_report_${new Date().toISOString().slice(0,10)}.csv`);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `comprehensive_lead_report_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    toast.success('Lead records exported successfully!');
+    URL.revokeObjectURL(url);
+
+    toast.success('Comprehensive lead records exported successfully!');
   };
 
   // 2. Trigger Print Window
