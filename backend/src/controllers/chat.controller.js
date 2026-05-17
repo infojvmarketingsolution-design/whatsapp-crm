@@ -1068,7 +1068,7 @@ const getLeadAnalysis = async (req, res) => {
   try {
     if (!req.tenantDb) {
       console.warn(`[GET /analysis] No tenant DB connection found.`);
-      return res.json({ statusStats: [], sourceStats: [] });
+      return res.json({ statusStats: [], sourceStats: [], tagStats: [] });
     }
 
     const Contact = req.tenantDb.model('Contact', ContactSchema);
@@ -1087,13 +1087,22 @@ const getLeadAnalysis = async (req, res) => {
       { $sort: { count: -1 } }
     ])) || [];
 
+    // Aggregate by Tags with fallback to empty array (Dynamic unwinding for automatic support of any custom tag!)
+    const tagStats = (await Contact.aggregate([
+      { $match: { isArchived: { $ne: true }, tags: { $exists: true, $not: { $size: 0 } } } },
+      { $unwind: "$tags" },
+      { $group: { _id: "$tags", count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ])) || [];
+
     res.json({
       statusStats: statusStats.map(s => ({ label: s._id || 'Unknown', value: s.count })),
-      sourceStats: sourceStats.map(s => ({ label: s._id || 'Direct', value: s.count }))
+      sourceStats: sourceStats.map(s => ({ label: s._id || 'Direct', value: s.count })),
+      tagStats: tagStats.map(t => ({ label: t._id, value: t.count }))
     });
   } catch (error) {
     console.error(`[GET /analysis] Analysis Failed:`, error.message);
-    res.json({ statusStats: [], sourceStats: [], error: error.message });
+    res.json({ statusStats: [], sourceStats: [], tagStats: [], error: error.message });
   }
 };
 

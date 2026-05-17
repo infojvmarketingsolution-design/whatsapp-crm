@@ -137,7 +137,11 @@ function LeadAnalysisCard({ title, data, type = 'status' }) {
             </div>
             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                <div 
-                 className={`h-full transition-all duration-1000 ${type === 'status' ? 'bg-gradient-to-r from-blue-500 to-indigo-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'}`}
+                 className={`h-full transition-all duration-1000 ${
+                    type === 'status' ? 'bg-gradient-to-r from-blue-500 to-indigo-500' : 
+                    type === 'source' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 
+                    'bg-gradient-to-r from-rose-500 to-orange-500'
+                 }`}
                  style={{ width: `${(item.value / max) * 100}%` }}
                />
             </div>
@@ -151,7 +155,7 @@ function LeadAnalysisCard({ title, data, type = 'status' }) {
 function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = React.useState({ campaigns: 0, recentCampaign: '', templates: 0, contacts: 0, chats: 0, pendingTasks: 0 });
-  const [analysisData, setAnalysisData] = React.useState({ statusStats: [], sourceStats: [] });
+  const [analysisData, setAnalysisData] = React.useState({ statusStats: [], sourceStats: [], tagStats: [] });
   const [loading, setLoading] = React.useState(true);
   const [wabaConfig, setWabaConfig] = React.useState(null);
   const [showRefillModal, setShowRefillModal] = React.useState(false);
@@ -829,8 +833,9 @@ function Dashboard() {
             <h3 className="text-sm font-black text-slate-700 tracking-widest uppercase">Market Intelligence</h3>
             <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold">Source Insights</span>
          </div>
-         <div className="grid grid-cols-1 gap-6">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <LeadAnalysisCard title="Lead Source Distribution" data={analysisData.sourceStats} type="source" />
+            <LeadAnalysisCard title="Lead Tag Distribution" data={analysisData.tagStats || []} type="tag" />
          </div>
       </div>
       </div>
