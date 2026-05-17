@@ -256,6 +256,35 @@ class PRDFlowService {
           console.error('[PRD] AI Extraction Name Failed:', e.message);
         }
 
+        // Fetch settings dynamically to check if QUALIFICATION step is deleted from visual builder
+        const Settings = require('../models/core/Settings');
+        const settings = await Settings.findOne({ tenantId });
+        const prdFlowSteps = settings?.automation?.aiPrompts?.prdFlowSteps || [];
+        const hasQualStep = prdFlowSteps.some(s => s.type === 'QUALIFICATION');
+
+        if (!hasQualStep) {
+          // 🚀 QUALIFICATION STEP IS DELETED - SKIP IT!
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              name: extractedName,
+              'flowVariables.name': extractedName,
+              qualification: 'Direct Onboarding',
+              'flowVariables.qualification': 'Direct Onboarding',
+              currentFlowStep: 'ask_program_category_12th' // Skip direct to program categories selection
+            }
+          });
+
+          const progStep = prdFlowSteps.find(s => s.type === 'PROGRAM_SELECTION');
+          let catMsg = progStep?.message || progStep?.text || "Please select program category.";
+          catMsg = catMsg.replace(/\{\{name\}\}/gi, extractedName).replace(/\{\{contact\}\}/gi, contact.phone);
+
+          await sendInteractiveOptions(catMsg, ['Traditional Program', 'Trending Program']);
+
+          this.activeProcesses.delete(lockKey);
+          return;
+        }
+
+        // Standard flow - Qualification Choice step is active
         await ContactModel.updateOne({ phone: contact.phone }, {
           $set: {
             name: extractedName,
@@ -264,12 +293,7 @@ class PRDFlowService {
           }
         });
 
-        // Prompt Qualification dynamically from visual builder
-        const Settings = require('../models/core/Settings');
-        const settings = await Settings.findOne({ tenantId });
-        const prdFlowSteps = settings?.automation?.aiPrompts?.prdFlowSteps || [];
         const qualStep = prdFlowSteps.find(s => s.type === 'QUALIFICATION');
-        
         let qualMsg = qualStep?.message || qualStep?.text || `Nice to meet you ${extractedName} 😊\n\nPlease select your qualification.`;
         qualMsg = qualMsg.replace(/\{\{name\}\}/gi, extractedName).replace(/\{\{contact\}\}/gi, contact.phone);
 
