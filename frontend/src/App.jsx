@@ -167,7 +167,7 @@ function Dashboard() {
   const [showLeadProfile, setShowLeadProfile] = React.useState(false);
   const [editedLead, setEditedLead] = React.useState(null);
   const [isUpdatingLead, setIsUpdatingLead] = React.useState(false);
-  const [activeLeadTab, setActiveLeadTab] = React.useState('timeline');
+  const [activeLeadTab, setActiveLeadTab] = React.useState('strategic notes');
   const [leadNoteInput, setLeadNoteInput] = React.useState('');
   const [showLeadNoteModal, setShowLeadNoteModal] = React.useState(false);
   const [isAddingLeadNote, setIsAddingLeadNote] = React.useState(false);
@@ -298,6 +298,7 @@ function Dashboard() {
        b2bPhone: fullLead.b2bPhone || ''
     });
     setShowLeadProfile(true);
+    setActiveLeadTab('strategic notes');
   };
 
   const handleLeadFieldChange = (field, val) => {
@@ -1407,7 +1408,7 @@ function Dashboard() {
                               {/* RIGHT PANEL: INTERACTION HUB */}
                               <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
                                  <div className="flex items-center space-x-1 p-2 shrink-0 bg-slate-50/50 border-b border-slate-100">
-                                    {['timeline', 'strategic notes', 'tasks & follow-ups'].map((tab) => (
+                                    {['strategic notes', 'tasks & follow-ups', 'timeline'].map((tab) => (
                                        <button
                                           key={tab}
                                           onClick={() => setActiveLeadTab(tab)}
