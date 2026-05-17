@@ -180,6 +180,60 @@ export default function AIChatbot() {
           </button>
         </div>
 
+        {/* 🤖 GLOBAL AI ENGINE CONTROLLERS */}
+        <div className="bg-white border border-slate-200 rounded-[2rem] p-6 mb-8 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center space-x-4">
+             <div className={`p-3 rounded-2xl transition-all ${settings.botEnabled ? 'bg-emerald-100 text-emerald-600 animate-pulse' : 'bg-slate-100 text-slate-400'}`}>
+                <Bot size={24} />
+             </div>
+             <div>
+                <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                   Chatbot Integration Status
+                   {settings.botEnabled ? (
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-black rounded-md uppercase tracking-widest animate-bounce">Active</span>
+                   ) : (
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-400 text-[8px] font-black rounded-md uppercase tracking-widest">Paused</span>
+                   )}
+                </h2>
+                <p className="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Configure your automation strategy</p>
+             </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
+             {/* Activate Toggle */}
+             <div className="flex items-center space-x-3 bg-slate-50 border border-slate-100 px-4 py-2.5 rounded-2xl">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">Enable Bot:</span>
+                <button
+                   onClick={() => setSettings(prev => ({ ...prev, botEnabled: !prev.botEnabled }))}
+                   className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${settings.botEnabled ? 'bg-emerald-500' : 'bg-slate-200'}`}
+                >
+                   <span
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${settings.botEnabled ? 'translate-x-5' : 'translate-x-0'}`}
+                   />
+                </button>
+             </div>
+
+             {/* Mode Selector */}
+             <div className="flex items-center space-x-2 bg-slate-50 border border-slate-100 px-4 py-2.5 rounded-2xl">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 mr-2">Strategy Mode:</span>
+                <div className="flex bg-slate-200 p-0.5 rounded-xl border border-slate-300/40">
+                   <button
+                      onClick={() => setSettings(prev => ({ ...prev, botMode: 'PRD' }))}
+                      className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${settings.botMode === 'PRD' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                   >
+                      PRD Form
+                   </button>
+                   <button
+                      onClick={() => setSettings(prev => ({ ...prev, botMode: 'AI' }))}
+                      className={`px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-all ${settings.botMode === 'AI' ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+                   >
+                      ⚡ Advanced AI Agent
+                   </button>
+                </div>
+             </div>
+          </div>
+        </div>
+
         {/* Tab Selection */}
         <div className="flex bg-slate-200/50 p-1 rounded-2xl mb-8 w-fit border border-slate-200">
            <button 
