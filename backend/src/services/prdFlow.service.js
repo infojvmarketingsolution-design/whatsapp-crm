@@ -148,8 +148,8 @@ class PRDFlowService {
           }
         });
 
-        // 1. Display Welcome Image & Welcome Message + Name Request in a single unified post!
-        let welcomeMsg = greetingStep?.message || greetingStep?.text || "Welcome to ABC Institute Admission Assistant 👋\nI’m here to help you choose the right program.";
+        const uniName = settings?.workspace?.name || "our institution";
+        let welcomeMsg = greetingStep?.message || greetingStep?.text || `Welcome to ${uniName} Admission Assistant 👋\nI’m here to help you choose the right program.`;
         
         // Append visual interactive buttons dynamically as beautiful clickable links inside the caption
         if (greetingStep?.buttons && greetingStep.buttons.length > 0) {
@@ -922,7 +922,10 @@ class PRDFlowService {
           await this.clearPRDFlowSession(tenantId, contact.phone, ContactModel);
         }
         else if (isNo) {
-          const goodbyeMsg = "Thank you for contacting ABC Institute.\nHave a great day!";
+          const Settings = require('../models/core/Settings');
+          const settingsObj = await Settings.findOne({ tenantId });
+          const uniName = settingsObj?.workspace?.name || "our institution";
+          const goodbyeMsg = `Thank you for contacting ${uniName}.\nHave a great day!`;
           const res = await waService.sendTextMessage(contact.phone, goodbyeMsg);
           await saveAndEmit('text', goodbyeMsg, res);
 
