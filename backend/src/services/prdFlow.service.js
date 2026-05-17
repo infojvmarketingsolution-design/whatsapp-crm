@@ -110,7 +110,8 @@ class PRDFlowService {
         }
       };
 
-      const normalizedInput = (replyValue || messageText || '').trim().toLowerCase();
+      const normalizedInput = (messageText || '').trim().toLowerCase();
+      const normalizedReply = (replyValue || '').trim().toLowerCase();
 
       // --- LOG ANALYTICS ---
       try {
@@ -208,7 +209,11 @@ class PRDFlowService {
       // STATE: ASK_QUALIFICATION
       // ==========================================
       if (currentState === 'ask_qualification') {
-        if (normalizedInput.includes('12') || normalizedInput.includes('twelfth') || normalizedInput.includes('12th pass') || replyValue === 'btn_12th' || replyValue?.toLowerCase().includes('12th')) {
+        const is12th = normalizedInput.includes('12') || normalizedInput.includes('twelfth') || normalizedInput.includes('12th pass') || normalizedReply === 'btn_0' || normalizedReply.includes('12th');
+        const isGrad = normalizedInput.includes('grad') || normalizedInput.includes('bachelor') || normalizedInput.includes('degree') || normalizedReply === 'btn_1' || normalizedReply.includes('grad');
+        const isOther = normalizedInput.includes('other') || normalizedReply === 'btn_2' || normalizedReply.includes('other');
+
+        if (is12th) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               qualification: '12th Pass',
@@ -220,7 +225,7 @@ class PRDFlowService {
           const catMsg = "Please select program category.";
           await sendInteractiveOptions(catMsg, ['Traditional Program', 'Trending Program']);
         }
-        else if (normalizedInput.includes('grad') || normalizedInput.includes('bachelor') || normalizedInput.includes('degree') || replyValue === 'btn_grad' || replyValue?.toLowerCase().includes('grad')) {
+        else if (isGrad) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               qualification: 'Graduation',
@@ -232,7 +237,7 @@ class PRDFlowService {
           const catMsg = "Please select program category.";
           await sendInteractiveOptions(catMsg, ['Master Traditional Program', 'Master Trending Program']);
         }
-        else if (normalizedInput.includes('other') || replyValue === 'btn_other' || replyValue?.toLowerCase().includes('other')) {
+        else if (isOther) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               qualification: 'Other',
@@ -300,7 +305,10 @@ class PRDFlowService {
       // STATE: ASK_PROGRAM_CATEGORY_12TH
       // ==========================================
       if (currentState === 'ask_program_category_12th') {
-        if (normalizedInput.includes('traditional') || replyValue?.toLowerCase().includes('traditional')) {
+        const isTraditional = normalizedInput.includes('traditional') || normalizedReply === 'btn_0' || normalizedReply.includes('traditional');
+        const isTrending = normalizedInput.includes('trending') || normalizedReply === 'btn_1' || normalizedReply.includes('trending');
+
+        if (isTraditional) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               selectedStream: 'Traditional Program',
@@ -312,7 +320,7 @@ class PRDFlowService {
           const progMsg = "Please select your preferred program.";
           await sendInteractiveOptions(progMsg, ['B.Com', 'BBA', 'B.Tech', 'B.Sc', 'Other']);
         }
-        else if (normalizedInput.includes('trending') || replyValue?.toLowerCase().includes('trending')) {
+        else if (isTrending) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               selectedStream: 'Trending Program',
@@ -344,7 +352,10 @@ class PRDFlowService {
       // STATE: ASK_PROGRAM_CATEGORY_GRAD
       // ==========================================
       if (currentState === 'ask_program_category_grad') {
-        if (normalizedInput.includes('traditional') || replyValue?.toLowerCase().includes('traditional')) {
+        const isTraditional = normalizedInput.includes('traditional') || normalizedReply === 'btn_0' || normalizedReply.includes('traditional');
+        const isTrending = normalizedInput.includes('trending') || normalizedReply === 'btn_1' || normalizedReply.includes('trending');
+
+        if (isTraditional) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               selectedStream: 'Master Traditional Program',
@@ -356,7 +367,7 @@ class PRDFlowService {
           const progMsg = "Please select your preferred master program.";
           await sendInteractiveOptions(progMsg, ['M.Com', 'MBA', 'M.Tech', 'M.Sc', 'Other']);
         }
-        else if (normalizedInput.includes('trending') || replyValue?.toLowerCase().includes('trending')) {
+        else if (isTrending) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               selectedStream: 'Master Trending Program',
@@ -575,7 +586,10 @@ class PRDFlowService {
       // STATE: ASK_CONFIRMATION
       // ==========================================
       if (currentState === 'ask_confirmation') {
-        if (normalizedInput === 'yes' || replyValue?.toLowerCase().includes('yes')) {
+        const isYes = normalizedInput === 'yes' || normalizedReply === 'btn_0' || normalizedReply.includes('yes');
+        const isEdit = normalizedInput === 'edit' || normalizedReply === 'btn_1' || normalizedReply.includes('edit');
+
+        if (isYes) {
           const fresh = await ContactModel.findOne({ phone: contact.phone });
           const name = fresh.flowVariables?.name || fresh.name;
           const qual = fresh.flowVariables?.qualification || fresh.qualification;
@@ -638,7 +652,7 @@ class PRDFlowService {
           const helpMsg = "Do you need any other help?";
           await sendInteractiveOptions(helpMsg, ['Yes', 'No']);
         }
-        else if (normalizedInput === 'edit' || replyValue?.toLowerCase().includes('edit')) {
+        else if (isEdit) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               currentFlowStep: 'ask_qualification'
@@ -668,7 +682,10 @@ class PRDFlowService {
       // STATE: ASK_ADDITIONAL_HELP
       // ==========================================
       if (currentState === 'ask_additional_help') {
-        if (normalizedInput === 'yes' || replyValue?.toLowerCase().includes('yes')) {
+        const isYes = normalizedInput === 'yes' || normalizedReply === 'btn_0' || normalizedReply.includes('yes');
+        const isNo = normalizedInput === 'no' || normalizedReply === 'btn_1' || normalizedReply.includes('no');
+
+        if (isYes) {
           const connectMsg = "Connecting you with our counsellor…";
           const res = await waService.sendTextMessage(contact.phone, connectMsg);
           await saveAndEmit('text', connectMsg, res);
@@ -685,7 +702,7 @@ class PRDFlowService {
           // Reset flow session
           await this.clearPRDFlowSession(tenantId, contact.phone, ContactModel);
         }
-        else if (normalizedInput === 'no' || replyValue?.toLowerCase().includes('no')) {
+        else if (isNo) {
           const goodbyeMsg = "Thank you for contacting ABC Institute.\nHave a great day!";
           const res = await waService.sendTextMessage(contact.phone, goodbyeMsg);
           await saveAndEmit('text', goodbyeMsg, res);
