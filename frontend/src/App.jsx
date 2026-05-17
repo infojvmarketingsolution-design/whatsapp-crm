@@ -1407,52 +1407,50 @@ function Dashboard() {
 
                             {/* RIGHT PANEL: INTERACTION HUB */}
                             <div className="flex-1 flex flex-col bg-white overflow-hidden relative">
-                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-2 gap-2 shrink-0 bg-slate-100/50 border-b border-slate-200">
-                                       <div className="flex items-center space-x-1 flex-1">
-                                          {['strategic notes', 'tasks & follow-ups', 'timeline'].map((tab) => {
-                                             const isActive = activeLeadTab === tab;
-                                             return (
-                                                <button
-                                                   key={tab}
-                                                   onClick={() => setActiveLeadTab(tab)}
-                                                   className={`flex-1 py-2.5 px-2 rounded-xl text-[10px] font-black capitalize transition-all duration-305 flex items-center justify-center space-x-1.5 ${
-                                                      isActive 
-                                                      ? tab === 'strategic notes'
-                                                         ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25 scale-[1.03] z-10'
-                                                         : tab === 'tasks & follow-ups'
-                                                            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 scale-[1.03] z-10'
-                                                            : 'bg-slate-900 text-white shadow-lg shadow-slate-900/25 scale-[1.03] z-10'
-                                                      : 'text-slate-500 hover:text-slate-850 hover:bg-slate-200/50'
-                                                   }`}
-                                                >
-                                                   {tab === 'strategic notes' && <FileText size={11} className={isActive ? "text-white" : "text-teal-500"} />}
-                                                   {tab === 'tasks & follow-ups' && <Calendar size={11} className={isActive ? "text-white" : "text-indigo-500"} />}
-                                                   {tab === 'timeline' && <Activity size={11} className={isActive ? "text-white" : "text-slate-500"} />}
-                                                   <span>{tab.replace('strategic ', '')}</span>
-                                                </button>
-                                             );
-                                          })}
-                                       </div>
+                                    {/* QUICK STRATEGIC ACTIONS BAR */}
+                                    <div className="p-4 bg-slate-50 border-b border-slate-200 grid grid-cols-2 gap-3 shrink-0">
+                                       <button
+                                          onClick={() => setShowLeadNoteModal(true)}
+                                          className="py-3 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white text-[11px] font-black uppercase tracking-wider rounded-2xl shadow-lg shadow-teal-500/20 active:scale-95 transition-all flex items-center justify-center space-x-2 border border-teal-400/20 hover:-translate-y-0.5"
+                                       >
+                                          <Plus size={14} className="stroke-[3]" />
+                                          <span>Add Strategic Note</span>
+                                       </button>
+                                       
+                                       <button
+                                          onClick={() => setShowFollowUpModal(true)}
+                                          className="py-3 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white text-[11px] font-black uppercase tracking-wider rounded-2xl shadow-lg shadow-indigo-500/20 active:scale-95 transition-all flex items-center justify-center space-x-2 border border-indigo-400/20 hover:-translate-y-0.5"
+                                       >
+                                          <Calendar size={14} className="stroke-[3]" />
+                                          <span>Schedule Follow-up</span>
+                                       </button>
+                                    </div>
 
-                                       <div className="flex items-center space-x-1.5 shrink-0 pl-1 sm:pl-0">
-                                          <button
-                                             onClick={() => setShowLeadNoteModal(true)}
-                                             title="Quick Add Note"
-                                             className="h-8 px-3 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-md shadow-teal-500/20 active:scale-95 transition-all flex items-center space-x-1 border border-teal-400/10"
-                                          >
-                                             <Plus size={11} className="stroke-[3]" />
-                                             <span>Note</span>
-                                          </button>
-                                          
-                                          <button
-                                             onClick={() => setShowFollowUpModal(true)}
-                                             title="Quick Schedule Follow-up"
-                                             className="h-8 px-3 bg-gradient-to-r from-indigo-500 to-violet-600 hover:from-indigo-600 hover:to-violet-700 text-white text-[9px] font-black uppercase tracking-wider rounded-lg shadow-md shadow-indigo-500/20 active:scale-95 transition-all flex items-center space-x-1 border border-indigo-400/10"
-                                          >
-                                             <Calendar size={11} className="stroke-[3]" />
-                                             <span>Task</span>
-                                          </button>
-                                       </div>
+                                    {/* TAB SELECTION BAR */}
+                                    <div className="flex items-center space-x-1 p-2 shrink-0 bg-slate-100/50 border-b border-slate-200">
+                                       {['strategic notes', 'tasks & follow-ups', 'timeline'].map((tab) => {
+                                          const isActive = activeLeadTab === tab;
+                                          return (
+                                             <button
+                                                key={tab}
+                                                onClick={() => setActiveLeadTab(tab)}
+                                                className={`flex-1 py-3 px-2 rounded-xl text-[10px] font-black capitalize transition-all duration-300 flex items-center justify-center space-x-2 ${
+                                                   isActive 
+                                                   ? tab === 'strategic notes'
+                                                      ? 'bg-teal-500 text-white shadow-lg shadow-teal-500/25 scale-[1.03] z-10'
+                                                      : tab === 'tasks & follow-ups'
+                                                         ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/25 scale-[1.03] z-10'
+                                                         : 'bg-slate-900 text-white shadow-lg shadow-slate-900/25 scale-[1.03] z-10'
+                                                   : 'text-slate-500 hover:text-slate-850 hover:bg-slate-200/50'
+                                                }`}
+                                             >
+                                                {tab === 'strategic notes' && <FileText size={12} className={isActive ? "text-white" : "text-teal-500"} />}
+                                                {tab === 'tasks & follow-ups' && <Calendar size={12} className={isActive ? "text-white" : "text-indigo-500"} />}
+                                                {tab === 'timeline' && <Activity size={12} className={isActive ? "text-white" : "text-slate-500"} />}
+                                                <span>{tab}</span>
+                                             </button>
+                                          );
+                                       })}
                                     </div>
 
                                     <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
