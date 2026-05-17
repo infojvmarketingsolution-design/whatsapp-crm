@@ -70,7 +70,8 @@ import {
   Map,
   Award,
   Activity,
-  Calendar
+  Calendar,
+  Tag,
 } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add", onClick, isClickable }) {
@@ -1427,6 +1428,100 @@ function Dashboard() {
                                     </div>
                                  </div>
 
+                                                                  {/* TAGS & LABELS */}
+                                 <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-6">
+                                    <div className="flex items-center justify-between border-b border-slate-50 pb-3">
+                                       <div className="flex items-center space-x-3">
+                                          <div className="w-8 h-8 rounded-xl bg-rose-500 text-white text-[10px] flex items-center justify-center font-bold shadow-md">
+                                             <Tag size={14}/>
+                                          </div>
+                                          <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Custom Tags</h3>
+                                       </div>
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                       <div className="flex items-center space-x-2">
+                                          <input 
+                                            type="text"
+                                            id="new-tag-input"
+                                            placeholder="Add custom tag (e.g. Hot Lead)..." 
+                                            className="flex-1 bg-slate-50/50 border-2 border-slate-50 py-3 px-4 text-xs font-bold text-slate-800 rounded-xl outline-none focus:bg-white focus:border-rose-500/20 transition-all"
+                                            onKeyDown={(e) => {
+                                               if (e.key === 'Enter' && e.target.value.trim() !== '') {
+                                                  e.preventDefault();
+                                                  const val = e.target.value.trim();
+                                                  const currentTags = editedLead.tags || [];
+                                                  if (!currentTags.includes(val)) {
+                                                     handleLeadFieldChange('tags', [...currentTags, val]);
+                                                  }
+                                                  e.target.value = '';
+                                               }
+                                            }}
+                                          />
+                                          <button 
+                                            onClick={(e) => {
+                                               e.preventDefault();
+                                               const input = document.getElementById('new-tag-input');
+                                               if (input && input.value.trim() !== '') {
+                                                  const val = input.value.trim();
+                                                  const currentTags = editedLead.tags || [];
+                                                  if (!currentTags.includes(val)) {
+                                                     handleLeadFieldChange('tags', [...currentTags, val]);
+                                                  }
+                                                  input.value = '';
+                                               }
+                                            }}
+                                            className="px-5 py-3 bg-teal-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-teal-700 shadow-sm transition-all"
+                                          >
+                                            Add
+                                          </button>
+                                       </div>
+                                       
+                                       {/* Suggested Tags */}
+                                       <div className="flex flex-wrap gap-2">
+                                          {['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'].map(tag => (
+                                             <button 
+                                               key={tag}
+                                               onClick={(e) => {
+                                                  e.preventDefault();
+                                                  const currentTags = editedLead.tags || [];
+                                                  if (!currentTags.includes(tag)) {
+                                                     handleLeadFieldChange('tags', [...currentTags, tag]);
+                                                  }
+                                               }}
+                                               className="px-3 py-1.5 bg-slate-50 hover:bg-rose-50 border border-slate-100 hover:border-rose-200 text-slate-500 hover:text-rose-600 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all"
+                                             >
+                                                + {tag}
+                                             </button>
+                                          ))}
+                                       </div>
+
+                                       {/* Active Tags */}
+                                       <div className="pt-4 mt-2 border-t border-slate-50">
+                                          {(!editedLead.tags || editedLead.tags.length === 0) ? (
+                                             <p className="text-[10px] font-medium text-slate-400 italic">No tags added yet.</p>
+                                          ) : (
+                                             <div className="flex flex-wrap gap-2">
+                                                {editedLead.tags.map(tag => (
+                                                   <span key={tag} className="pl-3 pr-1 py-1 bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100/50 text-rose-600 text-[10px] font-black tracking-wide rounded-lg flex items-center space-x-2 shadow-sm">
+                                                      <span>{tag}</span>
+                                                      <button 
+                                                        onClick={(e) => {
+                                                           e.preventDefault();
+                                                           handleLeadFieldChange('tags', editedLead.tags.filter(t => t !== tag));
+                                                        }}
+                                                        className="p-1 hover:bg-rose-100 rounded-md transition-colors"
+                                                      >
+                                                         <X size={10} className="text-rose-600" />
+                                                      </button>
+                                                   </span>
+                                                ))}
+                                             </div>
+                                          )}
+                                       </div>
+                                    </div>
+                                 </div>
+
                                  {/* STEP 3: VISIT FORMAT */}
                                  <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-6">
                                     <div className="flex items-center justify-between border-b border-slate-50 pb-3">
@@ -1487,81 +1582,6 @@ function Dashboard() {
                                              ))}
                                           </select>
                                        </div>
-                                     </div>
-                                  </div>
-
-                                  {/* STEP 5: LEAD TAGS */}
-                                  <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-6">
-                                     <div className="flex items-center justify-between border-b border-slate-50 pb-3">
-                                        <div className="flex items-center space-x-3">
-                                           <div className="w-8 h-8 rounded-xl bg-teal-500 text-white text-[10px] flex items-center justify-center font-bold shadow-md">05</div>
-                                           <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Lead Tags</h3>
-                                        </div>
-                                        <Tag size={16} className="text-slate-300" />
-                                     </div>
-
-                                     <div className="space-y-4">
-                                        <div className="flex justify-between items-center">
-                                           <label className="text-[9px] font-bold text-slate-400 capitalize">Active Tags</label>
-                                           <button 
-                                              type="button"
-                                              onClick={() => setShowTagInput(!showTagInput)} 
-                                              className="text-[9px] font-black text-teal-600 hover:text-teal-800 uppercase tracking-wider bg-teal-50 px-2 py-1 rounded-lg border border-teal-100 transition-colors"
-                                           >
-                                              {showTagInput ? 'Hide Panel' : '+ Add'}
-                                           </button>
-                                        </div>
-
-                                        {showTagInput && (
-                                           <div className="space-y-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 animate-fade-in">
-                                              <div className="flex space-x-2">
-                                                 <input 
-                                                    type="text" 
-                                                    value={newTagName} 
-                                                    onChange={e => setNewTagName(e.target.value)} 
-                                                    placeholder="Custom tag name..." 
-                                                    className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs font-semibold outline-none focus:border-teal-300 shadow-sm"
-                                                 />
-                                                 <button 
-                                                    type="button"
-                                                    onClick={() => { if(newTagName.trim()) handleLeadTagAction('add_tag', newTagName.trim()); }}
-                                                    className="bg-teal-600 text-white text-xs font-black px-4 py-2 rounded-xl hover:bg-teal-700 active:scale-95 transition-all shadow-sm"
-                                                 >
-                                                    Add
-                                                 </button>
-                                              </div>
-                                              
-                                              <div className="flex flex-wrap gap-1">
-                                                 {['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'].map(t => (
-                                                    <button 
-                                                       type="button"
-                                                       key={t}
-                                                       onClick={() => handleLeadTagAction('add_tag', t)}
-                                                       className="px-2.5 py-1 bg-white text-slate-600 border border-slate-100 rounded-lg text-[9px] font-bold hover:bg-teal-50 hover:text-teal-600 hover:border-teal-100 transition-colors shadow-sm"
-                                                    >
-                                                       + {t}
-                                                    </button>
-                                                 ))}
-                                              </div>
-                                           </div>
-                                        )}
-
-                                        <div className="flex flex-wrap gap-1.5 min-h-[40px] items-center p-3 bg-slate-50/50 rounded-2xl border border-dashed border-slate-200">
-                                           {(selectedLead.tags || []).length > 0 ? (
-                                              selectedLead.tags.map((tag, i) => (
-                                                 <span key={i} className="px-3 py-1.5 bg-teal-50 text-teal-700 rounded-lg text-[10px] font-extrabold tracking-wide flex items-center space-x-1.5 border border-teal-200 shadow-sm transition-all hover:border-teal-300">
-                                                    <span>{tag}</span>
-                                                    <X 
-                                                       size={12} 
-                                                       className="ml-1 opacity-60 hover:opacity-100 hover:text-rose-600 cursor-pointer transition-all" 
-                                                       onClick={() => handleLeadTagAction('remove_tag', tag)}
-                                                    />
-                                                 </span>
-                                              ))
-                                           ) : (
-                                              <span className="text-[10px] text-slate-400 italic font-bold">No tags added yet.</span>
-                                           )}
-                                        </div>
                                      </div>
                                   </div>
 
