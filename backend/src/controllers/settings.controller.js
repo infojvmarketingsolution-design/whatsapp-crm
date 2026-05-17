@@ -108,10 +108,16 @@ exports.getSettings = async (req, res) => {
        }
        if (updated) {
           settings.markModified('automation');
+          settings.markModified('automation.aiPrompts');
+          settings.markModified('automation.aiPrompts.qualificationOptions');
+          settings.markModified('automation.aiPrompts.programMap');
+          settings.markModified('automation.aiPrompts.prdFlowSteps');
           await settings.save();
+          console.log("✅ Seeded default settings for tenant:", tenantId);
        }
     }
 
+    console.log("Tenant:", tenantId, "qualificationOptions:", settings?.automation?.aiPrompts?.qualificationOptions);
     res.json(settings);
   } catch (err) {
     console.error('Error fetching settings:', err);
