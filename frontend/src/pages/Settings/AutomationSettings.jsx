@@ -239,6 +239,9 @@ export default function AutomationSettings() {
                 value={settings.rateLimit || 0}
                 onChange={(e) => setSettings({...settings, rateLimit: parseInt(e.target.value) || 0})}
                 className="w-32 bg-white border border-gray-200 rounded-lg py-2 px-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500"
+             />
+          </div>
+        </div>
         <div className="mt-8 pt-6 border-t border-gray-100 flex justify-end items-center">
           <p className="text-xs text-gray-400 mr-6">
             All changes are saved to the database.
