@@ -22,6 +22,7 @@ export default function AIChatbot() {
       qualificationOptions: []
     }
   });
+  const [programMapJson, setProgramMapJson] = useState('{}');
 
   const [uploading, setUploading] = useState(null);
   const fileInputRef = useRef(null);
@@ -42,6 +43,9 @@ export default function AIChatbot() {
         const data = await res.json();
         if (data.automation) {
           setSettings(data.automation);
+          if (data.automation.aiPrompts && data.automation.aiPrompts.programMap) {
+            setProgramMapJson(JSON.stringify(data.automation.aiPrompts.programMap, null, 2));
+          }
         }
       }
     } catch (err) {
@@ -407,15 +411,24 @@ export default function AIChatbot() {
                         <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block">Dynamic Program Mapping (JSON)</label>
                         <p className="text-xs text-blue-800 mb-2">Programs are automatically mapped based on the selected qualification. Edit the raw JSON mapping below:</p>
                         <textarea 
-                           className="w-full text-[10px] p-3 rounded-xl border border-blue-200 outline-none h-48 font-mono focus:ring-2 focus:ring-blue-500/20"
-                           defaultValue={JSON.stringify(settings.aiPrompts.programMap || {}, null, 2)}
+                           className="w-full text-[10px] p-3 rounded-xl border border-blue-200 outline-none h-48 font-mono focus:ring-2 focus:ring-blue-500/20 font-medium text-slate-700"
+                           value={programMapJson}
+                           onChange={(e) => {
+                              setProgramMapJson(e.target.value);
+                              try {
+                                const parsed = JSON.parse(e.target.value);
+                                setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, programMap: parsed}}));
+                              } catch(err) {
+                                // Silent catch during typing
+                              }
+                           }}
                            onBlur={(e) => {
                               try {
                                 const parsed = JSON.parse(e.target.value);
                                 setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, programMap: parsed}}));
-                                toast.success('Program mapping updated');
+                                toast.success('Program mapping format is valid!');
                               } catch(err) {
-                                toast.error('Invalid JSON format');
+                                toast.error('Invalid JSON format! Please correct before saving.');
                               }
                            }}
                         />
