@@ -421,7 +421,7 @@ export default function AIChatbot() {
                       <option value="SUCCESS_PROOF">Success Proof</option>
                       <option value="CUSTOM_MESSAGE">Custom Message</option>
                     </select>
-                    <button onClick={() => removeStep(step.id)} className="p-2 text-slate-300 hover:text-red-500 transition-colors">
+                    <button onClick={() => removeStep(step.id)} className="p-2 text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 rounded-xl transition-all" title="Delete Step">
                       <Trash2 size={16} />
                     </button>
                   </div>
