@@ -110,6 +110,7 @@ exports.updateSettings = async (req, res) => {
            : (settings[category] || {});
        settings[category] = { ...currentData, ...updates };
     }
+    settings.markModified(category);
     await settings.save();
     
     res.json(settings);
