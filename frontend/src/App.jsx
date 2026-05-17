@@ -1079,7 +1079,9 @@ function Dashboard() {
                             </div>
                             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-relaxed">No contacts found in this<br/>category at the moment.</p>
                          </div>
-                       ) : leadDetailsModal.data.map((lead, i) => (
+                        ) : leadDetailsModal.data.map((lead, i) => {
+                           const fullContact = allContacts.find(c => c._id === lead._id || c.phone === lead.phone) || lead;
+                           return (
                            <div key={i} onClick={() => openLeadProfile(lead)} className="group flex flex-col p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98]">
                               <div className="flex items-center justify-between w-full">
                                  <div className="flex items-center space-x-4">
@@ -1115,9 +1117,9 @@ function Dashboard() {
                                  if (!showRemarkGroup) return null;
 
                                  // Find last note
-                                 const lastNote = lead.notes && lead.notes.length > 0 ? lead.notes[lead.notes.length - 1] : null;
+                                 const lastNote = fullContact.notes && fullContact.notes.length > 0 ? fullContact.notes[fullContact.notes.length - 1] : null;
                                  // Find last task
-                                 const lastTask = lead.tasks && lead.tasks.length > 0 ? lead.tasks[lead.tasks.length - 1] : null;
+                                 const lastTask = fullContact.tasks && fullContact.tasks.length > 0 ? fullContact.tasks[fullContact.tasks.length - 1] : null;
 
                                  return (
                                     <div className="mt-4 pt-3 border-t border-slate-100 space-y-2 text-[10px] w-full text-left">
@@ -1178,7 +1180,8 @@ function Dashboard() {
                                  );
                               })()}
                            </div>
-                       ))}
+                           );
+                        })}
                     </div>
                   )}
                </div>
