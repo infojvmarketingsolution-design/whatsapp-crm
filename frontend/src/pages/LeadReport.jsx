@@ -33,7 +33,7 @@ export default function LeadReport() {
   const [activeTab, setActiveTab] = useState('overview'); // 'overview' | 'leads' | 'charts'
   
   // --- Filter States ---
-  const [presetDate, setPresetDate] = useState('this_month');
+  const [presetDate, setPresetDate] = useState('all');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('all');

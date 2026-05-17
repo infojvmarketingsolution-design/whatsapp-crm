@@ -1462,34 +1462,53 @@ const getLeadReport = async (req, res) => {
 
     if (mustRestrict) {
       const uid = new mongoose.Types.ObjectId(req.user._id);
+      const uidStr = req.user._id.toString();
       matchQuery.$or = [
         { assignedAgent: uid },
-        { assignedCounsellor: uid }
+        { assignedCounsellor: uid },
+        { assignedAgent: uidStr },
+        { assignedCounsellor: uidStr }
       ];
     }
 
     // Agent filter (Admin/Manager allowed to scope, or agent within their boundary)
     if (agents && agents !== 'all') {
-      const agentIds = agents.split(',').map(id => {
-        try {
-          return new mongoose.Types.ObjectId(id.trim());
-        } catch(e) {
-          return null;
+      const agentIds = [];
+      const agentIdStrs = [];
+      agents.split(',').forEach(id => {
+        const trimmed = id.trim();
+        if (trimmed) {
+          agentIdStrs.push(trimmed);
+          try {
+            agentIds.push(new mongoose.Types.ObjectId(trimmed));
+          } catch(e) {}
         }
-      }).filter(Boolean);
+      });
 
-      if (agentIds.length > 0) {
+      if (agentIdStrs.length > 0) {
+        const agentOrConditions = [
+          { assignedAgent: { $in: agentIds } },
+          { assignedCounsellor: { $in: agentIds } },
+          { assignedAgent: { $in: agentIdStrs } },
+          { assignedCounsellor: { $in: agentIdStrs } }
+        ];
+
         if (mustRestrict) {
           const myUid = new mongoose.Types.ObjectId(req.user._id);
+          const myUidStr = req.user._id.toString();
           matchQuery.$and = [
-            { $or: [{ assignedAgent: myUid }, { assignedCounsellor: myUid }] },
-            { $or: [{ assignedAgent: { $in: agentIds } }, { assignedCounsellor: { $in: agentIds } }] }
+            { 
+              $or: [
+                { assignedAgent: myUid }, 
+                { assignedCounsellor: myUid },
+                { assignedAgent: myUidStr },
+                { assignedCounsellor: myUidStr }
+              ] 
+            },
+            { $or: agentOrConditions }
           ];
         } else {
-          matchQuery.$or = [
-            { assignedAgent: { $in: agentIds } },
-            { assignedCounsellor: { $in: agentIds } }
-          ];
+          matchQuery.$or = agentOrConditions;
         }
       }
     }
@@ -1644,14 +1663,16 @@ const getLeadReport = async (req, res) => {
     // 8. Team Performance Breakdown (Chart and Cover data)
     const teamMembers = await User.find({
       tenantId: req.tenantId,
-      status: 'ACTIVE',
-      role: { $in: ['TELECALLER', 'COUNSELLOR', 'COUNSELLOUR', 'AGENT', 'MANAGER', 'ADMIN', 'OWNER'] }
+      status: 'ACTIVE'
     }).select('name role email');
 
     const teamPerformance = await Promise.all(teamMembers.map(async (member) => {
       const mId = member._id.toString();
       
-      const memberLeads = leads.filter(l => l.assignedAgent === mId || l.assignedCounsellor === mId);
+      const memberLeads = leads.filter(l => 
+        (l.assignedAgent && l.assignedAgent.toString() === mId) || 
+        (l.assignedCounsellor && l.assignedCounsellor.toString() === mId)
+      );
       const mTotal = memberLeads.length;
       
       let mConverted = 0;
