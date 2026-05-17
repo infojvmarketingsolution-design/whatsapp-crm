@@ -187,7 +187,10 @@ class AIService {
     if (score >= 70) heatLevel = 'Hot';
     else if (score >= 40) heatLevel = 'Warm';
 
-    return { score  /**
+    return { score, heatLevel };
+  }
+
+  /**
    * Generates a comprehensive Strategic Brief for a contact.
    * Includes behavior analysis (response speed) and fact extraction.
    */
