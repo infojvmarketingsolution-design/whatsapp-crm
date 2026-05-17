@@ -174,9 +174,13 @@ class PRDFlowService {
           }
         }
 
-        if (!welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
+        const nameStep = prdFlowSteps.find(s => s.type === 'NAME_CAPTURE');
+        const hasSeparateNameCard = !!nameStep && greetingStep.type === 'GREETING';
+
+        if (!hasSeparateNameCard && !welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
           welcomeMsg = `${welcomeMsg.trim()}\n\nPlease enter your full name.`;
         }
+
         const media = this.makeAbsolute(greetingImage);
         let resGreeting;
         if (media) {
@@ -227,6 +231,28 @@ class PRDFlowService {
             } catch (btnErr) {
               console.error('[PRD] Failed to send real interactive button:', btnErr.message);
             }
+          }
+        }
+
+        // 🚀 IF SEPARATE NAME CARD IS PRESENT, SEND IT IMMEDIATELY AFTER GREETING WITH A 1.5S DELAY
+        if (hasSeparateNameCard) {
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          const nameMsg = nameStep.message || nameStep.text || "May I know your name?";
+          const nameImage = nameStep.image || '';
+          const nameMedia = this.makeAbsolute(nameImage);
+          let resName;
+          
+          if (nameMedia) {
+            try {
+              resName = await waService.sendMedia(contact.phone, 'image', null, nameMsg, nameMedia);
+              await saveAndEmit('image', nameMsg, resName);
+            } catch (mediaErr) {
+              resName = await waService.sendTextMessage(contact.phone, nameMsg);
+              await saveAndEmit('text', nameMsg, resName);
+            }
+          } else {
+            resName = await waService.sendTextMessage(contact.phone, nameMsg);
+            await saveAndEmit('text', nameMsg, resName);
           }
         }
         
