@@ -315,7 +315,7 @@ class PRDFlowService {
 
           const progStep = prdFlowSteps.find(s => s.type === 'PROGRAM_SELECTION');
           let catMsg = progStep?.message || progStep?.text || "Please select program category.";
-          catMsg = catMsg.replace(/\{\{name\}\}/gi, extractedName).replace(/\{\{contact\}\}/gi, contact.phone);
+          catMsg = this.populatePlaceholders(catMsg, contact, extractedName);
 
           await sendInteractiveOptions(catMsg, ['Traditional Program', 'Trending Program']);
 
@@ -334,7 +334,7 @@ class PRDFlowService {
 
         const qualStep = prdFlowSteps.find(s => s.type === 'QUALIFICATION');
         let qualMsg = qualStep?.message || qualStep?.text || `Nice to meet you ${extractedName} 😊\n\nPlease select your qualification.`;
-        qualMsg = qualMsg.replace(/\{\{name\}\}/gi, extractedName).replace(/\{\{contact\}\}/gi, contact.phone);
+        qualMsg = this.populatePlaceholders(qualMsg, contact, extractedName);
 
         let options = settings?.automation?.aiPrompts?.qualificationOptions || ['12th Pass', 'Graduation', 'Other'];
         if (!options || options.length === 0 || (options.length === 1 && !options[0])) {
@@ -980,11 +980,7 @@ class PRDFlowService {
           // 4. Send Thank You Message (Dynamic from builder steps)
           const thankYouStep = steps.find(s => s.id === 'thank_you' || s.type === 'CUSTOM_MESSAGE');
           let thankYouMsg = thankYouStep?.message || thankYouStep?.text || `Thank you ${name} 😊\n\nYour counselling request has been submitted successfully.\nOur counsellor will contact you at your preferred time.`;
-          thankYouMsg = thankYouMsg.replace(/\{\{name\}\}/gi, name)
-                                   .replace(/\{\{contact\}\}/gi, contact.phone)
-                                   .replace(/\{\{qualification\}\}/gi, qual)
-                                   .replace(/\{\{program\}\}/gi, prog)
-                                   .replace(/\{\{time\}\}/gi, time);
+          thankYouMsg = this.populatePlaceholders(thankYouMsg, fresh, name, qual, prog, time);
 
           const thankYouMedia = thankYouStep?.image ? this.makeAbsolute(thankYouStep.image) : '';
           let resTY;
@@ -1092,6 +1088,16 @@ class PRDFlowService {
     }
   }
 
+  populatePlaceholders(text, contact, name = '', qual = '', prog = '', time = '') {
+    if (!text || typeof text !== 'string') return '';
+    return text
+      .replace(/\{\{\s*name\s*\}\}/gi, name || contact.flowVariables?.name || contact.name || 'Student')
+      .replace(/\{\{\s*contact\s*\}\}/gi, contact.phone || '')
+      .replace(/\{\{\s*qualification\s*\}\}/gi, qual || contact.flowVariables?.qualification || contact.qualification || '')
+      .replace(/\{\{\s*program\s*\}\}/gi, prog || contact.flowVariables?.program || contact.selectedProgram || '')
+      .replace(/\{\{\s*time\s*\}\}/gi, time || contact.flowVariables?.time || contact.preferredCallTime || '');
+  }
+
   async transitionToNextStepAfter(completedTypeOrId, contact, ContactModel, steps, settings, waService, nameVal, io = null) {
     const MessageSchema = require('../models/tenant/Message');
     const { getTenantConnection } = require('../config/db');
@@ -1148,18 +1154,14 @@ class PRDFlowService {
     else if (nextStep.type === 'CUSTOM_MESSAGE' || nextStep.type === 'SUCCESS_PROOF') {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: nextStep.id } });
 
-      let msg = nextStep.message || nextStep.text || '';
-      msg = msg.replace(/\{\{name\}\}/gi, nameVal).replace(/\{\{contact\}\}/gi, contact.phone);
-
       // Construct fresh values if available
       const fresh = await ContactModel.findOne({ phone: contact.phone });
       const qualVal = fresh.flowVariables?.qualification || fresh.qualification || '';
       const progVal = fresh.flowVariables?.program || fresh.selectedProgram || '';
       const timeVal = fresh.flowVariables?.time || fresh.preferredCallTime || '';
 
-      msg = msg.replace(/\{\{qualification\}\}/gi, qualVal)
-               .replace(/\{\{program\}\}/gi, progVal)
-               .replace(/\{\{time\}\}/gi, timeVal);
+      let msg = nextStep.message || nextStep.text || '';
+      msg = this.populatePlaceholders(msg, fresh, nameVal, qualVal, progVal, timeVal);
 
       const image = nextStep.image || '';
       const media = this.makeAbsolute(image);
