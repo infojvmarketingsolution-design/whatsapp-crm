@@ -74,7 +74,8 @@ exports.getSettings = async (req, res) => {
           settings.automation.aiPrompts = {};
           updated = true;
        }
-       if (!settings.automation.aiPrompts.qualificationOptions || settings.automation.aiPrompts.qualificationOptions.length === 0) {
+       const qualOptionsCleaned = (settings.automation.aiPrompts.qualificationOptions || []).filter(o => o && o.trim() !== "");
+       if (qualOptionsCleaned.length === 0) {
           settings.automation.aiPrompts.qualificationOptions = ['10th Pass', '12th Pass', 'Graduate', 'Working Professional'];
           updated = true;
        }
