@@ -148,8 +148,14 @@ class PRDFlowService {
         const media = this.makeAbsolute(greetingImage);
         let resGreeting;
         if (media) {
-          resGreeting = await waService.sendMedia(contact.phone, 'image', null, welcomeMsg, media);
-          await saveAndEmit('image', welcomeMsg, resGreeting);
+          try {
+            resGreeting = await waService.sendMedia(contact.phone, 'image', null, welcomeMsg, media);
+            await saveAndEmit('image', welcomeMsg, resGreeting);
+          } catch (mediaErr) {
+            console.error('[PRD] Media send failed, falling back to text greeting:', mediaErr.message);
+            resGreeting = await waService.sendTextMessage(contact.phone, welcomeMsg);
+            await saveAndEmit('text', welcomeMsg, resGreeting);
+          }
         } else {
           resGreeting = await waService.sendTextMessage(contact.phone, welcomeMsg);
           await saveAndEmit('text', welcomeMsg, resGreeting);
