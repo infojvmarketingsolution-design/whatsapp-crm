@@ -368,10 +368,10 @@ export default function LeadReport() {
   const trendAreaPath = trendPoints.length > 0 ? `${trendLinePath} L ${trendPoints[trendPoints.length - 1].x} 160 L ${trendPoints[0].x} 160 Z` : '';
 
   return (
-    <div className="p-4 sm:p-8 min-h-screen bg-slate-900 text-slate-100 font-sans relative overflow-hidden">
-      {/* Background radial gradients for sleek premium dark mode */}
-      <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/10 blur-[120px] pointer-events-none z-0" />
-      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-500/10 blur-[120px] pointer-events-none z-0" />
+    <div className="p-4 sm:p-8 min-h-screen bg-crm-bg text-slate-800 font-sans relative overflow-hidden">
+      {/* Background radial gradients for sleek premium light mode */}
+      <div className="absolute top-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-emerald-500/5 blur-[120px] pointer-events-none z-0" />
 
       {/* --- EXECUTIVE PRINT LAYOUT COVER PAGE (Hidden on screen) --- */}
       <div className="hidden print-layout print:block p-10 bg-white text-slate-900 font-serif min-h-screen">
@@ -475,14 +475,14 @@ export default function LeadReport() {
         {/* --- PAGE HEADER --- */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
           <div>
-            <div className="flex items-center space-x-2 text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">
+            <div className="flex items-center space-x-2 text-blue-600 text-xs font-bold uppercase tracking-widest mb-1">
               <FileText size={14} />
               <span>Executive Reporting Engine</span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-800 flex items-center gap-2">
               Lead Performance Report
             </h1>
-            <p className="text-slate-400 text-xs sm:text-sm font-medium mt-1">
+            <p className="text-slate-500 text-xs sm:text-sm font-medium mt-1">
               Analyze lifecycle movements, conversion metrics, and follow-up activities.
             </p>
           </div>
@@ -490,7 +490,7 @@ export default function LeadReport() {
           <div className="flex items-center gap-3 self-start md:self-center">
             <button 
               onClick={() => setShowFilterPanel(!showFilterPanel)}
-              className={`p-3 rounded-xl border flex items-center gap-2 text-xs font-bold uppercase tracking-widest transition-all ${showFilterPanel ? 'bg-slate-800 border-slate-700 text-blue-400' : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'}`}
+              className={`p-3 rounded-xl border flex items-center gap-2 text-xs font-bold uppercase tracking-widest transition-all ${showFilterPanel ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-slate-200 text-slate-500 hover:text-slate-700'}`}
             >
               <Filter size={14} />
               <span>{showFilterPanel ? 'Hide Filters' : 'Show Filters'}</span>
@@ -498,7 +498,7 @@ export default function LeadReport() {
 
             <button 
               onClick={handlePrint}
-              className="p-3 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:bg-slate-700 hover:text-white transition-all flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
+              className="p-3 rounded-xl bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 hover:text-slate-850 transition-all flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
             >
               <Printer size={14} />
               <span>Print Report</span>
@@ -506,7 +506,7 @@ export default function LeadReport() {
 
             <button 
               onClick={handleExportCSV}
-              className="p-3 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-bold hover:shadow-glow transition-all flex items-center gap-2 text-xs uppercase tracking-widest"
+              className="p-3 rounded-xl bg-slate-900 text-white font-bold hover:shadow-glow transition-all flex items-center gap-2 text-xs uppercase tracking-widest"
             >
               <Download size={14} />
               <span>Export CSV</span>
@@ -524,9 +524,9 @@ export default function LeadReport() {
               transition={{ duration: 0.3 }}
               className="mb-8 overflow-hidden"
             >
-              <div className="bg-slate-900/60 border border-slate-800 backdrop-blur-xl p-5 rounded-2xl shadow-premium">
-                <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-800/80 pb-3 mb-5">
-                  <Filter size={12} className="text-blue-500" />
+              <div className="bg-white border border-slate-100 p-5 rounded-2xl shadow-sm">
+                <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-widest text-slate-400 border-b border-slate-100 pb-3 mb-5">
+                  <Filter size={12} className="text-blue-600" />
                   <span>Advanced Report Filters</span>
                 </div>
 
@@ -538,7 +538,7 @@ export default function LeadReport() {
                       <select 
                         value={presetDate} 
                         onChange={(e) => setPresetDate(e.target.value)}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-medium focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500 appearance-none cursor-pointer"
                       >
                         <option value="all">All-Time Period</option>
                         <option value="today">Today</option>
@@ -562,7 +562,7 @@ export default function LeadReport() {
                           type="date" 
                           value={startDate} 
                           onChange={(e) => setStartDate(e.target.value)}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-medium focus:outline-none focus:border-blue-500"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500"
                         />
                       </div>
                       <div className="flex flex-col">
@@ -571,7 +571,7 @@ export default function LeadReport() {
                           type="date" 
                           value={endDate} 
                           onChange={(e) => setEndDate(e.target.value)}
-                          className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-medium focus:outline-none focus:border-blue-500"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500"
                         />
                       </div>
                     </>
@@ -584,7 +584,7 @@ export default function LeadReport() {
                       <select 
                         value={selectedMonth} 
                         onChange={(e) => setSelectedMonth(e.target.value)}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
                       >
                         <option value="all">All Months</option>
                         {monthsList.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
@@ -599,7 +599,7 @@ export default function LeadReport() {
                       <select 
                         value={selectedYear} 
                         onChange={(e) => setSelectedYear(e.target.value)}
-                        className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
+                        className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
                       >
                         <option value="all">Current Year</option>
                         {yearsList.map(y => <option key={y.value} value={y.value}>{y.label}</option>)}
@@ -613,7 +613,7 @@ export default function LeadReport() {
                     <select 
                       value={selectedAgent} 
                       onChange={(e) => setSelectedAgent(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
                     >
                       <option value="all">All Teammates</option>
                       {reportData?.analytics.teamPerformance.map(agent => (
@@ -628,7 +628,7 @@ export default function LeadReport() {
                     <select 
                       value={selectedStatus} 
                       onChange={(e) => setSelectedStatus(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
                     >
                       <option value="all">All Statuses</option>
                       {statusesList.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
@@ -641,7 +641,7 @@ export default function LeadReport() {
                     <select 
                       value={selectedSource} 
                       onChange={(e) => setSelectedSource(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
+                      className="w-full bg-white border border-slate-200 rounded-xl px-3 py-2.5 text-xs text-slate-700 font-medium focus:outline-none focus:border-blue-500 cursor-pointer"
                     >
                       <option value="all">All Sources</option>
                       {sourcesList.map(src => <option key={src.value} value={src.value}>{src.label}</option>)}
@@ -650,20 +650,20 @@ export default function LeadReport() {
                 </div>
 
                 {/* Keyword Search box */}
-                <form onSubmit={handleSearchSubmit} className="mt-5 pt-4 border-t border-slate-800/80 flex items-center gap-3">
+                <form onSubmit={handleSearchSubmit} className="mt-5 pt-4 border-t border-slate-100 flex items-center gap-3">
                   <div className="relative flex-1">
                     <input 
                       type="text"
                       placeholder="Keyword Search on Lead Name, Phone, Email, Company, Lead ID..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white font-medium placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                      className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-700 font-medium placeholder-slate-400 focus:outline-none focus:border-blue-500"
                     />
-                    <Search size={14} className="absolute left-3.5 top-3.5 text-slate-500" />
+                    <Search size={14} className="absolute left-3.5 top-3.5 text-slate-400" />
                   </div>
                   <button 
                     type="submit"
-                    className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-bold uppercase tracking-widest border border-slate-700 transition-colors"
+                    className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-bold uppercase tracking-widest border border-slate-200 transition-colors"
                   >
                     Apply Search
                   </button>
@@ -674,7 +674,7 @@ export default function LeadReport() {
         </AnimatePresence>
 
         {/* --- TABS NAVIGATION --- */}
-        <div className="flex border-b border-slate-850 mb-8 bg-slate-950/40 p-1.5 rounded-xl self-start gap-1">
+        <div className="flex border border-slate-200/60 mb-8 bg-slate-100/80 p-1 rounded-xl self-start gap-1">
           {[
             { id: 'overview', label: 'Executive Cover' },
             { id: 'charts', label: 'Dashboard Analytics' },
@@ -683,7 +683,7 @@ export default function LeadReport() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`px-6 py-2.5 text-xs uppercase font-bold tracking-widest rounded-lg transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+              className={`px-6 py-2.5 text-xs uppercase font-bold tracking-widest rounded-lg transition-all ${activeTab === tab.id ? 'bg-blue-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-800'}`}
             >
               {tab.label}
             </button>
@@ -708,71 +708,71 @@ export default function LeadReport() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 
                 {/* Executive Cover card */}
-                <div className="lg:col-span-2 bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950/60 p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-premium flex flex-col justify-between relative overflow-hidden min-h-[420px]">
+                <div className="lg:col-span-2 bg-gradient-to-br from-white via-white to-blue-50/20 p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between relative overflow-hidden min-h-[420px]">
                   {/* Decorative background SVG shape */}
-                  <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none">
+                  <div className="absolute right-0 bottom-0 opacity-[0.03] pointer-events-none">
                     <FileText size={350} className="text-blue-500 translate-x-20 translate-y-20" />
                   </div>
 
                   <div>
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-4 mb-6">
+                    <div className="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
+                        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
                           <FileText size={20} />
                         </div>
                         <div>
-                          <h2 className="text-[10px] font-bold text-blue-400 uppercase tracking-widest">Formal Executive Document</h2>
-                          <p className="text-xs text-slate-500 font-bold mt-0.5">{getWorkspaceName()}</p>
+                          <h2 className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">Formal Executive Document</h2>
+                          <p className="text-xs text-slate-400 font-bold mt-0.5">{getWorkspaceName()}</p>
                         </div>
                       </div>
-                      <span className="px-3 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded-md text-[9px] uppercase font-bold tracking-widest">
+                      <span className="px-3 py-1 bg-blue-50 text-blue-600 border border-blue-100 rounded-md text-[9px] uppercase font-bold tracking-widest">
                         v1.5.4 Secure
                       </span>
                     </div>
 
-                    <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight mt-6">
+                    <h1 className="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight mt-6">
                       LEAD PERFORMANCE REPORT
                     </h1>
-                    <p className="text-slate-400 text-sm mt-2 italic font-serif">
+                    <p className="text-slate-500 text-sm mt-2 italic font-serif">
                       A comprehensive analysis of client acquisitions, team conversions, and scheduled sales tasks.
                     </p>
 
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 mt-12 text-xs">
                       <div>
-                        <p className="text-slate-500 uppercase font-black tracking-wider text-[9px]">Generated Period</p>
-                        <p className="text-slate-200 font-bold text-sm mt-1">{getReportPeriodText()}</p>
+                        <p className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Generated Period</p>
+                        <p className="text-slate-800 font-bold text-sm mt-1">{getReportPeriodText()}</p>
                       </div>
                       <div>
-                        <p className="text-slate-500 uppercase font-black tracking-wider text-[9px]">Generated By</p>
-                        <p className="text-slate-200 font-bold text-sm mt-1">{reportData?.summary.generatedBy || getUserName()}</p>
+                        <p className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Generated By</p>
+                        <p className="text-slate-800 font-bold text-sm mt-1">{reportData?.summary.generatedBy || getUserName()}</p>
                       </div>
                       <div>
-                        <p className="text-slate-500 uppercase font-black tracking-wider text-[9px]">Date Compiled</p>
-                        <p className="text-slate-200 font-bold text-sm mt-1">{formatDate(reportData?.summary.generatedAt)}</p>
+                        <p className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Date Compiled</p>
+                        <p className="text-slate-800 font-bold text-sm mt-1">{formatDate(reportData?.summary.generatedAt)}</p>
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-12 pt-6 border-t border-slate-800/80 flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <div className="mt-12 pt-6 border-t border-slate-100 flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase tracking-widest">
                     <span>Executive Document ID: {Math.random().toString(36).substr(2, 9).toUpperCase()}</span>
                     <span>WapiPulse Reporting Core</span>
                   </div>
                 </div>
 
                 {/* High level executive conversion circle card */}
-                <div className="bg-slate-950/60 p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-premium flex flex-col justify-between items-center text-center relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 rounded-full blur-xl pointer-events-none" />
+                <div className="bg-white p-6 sm:p-8 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between items-center text-center relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 rounded-full blur-xl pointer-events-none" />
                   
                   <div className="w-full text-left">
-                    <h3 className="text-xs uppercase font-bold text-slate-400 tracking-wider">Conversion Ratio</h3>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Leads closed won ratio</p>
+                    <h3 className="text-xs uppercase font-bold text-slate-500 tracking-wider">Conversion Ratio</h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Leads closed won ratio</p>
                   </div>
 
                   {/* Interactive SVG semi-donut progress bar */}
                   <div className="my-6 relative flex items-center justify-center">
                     <svg viewBox="0 0 100 100" className="w-44 h-44">
                       {/* Trail path */}
-                      <circle cx="50" cy="50" r="42" stroke="#1e293b" strokeWidth="8" fill="none" />
+                      <circle cx="50" cy="50" r="42" stroke="#f1f5f9" strokeWidth="8" fill="none" />
                       {/* Gradient fill */}
                       <circle 
                         cx="50" 
@@ -796,18 +796,18 @@ export default function LeadReport() {
                     </svg>
 
                     <div className="absolute flex flex-col items-center">
-                      <span className="text-3xl font-black text-white">{reportData?.summary.conversionRatio || 0}%</span>
-                      <span className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Ratio</span>
+                      <span className="text-3xl font-black text-slate-800">{reportData?.summary.conversionRatio || 0}%</span>
+                      <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Ratio</span>
                     </div>
                   </div>
 
-                  <div className="w-full bg-slate-900/80 border border-slate-800 rounded-xl p-3 flex justify-between items-center text-xs">
-                    <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
+                  <div className="w-full bg-slate-50 border border-slate-100 rounded-xl p-3 flex justify-between items-center text-xs">
+                    <div className="flex items-center gap-1.5 text-emerald-600 font-bold">
                       <CheckCircle size={14} />
                       <span>{reportData?.summary.convertedLeads || 0} Won</span>
                     </div>
-                    <div className="w-px h-4 bg-slate-800" />
-                    <div className="text-slate-400 font-medium">
+                    <div className="w-px h-4 bg-slate-200" />
+                    <div className="text-slate-500 font-medium">
                       Out of {reportData?.summary.totalLeads || 0} Leads
                     </div>
                   </div>
@@ -828,7 +828,7 @@ export default function LeadReport() {
                       <motion.div 
                         key={i}
                         whileHover={{ y: -3 }}
-                        className="bg-slate-900/60 p-5 rounded-2xl border border-slate-850 shadow-premium flex flex-col justify-between h-[130px] relative overflow-hidden"
+                        className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between h-[130px] relative overflow-hidden"
                       >
                         <div className="flex justify-between items-start">
                           <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest">{card.label}</span>
@@ -838,7 +838,7 @@ export default function LeadReport() {
                         </div>
                         
                         <div className="mt-3">
-                          <p className="text-xl sm:text-2xl font-black text-white truncate">{card.val ?? 0}</p>
+                          <p className="text-xl sm:text-2xl font-black text-slate-800 truncate">{card.val ?? 0}</p>
                           <p className="text-[9px] font-bold text-slate-500 mt-1 uppercase tracking-widest">{card.text}</p>
                         </div>
                       </motion.div>
@@ -849,8 +849,8 @@ export default function LeadReport() {
                 {/* Quick Snapshot Metrics */}
                 <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* Leads by source list */}
-                  <div className="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 shadow-premium">
-                    <h3 className="text-xs uppercase font-bold text-slate-300 tracking-wider mb-4">Leads by Platform Source</h3>
+                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                    <h3 className="text-xs uppercase font-bold text-slate-800 tracking-wider mb-4">Leads by Platform Source</h3>
                     <div className="space-y-4">
                       {reportData?.analytics.leadsBySource.slice(0, 5).map((source, i) => {
                         const maxVal = Math.max(...reportData.analytics.leadsBySource.map(s => s.value), 1);
@@ -858,7 +858,7 @@ export default function LeadReport() {
                         return (
                           <div key={i} className="flex flex-col">
                             <div className="flex justify-between text-xs font-semibold mb-1">
-                              <span className="text-slate-300 flex items-center gap-1.5">
+                              <span className="text-slate-600 flex items-center gap-1.5">
                                 <span className={`w-2 h-2 rounded-full ${
                                   source.label.toLowerCase().includes('facebook') ? 'bg-blue-500' :
                                   source.label.toLowerCase().includes('instagram') ? 'bg-pink-500' :
@@ -867,9 +867,9 @@ export default function LeadReport() {
                                 }`} />
                                 {source.label}
                               </span>
-                              <span className="text-slate-400">{source.value} Leads</span>
+                              <span className="text-slate-500">{source.value} Leads</span>
                             </div>
-                            <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
+                            <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
                               <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${pct}%` }}
@@ -892,26 +892,26 @@ export default function LeadReport() {
                   </div>
 
                   {/* Quick follow up rate gauge */}
-                  <div className="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 shadow-premium flex flex-col justify-between">
+                  <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm flex flex-col justify-between">
                     <div>
-                      <h3 className="text-xs uppercase font-bold text-slate-300 tracking-wider">Follow-up Completion Rate</h3>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Completed vs Pending Tasks Ratio</p>
+                      <h3 className="text-xs uppercase font-bold text-slate-800 tracking-wider">Follow-up Completion Rate</h3>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Completed vs Pending Tasks Ratio</p>
                     </div>
 
                     <div className="flex items-center gap-6 my-4">
                       {/* Metric text */}
                       <div>
-                        <p className="text-4xl font-black text-white">{reportData?.summary.followupCompletionRate || 0}%</p>
+                        <p className="text-4xl font-black text-slate-800">{reportData?.summary.followupCompletionRate || 0}%</p>
                         <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1.5">Action Items Finished</p>
                       </div>
 
                       {/* Small horizontal progress visualizer */}
                       <div className="flex-1 space-y-2">
-                        <div className="flex justify-between text-[10px] uppercase font-bold text-slate-400">
+                        <div className="flex justify-between text-[10px] uppercase font-bold text-slate-500">
                           <span>Pending Action Items</span>
                           <span className="text-amber-500">{reportData?.summary.followupsPending || 0}</span>
                         </div>
-                        <div className="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800/80 p-0.5">
+                        <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-200 p-0.5">
                           <motion.div 
                             initial={{ width: 0 }}
                             animate={{ width: `${reportData?.summary.followupCompletionRate || 0}%` }}
@@ -922,7 +922,7 @@ export default function LeadReport() {
                       </div>
                     </div>
 
-                    <div className="text-[10px] text-slate-500 bg-slate-950/40 p-3 rounded-xl border border-slate-850 flex items-center gap-1.5 leading-relaxed font-medium">
+                    <div className="text-[10px] text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center gap-1.5 leading-relaxed font-medium">
                       <Info size={12} className="text-slate-400 shrink-0" />
                       <span>Regular follow-up schedules are critical to lead qualification, ensuring high-conversion funnels.</span>
                     </div>
@@ -937,11 +937,11 @@ export default function LeadReport() {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 
                 {/* Chart: Monthly Lead Trend */}
-                <div className="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 shadow-premium">
+                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                   <div className="flex justify-between items-center mb-6">
                     <div>
-                      <h3 className="text-xs uppercase font-bold text-slate-300 tracking-wider">Monthly Lead Inflow Trend</h3>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Total inbound volume across time</p>
+                      <h3 className="text-xs uppercase font-bold text-slate-800 tracking-wider">Monthly Lead Inflow Trend</h3>
+                      <p className="text-[10px] text-slate-400 mt-0.5">Total inbound volume across time</p>
                     </div>
                   </div>
 
@@ -958,7 +958,7 @@ export default function LeadReport() {
                         
                         {/* Horizontal grid lines */}
                         {[20, 55, 90, 125, 160].map((y, idx) => (
-                          <line key={idx} x1="20" y1={y} x2="480" y2={y} stroke="#1e293b" strokeWidth="1" strokeDasharray="3 3" />
+                          <line key={idx} x1="20" y1={y} x2="480" y2={y} stroke="#e2e8f0" strokeWidth="1" strokeDasharray="3 3" />
                         ))}
 
                         {/* Area Fill */}
@@ -979,8 +979,8 @@ export default function LeadReport() {
                         {/* Points Markers */}
                         {trendPoints.map((point, idx) => (
                           <g key={idx} className="group cursor-pointer">
-                            <circle cx={point.x} cy={point.y} r="5" fill="#3b82f6" stroke="#0f172a" strokeWidth="2" className="transition-transform duration-300 hover:scale-150" />
-                            <text x={point.x} y={point.y - 10} textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="bold" className="opacity-0 group-hover:opacity-100 transition-opacity bg-slate-900">
+                            <circle cx={point.x} cy={point.y} r="5" fill="#3b82f6" stroke="#ffffff" strokeWidth="2" className="transition-transform duration-300 hover:scale-150" />
+                            <text x={point.x} y={point.y - 10} textAnchor="middle" fill="#64748b" fontSize="8" fontWeight="bold" className="opacity-0 group-hover:opacity-100 transition-opacity bg-white">
                               {point.value}
                             </text>
                             {/* X-axis label */}
@@ -1001,10 +1001,10 @@ export default function LeadReport() {
                 </div>
 
                 {/* Chart: Team Conversion Breakdown */}
-                <div className="bg-slate-900/60 p-6 rounded-3xl border border-slate-800 shadow-premium">
+                <div className="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
                   <div>
-                    <h3 className="text-xs uppercase font-bold text-slate-300 tracking-wider">Teammate Conversion & Follow-up</h3>
-                    <p className="text-[10px] text-slate-500 mt-0.5">Individual volume and performance aggregates</p>
+                    <h3 className="text-xs uppercase font-bold text-slate-800 tracking-wider">Teammate Conversion & Follow-up</h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Individual volume and performance aggregates</p>
                   </div>
 
                   <div className="mt-6 space-y-5 max-h-[300px] overflow-y-auto pr-1">
@@ -1013,21 +1013,21 @@ export default function LeadReport() {
                       const leadsPct = Math.round((member.totalLeads / maxLeads) * 100);
                       
                       return (
-                        <div key={i} className="flex flex-col bg-slate-950/40 p-4 rounded-2xl border border-slate-850/80">
+                        <div key={i} className="flex flex-col bg-slate-50 p-4 rounded-2xl border border-slate-100">
                           <div className="flex justify-between items-center text-xs font-semibold mb-2">
                             <div>
-                              <span className="text-white font-bold">{member.name}</span>
-                              <span className="text-[9px] uppercase tracking-wider text-slate-500 ml-2">({member.role})</span>
+                              <span className="text-slate-800 font-bold">{member.name}</span>
+                              <span className="text-[9px] uppercase tracking-wider text-slate-400 ml-2">({member.role})</span>
                             </div>
                             <div className="flex gap-4">
-                              <span className="text-slate-400"><strong className="text-slate-200">{member.totalLeads}</strong> Leads</span>
-                              <span className="text-emerald-400"><strong className="text-emerald-350">{member.convertedLeads}</strong> Won ({member.conversionRate}%)</span>
+                              <span className="text-slate-500"><strong className="text-slate-700">{member.totalLeads}</strong> Leads</span>
+                              <span className="text-emerald-600"><strong className="text-emerald-700">{member.convertedLeads}</strong> Won ({member.conversionRate}%)</span>
                             </div>
                           </div>
 
                           <div className="space-y-1.5">
                             {/* Lead volume bar */}
-                            <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                            <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                               <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${leadsPct}%` }}
@@ -1037,7 +1037,7 @@ export default function LeadReport() {
                             </div>
                             
                             {/* Conversion rate bar */}
-                            <div className="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                            <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
                               <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${member.conversionRate}%` }}
@@ -1049,7 +1049,7 @@ export default function LeadReport() {
 
                           <div className="flex justify-between items-center text-[9px] uppercase font-bold text-slate-500 mt-2 tracking-widest">
                             <span>Pending Follow-ups: <strong className="text-amber-500">{member.pendingFollowups}</strong></span>
-                            <span>Follow-up Rate: <strong className="text-slate-300">{member.followupCompletionRate}%</strong></span>
+                            <span>Follow-up Rate: <strong className="text-slate-650">{member.followupCompletionRate}%</strong></span>
                           </div>
                         </div>
                       );
@@ -1061,8 +1061,8 @@ export default function LeadReport() {
                 </div>
 
                 {/* Leads by source platform comparative grid */}
-                <div className="lg:col-span-2 bg-slate-900/60 p-6 rounded-3xl border border-slate-800 shadow-premium">
-                  <h3 className="text-xs uppercase font-bold text-slate-300 tracking-wider mb-6">Leads Platform Source Distribution</h3>
+                <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
+                  <h3 className="text-xs uppercase font-bold text-slate-800 tracking-wider mb-6">Leads Platform Source Distribution</h3>
                   
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                     {reportData?.analytics.leadsBySource.map((source, i) => {
@@ -1070,14 +1070,14 @@ export default function LeadReport() {
                       const pct = Math.round((source.value / total) * 100);
                       
                       return (
-                        <div key={i} className="bg-slate-950/40 p-5 rounded-2xl border border-slate-850/80 hover:border-blue-500/20 transition-all flex flex-col justify-between">
+                        <div key={i} className="bg-slate-50 p-5 rounded-2xl border border-slate-100 hover:border-blue-500/20 transition-all flex flex-col justify-between">
                           <div className="flex justify-between items-start">
                             <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{source.label}</span>
-                            <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 rounded text-[9px] font-bold">{pct}%</span>
+                            <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded text-[9px] font-bold">{pct}%</span>
                           </div>
                           
                           <div className="mt-4">
-                            <p className="text-3xl font-black text-white">{source.value}</p>
+                            <p className="text-3xl font-black text-slate-800">{source.value}</p>
                             <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-1">Acquired Leads</p>
                           </div>
                         </div>
@@ -1094,19 +1094,19 @@ export default function LeadReport() {
 
             {/* 3. LEADS TABLE & LOG VIEW */}
             {activeTab === 'leads' && (
-              <div className="bg-slate-900/60 rounded-3xl border border-slate-800 shadow-premium overflow-hidden">
-                <div className="p-6 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
-                    <h3 className="text-xs uppercase font-bold text-slate-300 tracking-wider">Leads Lifecycle Registers</h3>
-                    <p className="text-[10px] text-slate-500 mt-0.5">List of all leads matching filter criteria</p>
+                    <h3 className="text-xs uppercase font-bold text-slate-800 tracking-wider">Leads Lifecycle Registers</h3>
+                    <p className="text-[10px] text-slate-400 mt-0.5">List of all leads matching filter criteria</p>
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <span className="text-xs text-slate-400 font-medium">Sort By:</span>
+                    <span className="text-xs text-slate-500 font-medium">Sort By:</span>
                     <select 
                       value={sortBy} 
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white font-semibold focus:outline-none focus:border-blue-500 cursor-pointer"
+                      className="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-700 font-semibold focus:outline-none focus:border-blue-500 cursor-pointer"
                     >
                       <option value="latest">Latest Created</option>
                       <option value="oldest">Oldest Created</option>
@@ -1120,7 +1120,7 @@ export default function LeadReport() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-slate-800 bg-slate-950/40 text-slate-400 font-bold uppercase tracking-wider">
+                      <tr className="border-b border-slate-100 bg-slate-50 text-slate-500 font-bold uppercase tracking-wider">
                         <th className="p-4 pl-6">Lead ID</th>
                         <th className="p-4">Contact Details</th>
                         <th className="p-4">Company</th>
@@ -1132,7 +1132,7 @@ export default function LeadReport() {
                         <th className="p-4 pr-6 text-right">Actions</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-850">
+                    <tbody className="divide-y divide-slate-100">
                       {paginatedLeads.map((lead) => (
                         <tr 
                           key={lead._id}
@@ -1140,39 +1140,39 @@ export default function LeadReport() {
                             setSelectedLead(lead);
                             setShowDrawer(true);
                           }}
-                          className="hover:bg-slate-800/40 cursor-pointer transition-colors duration-150"
+                          className="hover:bg-slate-50/80 cursor-pointer transition-colors duration-150"
                         >
                           {/* Lead ID */}
-                          <td className="p-4 pl-6 font-mono text-[10px] text-slate-400 font-bold">
+                          <td className="p-4 pl-6 font-mono text-[10px] text-slate-505 font-bold">
                             #{lead._id.toString().slice(-6).toUpperCase()}
                           </td>
                           {/* Contact Details */}
                           <td className="p-4">
                             <div>
-                              <p className="font-extrabold text-white text-sm hover:text-blue-400 transition-colors">{lead.name}</p>
-                              <div className="flex flex-col gap-0.5 mt-0.5 text-slate-500 font-medium">
+                              <p className="font-extrabold text-slate-800 text-sm hover:text-blue-600 transition-colors">{lead.name}</p>
+                              <div className="flex flex-col gap-0.5 mt-0.5 text-slate-450 font-medium font-sans">
                                 <span className="flex items-center gap-1"><Phone size={10} /> {lead.phone}</span>
                                 {lead.email && <span className="flex items-center gap-1"><Mail size={10} /> {lead.email}</span>}
                               </div>
                             </div>
                           </td>
                           {/* Company */}
-                          <td className="p-4 text-slate-300 font-semibold">{lead.companyName || 'N/A'}</td>
+                          <td className="p-4 text-slate-650 font-semibold">{lead.companyName || 'N/A'}</td>
                           {/* Lead Source */}
                           <td className="p-4">
-                            <span className="px-2.5 py-1 bg-slate-950/80 text-slate-400 rounded-md border border-slate-850 text-[10px] font-bold">
+                            <span className="px-2.5 py-1 bg-slate-50 text-slate-505 rounded-md border border-slate-100 text-[10px] font-bold">
                               {lead.leadSourceType || 'Manual Entry'}
                             </span>
                           </td>
                           {/* Assigned Agent */}
                           <td className="p-4">
                             <div>
-                              <p className="text-slate-300 font-bold">{lead.assignedAgentName || 'Unassigned'}</p>
-                              <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Agent</p>
+                              <p className="text-slate-700 font-bold">{lead.assignedAgentName || 'Unassigned'}</p>
+                              <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Agent</p>
                               {lead.assignedCounsellorName !== 'Unassigned' && (
                                 <>
-                                  <p className="text-slate-400 font-bold mt-1.5">{lead.assignedCounsellorName}</p>
-                                  <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Counsellor</p>
+                                  <p className="text-slate-655 font-bold mt-1.5">{lead.assignedCounsellorName}</p>
+                                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Counsellor</p>
                                 </>
                               )}
                             </div>
@@ -1180,10 +1180,10 @@ export default function LeadReport() {
                           {/* Status */}
                           <td className="p-4">
                             <span className={`inline-block px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border ${
-                              ['CLOSED_WON', 'ADMISSION'].includes(lead.status) ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                              ['CLOSED_LOST', 'CLOSED', 'CLOSE'].includes(lead.status) ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
-                              ['NEW', 'NEW LEAD'].includes(lead.status) ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                              'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                              ['CLOSED_WON', 'ADMISSION'].includes(lead.status) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                              ['CLOSED_LOST', 'CLOSED', 'CLOSE'].includes(lead.status) ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                              ['NEW', 'NEW LEAD'].includes(lead.status) ? 'bg-blue-50 text-blue-700 border-blue-200' :
+                              'bg-amber-50 text-amber-700 border-amber-200'
                             }`}>
                               {lead.status}
                             </span>
@@ -1191,15 +1191,15 @@ export default function LeadReport() {
                           {/* Heat Level */}
                           <td className="p-4">
                             <span className={`inline-block px-2.5 py-1 text-[9px] font-black uppercase rounded-lg border ${
-                              lead.heatLevel === 'Hot' ? 'bg-red-500/10 text-red-400 border-red-500/20 animate-pulse' :
-                              lead.heatLevel === 'Warm' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
-                              'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                              lead.heatLevel === 'Hot' ? 'bg-red-50 text-red-700 border-red-200' :
+                              lead.heatLevel === 'Warm' ? 'bg-orange-50 text-orange-700 border-orange-200' :
+                              'bg-blue-50 text-blue-700 border-blue-200'
                             }`}>
                               {lead.heatLevel || 'Cold'}
                             </span>
                           </td>
                           {/* Registered Date */}
-                          <td className="p-4 text-slate-400 font-bold">{formatDate(lead.createdAt)}</td>
+                          <td className="p-4 text-slate-500 font-bold">{formatDate(lead.createdAt)}</td>
                           {/* Action */}
                           <td className="p-4 pr-6 text-right">
                             <button 
@@ -1208,7 +1208,7 @@ export default function LeadReport() {
                                 setSelectedLead(lead);
                                 setShowDrawer(true);
                               }}
-                              className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-700 transition-colors"
+                              className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-600 rounded-xl text-[10px] font-black uppercase tracking-widest border border-slate-200 transition-colors"
                             >
                               Log View
                             </button>
@@ -1228,7 +1228,7 @@ export default function LeadReport() {
 
                 {/* Pagination Controls */}
                 {totalPages > 1 && (
-                  <div className="p-5 border-t border-slate-800/80 bg-slate-950/40 flex justify-between items-center">
+                  <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-between items-center">
                     <span className="text-xs text-slate-500 font-bold">
                       Showing {(currentPage - 1) * pageSize + 1} - {Math.min(currentPage * pageSize, leads.length)} of {leads.length} Records
                     </span>
@@ -1237,19 +1237,19 @@ export default function LeadReport() {
                       <button 
                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                         disabled={currentPage === 1}
-                        className="p-2 border border-slate-750 bg-slate-800 text-slate-300 disabled:text-slate-600 disabled:bg-slate-900 rounded-xl transition-colors cursor-pointer"
+                        className="p-2 border border-slate-200 bg-white text-slate-600 disabled:text-slate-400 disabled:bg-slate-50 rounded-xl transition-colors cursor-pointer"
                       >
                         <ChevronLeft size={16} />
                       </button>
                       
-                      <span className="text-xs font-bold text-white px-3">
+                      <span className="text-xs font-bold text-slate-700 px-3">
                         Page {currentPage} of {totalPages}
                       </span>
                       
                       <button 
                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         disabled={currentPage === totalPages}
-                        className="p-2 border border-slate-750 bg-slate-800 text-slate-300 disabled:text-slate-600 disabled:bg-slate-900 rounded-xl transition-colors cursor-pointer"
+                        className="p-2 border border-slate-200 bg-white text-slate-600 disabled:text-slate-400 disabled:bg-slate-50 rounded-xl transition-colors cursor-pointer"
                       >
                         <ChevronRight size={16} />
                       </button>
@@ -1269,10 +1269,10 @@ export default function LeadReport() {
             {/* Backdrop overlay */}
             <motion.div 
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.6 }}
+              animate={{ opacity: 0.4 }}
               exit={{ opacity: 0 }}
               onClick={() => setShowDrawer(false)}
-              className="fixed inset-0 bg-slate-950 z-[90] lg:block print:hidden"
+              className="fixed inset-0 bg-slate-900 z-[90] lg:block print:hidden"
             />
 
             {/* Slide out drawer panel */}
@@ -1281,29 +1281,29 @@ export default function LeadReport() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-              className="fixed top-0 right-0 h-screen w-full sm:w-[480px] bg-slate-950 border-l border-slate-850 z-[100] flex flex-col justify-between print:hidden"
+              className="fixed top-0 right-0 h-screen w-full sm:w-[480px] bg-white border-l border-slate-100 z-[100] flex flex-col justify-between print:hidden shadow-2xl"
             >
               {/* Header */}
-              <div className="p-6 bg-slate-900 border-b border-slate-800 flex justify-between items-start shrink-0">
+              <div className="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-start shrink-0">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded text-[9px] font-mono uppercase tracking-widest font-black">
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 border border-blue-100 rounded text-[9px] font-mono uppercase tracking-widest font-black">
                       Lead ID: #{selectedLead._id.toString().slice(-6).toUpperCase()}
                     </span>
                     <span className={`px-2 py-0.5 text-[9px] font-black uppercase rounded border ${
-                      ['CLOSED_WON', 'ADMISSION'].includes(selectedLead.status) ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
-                      ['CLOSED_LOST', 'CLOSED', 'CLOSE'].includes(selectedLead.status) ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
-                      'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                      ['CLOSED_WON', 'ADMISSION'].includes(selectedLead.status) ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                      ['CLOSED_LOST', 'CLOSED', 'CLOSE'].includes(selectedLead.status) ? 'bg-rose-50 text-rose-700 border-rose-200' :
+                      'bg-amber-50 text-amber-700 border-amber-200'
                     }`}>
                       {selectedLead.status}
                     </span>
                   </div>
-                  <h2 className="text-xl font-black text-white mt-2 leading-none">{selectedLead.name}</h2>
-                  <p className="text-xs text-slate-400 font-semibold mt-1.5">{selectedLead.companyName || 'No Company Recorded'}</p>
+                  <h2 className="text-xl font-black text-slate-800 mt-2 leading-none">{selectedLead.name}</h2>
+                  <p className="text-xs text-slate-500 font-semibold mt-1.5">{selectedLead.companyName || 'No Company Recorded'}</p>
                 </div>
                 <button 
                   onClick={() => setShowDrawer(false)}
-                  className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition-colors"
+                  className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 hover:text-slate-700 transition-colors"
                 >
                   <X size={18} />
                 </button>
@@ -1313,26 +1313,26 @@ export default function LeadReport() {
               <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
                 
                 {/* 1. Profile information summary */}
-                <div className="bg-slate-900/60 rounded-2xl border border-slate-850 p-4 space-y-3.5">
+                <div className="bg-slate-50 rounded-2xl border border-slate-100 p-4 space-y-3.5">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500 uppercase font-black tracking-wider text-[9px]">Mobile Phone</span>
-                    <span className="text-slate-200 font-bold">{selectedLead.phone}</span>
+                    <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Mobile Phone</span>
+                    <span className="text-slate-800 font-bold">{selectedLead.phone}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs border-t border-slate-850 pt-3">
-                    <span className="text-slate-500 uppercase font-black tracking-wider text-[9px]">Email Address</span>
-                    <span className="text-slate-200 font-bold truncate max-w-[200px]">{selectedLead.email || 'N/A'}</span>
+                  <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-3">
+                    <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Email Address</span>
+                    <span className="text-slate-800 font-bold truncate max-w-[200px]">{selectedLead.email || 'N/A'}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs border-t border-slate-850 pt-3">
-                    <span className="text-slate-500 uppercase font-black tracking-wider text-[9px]">Platform Source</span>
-                    <span className="text-slate-200 font-bold">{selectedLead.leadSourceType || 'Manual Entry'} ({selectedLead.leadSource || 'Manual'})</span>
+                  <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-3">
+                    <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Platform Source</span>
+                    <span className="text-slate-800 font-bold">{selectedLead.leadSourceType || 'Manual Entry'} ({selectedLead.leadSource || 'Manual'})</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs border-t border-slate-850 pt-3">
-                    <span className="text-slate-500 uppercase font-black tracking-wider text-[9px]">Created Date</span>
-                    <span className="text-slate-200 font-bold">{formatDateTime(selectedLead.createdAt)}</span>
+                  <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-3">
+                    <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Created Date</span>
+                    <span className="text-slate-800 font-bold">{formatDateTime(selectedLead.createdAt)}</span>
                   </div>
-                  <div className="flex justify-between items-center text-xs border-t border-slate-850 pt-3">
-                    <span className="text-slate-500 uppercase font-black tracking-wider text-[9px]">Assigned Agents</span>
-                    <span className="text-slate-200 font-bold">
+                  <div className="flex justify-between items-center text-xs border-t border-slate-100 pt-3">
+                    <span className="text-slate-400 uppercase font-black tracking-wider text-[9px]">Assigned Agents</span>
+                    <span className="text-slate-800 font-bold">
                       {selectedLead.assignedAgentName || 'Unassigned'}
                       {selectedLead.assignedCounsellorName !== 'Unassigned' && ` / ${selectedLead.assignedCounsellorName}`}
                     </span>
@@ -1341,28 +1341,28 @@ export default function LeadReport() {
 
                 {/* 2. Tasks / Follow-up list */}
                 <div>
-                  <h3 className="text-xs uppercase font-bold text-slate-300 tracking-wider mb-4 border-b border-slate-850 pb-2 flex items-center gap-1.5">
-                    <Clock size={12} className="text-blue-500" />
+                  <h3 className="text-xs uppercase font-bold text-slate-850 tracking-wider mb-4 border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                    <Clock size={12} className="text-blue-600" />
                     <span>Follow-up Logs & Schedule</span>
                   </h3>
                   <div className="space-y-3">
                     {selectedLead.tasks && selectedLead.tasks.length > 0 ? (
                       selectedLead.tasks.map((task, i) => (
-                        <div key={i} className="bg-slate-900/60 p-4 rounded-xl border border-slate-850 flex items-start justify-between">
+                        <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex items-start justify-between">
                           <div>
                             <span className={`inline-block px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-wider border mb-1.5 ${
-                              task.status === 'COMPLETED' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
+                              task.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-amber-50 text-amber-700 border-amber-200'
                             }`}>
                               {task.status}
                             </span>
-                            <h4 className="text-xs font-black text-white">{task.title || 'Follow-up Call'}</h4>
-                            {task.description && <p className="text-[10px] text-slate-400 font-medium mt-1 leading-relaxed">{task.description}</p>}
-                            {task.outcome && <p className="text-[10px] text-emerald-400 font-semibold mt-1">Remark: {task.outcome}</p>}
+                            <h4 className="text-xs font-black text-slate-800">{task.title || 'Follow-up Call'}</h4>
+                            {task.description && <p className="text-[10px] text-slate-550 font-medium mt-1 leading-relaxed">{task.description}</p>}
+                            {task.outcome && <p className="text-[10px] text-emerald-600 font-semibold mt-1">Remark: {task.outcome}</p>}
                           </div>
                           
-                          <span className="text-[9px] font-bold text-slate-500 flex flex-col items-end">
+                          <span className="text-[9px] font-bold text-slate-400 flex flex-col items-end">
                             <span>Due Date</span>
-                            <span className="text-slate-300 mt-1">{formatDate(task.dueDate)}</span>
+                            <span className="text-slate-600 mt-1">{formatDate(task.dueDate)}</span>
                           </span>
                         </div>
                       ))
@@ -1374,12 +1374,12 @@ export default function LeadReport() {
 
                 {/* 3. Event timeline log history */}
                 <div>
-                  <h3 className="text-xs uppercase font-bold text-slate-300 tracking-wider mb-4 border-b border-slate-850 pb-2 flex items-center gap-1.5">
-                    <TrendingUp size={12} className="text-blue-500" />
+                  <h3 className="text-xs uppercase font-bold text-slate-850 tracking-wider mb-4 border-b border-slate-100 pb-2 flex items-center gap-1.5">
+                    <TrendingUp size={12} className="text-blue-600" />
                     <span>Lead Activity Timeline</span>
                   </h3>
 
-                  <div className="relative border-l-2 border-slate-850 pl-5 ml-2.5 space-y-6 py-2">
+                  <div className="relative border-l-2 border-slate-150 pl-5 ml-2.5 space-y-6 py-2">
                     {selectedLead.timeline && selectedLead.timeline.length > 0 ? (
                       selectedLead.timeline.map((event, idx) => (
                         <div key={idx} className="relative">
@@ -1391,9 +1391,9 @@ export default function LeadReport() {
                             event.eventType === 'TASK_COMPLETED' ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-400 border-slate-400'
                           }`} />
                           
-                          <span className="text-[9px] font-bold text-slate-500">{formatDateTime(event.timestamp)}</span>
-                          <h4 className="text-xs font-black text-white mt-1 uppercase tracking-wider text-[10px]">{event.eventType?.replace(/_/g, ' ') || 'Lifecycle Step'}</h4>
-                          <p className="text-[10px] text-slate-400 font-semibold mt-1 leading-relaxed">{event.description}</p>
+                          <span className="text-[9px] font-bold text-slate-400">{formatDateTime(event.timestamp)}</span>
+                          <h4 className="text-xs font-black text-slate-800 mt-1 uppercase tracking-wider text-[10px]">{event.eventType?.replace(/_/g, ' ') || 'Lifecycle Step'}</h4>
+                          <p className="text-[10px] text-slate-550 font-semibold mt-1 leading-relaxed">{event.description}</p>
                         </div>
                       ))
                     ) : (
@@ -1405,10 +1405,10 @@ export default function LeadReport() {
               </div>
 
               {/* Footer */}
-              <div className="p-6 bg-slate-900 border-t border-slate-800 shrink-0">
+              <div className="p-6 bg-slate-50 border-t border-slate-100 shrink-0">
                 <button 
                   onClick={() => setShowDrawer(false)}
-                  className="w-full py-4 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-premium"
+                  className="w-full py-4 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm"
                 >
                   Close Lead Log
                 </button>
