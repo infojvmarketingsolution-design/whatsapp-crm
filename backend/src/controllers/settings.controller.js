@@ -64,6 +64,52 @@ exports.getSettings = async (req, res) => {
     if (!settings) {
        settings = new Settings({ tenantId });
        await settings.save();
+    } else {
+       let updated = false;
+       if (!settings.automation) {
+          settings.automation = { botEnabled: false, botMode: 'PRD', aiPrompts: {} };
+          updated = true;
+       }
+       if (!settings.automation.aiPrompts) {
+          settings.automation.aiPrompts = {};
+          updated = true;
+       }
+       if (!settings.automation.aiPrompts.qualificationOptions || settings.automation.aiPrompts.qualificationOptions.length === 0) {
+          settings.automation.aiPrompts.qualificationOptions = ['10th Pass', '12th Pass', 'Graduate', 'Working Professional'];
+          updated = true;
+       }
+       if (!settings.automation.aiPrompts.programMap || Object.keys(settings.automation.aiPrompts.programMap).length === 0) {
+          settings.automation.aiPrompts.programMap = {
+            '10th Pass': {
+              'Diploma Programs': ['IT Diploma', 'Mechanical Diploma', 'Civil Diploma']
+            },
+            '12th Pass': {
+              'Trending Programs': ['B.Sc Cyber Security', 'B.Sc AI & ML', 'B.Sc Animation', 'B.Sc Cloud Automation', 'B.Sc Software Development', 'B.Sc Blockchain Technology', 'B.Sc Data Analytics'],
+              'Traditional Programs': ['B.Com', 'B.Tech', 'BBA']
+            },
+            'Graduate': {
+              'Master Programs': ['MBA', 'MCA', 'M.Tech', 'M.Sc']
+            },
+            'Working Professional': {
+              'Executive Programs': ['Executive MBA', 'Certification Courses']
+            }
+          };
+          updated = true;
+       }
+       if (!settings.automation.aiPrompts.prdFlowSteps || settings.automation.aiPrompts.prdFlowSteps.length === 0) {
+          settings.automation.aiPrompts.prdFlowSteps = [
+            { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Greeting & Name Request', message: 'Welcome to Gandhinagar University 🎓\n\nWe’re excited to help you choose the right career path.\n\nMay I know your name?', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+            { id: 'qualification', type: 'QUALIFICATION', title: 'Qualification Request', message: 'Nice to meet you {{name}} 😊\n\nPlease select your qualification.' },
+            { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Please select your preferred program category.' },
+            { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: 'Excellent choice 🚀\n\nWhen should our counselor contact you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
+            { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counselor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' }
+          ];
+          updated = true;
+       }
+       if (updated) {
+          settings.markModified('automation');
+          await settings.save();
+       }
     }
 
     res.json(settings);
