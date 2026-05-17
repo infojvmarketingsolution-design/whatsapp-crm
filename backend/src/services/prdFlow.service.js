@@ -78,7 +78,10 @@ class PRDFlowService {
 
       const settings = await Settings.findOne({ tenantId });
       const aiPrompts = settings?.automation?.aiPrompts || {};
-      const greetingImage = aiPrompts.greetingImage || 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg';
+      let greetingImage = aiPrompts.greetingImage || '';
+      if (!greetingImage || greetingImage.includes('tenant_demo_001') || greetingImage.includes('prompt_1774743344804')) {
+        greetingImage = 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80';
+      }
 
       const saveAndEmit = async (type, payload, waResult) => {
         const msgId = waResult?.messages?.[0]?.id || `out_${Date.now()}`;
