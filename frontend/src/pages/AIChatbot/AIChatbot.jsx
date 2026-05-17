@@ -299,6 +299,95 @@ export default function AIChatbot() {
                       onChange={(e) => updateStep(step.id, 'message', e.target.value)}
                       placeholder="Type message..."
                     />
+
+                    {/* 🖼️ PREMIUM IMAGE BANNER UPLOADER & PREVIEW */}
+                    {(step.type === 'GREETING' || step.type === 'SUCCESS_PROOF') && (
+                      <div className="mt-4 p-4 bg-slate-50 border border-slate-200/60 rounded-2xl animate-fade-in">
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Greeting / Proof Image Banner</label>
+                        
+                        <div className="flex flex-col sm:flex-row gap-4 items-center">
+                          {/* Image Thumbnail Preview */}
+                          <div className="w-full sm:w-36 h-24 bg-white border border-slate-200 rounded-xl overflow-hidden flex items-center justify-center relative group shadow-inner">
+                            {step.image ? (
+                              <>
+                                <img src={step.image} alt="Banner Preview" className="w-full h-full object-cover" />
+                                <button 
+                                  onClick={() => updateStep(step.id, 'image', '')}
+                                  className="absolute top-1.5 right-1.5 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 shadow"
+                                >
+                                  <X size={10} />
+                                </button>
+                              </>
+                            ) : (
+                              <div className="text-center p-2 text-slate-300">
+                                <ImageIcon size={24} className="mx-auto mb-1 text-slate-300/70" />
+                                <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400 block">No Banner</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Image Actions */}
+                          <div className="flex-1 w-full space-y-2">
+                            <div className="flex flex-col sm:flex-row gap-2">
+                              {/* Custom File Upload Label */}
+                              <label className="flex-shrink-0 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest text-center cursor-pointer shadow-sm transition-all flex items-center justify-center gap-1.5">
+                                <Upload size={12} />
+                                <span>Upload Image</span>
+                                <input 
+                                  type="file" 
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={async (e) => {
+                                    const file = e.target.files[0];
+                                    if (!file) return;
+                                    
+                                    const formData = new FormData();
+                                    formData.append('image', file);
+                                    
+                                    const token = localStorage.getItem('token');
+                                    const tenantId = localStorage.getItem('tenantId');
+                                    
+                                    const uploadToast = toast.loading('Uploading banner...');
+                                    try {
+                                      const res = await fetch('/api/settings/upload-image', {
+                                        method: 'POST',
+                                        headers: {
+                                          'Authorization': `Bearer ${token}`,
+                                          'x-tenant-id': tenantId
+                                        },
+                                        body: formData
+                                      });
+                                      
+                                      toast.dismiss(uploadToast);
+                                      if (res.ok) {
+                                        const data = await res.json();
+                                        updateStep(step.id, 'image', data.url);
+                                        toast.success('Banner uploaded successfully!');
+                                      } else {
+                                        toast.error('Failed to upload image banner');
+                                      }
+                                    } catch (err) {
+                                      toast.dismiss(uploadToast);
+                                      toast.error('Error uploading image');
+                                    }
+                                  }}
+                                />
+                              </label>
+
+                              {/* Paste URL Input */}
+                              <input 
+                                type="text"
+                                className="flex-1 bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs outline-none focus:ring-1 focus:ring-blue-500 font-medium text-slate-700"
+                                placeholder="Or paste image URL here..."
+                                value={step.image || ''}
+                                onChange={(e) => updateStep(step.id, 'image', e.target.value)}
+                              />
+                            </div>
+                            <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">Recommended: PNG/JPG ratios (16:9 or 4:3) under 2MB for optimal WhatsApp delivery.</p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
