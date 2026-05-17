@@ -400,8 +400,20 @@ class PRDFlowService {
           selectedOption = options.find(o => o.toLowerCase().includes('other')) || options[0] || '12th Pass';
         }
 
-        const is12th = selectedOption.toLowerCase().includes('12') || selectedOption.toLowerCase().includes('twelfth') || selectedOption.toLowerCase().includes('10') || selectedOption.toLowerCase().includes('tenth');
-        const isGrad = selectedOption.toLowerCase().includes('grad') || selectedOption.toLowerCase().includes('bachelor') || selectedOption.toLowerCase().includes('master') || selectedOption.toLowerCase().includes('degree') || selectedOption.toLowerCase().includes('postgrad');
+        const programMap = settings?.automation?.aiPrompts?.programMap || {};
+        const matchedQualKey = Object.keys(programMap).find(k => k.toLowerCase().trim() === selectedOption.toLowerCase().trim()) || 
+                               Object.keys(programMap).find(k => {
+                                 const cleanK = k.toLowerCase().trim();
+                                 const cleanSel = selectedOption.toLowerCase().trim();
+                                 return cleanK.includes(cleanSel) || cleanSel.includes(cleanK) ||
+                                        (cleanSel.includes('grad') && cleanK.includes('grad')) ||
+                                        (cleanSel.includes('12') && cleanK.includes('12')) ||
+                                        (cleanSel.includes('working') && cleanK.includes('working')) ||
+                                        (cleanSel.includes('professional') && cleanK.includes('professional'));
+                               });
+
+        const is12th = selectedOption.toLowerCase().includes('12') || selectedOption.toLowerCase().includes('twelfth') || selectedOption.toLowerCase().includes('10') || selectedOption.toLowerCase().includes('tenth') || (matchedQualKey && matchedQualKey.toLowerCase().includes('12'));
+        const isGrad = selectedOption.toLowerCase().includes('grad') || selectedOption.toLowerCase().includes('bachelor') || selectedOption.toLowerCase().includes('master') || selectedOption.toLowerCase().includes('degree') || selectedOption.toLowerCase().includes('postgrad') || (matchedQualKey && (matchedQualKey.toLowerCase().includes('grad') || matchedQualKey.toLowerCase().includes('working') || matchedQualKey.toLowerCase().includes('professional')));
 
         if (is12th) {
           await ContactModel.updateOne({ phone: contact.phone }, {
@@ -412,8 +424,11 @@ class PRDFlowService {
             }
           });
 
+          const finalQualKey = matchedQualKey || '12th Pass';
+          const categories = programMap[finalQualKey] ? Object.keys(programMap[finalQualKey]) : ['Traditional Program', 'Trending Program'];
+
           const catMsg = "Please select program category.";
-          await sendInteractiveOptions(catMsg, ['Traditional Program', 'Trending Program']);
+          await sendInteractiveOptions(catMsg, categories);
         }
         else if (isGrad) {
           await ContactModel.updateOne({ phone: contact.phone }, {
@@ -424,8 +439,11 @@ class PRDFlowService {
             }
           });
 
+          const finalQualKey = matchedQualKey || 'Graduate';
+          const categories = programMap[finalQualKey] ? Object.keys(programMap[finalQualKey]) : ['Master Traditional Program', 'Master Trending Program'];
+
           const catMsg = "Please select program category.";
-          await sendInteractiveOptions(catMsg, ['Master Traditional Program', 'Master Trending Program']);
+          await sendInteractiveOptions(catMsg, categories);
         }
         else {
           await ContactModel.updateOne({ phone: contact.phone }, {
@@ -520,61 +538,51 @@ class PRDFlowService {
           }
         }
 
-        const isTraditional = selectedCategory ? selectedCategory.toLowerCase().includes('trad') : (normalizedInput.includes('traditional') || normalizedReply === 'btn_0' || normalizedReply.includes('traditional'));
-        const isTrending = selectedCategory ? selectedCategory.toLowerCase().includes('trend') : (normalizedInput.includes('trending') || normalizedReply === 'btn_1' || normalizedReply.includes('trending'));
-
-        if (isTraditional) {
-          const streamName = selectedCategory || 'Traditional Program';
-          await ContactModel.updateOne({ phone: contact.phone }, {
-            $set: {
-              selectedStream: streamName,
-              'flowVariables.selectedStream': streamName,
-              currentFlowStep: 'ask_program_traditional_12th'
-            }
-          });
-
-          let programs = programMap[matchedQualKey]?.[streamName] || ['B.Com', 'BBA', 'B.Tech', 'B.Sc', 'Other'];
-          if (!programs || programs.length === 0) {
-            programs = ['B.Com', 'BBA', 'B.Tech', 'B.Sc', 'Other'];
+        // Fallbacks for traditional/trending button/text if categories contain traditional/trending
+        if (!selectedCategory) {
+          const isTraditional = normalizedInput.includes('traditional') || normalizedReply === 'btn_0' || normalizedReply.includes('traditional');
+          const isTrending = normalizedInput.includes('trending') || normalizedReply === 'btn_1' || normalizedReply.includes('trending');
+          if (isTraditional) {
+            selectedCategory = categories.find(c => c.toLowerCase().includes('trad')) || categories[0];
+          } else if (isTrending) {
+            selectedCategory = categories.find(c => c.toLowerCase().includes('trend')) || categories[0] || categories[1];
           }
-
-          const progMsg = "Please select your preferred program.";
-          await sendInteractiveOptions(progMsg, programs);
         }
-        else if (isTrending) {
-          const streamName = selectedCategory || 'Trending Program';
+
+        // Ultimate default to first category if only 1 category exists
+        if (!selectedCategory && categories.length === 1) {
+          selectedCategory = categories[0];
+        }
+
+        if (selectedCategory) {
+          const streamName = selectedCategory;
+          const isTrending = streamName.toLowerCase().includes('trend');
+
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               selectedStream: streamName,
               'flowVariables.selectedStream': streamName,
-              currentFlowStep: 'ask_program_trending_12th'
+              currentFlowStep: isTrending ? 'ask_program_trending_12th' : 'ask_program_traditional_12th'
             }
           });
 
-          let programs = programMap[matchedQualKey]?.[streamName] || [
-            'B.Sc IT in Cyber Security & Digital Forensics',
-            'B.Sc IT in Cloud Automation',
-            'B.Sc IT in Data Analytics',
-            'B.Sc IT in Animation, VFX & Game Design',
-            'B.Sc IT in Blockchain Technology',
-            'B.Sc IT in Software & Mobile App Development'
-          ];
+          let programs = programMap[matchedQualKey]?.[streamName] || [];
           if (!programs || programs.length === 0) {
-            programs = [
+            programs = isTrending ? [
               'B.Sc IT in Cyber Security & Digital Forensics',
               'B.Sc IT in Cloud Automation',
               'B.Sc IT in Data Analytics',
               'B.Sc IT in Animation, VFX & Game Design',
               'B.Sc IT in Blockchain Technology',
               'B.Sc IT in Software & Mobile App Development'
-            ];
+            ] : ['B.Com', 'BBA', 'B.Tech', 'B.Sc', 'Other'];
           }
 
           const progMsg = "Please select your preferred program.";
           await sendInteractiveOptions(progMsg, programs);
         }
         else {
-          const errMsg = "Invalid option. Please select program category:";
+          const errMsg = "Please select program category:";
           await sendInteractiveOptions(errMsg, categories);
         }
 
@@ -610,61 +618,51 @@ class PRDFlowService {
           }
         }
 
-        const isTraditional = selectedCategory ? selectedCategory.toLowerCase().includes('trad') : (normalizedInput.includes('traditional') || normalizedReply === 'btn_0' || normalizedReply.includes('traditional'));
-        const isTrending = selectedCategory ? selectedCategory.toLowerCase().includes('trend') : (normalizedInput.includes('trending') || normalizedReply === 'btn_1' || normalizedReply.includes('trending'));
-
-        if (isTraditional) {
-          const streamName = selectedCategory || 'Master Traditional Program';
-          await ContactModel.updateOne({ phone: contact.phone }, {
-            $set: {
-              selectedStream: streamName,
-              'flowVariables.selectedStream': streamName,
-              currentFlowStep: 'ask_program_traditional_grad'
-            }
-          });
-
-          let programs = programMap[matchedQualKey]?.[streamName] || ['M.Com', 'MBA', 'M.Tech', 'M.Sc', 'Other'];
-          if (!programs || programs.length === 0) {
-            programs = ['M.Com', 'MBA', 'M.Tech', 'M.Sc', 'Other'];
+        // Fallbacks for traditional/trending button/text if categories contain traditional/trending
+        if (!selectedCategory) {
+          const isTraditional = normalizedInput.includes('traditional') || normalizedReply === 'btn_0' || normalizedReply.includes('traditional');
+          const isTrending = normalizedInput.includes('trending') || normalizedReply === 'btn_1' || normalizedReply.includes('trending');
+          if (isTraditional) {
+            selectedCategory = categories.find(c => c.toLowerCase().includes('trad')) || categories[0];
+          } else if (isTrending) {
+            selectedCategory = categories.find(c => c.toLowerCase().includes('trend')) || categories[0] || categories[1];
           }
-
-          const progMsg = "Please select your preferred master program.";
-          await sendInteractiveOptions(progMsg, programs);
         }
-        else if (isTrending) {
-          const streamName = selectedCategory || 'Master Trending Program';
+
+        // Ultimate default to first category if only 1 category exists
+        if (!selectedCategory && categories.length === 1) {
+          selectedCategory = categories[0];
+        }
+
+        if (selectedCategory) {
+          const streamName = selectedCategory;
+          const isTrending = streamName.toLowerCase().includes('trend');
+
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               selectedStream: streamName,
               'flowVariables.selectedStream': streamName,
-              currentFlowStep: 'ask_program_trending_grad'
+              currentFlowStep: isTrending ? 'ask_program_trending_grad' : 'ask_program_traditional_grad'
             }
           });
 
-          let programs = programMap[matchedQualKey]?.[streamName] || [
-            'M.Sc IT in Cyber Security & Digital Forensics',
-            'M.Sc IT in Cloud Automation',
-            'M.Sc IT in Data Analytics',
-            'M.Sc IT in Animation, VFX & Game Design',
-            'M.Sc IT in Blockchain Technology',
-            'M.Sc IT in Software & Mobile App Development'
-          ];
+          let programs = programMap[matchedQualKey]?.[streamName] || [];
           if (!programs || programs.length === 0) {
-            programs = [
+            programs = isTrending ? [
               'M.Sc IT in Cyber Security & Digital Forensics',
               'M.Sc IT in Cloud Automation',
               'M.Sc IT in Data Analytics',
               'M.Sc IT in Animation, VFX & Game Design',
               'M.Sc IT in Blockchain Technology',
               'M.Sc IT in Software & Mobile App Development'
-            ];
+            ] : ['M.Com', 'MBA', 'M.Tech', 'M.Sc', 'Other'];
           }
 
           const progMsg = "Please select your preferred master program.";
           await sendInteractiveOptions(progMsg, programs);
         }
         else {
-          const errMsg = "Invalid option. Please select program category:";
+          const errMsg = "Please select program category:";
           await sendInteractiveOptions(errMsg, categories);
         }
 
