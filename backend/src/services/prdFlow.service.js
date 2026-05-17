@@ -192,6 +192,43 @@ class PRDFlowService {
           resGreeting = await waService.sendTextMessage(contact.phone, welcomeMsg);
           await saveAndEmit('text', welcomeMsg, resGreeting);
         }
+
+        // Send premium real WhatsApp interactive buttons (URL and Call buttons) immediately after the greeting card
+        if (greetingStep?.buttons && greetingStep.buttons.length > 0) {
+          for (const btn of greetingStep.buttons) {
+            try {
+              if (btn.type === 'url') {
+                let url = (btn.label || '').trim();
+                if (url && !url.startsWith('http')) {
+                  url = `https://${url}`;
+                }
+                const resCta = await waService.sendCtaMessage(contact.phone, {
+                  type: 'url',
+                  body: `Official Website:`,
+                  title: 'Open Website',
+                  value: url
+                });
+                await saveAndEmit('interactive', 'Open Website', resCta);
+              } else if (btn.type === 'call') {
+                const resCta = await waService.sendCtaMessage(contact.phone, {
+                  type: 'call',
+                  body: `Hotline Support:`,
+                  title: 'Call Counselor',
+                  value: btn.label
+                });
+                await saveAndEmit('interactive', 'Call Counselor', resCta);
+              } else if (btn.type === 'reply') {
+                const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
+                  body: `Selected Option:`,
+                  buttons: [btn.label]
+                });
+                await saveAndEmit('interactive', btn.label, resBtn);
+              }
+            } catch (btnErr) {
+              console.error('[PRD] Failed to send real interactive button:', btnErr.message);
+            }
+          }
+        }
         
         this.activeProcesses.delete(lockKey);
         return;
