@@ -422,7 +422,9 @@ class PRDFlowService {
                 currentFlowStep: 'ask_program_category'
               }
             });
-            const catMsg = "Please select program category.";
+            const progStep = steps.find(s => s.type === 'PROGRAM_SELECTION');
+            let catMsg = progStep?.categoryMessage || progStep?.message || progStep?.text || "Please select program category.";
+            catMsg = this.populatePlaceholders(catMsg, contact, contact.flowVariables?.name || contact.name || 'Student');
             await sendInteractiveOptions(catMsg, categories);
           } else {
              // No categories, ask custom
@@ -526,7 +528,9 @@ class PRDFlowService {
           const progMsg = "Please select your preferred program.";
           await sendInteractiveOptions(progMsg, programs);
         } else {
-          const errMsg = "Please select program category:";
+          const progStep = steps.find(s => s.type === 'PROGRAM_SELECTION');
+          let errMsg = progStep?.categoryMessage || progStep?.message || progStep?.text || "Please select program category:";
+          errMsg = this.populatePlaceholders(errMsg, contact, contact.flowVariables?.name || contact.name || 'Student');
           await sendInteractiveOptions(errMsg, categories.length ? categories : ['Traditional', 'Trending']);
         }
 
