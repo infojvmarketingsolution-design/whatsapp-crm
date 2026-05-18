@@ -28,8 +28,14 @@ class PRDFlowService {
 
   makeAbsolute(url) {
     if (!url || typeof url !== 'string' || url.trim() === '') return '';
-    if (url.startsWith('http') || /^\d+$/.test(url)) return url;
-    const baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').replace(/\/$/, '');
+    if (url.startsWith('http') || /^\d+$/.test(url)) {
+      if (url.includes('localhost') || url.includes('127.0.0.1') || url.includes('wapipulse.com')) return '';
+      return url;
+    }
+    const baseUrl = (process.env.BASE_URL || '').replace(/\/$/, '');
+    if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1') || baseUrl.includes('wapipulse.com')) {
+      return '';
+    }
     return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
   }
 
@@ -227,13 +233,12 @@ class PRDFlowService {
                 });
                 await saveAndEmit('interactive', 'Open Website', resCta);
               } else if (btn.type === 'call') {
-                const resCta = await waService.sendCtaMessage(contact.phone, {
-                  type: 'call',
-                  body: `Hotline Support:`,
-                  title: 'Call Counselor',
-                  value: btn.label
+                // Meta Cloud API doesn't support cta_call in free-form messages. Send as a standard reply button!
+                const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
+                  body: `Hotline Support:\n📞 ${btn.label}`,
+                  buttons: ['Call Counselor']
                 });
-                await saveAndEmit('interactive', 'Call Counselor', resCta);
+                await saveAndEmit('interactive', 'Call Counselor', resBtn);
               } else if (btn.type === 'reply') {
                 const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
                   body: `Selected Option:`,
@@ -1091,7 +1096,7 @@ class PRDFlowService {
         const callTimeMsg = "What would be the best time for our counsellor to call you?";
         await this.sendInteractiveOptionsHelper(contact, waService, callTimeMsg, [
           'Immediate', 'Within 2 hours', 'Morning (9am - 12pm)', 'Afternoon (12pm - 4pm)', 'Evening (4pm - 7pm)'
-        ]);
+        ], settings, io);
         return;
       }
       
@@ -1103,7 +1108,7 @@ class PRDFlowService {
       const prog = fresh.flowVariables?.program || fresh.selectedProgram || '';
       const timeVal = fresh.flowVariables?.time || fresh.preferredCallTime || '';
       const summaryMsg = `Please confirm your details:\n\nName: ${name}\nQualification: ${qual}\nProgram: ${prog}\nPreferred Call Time: ${timeVal}\n\nIs this correct?`;
-      await this.sendInteractiveOptionsHelper(contact, waService, summaryMsg, ['Yes', 'Edit']);
+      await this.sendInteractiveOptionsHelper(contact, waService, summaryMsg, ['Yes', 'Edit'], settings, io);
       return;
     }
 
@@ -1115,7 +1120,7 @@ class PRDFlowService {
       const buttons = (nextStep.buttons && nextStep.buttons.length > 0) ? nextStep.buttons : [
         'Immediate', 'Within 2 hours', 'Morning (9am - 12pm)', 'Afternoon (12pm - 4pm)', 'Evening (4pm - 7pm)'
       ];
-      await this.sendInteractiveOptionsHelper(contact, waService, callTimeMsg, buttons);
+      await this.sendInteractiveOptionsHelper(contact, waService, callTimeMsg, buttons, settings, io);
     }
     else if (nextStep.type === 'CUSTOM_MESSAGE' || nextStep.type === 'SUCCESS_PROOF') {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: nextStep.id } });
@@ -1164,9 +1169,9 @@ class PRDFlowService {
       // If the custom step has interactive buttons, send them! Otherwise send a "Continue" button or wait for any text reply
       if (nextStep.buttons && nextStep.buttons.length > 0) {
         const buttonLabels = nextStep.buttons.map(b => typeof b === 'string' ? b : b.label);
-        await this.sendInteractiveOptionsHelper(contact, waService, "Please select an option:", buttonLabels);
+        await this.sendInteractiveOptionsHelper(contact, waService, "Please select an option:", buttonLabels, settings, io);
       } else {
-        await this.sendInteractiveOptionsHelper(contact, waService, "Press below to proceed:", ["Continue ➡️"]);
+        await this.sendInteractiveOptionsHelper(contact, waService, "Press below to proceed:", ["Continue ➡️"], settings, io);
       }
     }
     else if (nextStep.type === 'QUALIFICATION') {
@@ -1174,7 +1179,7 @@ class PRDFlowService {
       let qualMsg = nextStep.message || nextStep.text || `Please select your qualification.`;
       qualMsg = this.populatePlaceholders(qualMsg, contact, nameVal);
       let options = settings?.automation?.aiPrompts?.qualificationOptions || ['12th Pass', 'Graduation', 'Other'];
-      await this.sendInteractiveOptionsHelper(contact, waService, qualMsg, options);
+      await this.sendInteractiveOptionsHelper(contact, waService, qualMsg, options, settings, io);
     }
     else if (nextStep.type === 'PROGRAM_SELECTION') {
       const fresh = await ContactModel.findOne({ phone: contact.phone });
@@ -1185,20 +1190,41 @@ class PRDFlowService {
       });
       let catMsg = nextStep.message || nextStep.text || "Please select program category.";
       catMsg = this.populatePlaceholders(catMsg, fresh, nameVal);
-      await this.sendInteractiveOptionsHelper(contact, waService, catMsg, isGrad ? ['Master Traditional Program', 'Master Trending Program'] : ['Traditional Program', 'Trending Program']);
+      await this.sendInteractiveOptionsHelper(contact, waService, catMsg, isGrad ? ['Master Traditional Program', 'Master Trending Program'] : ['Traditional Program', 'Trending Program'], settings, io);
     }
     else {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_additional_help' } });
       const thankYouMsg = `Thank you ${nameVal} 😊\n\nYour request has been submitted. Our counselor will contact you.`;
-      await waService.sendTextMessage(contact.phone, thankYouMsg);
+      const resTy = await waService.sendTextMessage(contact.phone, thankYouMsg);
+      if (settings?.tenantId) {
+        try {
+          const { getTenantConnection } = require('../config/db');
+          const MessageSchema = require('../models/tenant/Message');
+          const tenantDb = getTenantConnection(settings.tenantId);
+          const MessageModel = tenantDb.model('Message', MessageSchema);
+          const msgId = resTy?.messages?.[0]?.id || resTy?.messageId || `out_${Date.now()}`;
+          const msgDoc = await MessageModel.create({
+            contactId: contact._id,
+            messageId: msgId,
+            direction: 'OUTBOUND',
+            type: 'text',
+            content: thankYouMsg,
+            status: 'SENT'
+          });
+          if (io) io.to(settings.tenantId).emit('new_message', { ...msgDoc._doc, contact });
+        } catch (err) {
+          console.error('[PRD ThankYou] Save/Emit failed:', err.message);
+        }
+      }
     }
   }
 
-  async sendInteractiveOptionsHelper(contact, waService, body, options) {
+  async sendInteractiveOptionsHelper(contact, waService, body, options, settings = null, io = null) {
+    let res;
     if (options.length <= 3) {
-      await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: options });
+      res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: options });
     } else {
-      await waService.sendListMessage(contact.phone, {
+      res = await waService.sendListMessage(contact.phone, {
         body,
         buttonText: 'View Options',
         sections: [{
@@ -1207,6 +1233,30 @@ class PRDFlowService {
         }]
       });
     }
+
+    if (settings?.tenantId) {
+      try {
+        const { getTenantConnection } = require('../config/db');
+        const MessageSchema = require('../models/tenant/Message');
+        const tenantDb = getTenantConnection(settings.tenantId);
+        const MessageModel = tenantDb.model('Message', MessageSchema);
+        const msgId = res?.messages?.[0]?.id || res?.messageId || `out_${Date.now()}`;
+        const msgDoc = await MessageModel.create({
+          contactId: contact._id,
+          messageId: msgId,
+          direction: 'OUTBOUND',
+          type: 'interactive',
+          content: body,
+          status: 'SENT'
+        });
+        if (io) {
+          io.to(settings.tenantId).emit('new_message', { ...msgDoc._doc, contact });
+        }
+      } catch (err) {
+        console.error('[PRD Helper] Save/Emit failed:', err.message);
+      }
+    }
+    return res;
   }
 
   async updateLeadScore(Contact, Message, contactId, io, tenantId) {
