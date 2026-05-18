@@ -32,6 +32,7 @@ export default function Contacts({ roleAccess }) {
   const userRole = (user?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
   const roleData = roleAccess?.[userRole];
   const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'OWNER', 'MANAGER_COUNSELLOUR'].includes(userRole);
+  const isAdmin = ['ADMIN', 'SUPER_ADMIN', 'OWNER', 'BUSINESS_HEAD'].includes(userRole);
 
 
   const rolePermissions = roleData?.permissions || [];
@@ -825,6 +826,7 @@ export default function Contacts({ roleAccess }) {
                                                <Clock size={14} className="text-slate-500" />
                                                <span>Archive Selected</span>
                                            </button>
+                                           {isAdmin && (
                                            <button 
                                                onClick={() => { if(window.confirm('Delete selected leads permanently?')) handleBulkAction('delete', ''); }}
                                                className="w-full p-3 rounded-xl hover:bg-red-500/20 text-red-400 text-xs font-bold transition-all flex items-center space-x-3"
@@ -832,6 +834,7 @@ export default function Contacts({ roleAccess }) {
                                                <Trash2 size={14} />
                                                <span>Delete Permanently</span>
                                            </button>
+                                           )}
                                        </div>
                                    </div>
                                )}
