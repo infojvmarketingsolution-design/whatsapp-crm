@@ -420,7 +420,7 @@ class PRDFlowService {
         });
 
         // Trigger dynamic transition to next step after NAME_CAPTURE
-        await this.transitionToNextStepAfter('NAME_CAPTURE', contact, ContactModel, prdFlowSteps, settings, waService, extractedName, io);
+        await this.transitionToNextStepAfter('ask_name', contact, ContactModel, prdFlowSteps, settings, waService, extractedName, io);
         
         this.activeProcesses.delete(lockKey);
         return;
