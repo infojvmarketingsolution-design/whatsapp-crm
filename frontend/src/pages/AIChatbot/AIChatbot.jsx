@@ -603,18 +603,26 @@ export default function AIChatbot() {
                              <option value="handoff">Handoff</option>
                           </select>
                            {(btn.type === 'url' || btn.type === 'call') ? (
-                             <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                             <div className="flex-1 flex flex-col gap-1">
+                               <div className="flex flex-col sm:flex-row gap-2">
+                                 <input 
+                                   className="flex-1 text-xs font-bold text-slate-700 outline-none border-b border-slate-200 focus:border-blue-500 py-1"
+                                   placeholder={btn.type === 'url' ? "Button Label (e.g., Learn More)" : "Button Label (e.g., Call Us)"}
+                                   value={btn.label || ''}
+                                   onChange={(e) => updateStepButton(step.id, bIdx, 'label', e.target.value)}
+                                 />
+                                 <input 
+                                   className="flex-1 text-xs text-slate-500 outline-none border-b border-slate-200 focus:border-blue-500 py-1 font-mono"
+                                   placeholder={btn.type === 'url' ? "Website URL (e.g., https://...)" : "Phone Number (e.g., +91...)"}
+                                   value={btn.value || ''}
+                                   onChange={(e) => updateStepButton(step.id, bIdx, 'value', e.target.value)}
+                                 />
+                               </div>
                                <input 
-                                 className="flex-1 text-xs font-bold text-slate-700 outline-none border-b border-slate-200 focus:border-blue-500 py-1"
-                                 placeholder={btn.type === 'url' ? "Button Label (e.g., Learn More)" : "Button Label (e.g., Call Us)"}
-                                 value={btn.label || ''}
-                                 onChange={(e) => updateStepButton(step.id, bIdx, 'label', e.target.value)}
-                               />
-                               <input 
-                                 className="flex-1 text-xs text-slate-500 outline-none border-b border-slate-200 focus:border-blue-500 py-1 font-mono"
-                                 placeholder={btn.type === 'url' ? "Website URL (e.g., https://...)" : "Phone Number (e.g., +91...)"}
-                                 value={btn.value || ''}
-                                 onChange={(e) => updateStepButton(step.id, bIdx, 'value', e.target.value)}
+                                 className="text-[10px] text-slate-400 outline-none border-b border-transparent focus:border-blue-400 py-0.5 italic"
+                                 placeholder={btn.type === 'url' ? "Custom Header Text (e.g., Official Website:)" : "Custom Header Text (e.g., Hotline Support:)"}
+                                 value={btn.text || ''}
+                                 onChange={(e) => updateStepButton(step.id, bIdx, 'text', e.target.value)}
                                />
                              </div>
                            ) : (

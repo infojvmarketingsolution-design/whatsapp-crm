@@ -250,9 +250,10 @@ class PRDFlowService {
                 if (url && !url.startsWith('http')) {
                   url = `https://${url}`;
                 }
+                let bodyText = (btn.text || 'Official Website:').trim();
                 const resCta = await waService.sendCtaMessage(contact.phone, {
                   type: 'url',
-                  body: `Official Website:`,
+                  body: bodyText,
                   title: title,
                   value: url
                 });
@@ -272,8 +273,9 @@ class PRDFlowService {
                 }
                 
                 let title = label || 'Call Counselor';
+                let bodyText = (btn.text || 'Hotline Support:').trim();
                 const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
-                  body: `Hotline Support:\n📞 ${phone}`,
+                  body: `${bodyText}\n📞 ${phone}`,
                   buttons: [title.substring(0, 20)]
                 });
                 await saveAndEmit('interactive', title, resBtn);
