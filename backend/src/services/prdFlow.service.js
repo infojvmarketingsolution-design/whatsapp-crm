@@ -54,7 +54,10 @@ class PRDFlowService {
   makeAbsolute(url) {
     if (!url || typeof url !== 'string' || url.trim() === '') return '';
     if (url.toLowerCase().endsWith('.webp') || url.toLowerCase().includes('.webp')) {
-      return ''; // Meta Cloud API doesn't support WebP. Fallback to text.
+      // Meta Cloud API doesn't support WebP. Proxy and convert to standard JPG on the fly!
+      if (url.startsWith('http')) {
+        return `https://wsrv.nl/?url=${encodeURIComponent(url)}&output=jpg&q=90`;
+      }
     }
     if (url.startsWith('http') || /^\d+$/.test(url)) {
       if (url.includes('localhost') || url.includes('127.0.0.1')) return '';
