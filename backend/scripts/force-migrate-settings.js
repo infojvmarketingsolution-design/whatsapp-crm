@@ -39,6 +39,16 @@ async function forceUpdate() {
         if (!doc.automation.aiPrompts) doc.automation.aiPrompts = {};
         
         doc.automation.aiPrompts.qualificationOptions = ['12th Pass', 'Graduation', 'Other'];
+        
+        // Ensure PROGRAM_SELECTION step has a categoryMessage field
+        if (doc.automation.aiPrompts.prdFlowSteps) {
+           doc.automation.aiPrompts.prdFlowSteps = doc.automation.aiPrompts.prdFlowSteps.map(s => {
+              if (s.type === 'PROGRAM_SELECTION' && !s.categoryMessage) {
+                 return { ...s, categoryMessage: 'Please select program category.' };
+              }
+              return s;
+           });
+        }
         doc.automation.aiPrompts.programMap = DEFAULT_PROGRAM_MAP;
         
         doc.markModified('automation');

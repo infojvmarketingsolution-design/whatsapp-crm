@@ -437,6 +437,20 @@ export default function AIChatbot() {
                       placeholder="Type message..."
                     />
 
+                    {step.type === 'PROGRAM_SELECTION' && (
+                      <div className="mt-4 animate-fade-in">
+                        <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-2">Category Selection Message</label>
+                        <p className="text-[10px] text-slate-400 mb-2 font-bold uppercase tracking-wider">This question will be shown above the interactive category buttons (e.g. Master Traditional / Master Trending):</p>
+                        <input 
+                          type="text"
+                          className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                          value={step.categoryMessage || ''}
+                          onChange={(e) => updateStep(step.id, 'categoryMessage', e.target.value)}
+                          placeholder="Please select program category."
+                        />
+                      </div>
+                    )}
+
                     {/* 🖼️ PREMIUM IMAGE BANNER UPLOADER & PREVIEW */}
                     {(step.type === 'GREETING' || step.type === 'SUCCESS_PROOF') && (
                       <div className="mt-4 p-4 bg-slate-50 border border-slate-200/60 rounded-2xl animate-fade-in">
