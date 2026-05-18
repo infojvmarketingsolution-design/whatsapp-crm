@@ -983,7 +983,7 @@ class PRDFlowService {
               currentFlowStep: 'ask_program_category'
             }
           });
-          let catMsg = "Please select program category.";
+          let catMsg = nextStep.message || nextStep.text || "Please select program category.";
           catMsg = this.populatePlaceholders(catMsg, fresh, nameVal);
           await this.sendInteractiveOptionsHelper(contact, waService, catMsg, categories, settings, io);
         } else {
