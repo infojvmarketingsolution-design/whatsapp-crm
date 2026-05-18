@@ -179,6 +179,11 @@ exports.uploadImage = async (req, res) => {
       return res.status(400).json({ error: 'No image file uploaded' });
     }
 
+    const fileExt = path.extname(req.file.originalname).toLowerCase();
+    if (fileExt === '.webp') {
+      return res.status(400).json({ error: 'Meta API does not support WebP images. Please upload a PNG or JPEG.' });
+    }
+
     const tenantId = req.tenantId;
     const targetDir = path.join(__dirname, '../../uploads/prompts', tenantId);
     

@@ -116,7 +116,8 @@ export default function AutomationSettings() {
         const data = await res.json();
         updatePrompt(field, data.url);
       } else {
-        alert('Failed to upload image. Please try again.');
+        const errData = await res.json().catch(() => ({}));
+        alert(errData.error || errData.message || 'Failed to upload image. Please try again.');
       }
     } catch (err) {
       console.error('Upload error:', err);

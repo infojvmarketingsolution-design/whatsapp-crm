@@ -501,7 +501,8 @@ export default function AIChatbot() {
                                         updateStep(step.id, 'image', data.url);
                                         toast.success('Banner uploaded successfully!');
                                       } else {
-                                        toast.error('Failed to upload image banner');
+                                        const errData = await res.json().catch(() => ({}));
+                                        toast.error(errData.error || errData.message || 'Failed to upload image banner');
                                       }
                                     } catch (err) {
                                       toast.dismiss(uploadToast);
