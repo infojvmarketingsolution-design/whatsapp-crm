@@ -121,8 +121,19 @@ class PRDFlowService {
       if (greetingStep) {
          console.log('[PRD FLOW DEBUG] Greeting step buttons:', JSON.stringify(greetingStep.buttons, null, 2));
       }
-      let greetingImage = greetingStep?.image || aiPrompts.greetingImage || '';
-      if (!greetingImage || greetingImage.includes('tenant_demo_001') || greetingImage.includes('prompt_1774743344804')) {
+      let greetingImage = '';
+      if (greetingStep) {
+        if (greetingStep.image === undefined) {
+          greetingImage = aiPrompts.greetingImage || '';
+        } else {
+          greetingImage = greetingStep.image || '';
+        }
+      } else {
+        greetingImage = aiPrompts.greetingImage || '';
+      }
+
+      // Default demo fallback only if they have absolutely no custom steps at all
+      if (!greetingImage && (!steps || steps.length === 0)) {
         greetingImage = 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80';
       }
 
