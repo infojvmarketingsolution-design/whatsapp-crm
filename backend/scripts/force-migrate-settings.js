@@ -50,7 +50,7 @@ async function forceUpdate() {
         if (!doc.automation) doc.automation = {};
         if (!doc.automation.aiPrompts) doc.automation.aiPrompts = {};
         
-        doc.automation.aiPrompts.qualificationOptions = ['12th Pass', 'Graduation', 'Other'];
+        doc.automation.aiPrompts.qualificationOptions = ['12th Pass (Bachelor Programs)', 'After Graduation (Master Programs)', 'Other'];
         
         // Ensure PROGRAM_SELECTION step has a categoryMessage field
         if (doc.automation.aiPrompts.prdFlowSteps) {

@@ -133,7 +133,8 @@ class PRDFlowService {
       };
 
       const sendInteractiveOptions = async (body, options) => {
-        if (options.length <= 3) {
+        const hasLongOption = options.some(opt => opt.length > 20);
+        if (options.length <= 3 && !hasLongOption) {
           const res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: options });
           await saveAndEmit('interactive', body, res);
         } else {
@@ -1045,7 +1046,8 @@ class PRDFlowService {
 
   async sendInteractiveOptionsHelper(contact, waService, body, options, settings = null, io = null) {
     let res;
-    if (options.length <= 3) {
+    const hasLongOption = options.some(opt => opt.length > 20);
+    if (options.length <= 3 && !hasLongOption) {
       res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: options });
     } else {
       res = await waService.sendListMessage(contact.phone, {
