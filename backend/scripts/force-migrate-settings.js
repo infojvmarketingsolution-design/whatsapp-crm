@@ -5,24 +5,36 @@ const SettingsSchema = require('../src/models/core/Settings');
 
 const DEFAULT_PROGRAM_MAP = {
   "12th Pass": {
-    "Trending Programs": ["B.Voc Cyber Security", "B.Voc Fintech", "B.Sc IT Ai & ML", "B.Sc IT Data Analytics"],
-    "Traditional Programs": ["B.Com", "B.Tech", "BBA"]
-  },
-  "Graduation": {
-    "Master Traditional Program": ["M.Com", "MBA", "M.Tech", "M.Sc", "Other"],
-    "Master Trending Program": [
-      "M.Sc IT in Cyber Security & Digital Forensics",
-      "M.Sc IT in Cloud Automation",
-      "M.Sc IT in Data Analytics",
-      "M.Sc IT in Animation, VFX & Game Design",
-      "M.Sc IT in Blockchain Technology",
-      "M.Sc IT in Software & Mobile App Development"
+    "Trending Programs": [
+      "B.Voc Cyber Security",
+      "B.Voc Fintech",
+      "B.Sc IT Ai & ML",
+      "B.Sc IT Data Analytics"
+    ],
+    "Traditional Programs": [
+      "B.Com",
+      "B.Tech",
+      "BBA"
     ]
   },
-  "Working Professional": {
-    "Executive Programs": ["Executive MBA", "Certification Courses"]
+  "Graduation": {
+    "Trending Programs": [
+      "Cyber Security & Digital Forensics",
+      "Cloud Automation",
+      "Data Analytics",
+      "Animation, VFX & Game Design",
+      "Blockchain Technology",
+      "Software & Mobile App Development"
+    ],
+    "Traditional Programs": [
+      "M.Com",
+      "MBA",
+      "M.Tech",
+      "M.Sc",
+      "Other"
+    ]
   }
-};
+}};
 
 async function forceUpdate() {
     const coreUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/jv_cloud_crm_core';

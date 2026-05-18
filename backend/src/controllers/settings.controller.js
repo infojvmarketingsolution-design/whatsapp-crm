@@ -81,23 +81,38 @@ exports.getSettings = async (req, res) => {
        }
        if (!settings.automation.aiPrompts.programMap || Object.keys(settings.automation.aiPrompts.programMap).length === 0) {
           settings.automation.aiPrompts.programMap = {
-            '12th Pass': {
-              'Trending Programs': ['B.Voc Cyber Security', 'B.Voc Fintech', 'B.Sc IT Ai & ML', 'B.Sc IT Data Analytics'],
-              'Traditional Programs': ['B.Com', 'B.Tech', 'BBA']
-            },
-            'Graduation': {
-              'Master Traditional Program': ['M.Com', 'MBA', 'M.Tech', 'M.Sc', 'Other'],
-              'Master Trending Program': [
-                'M.Sc IT in Cyber Security & Digital Forensics',
-                'M.Sc IT in Cloud Automation',
-                'M.Sc IT in Data Analytics',
-                'M.Sc IT in Animation, VFX & Game Design',
-                'M.Sc IT in Blockchain Technology',
-                'M.Sc IT in Software & Mobile App Development'
-              ]
-            }
-          }
-          updated = true;
+        "12th Pass": {
+                "Trending Programs": [
+                        "B.Voc Cyber Security",
+                        "B.Voc Fintech",
+                        "B.Sc IT Ai & ML",
+                        "B.Sc IT Data Analytics"
+                ],
+                "Traditional Programs": [
+                        "B.Com",
+                        "B.Tech",
+                        "BBA"
+                ]
+        },
+        "Graduation": {
+                "Trending Programs": [
+                        "Cyber Security & Digital Forensics",
+                        "Cloud Automation",
+                        "Data Analytics",
+                        "Animation, VFX & Game Design",
+                        "Blockchain Technology",
+                        "Software & Mobile App Development"
+                ],
+                "Traditional Programs": [
+                        "M.Com",
+                        "MBA",
+                        "M.Tech",
+                        "M.Sc",
+                        "Other"
+                ]
+        }
+      };
+           updated = true;
        }
        if (!settings.automation.aiPrompts.prdFlowSteps || settings.automation.aiPrompts.prdFlowSteps.length === 0) {
           settings.automation.aiPrompts.prdFlowSteps = [

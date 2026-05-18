@@ -18,18 +18,21 @@ const DEFAULT_PROGRAM_MAP = {
     "Traditional Programs": ["B.Com", "B.Tech", "BBA"]
   },
   "Graduation": {
-    "Master Traditional Program": ["M.Com", "MBA", "M.Tech", "M.Sc", "Other"],
-    "Master Trending Program": [
-      "M.Sc IT in Cyber Security & Digital Forensics",
-      "M.Sc IT in Cloud Automation",
-      "M.Sc IT in Data Analytics",
-      "M.Sc IT in Animation, VFX & Game Design",
-      "M.Sc IT in Blockchain Technology",
-      "M.Sc IT in Software & Mobile App Development"
+    "Trending Programs": [
+      "Cyber Security & Digital Forensics",
+      "Cloud Automation",
+      "Data Analytics",
+      "Animation, VFX & Game Design",
+      "Blockchain Technology",
+      "Software & Mobile App Development"
+    ],
+    "Traditional Programs": [
+      "M.Com",
+      "MBA",
+      "M.Tech",
+      "M.Sc",
+      "Other"
     ]
-  },
-  "Working Professional": {
-    "Executive Programs": ["Executive MBA", "Certification Courses"]
   }
 };
 
