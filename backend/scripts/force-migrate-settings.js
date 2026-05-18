@@ -34,7 +34,7 @@ const DEFAULT_PROGRAM_MAP = {
       "Other"
     ]
   }
-}};
+};
 
 async function forceUpdate() {
     const coreUri = process.env.CORE_DB_URI || 'mongodb://127.0.0.1:27017/jv_cloud_crm_core';
