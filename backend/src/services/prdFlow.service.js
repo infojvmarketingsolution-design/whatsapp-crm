@@ -142,7 +142,11 @@ class PRDFlowService {
             buttonText: 'View Options',
             sections: [{
               title: 'Available Options',
-              rows: options.slice(0, 10).map((opt, i) => ({ id: `list_${i}`, title: opt.substring(0, 24) }))
+              rows: options.slice(0, 10).map((opt, i) => ({ 
+                id: `list_${i}`, 
+                title: opt.substring(0, 24), 
+                description: opt.length > 24 ? opt.substring(0, 72) : undefined 
+              }))
             }]
           });
           await saveAndEmit('interactive', body, res);
@@ -1049,7 +1053,11 @@ class PRDFlowService {
         buttonText: 'View Options',
         sections: [{
           title: 'Available Options',
-          rows: options.slice(0, 10).map((opt, i) => ({ id: `list_${i}`, title: opt.substring(0, 24) }))
+          rows: options.slice(0, 10).map((opt, i) => ({ 
+            id: `list_${i}`, 
+            title: opt.substring(0, 24), 
+            description: opt.length > 24 ? opt.substring(0, 72) : undefined 
+          }))
         }]
       });
     }
