@@ -163,6 +163,49 @@ export default function AIChatbot() {
     }));
   };
 
+  const addQualificationOption = () => {
+    setSettings(prev => {
+      const current = prev.aiPrompts.qualificationOptions || [];
+      return {
+        ...prev,
+        aiPrompts: {
+          ...prev.aiPrompts,
+          qualificationOptions: [...current, { label: '', description: '' }]
+        }
+      };
+    });
+  };
+
+  const updateQualificationOption = (index, field, value) => {
+    setSettings(prev => {
+      const current = [...(prev.aiPrompts.qualificationOptions || [])];
+      const item = current[index];
+      const normalized = typeof item === 'object' ? { ...item } : { label: item || '', description: '' };
+      normalized[field] = value;
+      current[index] = normalized;
+      return {
+        ...prev,
+        aiPrompts: {
+          ...prev.aiPrompts,
+          qualificationOptions: current
+        }
+      };
+    });
+  };
+
+  const removeQualificationOption = (index) => {
+    setSettings(prev => {
+      const current = (prev.aiPrompts.qualificationOptions || []).filter((_, idx) => idx !== index);
+      return {
+        ...prev,
+        aiPrompts: {
+          ...prev.aiPrompts,
+          qualificationOptions: current
+        }
+      };
+    });
+  };
+
   if (loading) return <div className="p-8">Loading AI Chatbot...</div>;
 
   return (
@@ -545,14 +588,66 @@ export default function AIChatbot() {
                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                     {step.type === 'QUALIFICATION' ? (
                       <div>
-                        <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2 block">Qualification Options (Comma Separated)</label>
-                        <textarea 
-                           className="w-full text-xs p-3 rounded-xl border border-amber-200 outline-none focus:ring-2 focus:ring-amber-500/20"
-                           placeholder="10th Pass, 12th Pass, Diploma, Graduation..."
-                           value={(settings.aiPrompts.qualificationOptions || []).map(opt => typeof opt === 'object' ? (opt.label || '') : opt).join(', ')}
-                           onChange={(e) => setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, qualificationOptions: e.target.value.split(',').map(s=>s.trim()).filter(Boolean)}}))}
-                        />
-                        <p className="text-[10px] text-slate-400 mt-2">These options will be sent to the user as an interactive list.</p>
+                        <div className="flex justify-between items-center mb-4">
+                          <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Qualification Options</label>
+                          <button onClick={addQualificationOption} className="text-[10px] font-black text-amber-600 bg-white px-3 py-1.5 rounded-lg border border-amber-200 shadow-sm hover:bg-amber-50 transition-all flex items-center">
+                            <Plus size={12} className="mr-1" /> Add Option
+                          </button>
+                        </div>
+                        <div className="space-y-3.5">
+                          {(settings.aiPrompts.qualificationOptions || []).map((opt, oIdx) => {
+                            const label = typeof opt === 'object' ? (opt.label || '') : opt;
+                            const description = typeof opt === 'object' ? (opt.description || '') : '';
+                            const isLabelExceeded = label.length > 24;
+                            const isDescExceeded = description.length > 72;
+
+                            return (
+                              <div key={oIdx} className="bg-white p-3.5 rounded-2xl border border-slate-200/85 shadow-sm flex flex-col gap-2.5 relative hover:border-amber-400/40 transition-all">
+                                <div className="flex items-center justify-between gap-3">
+                                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Option #{oIdx + 1}</span>
+                                  <button onClick={() => removeQualificationOption(oIdx)} className="text-slate-300 hover:text-red-500 p-1 transition-all">
+                                    <X size={13} />
+                                  </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                  {/* Title / Label Input */}
+                                  <div className="flex flex-col gap-0.5">
+                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Label (Title - Max 24 Chars)</label>
+                                    <input 
+                                      className={`text-xs font-bold text-slate-700 outline-none border-b py-1 transition-all focus:border-amber-500 ${isLabelExceeded ? 'border-red-300 text-red-500' : 'border-slate-200'}`}
+                                      placeholder="e.g., 12th Pass"
+                                      value={label}
+                                      maxLength={30}
+                                      onChange={(e) => updateQualificationOption(oIdx, 'label', e.target.value)}
+                                    />
+                                    <div className="flex justify-between text-[8px] text-slate-400 font-medium">
+                                      <span>Main option text</span>
+                                      <span className={isLabelExceeded ? 'text-red-500 font-bold' : ''}>{label.length}/24</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Description / Sub-label Input */}
+                                  <div className="flex flex-col gap-0.5">
+                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Sub-label / Description (Max 72 Chars)</label>
+                                    <input 
+                                      className={`text-xs text-slate-500 outline-none border-b py-1 transition-all focus:border-amber-500 ${isDescExceeded ? 'border-red-300 text-red-500' : 'border-slate-200'}`}
+                                      placeholder="e.g., For Bachelor programs"
+                                      value={description}
+                                      maxLength={85}
+                                      onChange={(e) => updateQualificationOption(oIdx, 'description', e.target.value)}
+                                    />
+                                    <div className="flex justify-between text-[8px] text-slate-400 font-medium">
+                                      <span>Optional description text</span>
+                                      <span className={isDescExceeded ? 'text-red-500 font-bold' : ''}>{description.length}/72</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <p className="text-[9px] text-slate-400 mt-2 font-bold uppercase tracking-wider">These options will be sent to the user as an interactive list menu.</p>
                       </div>
                     ) : step.type === 'PROGRAM_SELECTION' ? (
                       <div>
