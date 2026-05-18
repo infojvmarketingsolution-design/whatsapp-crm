@@ -63,7 +63,7 @@ class PRDFlowService {
       if (url.includes('localhost') || url.includes('127.0.0.1')) return '';
       return url;
     }
-    const baseUrl = (process.env.BASE_URL || '').replace(/\/$/, '');
+    const baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').replace(/\/$/, '');
     if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
       return '';
     }
@@ -117,7 +117,7 @@ class PRDFlowService {
       const aiPrompts = settings?.automation?.aiPrompts || {};
       const steps = aiPrompts.prdFlowSteps || [];
       console.log('[PRD FLOW DEBUG] Loaded steps count:', steps.length);
-      const greetingStep = steps.find(s => s.type === 'GREETING');
+      const greetingStep = steps.find(s => s.type === 'GREETING') || steps.find(s => s.type === 'NAME_CAPTURE');
       if (greetingStep) {
          console.log('[PRD FLOW DEBUG] Greeting step buttons:', JSON.stringify(greetingStep.buttons, null, 2));
       }
@@ -213,7 +213,7 @@ class PRDFlowService {
 
 
         const nameStep = steps.find(s => s.type === 'NAME_CAPTURE');
-        const hasSeparateNameCard = !!nameStep && greetingStep?.type === 'GREETING';
+        const hasSeparateNameCard = !!nameStep && greetingStep?.type === 'GREETING' && steps.indexOf(greetingStep) < steps.indexOf(nameStep);
 
         if (!hasSeparateNameCard && !welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
           welcomeMsg = `${welcomeMsg.trim()}\n\nPlease enter your full name.`;
@@ -287,8 +287,9 @@ class PRDFlowService {
                 });
                 await saveAndEmit('interactive', title, resBtn);
               } else if (btn.type === 'reply') {
+                let bodyText = (btn.text || 'Selected Option:').trim();
                 const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
-                  body: `Selected Option:`,
+                  body: bodyText,
                   buttons: [btn.label]
                 });
                 await saveAndEmit('interactive', btn.label, resBtn);

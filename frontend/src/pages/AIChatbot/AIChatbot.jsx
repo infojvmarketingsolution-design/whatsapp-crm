@@ -452,7 +452,7 @@ export default function AIChatbot() {
                     )}
 
                     {/* 🖼️ PREMIUM IMAGE BANNER UPLOADER & PREVIEW */}
-                    {(step.type === 'GREETING' || step.type === 'SUCCESS_PROOF') && (
+                    {(step.type === 'GREETING' || step.type === 'SUCCESS_PROOF' || step.type === 'NAME_CAPTURE' || step.type === 'CUSTOM_MESSAGE') && (
                       <div className="mt-4 p-4 bg-slate-50 border border-slate-200/60 rounded-2xl animate-fade-in">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Greeting / Proof Image Banner</label>
                         
@@ -585,61 +585,86 @@ export default function AIChatbot() {
                       <>
                         <div className="flex justify-between items-center mb-4">
                           <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Interactive Buttons</label>
-                      <button onClick={() => addStepButton(step.id)} className="text-[10px] font-black text-blue-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:bg-blue-50 transition-all flex items-center">
-                        <Plus size={12} className="mr-1" /> Add Button
-                      </button>
-                    </div>
-                    <div className="space-y-2">
-                      {(step.buttons || []).map((btn, bIdx) => (
-                        <div key={bIdx} className="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-100 shadow-sm">
-                          <select 
-                             className="bg-slate-50 border-none text-[10px] font-bold text-slate-500 rounded-lg py-1 px-2"
-                             value={btn.type}
-                             onChange={(e) => updateStepButton(step.id, bIdx, 'type', e.target.value)}
-                          >
-                             <option value="reply">Reply</option>
-                             <option value="url">URL</option>
-                             <option value="call">Call</option>
-                             <option value="handoff">Handoff</option>
-                          </select>
-                           {(btn.type === 'url' || btn.type === 'call') ? (
-                             <div className="flex-1 flex flex-col gap-1">
-                               <div className="flex flex-col sm:flex-row gap-2">
-                                 <input 
-                                   className="flex-1 text-xs font-bold text-slate-700 outline-none border-b border-slate-200 focus:border-blue-500 py-1"
-                                   placeholder={btn.type === 'url' ? "Button Label (e.g., Learn More)" : "Button Label (e.g., Call Us)"}
-                                   value={btn.label || ''}
-                                   onChange={(e) => updateStepButton(step.id, bIdx, 'label', e.target.value)}
-                                 />
-                                 <input 
-                                   className="flex-1 text-xs text-slate-500 outline-none border-b border-slate-200 focus:border-blue-500 py-1 font-mono"
-                                   placeholder={btn.type === 'url' ? "Website URL (e.g., https://...)" : "Phone Number (e.g., +91...)"}
-                                   value={btn.value || ''}
-                                   onChange={(e) => updateStepButton(step.id, bIdx, 'value', e.target.value)}
-                                 />
-                               </div>
-                               <input 
-                                 className="text-[10px] text-slate-400 outline-none border-b border-transparent focus:border-blue-400 py-0.5 italic"
-                                 placeholder={btn.type === 'url' ? "Custom Header Text (e.g., Official Website:)" : "Custom Header Text (e.g., Hotline Support:)"}
-                                 value={btn.text || ''}
-                                 onChange={(e) => updateStepButton(step.id, bIdx, 'text', e.target.value)}
-                               />
-                             </div>
-                           ) : (
-                             <input 
-                               className="flex-1 text-xs font-bold text-slate-700 outline-none border-b border-transparent focus:border-blue-500"
-                               placeholder="Button Text"
-                               value={btn.label || ''}
-                               onChange={(e) => updateStepButton(step.id, bIdx, 'label', e.target.value)}
-                             />
-                           )}
-                          <button onClick={() => removeStepButton(step.id, bIdx)} className="text-slate-300 hover:text-red-400 p-1">
-                            <X size={14} />
+                          <button onClick={() => addStepButton(step.id)} className="text-[10px] font-black text-blue-600 bg-white px-3 py-1.5 rounded-lg border border-slate-200 shadow-sm hover:bg-blue-50 transition-all flex items-center">
+                            <Plus size={12} className="mr-1" /> Add Button
                           </button>
                         </div>
-                      ))}
-                    </div>
-                  </>
+                        <div className="space-y-4">
+                          {(step.buttons || []).map((btn, bIdx) => {
+                            const labelValue = btn.label || '';
+                            const isExceeded = labelValue.length > 20;
+                            return (
+                              <div key={bIdx} className="bg-white p-3.5 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-2.5 relative group hover:border-blue-400/40 transition-all">
+                                <div className="flex items-center justify-between gap-3">
+                                  <select 
+                                     className="bg-slate-50 border border-slate-200 text-[10px] font-black uppercase text-slate-500 rounded-lg py-1 px-2.5 outline-none focus:border-blue-500 transition-all"
+                                     value={btn.type}
+                                     onChange={(e) => updateStepButton(step.id, bIdx, 'type', e.target.value)}
+                                  >
+                                     <option value="reply">💬 Quick Reply</option>
+                                     <option value="url">🔗 Web Link (Brochure/Website)</option>
+                                     <option value="call">📞 Phone Call</option>
+                                     <option value="handoff">👨‍💻 Talk to Agent</option>
+                                  </select>
+                                  <button onClick={() => removeStepButton(step.id, bIdx)} className="text-slate-300 hover:text-red-500 p-1.5 transition-all">
+                                    <X size={13} />
+                                  </button>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                  {/* Label/Title Input */}
+                                  <div className="flex flex-col gap-0.5">
+                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Button Label (Title - Max 20 Chars)</label>
+                                    <input 
+                                      className={`text-xs font-bold text-slate-700 outline-none border-b py-1 transition-all focus:border-blue-500 ${isExceeded ? 'border-red-300 text-red-500' : 'border-slate-200'}`}
+                                      placeholder={btn.type === 'url' ? "e.g., Download Brochure" : btn.type === 'call' ? "e.g., Call Support" : "e.g., Learn More"}
+                                      value={labelValue}
+                                      maxLength={30}
+                                      onChange={(e) => updateStepButton(step.id, bIdx, 'label', e.target.value)}
+                                    />
+                                    <div className="flex justify-between text-[8px] text-slate-400 font-medium">
+                                      <span>Button text shown in WhatsApp</span>
+                                      <span className={isExceeded ? 'text-red-500 font-bold' : ''}>{labelValue.length}/20</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Value Input (URL or Phone Number) */}
+                                  {(btn.type === 'url' || btn.type === 'call') && (
+                                    <div className="flex flex-col gap-0.5 animate-fade-in">
+                                      <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">
+                                        {btn.type === 'url' ? "Website URL / Link" : "Phone Number (with Country Code)"}
+                                      </label>
+                                      <input 
+                                        className="text-xs text-slate-600 font-mono outline-none border-b border-slate-200 focus:border-blue-500 py-1 transition-all"
+                                        placeholder={btn.type === 'url' ? "https://example.com/brochure.pdf" : "+91 63597 00606"}
+                                        value={btn.value || ''}
+                                        onChange={(e) => updateStepButton(step.id, bIdx, 'value', e.target.value)}
+                                      />
+                                      <div className="text-[8px] text-slate-400 font-medium">
+                                        {btn.type === 'url' ? "URL opened on click" : "Phone number dialed on click"}
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+
+                                {/* Sub-label/Description (Body Text) Input */}
+                                <div className="flex flex-col gap-0.5">
+                                  <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Sub-label / Message Body Text</label>
+                                  <input 
+                                    className="text-xs text-slate-500 outline-none border-b border-slate-200 focus:border-blue-500 py-1 transition-all"
+                                    placeholder={btn.type === 'url' ? "e.g., Download our official brochure:" : btn.type === 'call' ? "e.g., Hotline Support:" : "e.g., Select to proceed:"}
+                                    value={btn.text || ''}
+                                    onChange={(e) => updateStepButton(step.id, bIdx, 'text', e.target.value)}
+                                  />
+                                  <div className="text-[8px] text-slate-400 font-medium">
+                                    Text displayed directly above the button to give more context
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </>
                   )}
                 </div>
               </div>
