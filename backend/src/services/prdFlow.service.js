@@ -987,7 +987,14 @@ class PRDFlowService {
       }
     }
 
-    const nextStep = (completedIdx !== -1 && completedIdx + 1 < steps.length) ? steps[completedIdx + 1] : null;
+    let nextStep = (completedIdx !== -1 && completedIdx + 1 < steps.length) ? steps[completedIdx + 1] : null;
+
+    if (!nextStep && completedLower === 'name_capture') {
+      if (steps.length > 0) {
+        // If name capture was completed but not found in list, go to first step that is not name capture
+        nextStep = steps.find(s => (s.type || '').toUpperCase() !== 'NAME_CAPTURE') || steps[0];
+      }
+    }
 
     if (!nextStep) {
       // Fallbacks if no next step exists in visual builder
