@@ -543,6 +543,7 @@ export default function AIChatbot() {
                   </div>
 
                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                    {step.type === 'QUALIFICATION' ? (
                       <div>
                         <div className="flex justify-between items-center mb-3">
                           <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest block">Qualification Choices (Interactive List Options)</label>
