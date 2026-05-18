@@ -190,7 +190,7 @@ class AIService {
     return { score, heatLevel };
   }
 
-/**
+  /**
    * Generates a comprehensive Strategic Brief for a contact.
    * Includes behavior analysis (response speed) and fact extraction.
    */
@@ -248,6 +248,98 @@ class AIService {
     } catch (err) {
       console.error('[AI Service] Strategic Brief Error:', err.message);
       return null;
+    }
+  }
+
+  /**
+   * 🤖 ADVANCED AI ADMISSION COUNSELLOR
+   * Processes conversational queries, tracks context, performs qualification detection,
+   * dynamically recommends courses, answers FAQs, updates lead scoring, and triggers agent handoffs.
+   */
+  async processAdvancedAIConversation({ tenantId, universityName, contact, messages, messageText }) {
+    if (!this.openai) {
+      return {
+        reply: "I'm sorry, I'm currently running in low-power mode. Let me connect you with a human counsellor right away! 👨‍💻",
+        shouldTransfer: true
+      };
+    }
+
+    try {
+      // Load dynamic settings from DB
+      const Settings = require('../models/core/Settings');
+      const settings = await Settings.findOne({ tenantId });
+      const customAi = settings?.automation?.aiPrompts || {};
+
+      const placement = customAi.aiPlacementInfo || `${universityName} has over 90% placement rates, with top packages exceeding 12 Lakhs per annum. Recruiting partners include TCS, Infosys, and top startups.`;
+      const hostel = customAi.aiHostelInfo || `Clean and premium hostels with AC/Non-AC options, hot water, Wi-Fi, and nutritious mess food.`;
+      const scholarship = customAi.aiScholarshipInfo || `Up to 50% waiver based on merit (12th Board / Graduation GPA) or financial needs.`;
+      const fees = customAi.aiFeeInfo || `B.Sc Trending courses are ~85k/year, Traditional courses ~45k/year. M.Sc courses are ~95k/year.`;
+      
+      const customPromptInstructions = customAi.aiSystemInstructions 
+        ? `CORE CUSTOM WORKSPACE INSTRUCTIONS:\n${customAi.aiSystemInstructions}\n` 
+        : '';
+
+      // 1. Compile recent message history for context-awareness
+      const historyStr = messages.slice(-8).map(m => `${m.direction === 'INBOUND' ? 'Student' : 'Counsellor'}: ${m.content}`).join("\n");
+
+      // 2. Comprehensive system instructions for Advanced AI features
+      const systemPrompt = `
+You are the highly intelligent Advanced AI Admission Counsellor for ${universityName}.
+Your objective is to consult students naturally, understand their needs, suggest matching programs, answer FAQs, and score leads dynamically.
+
+${customPromptInstructions}
+
+CAPABILITIES:
+1. NATURAL MULTILINGUAL CONVERSATION: Warm, empathetic, and human-like. Silently understand and correct spelling mistakes. Respond in the language used by the student (English, Hindi, Gujarati, or a mixed blend like Hinglish / Gujlish).
+2. DYNAMIC WORKFLOW & RECOMMENDATIONS:
+   - Identify qualification: (e.g. B.Com/Graduation ➔ Master Programs; 12th Pass ➔ Bachelor/Trending Programs).
+   - If they select Cyber Security: Suggest "B.Sc IT in Cyber Security & Digital Forensics" or "M.Sc IT in Cyber Security & Digital Forensics".
+   - If they select Animation: Suggest VFX, Gaming, 3D Design, or Film Editing.
+3. SMART FAQ KNOWLEDGE:
+   - Placement: ${placement}
+   - Hostel: ${hostel}
+   - Scholarships: ${scholarship}
+   - Fees: ${fees}
+4. SENTIMENT & COUUNSELLOR TRANSFER: Detect user sentiments (confused, frustrated, interested, urgent). Trigger human counsellor transfer (shouldTransfer = true) if the user is frustrated, highly confused, or directly asks to talk to a person/counsellor.
+5. LEAD SCORING RULES:
+   - Interested in trending program (e.g. Cyber Security, Cloud, Data Analytics, AI & ML): +20 points
+   - Asked about placements, scholarships, or hostels: +15 points
+   - Provided call time / requested phone counselling: +30 points
+   - Continued positive interaction: +10 points
+6. BROCHURE SHARING: If the student asks for course details, brochure, or syllabus, set brochureToShare to "Admission Brochure".
+
+Return your reply ONLY in a valid JSON object format matching this structure:
+{
+  "reply": "Your warm, natural conversational reply here.",
+  "detectedQualification": "12th Pass" | "Graduation" | "Diploma Completed" | "Master Completed" | null,
+  "detectedProgram": "Full program name recommended" | null,
+  "detectedCallTime": "Time string if provided" | null,
+  "sentiment": "interested" | "confused" | "frustrated" | "urgent" | "neutral",
+  "scoreAddition": number,
+  "shouldTransfer": boolean,
+  "brochureToShare": "Admission Brochure" | null
+}
+`;
+
+      const response = await this.openai.chat.completions.create({
+        model: "gpt-3.5-turbo-1106",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Conversation History:\n${historyStr}\n\nStudent's latest message:\n${messageText}` }
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.7
+      });
+
+      const parsedResult = JSON.parse(response.choices[0].message.content);
+      console.log(`[AI Counsellor] Parsed JSON Output:`, JSON.stringify(parsedResult));
+      return parsedResult;
+    } catch (err) {
+      console.error('[AI Counsellor] Error during OpenAI execution:', err.message);
+      return {
+        reply: "I'd love to tell you more about our programs. Can we connect you with a human counsellor to guide you better? 📞",
+        shouldTransfer: false
+      };
     }
   }
 }

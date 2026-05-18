@@ -8,6 +8,7 @@ export default function Inbox({ roleAccess }) {
   const userRole = (user?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
   const roleData = roleAccess?.[userRole];
   const isSuper = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'OWNER', 'MANAGER_COUNSELLOUR'].includes(userRole);
+  const isAdmin = ['ADMIN', 'SUPER_ADMIN', 'OWNER', 'BUSINESS_HEAD'].includes(userRole);
 
 
   const rolePermissions = roleData?.permissions || [];
@@ -842,15 +843,17 @@ export default function Inbox({ roleAccess }) {
          <div className="p-8 pb-6 flex flex-col items-center justify-center border-b border-gray-50 text-center relative mt-2">
             <img src={getAvatarUrl(activeChat?.name)} className="w-24 h-24 rounded-full shadow-lg object-cover border-4 border-white mb-4" />
             
-            <button 
-              onClick={() => setShowDeleteModal(!showDeleteModal)}
-              className="absolute top-4 right-4 p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors shadow-sm border border-red-100"
-              title="Delete Lead Options"
-            >
-              <Trash2 size={16} />
-            </button>
+            {isAdmin && (
+              <button 
+                onClick={() => setShowDeleteModal(!showDeleteModal)}
+                className="absolute top-4 right-4 p-2 bg-red-50 text-red-500 rounded-full hover:bg-red-100 transition-colors shadow-sm border border-red-100"
+                title="Delete Lead Options"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
 
-            {showDeleteModal && (
+            {isAdmin && showDeleteModal && (
               <div className="absolute top-14 right-4 bg-white border border-gray-100 rounded-xl shadow-xl p-2 z-50 w-48 animate-pop-in">
                 <button 
                   onClick={() => handleAction('archive_lead', {})}

@@ -64,8 +64,86 @@ exports.getSettings = async (req, res) => {
     if (!settings) {
        settings = new Settings({ tenantId });
        await settings.save();
+    } else {
+       let updated = false;
+       if (!settings.automation) {
+          settings.automation = { botEnabled: false, botMode: 'PRD', aiPrompts: {} };
+          updated = true;
+       }
+       if (!settings.automation.aiPrompts) {
+          settings.automation.aiPrompts = {};
+          updated = true;
+       }
+       const qualOptionsCleaned = (settings.automation.aiPrompts.qualificationOptions || []).filter(o => {
+          if (!o) return false;
+          if (typeof o === 'string') return o.trim() !== "";
+          if (typeof o === 'object') {
+             const lbl = o.label || '';
+             return typeof lbl === 'string' && lbl.trim() !== "";
+          }
+          return false;
+        });
+       if (qualOptionsCleaned.length === 0) {
+          settings.automation.aiPrompts.qualificationOptions = ['12th Pass', 'Graduation', 'Other'];
+          updated = true;
+       }
+       if (!settings.automation.aiPrompts.programMap || Object.keys(settings.automation.aiPrompts.programMap).length === 0) {
+          settings.automation.aiPrompts.programMap = {
+        "12th Pass": {
+                "Trending Programs": [
+                        "B.Voc Cyber Security",
+                        "B.Voc Fintech",
+                        "B.Sc IT Ai & ML",
+                        "B.Sc IT Data Analytics"
+                ],
+                "Traditional Programs": [
+                        "B.Com",
+                        "B.Tech",
+                        "BBA"
+                ]
+        },
+        "Graduation": {
+                "Trending Programs": [
+                        "Cyber Security & Digital Forensics",
+                        "Cloud Automation",
+                        "Data Analytics",
+                        "Animation, VFX & Game Design",
+                        "Blockchain Technology",
+                        "Software & Mobile App Development"
+                ],
+                "Traditional Programs": [
+                        "M.Com",
+                        "MBA",
+                        "M.Tech",
+                        "M.Sc",
+                        "Other"
+                ]
+        }
+      };
+           updated = true;
+       }
+       if (!settings.automation.aiPrompts.prdFlowSteps || settings.automation.aiPrompts.prdFlowSteps.length === 0) {
+          settings.automation.aiPrompts.prdFlowSteps = [
+            { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Greeting & Name Request', message: 'Welcome to Gandhinagar University 🎓\n\nWe’re excited to help you choose the right career path.\n\nMay I know your name?', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+            { id: 'qualification', type: 'QUALIFICATION', title: 'Qualification Request', message: 'Nice to meet you {{name}} 😊\n\nPlease select your qualification.' },
+            { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Please select your preferred program category.', categoryMessage: 'Please select program category.' },
+            { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: 'Excellent choice 🚀\n\nWhen should our counselor contact you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
+            { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counselor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' }
+          ];
+          updated = true;
+       }
+       if (updated) {
+          settings.markModified('automation');
+          settings.markModified('automation.aiPrompts');
+          settings.markModified('automation.aiPrompts.qualificationOptions');
+          settings.markModified('automation.aiPrompts.programMap');
+          settings.markModified('automation.aiPrompts.prdFlowSteps');
+          await settings.save();
+          console.log("✅ Seeded default settings for tenant:", tenantId);
+       }
     }
 
+    console.log("Tenant:", tenantId, "qualificationOptions:", settings?.automation?.aiPrompts?.qualificationOptions);
     res.json(settings);
   } catch (err) {
     console.error('Error fetching settings:', err);
@@ -104,12 +182,57 @@ exports.updateSettings = async (req, res) => {
     // Merge updates into the specific category
     if (category === 'roleAccess') {
        settings.set('roleAccess', updates);
+    } else if (category === 'automation') {
+       // Direct deep assignment of automation fields to ensure Mongoose dirty-tracking detects all changes perfectly
+       if (updates.botEnabled !== undefined) settings.automation.botEnabled = updates.botEnabled;
+       if (updates.botMode !== undefined) settings.automation.botMode = updates.botMode;
+       if (updates.customGreetingFlowId !== undefined) settings.automation.customGreetingFlowId = updates.customGreetingFlowId;
+       if (updates.fallbackToHuman !== undefined) settings.automation.fallbackToHuman = updates.fallbackToHuman;
+       if (updates.workingHours !== undefined) settings.automation.workingHours = updates.workingHours;
+       if (updates.rateLimit !== undefined) settings.automation.rateLimit = updates.rateLimit;
+       if (updates.aiPrompts) {
+          const ai = updates.aiPrompts;
+          if (ai.greetingMessage !== undefined) settings.automation.aiPrompts.greetingMessage = ai.greetingMessage;
+          if (ai.greetingImage !== undefined) settings.automation.aiPrompts.greetingImage = ai.greetingImage;
+          if (ai.namePrompt !== undefined) settings.automation.aiPrompts.namePrompt = ai.namePrompt;
+          if (ai.programListPrompt !== undefined) settings.automation.aiPrompts.programListPrompt = ai.programListPrompt;
+          if (ai.successProofMessage !== undefined) settings.automation.aiPrompts.successProofMessage = ai.successProofMessage;
+          if (ai.successProofImage !== undefined) settings.automation.aiPrompts.successProofImage = ai.successProofImage;
+          if (ai.callTimePrompt !== undefined) settings.automation.aiPrompts.callTimePrompt = ai.callTimePrompt;
+          if (ai.agentTransferPrompt !== undefined) settings.automation.aiPrompts.agentTransferPrompt = ai.agentTransferPrompt;
+          if (ai.fallbackMessage !== undefined) settings.automation.aiPrompts.fallbackMessage = ai.fallbackMessage;
+          
+          // Mixed and custom array/object fields
+          if (ai.qualificationOptions !== undefined) {
+             settings.automation.aiPrompts.qualificationOptions = ai.qualificationOptions;
+             settings.markModified('automation.aiPrompts.qualificationOptions');
+          }
+          if (ai.programMap !== undefined) {
+             settings.automation.aiPrompts.programMap = ai.programMap;
+             settings.markModified('automation.aiPrompts.programMap');
+          }
+          if (ai.prdFlowSteps !== undefined) {
+             settings.automation.aiPrompts.prdFlowSteps = ai.prdFlowSteps;
+             settings.markModified('automation.aiPrompts.prdFlowSteps');
+          }
+          
+          // Direct dynamic AI fields
+          if (ai.aiSystemInstructions !== undefined) settings.automation.aiPrompts.aiSystemInstructions = ai.aiSystemInstructions;
+          if (ai.aiPlacementInfo !== undefined) settings.automation.aiPrompts.aiPlacementInfo = ai.aiPlacementInfo;
+          if (ai.aiHostelInfo !== undefined) settings.automation.aiPrompts.aiHostelInfo = ai.aiHostelInfo;
+          if (ai.aiScholarshipInfo !== undefined) settings.automation.aiPrompts.aiScholarshipInfo = ai.aiScholarshipInfo;
+          if (ai.aiFeeInfo !== undefined) settings.automation.aiPrompts.aiFeeInfo = ai.aiFeeInfo;
+          if (ai.aiBrochureUrl !== undefined) settings.automation.aiPrompts.aiBrochureUrl = ai.aiBrochureUrl;
+       }
+       settings.markModified('automation');
+       settings.markModified('automation.aiPrompts');
     } else {
        const currentData = (settings[category] && typeof settings[category].toObject === 'function') 
            ? settings[category].toObject() 
            : (settings[category] || {});
        settings[category] = { ...currentData, ...updates };
     }
+    settings.markModified(category);
     await settings.save();
     
     res.json(settings);
@@ -125,6 +248,11 @@ exports.uploadImage = async (req, res) => {
       return res.status(400).json({ error: 'No image file uploaded' });
     }
 
+    const fileExt = path.extname(req.file.originalname).toLowerCase();
+    if (fileExt === '.webp') {
+      return res.status(400).json({ error: 'Meta API does not support WebP images. Please upload a PNG or JPEG.' });
+    }
+
     const tenantId = req.tenantId;
     const targetDir = path.join(__dirname, '../../uploads/prompts', tenantId);
     
@@ -132,8 +260,8 @@ exports.uploadImage = async (req, res) => {
       fs.mkdirSync(targetDir, { recursive: true });
     }
 
-    const fileExt = path.extname(req.file.originalname);
-    const fileName = `prompt_${Date.now()}${fileExt}`;
+    const originalExt = path.extname(req.file.originalname);
+    const fileName = `prompt_${Date.now()}${originalExt}`;
     const targetPath = path.join(targetDir, fileName);
 
     fs.renameSync(req.file.path, targetPath);

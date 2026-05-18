@@ -370,8 +370,13 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
        console.log(`[Flow Engine] 🏛️ Strategy Mode: PRD (Education Template). Routing message...`);
        
        const hasCompletedFlow = activeContact.flowVariables && activeContact.flowVariables.program;
+       const isGreeting = messageText.toLowerCase().trim().match(/^(hi|hello|hey|start|menu|counselor|counsellor)$/i);
 
-       if (activeContact.currentFlowStep || !hasCompletedFlow) {
+       if (activeContact.currentFlowStep || !hasCompletedFlow || isGreeting) {
+           // If it's a greeting and we are starting fresh, make sure currentFlowStep is reset to force the welcome greeting
+           if (isGreeting && !activeContact.currentFlowStep) {
+              activeContact.currentFlowStep = 'START';
+           }
            return PRDFlowService.processStep(tenantId, activeContact, messageText, waService, io, false, replyValue);
        } else {
            console.log(`[Flow Engine] ⚠️ PRD Mode active, but flow completed. Falling through to AI Fallback.`);
@@ -408,25 +413,109 @@ const processIncomingMessage = async (tenantId, contact, messageText, io, isNewC
        }
     }
 
-    // 🤖 AI CONVERSATIONAL FALLBACK (Smart Resolution)
-    console.log(`[Flow Engine] 🤖 Checking AI Settings for fallback...`);
+    // 🤖 ADVANCED AI ADMISSION COUNSELLOR AGENT (Smart RAG & Scoring Context)
+    console.log(`[Flow Engine] 🤖 Checking AI Settings for Advanced Counsellor...`);
     if (settings?.automation?.botEnabled) {
-       console.log(`[Flow Engine] 🧠 AI Bot Enabled. Generating response for: "${messageText}"`);
-       const aiReply = await AIService.askAI(messageText, "Education CRM. We offer Software Engineering, VFX, and AI courses.");
-       
-       // Record in DB
+       console.log(`[Flow Engine] 🧠 Advanced AI Bot Active. Processing: "${messageText}"`);
+
+       // 1. Fetch recent message history for perfect context-awareness
        const Message = tenantDb.model('Message', MessageSchema);
+       const historyMessages = await Message.find({ contactId: activeContact._id })
+          .sort({ createdAt: -1 })
+          .limit(8);
+       historyMessages.reverse();
+
+       const universityName = client.whatsappConfig?.wabaName || client.name || 'ABC Institute';
+
+       // 2. Query Advanced AI Agent
+       const aiResult = await AIService.processAdvancedAIConversation({
+          tenantId,
+          universityName,
+          contact: activeContact,
+          messages: historyMessages,
+          messageText
+       });
+
+       const updates = {};
+       const timelineEvents = [];
+
+       // 3. Dynamic Field Extractions
+       if (aiResult.detectedQualification) {
+          updates.qualification = aiResult.detectedQualification;
+          timelineEvents.push({ eventType: 'QUALIFICATION_UPDATE', description: `AI detected qualification: ${aiResult.detectedQualification}` });
+       }
+       if (aiResult.detectedProgram) {
+          updates.selectedProgram = aiResult.detectedProgram;
+          timelineEvents.push({ eventType: 'PROGRAM_RECOMMENDATION', description: `AI recommended program: ${aiResult.detectedProgram}` });
+       }
+       if (aiResult.detectedCallTime) {
+          updates.preferredCallTime = aiResult.detectedCallTime;
+          timelineEvents.push({ eventType: 'CALL_TIME_SET', description: `AI detected preferred call time: ${aiResult.detectedCallTime}` });
+       }
+
+       // 4. Dynamic Lead Scoring Updates
+       const currentScore = activeContact.score || 0;
+       const scoreAddition = aiResult.scoreAddition || 0;
+       if (scoreAddition > 0) {
+          const newScore = Math.min(currentScore + scoreAddition, 100);
+          updates.score = newScore;
+
+          // Categorize Lead
+          let newHeatLevel = 'Cold';
+          if (newScore >= 70) newHeatLevel = 'Hot';
+          else if (newScore >= 40) newHeatLevel = 'Warm';
+          
+          updates.heatLevel = newHeatLevel;
+          timelineEvents.push({ eventType: 'LEAD_SCORING_UPDATE', description: `Lead score increased by +${scoreAddition} to ${newScore} (${newHeatLevel})` });
+       }
+
+       // 5. Sentiment-Driven Live Agent Handoff
+       if (aiResult.shouldTransfer) {
+          updates.isBotPaused = true;
+          updates.isFlowActive = false;
+          updates.currentFlowStep = null;
+
+          const notificationService = require('./notification.service');
+          notificationService.sendAdminAlert(tenantId, {
+             subject: 'Urgent: Counsellor Handoff Triggered',
+             text: `Lead *${activeContact.name || activeContact.phone}* has been transferred to a live agent. Sentiment: *${aiResult.sentiment || 'confused'}*.`
+          });
+
+          timelineEvents.push({ eventType: 'AGENT_HANDOFF', description: `AI triggered live counsellor transfer. Student Sentiment: ${aiResult.sentiment}` });
+       }
+
+       // Save all updates to dynamic contact model
+       if (Object.keys(updates).length > 0 || timelineEvents.length > 0) {
+          await Contact.updateOne(
+             { phone: activeContact.phone },
+             {
+                $set: updates,
+                $push: { timeline: { $each: timelineEvents } }
+             }
+          );
+       }
+
+       // 6. Record Outbound Message in DB
        const savedMsg = await Message.create({
           contactId: activeContact._id,
           messageId: `ai_${Date.now()}`,
           direction: 'OUTBOUND',
           type: 'text',
-          content: aiReply,
+          content: aiResult.reply,
           status: 'SENT'
        });
-       if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact: activeContact });
+       if (io) io.to(tenantId).emit('new_message', { ...savedMsg._doc, contact: { ...activeContact.toObject(), ...updates } });
 
-       return waService.sendTextMessage(activeContact.phone, aiReply);
+       // 7. Send conversational text message to user via WhatsApp
+       await waService.sendTextMessage(activeContact.phone, aiResult.reply);
+
+       // 8. If brochure sharing triggered, automatically send the brochure document link
+       if (aiResult.brochureToShare) {
+          const brochureUrl = settings?.automation?.aiPrompts?.aiBrochureUrl || 'https://wapipulse.com/uploads/brochures/general_admission_brochure.pdf';
+          await waService.sendTextMessage(activeContact.phone, `Here is our official brochure for your review: 📄 ${brochureUrl}`);
+       }
+
+       return;
     } else {
        console.log(`[Flow Engine] 🔇 AI Bot Disabled. Ending silently.`);
     }

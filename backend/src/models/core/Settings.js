@@ -10,7 +10,7 @@ const AIPromptsSchema = new mongoose.Schema({
   callTimePrompt: { type: String, default: '{{name}}, what is your preferred time for our counsellor to call you? 📞' },
   agentTransferPrompt: { type: String, default: 'Transferring you to a human agent... 👨‍💻' },
   fallbackMessage: { type: String, default: "I'm sorry, I didn't quite get that. Could you please rephrase?" },
-  qualificationOptions: { type: [String], default: ['10th Pass', '12th Pass', 'Graduate', 'Working Professional'] },
+  qualificationOptions: { type: [mongoose.Schema.Types.Mixed], default: ['10th Pass', '12th Pass', 'Graduate', 'Working Professional'] },
   programMap: {
     type: Object,
     default: {
@@ -38,7 +38,13 @@ const AIPromptsSchema = new mongoose.Schema({
       { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: 'Great choice 🚀\nWhen should our counselor call you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
       { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counsellor will call you at your preferred time 📞' }
     ] 
-  }
+  },
+  aiSystemInstructions: { type: String, default: '' },
+  aiPlacementInfo: { type: String, default: '' },
+  aiHostelInfo: { type: String, default: '' },
+  aiScholarshipInfo: { type: String, default: '' },
+  aiFeeInfo: { type: String, default: '' },
+  aiBrochureUrl: { type: String, default: '' }
 });
 
 
@@ -76,7 +82,7 @@ const CRMSettingsSchema = new mongoose.Schema({
 
 const AutomationSettingsSchema = new mongoose.Schema({
   botEnabled: { type: Boolean, default: false },
-  botMode: { type: String, enum: ['PRD', 'CUSTOM'], default: 'PRD' },
+  botMode: { type: String, enum: ['PRD', 'CUSTOM', 'AI'], default: 'PRD' },
   customGreetingFlowId: { type: String, default: null },
   fallbackToHuman: { type: Boolean, default: true },
   workingHours: { type: Object, default: {} },

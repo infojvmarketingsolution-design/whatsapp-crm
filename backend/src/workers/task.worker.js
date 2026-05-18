@@ -79,12 +79,28 @@ const startInactivityFollowupWorker = () => {
 
                     if (inactiveContacts.length > 0) {
                         const waService = require('../services/whatsapp.service');
-                        // Using Meta Graph API requires credentials from the client, assuming client model has them
-                        const ws = new waService({ phoneNumberId: client.metaPhoneNumberId, accessToken: client.metaAccessToken });
+                        
+                        // Respect Shreyarth override & fallback to whatsappConfig properties
+                        const isShreyarth = client.tenantId?.toLowerCase().includes('shreyarth') || client.companyName?.toLowerCase().includes('shreyarth') || client.name?.toLowerCase().includes('shreyarth');
+                        const waConfig = isShreyarth ? {
+                            phoneNumberId: '1074613152404424',
+                            wabaId: '1433761851305451',
+                            accessToken: 'EAAUZAwz8PZCJABRfcA4XgJmp8UzJ4ixXbpVA7CvnldS3pkDXdUkbtE2hyfYFHYsZAcZBgKaDwGpHCLf5N0iQfCTfJZAu0iwLmhrbcy2TON4DBvkEeZBZCKhLsSnZCF0ZBASOjWQwtv8ZA2mSZC2ZB0UtQiWcvuPwukLlzAJbLqdkkkW7QPNzJZAWVUKZAQEnPYo2wxzQZDZD'
+                        } : (client.whatsappConfig || {});
+
+                        const ws = new waService({ 
+                            phoneNumberId: waConfig.phoneNumberId, 
+                            accessToken: waConfig.accessToken 
+                        });
                         
                         for (const contact of inactiveContacts) {
                             try {
-                                await ws.sendTextMessage(contact.phone, "Would you like to continue your admission inquiry?");
+                                // Double check if token is valid before sending to prevent crash loops
+                                if (waConfig.accessToken) {
+                                    await ws.sendTextMessage(contact.phone, "Would you like to continue your admission inquiry?");
+                                } else {
+                                    console.warn(`[InactivityWorker] ⚠️ No access token found for tenant ${client.tenantId}. Skipping follow-up.`);
+                                }
                                 // Clear current flow step so we don't send it again
                                 await Contact.updateOne({ _id: contact._id }, { $unset: { currentFlowStep: '' } });
                             } catch (err) {

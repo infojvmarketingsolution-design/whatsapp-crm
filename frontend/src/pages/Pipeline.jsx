@@ -31,6 +31,9 @@ const STATUS_MAPPING = {
 
 export default function Pipeline() {
   const navigate = useNavigate();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const userRole = (user?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
+  const isAdmin = ['ADMIN', 'SUPER_ADMIN', 'OWNER', 'BUSINESS_HEAD'].includes(userRole);
   const [contacts, setContacts] = useState([]);
   const [agents, setAgents] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -282,9 +285,11 @@ export default function Pipeline() {
                                <button onClick={() => { handleAction(c._id, 'archive_lead'); }} className="w-full text-left px-5 py-3 text-[11px] font-bold capitalize text-orange-600 hover:bg-orange-50 flex items-center border-t border-slate-50">
                                   <Snowflake size={14} className="mr-3" /> Archive Lead
                                </button>
+                               {isAdmin && (
                                <button onClick={() => { handleAction(c._id, 'hard_delete_lead'); }} className="w-full text-left px-5 py-3 text-[11px] font-bold capitalize text-red-600 hover:bg-red-50 flex items-center border-t border-slate-50">
                                   <X size={14} className="mr-3" /> Permanent Delete
                                </button>
+                               )}
                              </div>
                           )}
                         </div>

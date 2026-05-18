@@ -70,7 +70,8 @@ import {
   Map,
   Award,
   Activity,
-  Calendar
+  Calendar,
+  Tag,
 } from 'lucide-react';
 
 function DashboardCard({ title, value, subtext, icon: Icon, greenBadge, onAction, actionLabel = "Add", onClick, isClickable }) {
@@ -137,7 +138,11 @@ function LeadAnalysisCard({ title, data, type = 'status' }) {
             </div>
             <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                <div 
-                 className={`h-full transition-all duration-1000 ${type === 'status' ? 'bg-gradient-to-r from-blue-500 to-indigo-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500'}`}
+                 className={`h-full transition-all duration-1000 ${
+                    type === 'status' ? 'bg-gradient-to-r from-blue-500 to-indigo-500' : 
+                    type === 'source' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' : 
+                    'bg-gradient-to-r from-rose-500 to-orange-500'
+                 }`}
                  style={{ width: `${(item.value / max) * 100}%` }}
                />
             </div>
@@ -151,7 +156,7 @@ function LeadAnalysisCard({ title, data, type = 'status' }) {
 function Dashboard() {
   const navigate = useNavigate();
   const [stats, setStats] = React.useState({ campaigns: 0, recentCampaign: '', templates: 0, contacts: 0, chats: 0, pendingTasks: 0 });
-  const [analysisData, setAnalysisData] = React.useState({ statusStats: [], sourceStats: [] });
+  const [analysisData, setAnalysisData] = React.useState({ statusStats: [], sourceStats: [], tagStats: [] });
   const [loading, setLoading] = React.useState(true);
   const [wabaConfig, setWabaConfig] = React.useState(null);
   const [showRefillModal, setShowRefillModal] = React.useState(false);
@@ -829,8 +834,9 @@ function Dashboard() {
             <h3 className="text-sm font-black text-slate-700 tracking-widest uppercase">Market Intelligence</h3>
             <span className="text-[10px] bg-indigo-100 text-indigo-600 px-2 py-0.5 rounded-full font-bold">Source Insights</span>
          </div>
-         <div className="grid grid-cols-1 gap-6">
+         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <LeadAnalysisCard title="Lead Source Distribution" data={analysisData.sourceStats} type="source" />
+            <LeadAnalysisCard title="Lead Tag Distribution" data={analysisData.tagStats || []} type="tag" />
          </div>
       </div>
       </div>
@@ -1079,6 +1085,7 @@ function Dashboard() {
                             </div>
                             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-relaxed">No contacts found in this<br/>category at the moment.</p>
                          </div>
+<<<<<<< HEAD
                        ) : leadDetailsModal.data.map((lead, i) => (
                           <div key={i} onClick={() => openLeadProfile(lead)} className="group flex flex-col p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98]">
                              <div className="flex items-center justify-between w-full">
@@ -1159,6 +1166,111 @@ function Dashboard() {
                              })()}
                           </div>
                        ))}
+=======
+                        ) : leadDetailsModal.data.map((lead, i) => {
+                           const fullContact = allContacts.find(c => c._id === lead._id || c.phone === lead.phone) || lead;
+                           return (
+                           <div key={i} onClick={() => openLeadProfile(lead)} className="group flex flex-col p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98]">
+                              <div className="flex items-center justify-between w-full">
+                                 <div className="flex items-center space-x-4">
+                                    <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-teal-600 font-black text-lg group-hover:bg-teal-50 group-hover:scale-110 transition-all">
+                                       {lead.name?.charAt(0) || 'L'}
+                                    </div>
+                                    <div>
+                                       <div className="flex items-center gap-2">
+                                          <p className="text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors">{lead.name}</p>
+                                          <span className="text-[8px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">View Details →</span>
+                                       </div>
+                                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{lead.phone}</p>
+                                    </div>
+                                 </div>
+                                 <div className="text-right">
+                                    <span className="inline-block px-3 py-1 bg-teal-50 text-teal-600 text-[9px] font-black uppercase rounded-lg border border-teal-100 group-hover:bg-teal-100 group-hover:text-teal-700 transition-colors">
+                                       {lead.status}
+                                    </span>
+                                 </div>
+                              </div>
+                              
+                              {/* Render Last Remark & Follow-up Details on the card */}
+                              {(() => {
+                                 // Normalize status to match standard groups
+                                 const upperStatus = (lead.status || '').toUpperCase().replace(/_/g, ' ');
+                                 const showRemarkGroup = [
+                                    'NEW LEAD', 'NEW',
+                                    'OPEN', 'CONTACTED', 'INTERESTED', 'FOLLOW UP',
+                                    'CLOSE', 'CLOSED', 'CLOSED LOST',
+                                    'ADMISSION', 'CLOSED WON'
+                                 ].includes(upperStatus);
+                                 
+                                 if (!showRemarkGroup) return null;
+
+                                 // Find last note
+                                 const lastNote = fullContact.notes && fullContact.notes.length > 0 ? fullContact.notes[fullContact.notes.length - 1] : null;
+                                 // Find last task
+                                 const lastTask = fullContact.tasks && fullContact.tasks.length > 0 ? fullContact.tasks[fullContact.tasks.length - 1] : null;
+
+                                 return (
+                                    <div className="mt-4 pt-3 border-t border-slate-100 space-y-2 text-[10px] w-full text-left">
+                                       {lastNote ? (
+                                          <div className="bg-teal-50/50 p-2.5 rounded-xl border border-teal-100/30 flex items-start space-x-2 animate-fade-in">
+                                             <FileText size={12} className="text-teal-600 mt-0.5 shrink-0" />
+                                             <div className="min-w-0 flex-1">
+                                                <div className="flex justify-between items-center mb-0.5">
+                                                   <span className="font-bold text-teal-800">Last Remark Note ({lastNote.createdBy || 'Agent'})</span>
+                                                   <span className="text-[8px] text-teal-500 font-bold">
+                                                      {lastNote.createdAt ? new Date(lastNote.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
+                                                   </span>
+                                                </div>
+                                                <p className="text-slate-600 font-medium truncate leading-normal" title={lastNote.content}>{lastNote.content}</p>
+                                             </div>
+                                          </div>
+                                       ) : (
+                                          <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/50 flex items-start space-x-2 opacity-75">
+                                             <FileText size={12} className="text-slate-400 mt-0.5 shrink-0" />
+                                             <div className="min-w-0 flex-1">
+                                                <div className="flex justify-between items-center mb-0.5">
+                                                   <span className="font-bold text-slate-500">Last Remark Note</span>
+                                                   <span className="text-[8px] text-slate-400 font-bold">N/A</span>
+                                                </div>
+                                                <p className="text-slate-400 font-semibold italic truncate leading-normal">No remark note recorded</p>
+                                             </div>
+                                          </div>
+                                       )}
+                                       
+                                       {lastTask ? (
+                                          <div className="bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100/30 flex items-start space-x-2 animate-fade-in">
+                                             <Calendar size={12} className="text-indigo-600 mt-0.5 shrink-0" />
+                                             <div className="min-w-0 flex-1">
+                                                <div className="flex justify-between items-center mb-0.5">
+                                                   <span className="font-bold text-indigo-800">Last Follow-up: {lastTask.title}</span>
+                                                   <span className="text-[8px] text-indigo-500 font-bold">
+                                                      {lastTask.dueDate ? new Date(lastTask.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
+                                                   </span>
+                                                </div>
+                                                {lastTask.description && (
+                                                   <p className="text-slate-600 font-medium truncate leading-normal" title={lastTask.description}>{lastTask.description}</p>
+                                                )}
+                                             </div>
+                                          </div>
+                                       ) : (
+                                          <div className="bg-slate-50/50 p-2.5 rounded-xl border border-slate-100/50 flex items-start space-x-2 opacity-75">
+                                             <Calendar size={12} className="text-slate-400 mt-0.5 shrink-0" />
+                                             <div className="min-w-0 flex-1">
+                                                <div className="flex justify-between items-center mb-0.5">
+                                                   <span className="font-bold text-slate-500">Last Follow-up Task</span>
+                                                   <span className="text-[8px] text-slate-400 font-bold">N/A</span>
+                                                </div>
+                                                <p className="text-slate-400 font-semibold italic truncate leading-normal">No follow-up scheduled</p>
+                                             </div>
+                                          </div>
+                                       )}
+                                    </div>
+                                 );
+                              })()}
+                           </div>
+                           );
+                        })}
+>>>>>>> 2d1e08c85a3ac8b175cacef31ab98ab4c8c1a908
                     </div>
                   )}
                </div>
@@ -1396,6 +1508,100 @@ function Dashboard() {
                                              </div>
                                           </div>
                                        )}
+                                    </div>
+                                 </div>
+
+                                                                  {/* TAGS & LABELS */}
+                                 <div className="bg-white rounded-3xl border border-slate-100 p-6 shadow-sm space-y-6">
+                                    <div className="flex items-center justify-between border-b border-slate-50 pb-3">
+                                       <div className="flex items-center space-x-3">
+                                          <div className="w-8 h-8 rounded-xl bg-rose-500 text-white text-[10px] flex items-center justify-center font-bold shadow-md">
+                                             <Tag size={14}/>
+                                          </div>
+                                          <h3 className="text-[10px] font-black text-slate-800 uppercase tracking-widest">Custom Tags</h3>
+                                       </div>
+                                    </div>
+                                    
+                                    <div className="space-y-4">
+                                       <div className="flex items-center space-x-2">
+                                          <input 
+                                            type="text"
+                                            id="new-tag-input"
+                                            placeholder="Add custom tag (e.g. Hot Lead)..." 
+                                            className="flex-1 bg-slate-50/50 border-2 border-slate-50 py-3 px-4 text-xs font-bold text-slate-800 rounded-xl outline-none focus:bg-white focus:border-rose-500/20 transition-all"
+                                            onKeyDown={(e) => {
+                                               if (e.key === 'Enter' && e.target.value.trim() !== '') {
+                                                  e.preventDefault();
+                                                  const val = e.target.value.trim();
+                                                  const currentTags = editedLead.tags || [];
+                                                  if (!currentTags.includes(val)) {
+                                                     handleLeadFieldChange('tags', [...currentTags, val]);
+                                                  }
+                                                  e.target.value = '';
+                                               }
+                                            }}
+                                          />
+                                          <button 
+                                            onClick={(e) => {
+                                               e.preventDefault();
+                                               const input = document.getElementById('new-tag-input');
+                                               if (input && input.value.trim() !== '') {
+                                                  const val = input.value.trim();
+                                                  const currentTags = editedLead.tags || [];
+                                                  if (!currentTags.includes(val)) {
+                                                     handleLeadFieldChange('tags', [...currentTags, val]);
+                                                  }
+                                                  input.value = '';
+                                               }
+                                            }}
+                                            className="px-5 py-3 bg-teal-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl hover:bg-teal-700 shadow-sm transition-all"
+                                          >
+                                            Add
+                                          </button>
+                                       </div>
+                                       
+                                       {/* Suggested Tags */}
+                                       <div className="flex flex-wrap gap-2">
+                                          {['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'].map(tag => (
+                                             <button 
+                                               key={tag}
+                                               onClick={(e) => {
+                                                  e.preventDefault();
+                                                  const currentTags = editedLead.tags || [];
+                                                  if (!currentTags.includes(tag)) {
+                                                     handleLeadFieldChange('tags', [...currentTags, tag]);
+                                                  }
+                                               }}
+                                               className="px-3 py-1.5 bg-slate-50 hover:bg-rose-50 border border-slate-100 hover:border-rose-200 text-slate-500 hover:text-rose-600 text-[9px] font-black uppercase tracking-wider rounded-lg transition-all"
+                                             >
+                                                + {tag}
+                                             </button>
+                                          ))}
+                                       </div>
+
+                                       {/* Active Tags */}
+                                       <div className="pt-4 mt-2 border-t border-slate-50">
+                                          {(!editedLead.tags || editedLead.tags.length === 0) ? (
+                                             <p className="text-[10px] font-medium text-slate-400 italic">No tags added yet.</p>
+                                          ) : (
+                                             <div className="flex flex-wrap gap-2">
+                                                {editedLead.tags.map(tag => (
+                                                   <span key={tag} className="pl-3 pr-1 py-1 bg-gradient-to-r from-rose-50 to-orange-50 border border-rose-100/50 text-rose-600 text-[10px] font-black tracking-wide rounded-lg flex items-center space-x-2 shadow-sm">
+                                                      <span>{tag}</span>
+                                                      <button 
+                                                        onClick={(e) => {
+                                                           e.preventDefault();
+                                                           handleLeadFieldChange('tags', editedLead.tags.filter(t => t !== tag));
+                                                        }}
+                                                        className="p-1 hover:bg-rose-100 rounded-md transition-colors"
+                                                      >
+                                                         <X size={10} className="text-rose-600" />
+                                                      </button>
+                                                   </span>
+                                                ))}
+                                             </div>
+                                          )}
+                                       </div>
                                     </div>
                                  </div>
 
