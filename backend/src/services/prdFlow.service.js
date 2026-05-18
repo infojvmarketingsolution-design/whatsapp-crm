@@ -151,9 +151,15 @@ class PRDFlowService {
       };
 
       const sendInteractiveOptions = async (body, options) => {
-        const hasLongOption = options.some(opt => opt.length > 20);
+        const optionStrings = options.map(opt => {
+          if (typeof opt === 'string') return opt;
+          if (opt && typeof opt === 'object') return opt.label || opt.title || '';
+          return '';
+        });
+
+        const hasLongOption = optionStrings.some(opt => opt.length > 20);
         if (options.length <= 3 && !hasLongOption) {
-          const res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: options });
+          const res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: optionStrings });
           await saveAndEmit('interactive', body, res);
         } else {
           const res = await waService.sendListMessage(contact.phone, {
@@ -161,11 +167,23 @@ class PRDFlowService {
             buttonText: 'View Options',
             sections: [{
               title: 'Available Options',
-              rows: options.slice(0, 10).map((opt, i) => ({ 
-                id: `list_${i}`, 
-                title: opt.substring(0, 24), 
-                description: opt.length > 24 ? opt.substring(0, 72) : undefined 
-              }))
+              rows: options.slice(0, 10).map((opt, i) => {
+                if (typeof opt === 'string') {
+                  return {
+                    id: `list_${i}`,
+                    title: opt.substring(0, 24),
+                    description: opt.length > 24 ? opt.substring(0, 72) : undefined
+                  };
+                } else {
+                  const title = (opt?.label || opt?.title || '').trim().substring(0, 24);
+                  const desc = (opt?.description || opt?.text || '').trim().substring(0, 72);
+                  return {
+                    id: `list_${i}`,
+                    title: title || `Option ${i+1}`,
+                    description: desc || undefined
+                  };
+                }
+              })
             }]
           });
           await saveAndEmit('interactive', body, res);
@@ -465,7 +483,7 @@ class PRDFlowService {
                                });
 
         if (matchedQualKey && programMap[matchedQualKey]) {
-          const categories = Object.keys(programMap[matchedQualKey]);
+          const categories = Object.keys(programMap[matchedQualKey]).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
           if (categories.length === 1) {
             // Skip category selection if only 1 category
             const streamName = categories[0];
@@ -478,7 +496,8 @@ class PRDFlowService {
                 currentFlowStep: 'ask_program'
               }
             });
-            const programs = programMap[matchedQualKey][streamName] || [];
+            const val = programMap[matchedQualKey][streamName];
+            const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || []) : (val || []);
             const progMsg = "Please select your preferred program.";
             await sendInteractiveOptions(progMsg, programs);
           } else if (categories.length > 1) {
@@ -490,30 +509,21 @@ class PRDFlowService {
               }
             });
             const progStep = steps.find(s => s.type === 'PROGRAM_SELECTION');
-            let catMsg = progStep?.categoryMessage || progStep?.message || progStep?.text || "Please select program category.";
-            let optionsToSend = categories;
-
-            const config = this.getCategoryConfig(progStep, matchedQualKey);
-            if (config) {
-              if (config.message) {
-                catMsg = config.message;
-              }
-              if (config.categories && config.categories.length > 0) {
-                optionsToSend = categories.map(cat => {
-                  const matchedConfigCat = config.categories.find(cc => cc.key === cat);
-                  if (matchedConfigCat) {
-                    return {
-                      label: matchedConfigCat.label || cat,
-                      description: matchedConfigCat.description || ''
-                    };
-                  }
-                  return cat;
-                });
-              }
-            }
-
+            let catMsg = programMap[matchedQualKey]?._categoryMessage || programMap[matchedQualKey]?.categoryMessage || progStep?.categoryMessage || progStep?.message || progStep?.text || "Please select program category.";
             catMsg = this.populatePlaceholders(catMsg, contact, contact.flowVariables?.name || contact.name || 'Student');
-            await sendInteractiveOptions(catMsg, optionsToSend);
+
+            const categoryOptions = categories.map(key => {
+              const val = programMap[matchedQualKey][key];
+              if (val && typeof val === 'object' && !Array.isArray(val)) {
+                return {
+                  label: val.label || key,
+                  description: val.description || ''
+                };
+              }
+              return key;
+            });
+
+            await sendInteractiveOptions(catMsg, categoryOptions);
           } else {
              // No categories, ask custom
              await ContactModel.updateOne({ phone: contact.phone }, {
@@ -582,7 +592,9 @@ class PRDFlowService {
                                         (cleanSel.includes('grad') && cleanK.includes('grad'));
                                });
 
-        const categories = matchedQualKey && programMap[matchedQualKey] ? Object.keys(programMap[matchedQualKey]) : [];
+        const categories = matchedQualKey && programMap[matchedQualKey] 
+          ? Object.keys(programMap[matchedQualKey]).filter(k => !k.startsWith('_') && k !== 'categoryMessage') 
+          : [];
 
         let selectedCategory = '';
         if (replyValue) {
@@ -595,8 +607,15 @@ class PRDFlowService {
         }
         if (!selectedCategory) {
           const matchIdx = categories.findIndex(cat => {
+            const val = programMap[matchedQualKey][cat];
+            const label = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.label || cat) : cat;
+            const description = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.description || '') : '';
             const cleanCat = cat.toLowerCase().trim();
-            return normalizedInput === cleanCat || normalizedInput.includes(cleanCat);
+            const cleanLabel = label.toLowerCase().trim();
+            const cleanDesc = description.toLowerCase().trim();
+            return normalizedInput === cleanCat || normalizedInput.includes(cleanCat) ||
+                   normalizedInput === cleanLabel || normalizedInput.includes(cleanLabel) ||
+                   (cleanDesc && (normalizedInput === cleanDesc || normalizedInput.includes(cleanDesc)));
           });
           if (matchIdx !== -1) {
             selectedCategory = categories[matchIdx];
@@ -612,35 +631,27 @@ class PRDFlowService {
             }
           });
 
-          const programs = programMap[matchedQualKey][selectedCategory] || [];
+          const val = programMap[matchedQualKey][selectedCategory];
+          const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || []) : (val || []);
           const progMsg = "Please select your preferred program.";
           await sendInteractiveOptions(progMsg, programs);
         } else {
           const progStep = steps.find(s => s.type === 'PROGRAM_SELECTION');
-          let errMsg = progStep?.categoryMessage || progStep?.message || progStep?.text || "Please select program category:";
-          let optionsToSend = categories.length ? categories : ['Traditional', 'Trending'];
-
-          const config = this.getCategoryConfig(progStep, matchedQualKey);
-          if (config && categories.length > 0) {
-            if (config.message) {
-              errMsg = config.message;
-            }
-            if (config.categories && config.categories.length > 0) {
-              optionsToSend = categories.map(cat => {
-                const matchedConfigCat = config.categories.find(cc => cc.key === cat);
-                if (matchedConfigCat) {
-                  return {
-                    label: matchedConfigCat.label || cat,
-                    description: matchedConfigCat.description || ''
-                  };
-                }
-                return cat;
-              });
-            }
-          }
-
+          let errMsg = programMap[matchedQualKey]?._categoryMessage || programMap[matchedQualKey]?.categoryMessage || progStep?.categoryMessage || progStep?.message || progStep?.text || "Please select program category:";
           errMsg = this.populatePlaceholders(errMsg, contact, contact.flowVariables?.name || contact.name || 'Student');
-          await sendInteractiveOptions(errMsg, optionsToSend);
+          
+          const categoryOptions = categories.map(key => {
+            const val = programMap[matchedQualKey][key];
+            if (val && typeof val === 'object' && !Array.isArray(val)) {
+              return {
+                label: val.label || key,
+                description: val.description || ''
+              };
+            }
+            return key;
+          });
+
+          await sendInteractiveOptions(errMsg, categoryOptions);
         }
 
         this.activeProcesses.delete(lockKey);
@@ -1077,7 +1088,7 @@ class PRDFlowService {
                              });
 
       if (matchedQualKey && programMap[matchedQualKey]) {
-        const categories = Object.keys(programMap[matchedQualKey]);
+        const categories = Object.keys(programMap[matchedQualKey]).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
         if (categories.length === 1) {
           const streamName = categories[0];
           await ContactModel.updateOne({ phone: contact.phone }, {
@@ -1089,37 +1100,31 @@ class PRDFlowService {
           });
           let progMsg = nextStep.message || nextStep.text || "Please select your preferred program.";
           progMsg = this.populatePlaceholders(progMsg, fresh, nameVal);
-          await this.sendInteractiveOptionsHelper(contact, waService, progMsg, programMap[matchedQualKey][streamName] || [], settings, io);
+          
+          const val = programMap[matchedQualKey][streamName];
+          const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || []) : (val || []);
+          await this.sendInteractiveOptionsHelper(contact, waService, progMsg, programs, settings, io);
         } else if (categories.length > 1) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               currentFlowStep: 'ask_program_category'
             }
           });
-          let catMsg = nextStep.categoryMessage || nextStep.message || nextStep.text || "Please select program category.";
-          let optionsToSend = categories;
-
-          const config = this.getCategoryConfig(nextStep, matchedQualKey);
-          if (config) {
-            if (config.message) {
-              catMsg = config.message;
-            }
-            if (config.categories && config.categories.length > 0) {
-              optionsToSend = categories.map(cat => {
-                const matchedConfigCat = config.categories.find(cc => cc.key === cat);
-                if (matchedConfigCat) {
-                  return {
-                    label: matchedConfigCat.label || cat,
-                    description: matchedConfigCat.description || ''
-                  };
-                }
-                return cat;
-              });
-            }
-          }
-
+          let catMsg = programMap[matchedQualKey]?._categoryMessage || programMap[matchedQualKey]?.categoryMessage || nextStep.categoryMessage || nextStep.message || nextStep.text || "Please select program category.";
           catMsg = this.populatePlaceholders(catMsg, fresh, nameVal);
-          await this.sendInteractiveOptionsHelper(contact, waService, catMsg, optionsToSend, settings, io);
+
+          const categoryOptions = categories.map(key => {
+            const val = programMap[matchedQualKey][key];
+            if (val && typeof val === 'object' && !Array.isArray(val)) {
+              return {
+                label: val.label || key,
+                description: val.description || ''
+              };
+            }
+            return key;
+          });
+
+          await this.sendInteractiveOptionsHelper(contact, waService, catMsg, categoryOptions, settings, io);
         } else {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: { currentFlowStep: 'ask_custom_program' }
@@ -1164,13 +1169,6 @@ class PRDFlowService {
         }
       }
     }
-  getCategoryConfig(progStep, matchedQualKey) {
-    if (!progStep || !progStep.categoryConfigs || !matchedQualKey) return null;
-    const cleanQual = matchedQualKey.toLowerCase().trim();
-    return progStep.categoryConfigs.find(c => {
-      const cleanKey = (c.qualKey || '').toLowerCase().trim();
-      return cleanKey === cleanQual || cleanQual.includes(cleanKey) || cleanKey.includes(cleanQual);
-    });
   }
 
   async sendInteractiveOptionsHelper(contact, waService, body, options, settings = null, io = null) {
