@@ -1312,7 +1312,7 @@ const getLeadDetailsStats = async (req, res) => {
     }
 
     const contacts = await Contact.find(matchQuery)
-      .select('name phone email status leadSourceType score heatLevel createdAt lastActivity')
+      .select('name phone email status leadSourceType score heatLevel createdAt lastActivity notes tasks')
       .sort({ updatedAt: -1 })
       .limit(1000);
 
