@@ -28,12 +28,15 @@ class PRDFlowService {
 
   makeAbsolute(url) {
     if (!url || typeof url !== 'string' || url.trim() === '') return '';
+    if (url.toLowerCase().endsWith('.webp') || url.toLowerCase().includes('.webp')) {
+      return ''; // Meta Cloud API doesn't support WebP. Fallback to text.
+    }
     if (url.startsWith('http') || /^\d+$/.test(url)) {
-      if (url.includes('localhost') || url.includes('127.0.0.1') || url.includes('wapipulse.com')) return '';
+      if (url.includes('localhost') || url.includes('127.0.0.1')) return '';
       return url;
     }
     const baseUrl = (process.env.BASE_URL || '').replace(/\/$/, '');
-    if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1') || baseUrl.includes('wapipulse.com')) {
+    if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
       return '';
     }
     return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
