@@ -191,8 +191,8 @@ exports.uploadImage = async (req, res) => {
       fs.mkdirSync(targetDir, { recursive: true });
     }
 
-    const fileExt = path.extname(req.file.originalname);
-    const fileName = `prompt_${Date.now()}${fileExt}`;
+    const originalExt = path.extname(req.file.originalname);
+    const fileName = `prompt_${Date.now()}${originalExt}`;
     const targetPath = path.join(targetDir, fileName);
 
     fs.renameSync(req.file.path, targetPath);
