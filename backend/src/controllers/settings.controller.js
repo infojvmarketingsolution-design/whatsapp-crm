@@ -74,7 +74,15 @@ exports.getSettings = async (req, res) => {
           settings.automation.aiPrompts = {};
           updated = true;
        }
-       const qualOptionsCleaned = (settings.automation.aiPrompts.qualificationOptions || []).filter(o => o && o.trim() !== "");
+       const qualOptionsCleaned = (settings.automation.aiPrompts.qualificationOptions || []).filter(o => {
+          if (!o) return false;
+          if (typeof o === 'string') return o.trim() !== "";
+          if (typeof o === 'object') {
+             const lbl = o.label || '';
+             return typeof lbl === 'string' && lbl.trim() !== "";
+          }
+          return false;
+        });
        if (qualOptionsCleaned.length === 0) {
           settings.automation.aiPrompts.qualificationOptions = ['12th Pass', 'Graduation', 'Other'];
           updated = true;
