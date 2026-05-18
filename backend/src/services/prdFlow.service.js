@@ -116,7 +116,11 @@ class PRDFlowService {
       const settings = await Settings.findOne({ tenantId });
       const aiPrompts = settings?.automation?.aiPrompts || {};
       const steps = aiPrompts.prdFlowSteps || [];
+      console.log('[PRD FLOW DEBUG] Loaded steps count:', steps.length);
       const greetingStep = steps.find(s => s.type === 'GREETING');
+      if (greetingStep) {
+         console.log('[PRD FLOW DEBUG] Greeting step buttons:', JSON.stringify(greetingStep.buttons, null, 2));
+      }
       let greetingImage = greetingStep?.image || aiPrompts.greetingImage || '';
       if (!greetingImage || greetingImage.includes('tenant_demo_001') || greetingImage.includes('prompt_1774743344804')) {
         greetingImage = 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=1200&q=80';

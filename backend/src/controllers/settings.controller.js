@@ -174,6 +174,50 @@ exports.updateSettings = async (req, res) => {
     // Merge updates into the specific category
     if (category === 'roleAccess') {
        settings.set('roleAccess', updates);
+    } else if (category === 'automation') {
+       // Direct deep assignment of automation fields to ensure Mongoose dirty-tracking detects all changes perfectly
+       if (updates.botEnabled !== undefined) settings.automation.botEnabled = updates.botEnabled;
+       if (updates.botMode !== undefined) settings.automation.botMode = updates.botMode;
+       if (updates.customGreetingFlowId !== undefined) settings.automation.customGreetingFlowId = updates.customGreetingFlowId;
+       if (updates.fallbackToHuman !== undefined) settings.automation.fallbackToHuman = updates.fallbackToHuman;
+       if (updates.workingHours !== undefined) settings.automation.workingHours = updates.workingHours;
+       if (updates.rateLimit !== undefined) settings.automation.rateLimit = updates.rateLimit;
+       if (updates.aiPrompts) {
+          const ai = updates.aiPrompts;
+          if (ai.greetingMessage !== undefined) settings.automation.aiPrompts.greetingMessage = ai.greetingMessage;
+          if (ai.greetingImage !== undefined) settings.automation.aiPrompts.greetingImage = ai.greetingImage;
+          if (ai.namePrompt !== undefined) settings.automation.aiPrompts.namePrompt = ai.namePrompt;
+          if (ai.programListPrompt !== undefined) settings.automation.aiPrompts.programListPrompt = ai.programListPrompt;
+          if (ai.successProofMessage !== undefined) settings.automation.aiPrompts.successProofMessage = ai.successProofMessage;
+          if (ai.successProofImage !== undefined) settings.automation.aiPrompts.successProofImage = ai.successProofImage;
+          if (ai.callTimePrompt !== undefined) settings.automation.aiPrompts.callTimePrompt = ai.callTimePrompt;
+          if (ai.agentTransferPrompt !== undefined) settings.automation.aiPrompts.agentTransferPrompt = ai.agentTransferPrompt;
+          if (ai.fallbackMessage !== undefined) settings.automation.aiPrompts.fallbackMessage = ai.fallbackMessage;
+          
+          // Mixed and custom array/object fields
+          if (ai.qualificationOptions !== undefined) {
+             settings.automation.aiPrompts.qualificationOptions = ai.qualificationOptions;
+             settings.markModified('automation.aiPrompts.qualificationOptions');
+          }
+          if (ai.programMap !== undefined) {
+             settings.automation.aiPrompts.programMap = ai.programMap;
+             settings.markModified('automation.aiPrompts.programMap');
+          }
+          if (ai.prdFlowSteps !== undefined) {
+             settings.automation.aiPrompts.prdFlowSteps = ai.prdFlowSteps;
+             settings.markModified('automation.aiPrompts.prdFlowSteps');
+          }
+          
+          // Direct dynamic AI fields
+          if (ai.aiSystemInstructions !== undefined) settings.automation.aiPrompts.aiSystemInstructions = ai.aiSystemInstructions;
+          if (ai.aiPlacementInfo !== undefined) settings.automation.aiPrompts.aiPlacementInfo = ai.aiPlacementInfo;
+          if (ai.aiHostelInfo !== undefined) settings.automation.aiPrompts.aiHostelInfo = ai.aiHostelInfo;
+          if (ai.aiScholarshipInfo !== undefined) settings.automation.aiPrompts.aiScholarshipInfo = ai.aiScholarshipInfo;
+          if (ai.aiFeeInfo !== undefined) settings.automation.aiPrompts.aiFeeInfo = ai.aiFeeInfo;
+          if (ai.aiBrochureUrl !== undefined) settings.automation.aiPrompts.aiBrochureUrl = ai.aiBrochureUrl;
+       }
+       settings.markModified('automation');
+       settings.markModified('automation.aiPrompts');
     } else {
        const currentData = (settings[category] && typeof settings[category].toObject === 'function') 
            ? settings[category].toObject() 
@@ -181,12 +225,6 @@ exports.updateSettings = async (req, res) => {
        settings[category] = { ...currentData, ...updates };
     }
     settings.markModified(category);
-     if (category === 'automation') {
-        settings.markModified('automation.aiPrompts');
-        settings.markModified('automation.aiPrompts.prdFlowSteps');
-        settings.markModified('automation.aiPrompts.programMap');
-        settings.markModified('automation.aiPrompts.qualificationOptions');
-     }
     await settings.save();
     
     res.json(settings);
