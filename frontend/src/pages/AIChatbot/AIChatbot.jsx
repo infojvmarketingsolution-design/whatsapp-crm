@@ -206,51 +206,6 @@ export default function AIChatbot() {
     });
   };
 
-  const updateCategoryConfigMessage = (qualKey, message) => {
-    setSettings(prev => {
-      const prdFlowSteps = (prev.aiPrompts.prdFlowSteps || []).map(s => {
-        if (s.type === 'PROGRAM_SELECTION') {
-          const categoryConfigs = [...(s.categoryConfigs || [])];
-          let qualConfig = categoryConfigs.find(c => c.qualKey === qualKey);
-          if (!qualConfig) {
-            qualConfig = { qualKey, message: '', categories: [] };
-            categoryConfigs.push(qualConfig);
-          }
-          qualConfig.message = message;
-          return { ...s, categoryConfigs };
-        }
-        return s;
-      });
-      return { ...prev, aiPrompts: { ...prev.aiPrompts, prdFlowSteps } };
-    });
-  };
-
-  const updateCategoryConfigOption = (qualKey, catKey, field, value) => {
-    setSettings(prev => {
-      const prdFlowSteps = (prev.aiPrompts.prdFlowSteps || []).map(s => {
-        if (s.type === 'PROGRAM_SELECTION') {
-          const categoryConfigs = [...(s.categoryConfigs || [])];
-          let qualConfig = categoryConfigs.find(c => c.qualKey === qualKey);
-          if (!qualConfig) {
-            qualConfig = { qualKey, message: '', categories: [] };
-            categoryConfigs.push(qualConfig);
-          }
-          const categories = [...(qualConfig.categories || [])];
-          let catConfig = categories.find(cc => cc.key === catKey);
-          if (!catConfig) {
-            catConfig = { key: catKey, label: '', description: '' };
-            categories.push(catConfig);
-          }
-          catConfig[field] = value;
-          qualConfig.categories = categories;
-          return { ...s, categoryConfigs };
-        }
-        return s;
-      });
-      return { ...prev, aiPrompts: { ...prev.aiPrompts, prdFlowSteps } };
-    });
-  };
-
   if (loading) return <div className="p-8">Loading AI Chatbot...</div>;
 
   return (
@@ -506,6 +461,7 @@ export default function AIChatbot() {
                       <option value="NAME_CAPTURE">Name Capture</option>
                       <option value="QUALIFICATION">Qualification</option>
                       <option value="PROGRAM_SELECTION">Program Branch</option>
+                      <option value="CALL_TIME">Consultation Call</option>
                       <option value="SUCCESS_PROOF">Success Proof</option>
                       <option value="CUSTOM_MESSAGE">Custom Message</option>
                     </select>
@@ -696,126 +652,30 @@ export default function AIChatbot() {
                       </div>
                     ) : step.type === 'PROGRAM_SELECTION' ? (
                       <div>
-                        {/* Dynamic Program Mapping JSON editor */}
-                        <div className="mb-6">
-                          <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block">Dynamic Program Mapping (JSON)</label>
-                          <p className="text-xs text-blue-800 mb-2">Programs are automatically mapped based on the selected qualification. Edit the raw JSON mapping below:</p>
-                          <textarea 
-                             className="w-full text-[10px] p-3 rounded-xl border border-blue-200 outline-none h-48 font-mono focus:ring-2 focus:ring-blue-500/20 font-medium text-slate-700"
-                             value={programMapJson}
-                             onChange={(e) => {
-                                 setProgramMapJson(e.target.value);
-                                 try {
-                                   const parsed = JSON.parse(e.target.value);
-                                   setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, programMap: parsed}}));
-                                 } catch(err) {
-                                   // Silent catch during typing
-                                 }
-                             }}
-                             onBlur={(e) => {
-                                 try {
-                                   const parsed = JSON.parse(e.target.value);
-                                   setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, programMap: parsed}}));
-                                   toast.success('Program mapping format is valid!');
-                                 } catch(err) {
-                                   toast.error('Invalid JSON format! Please correct before saving.');
-                                 }
-                             }}
-                          />
-                        </div>
-
-                        {/* Visual category config manager per qualification option */}
-                        <div className="border-t border-slate-200/80 pt-6 mt-6">
-                          <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-4">Program Category Settings & Custom Messages</label>
-                          <div className="space-y-6">
-                            {Object.keys(settings.aiPrompts.programMap || {}).map((qualKey, qIdx) => {
-                              const categoriesMap = settings.aiPrompts.programMap[qualKey] || {};
-                              const categories = Object.keys(categoriesMap);
-                              // We only show settings if there are multiple categories to choose from
-                              if (categories.length <= 1) return null;
-
-                              const qualConfig = (step.categoryConfigs || []).find(c => c.qualKey === qualKey) || {};
-                              const catMsgVal = qualConfig.message || '';
-
-                              return (
-                                <div key={qualKey} className="bg-blue-50/30 border border-blue-200/60 rounded-2xl p-4 flex flex-col gap-4">
-                                  <div className="flex items-center justify-between border-b border-blue-100 pb-2">
-                                    <span className="text-xs font-black text-blue-800 uppercase tracking-wider">
-                                      🎓 For Selected Qualification: <span className="text-amber-600 font-bold ml-1">{qualKey}</span>
-                                    </span>
-                                  </div>
-
-                                  {/* Custom Question/Message Input */}
-                                  <div className="flex flex-col gap-1 bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
-                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Category Question / Message</label>
-                                    <input 
-                                      type="text"
-                                      className="text-xs font-bold text-slate-700 outline-none border-b border-slate-200 py-1 transition-all focus:border-blue-500"
-                                      placeholder="e.g., Please select Bachelor program category."
-                                      value={catMsgVal}
-                                      onChange={(e) => updateCategoryConfigMessage(qualKey, e.target.value)}
-                                    />
-                                    <span className="text-[8px] text-slate-400">Custom question displayed to student during category selection</span>
-                                  </div>
-
-                                  {/* Categories Labels & Sub-labels list */}
-                                  <div className="space-y-3.5">
-                                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider block">Interactive Buttons / Row Items for Categories</span>
-                                    {categories.map((catKey, cIdx) => {
-                                      const catConfig = (qualConfig.categories || []).find(cc => cc.key === catKey) || {};
-                                      const label = catConfig.label || '';
-                                      const description = catConfig.description || '';
-                                      const isLabelExceeded = label.length > 24;
-                                      const isDescExceeded = description.length > 72;
-
-                                      return (
-                                        <div key={catKey} className="bg-white p-3.5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col gap-2.5 hover:border-blue-400/40 transition-all">
-                                          <div className="flex items-center justify-between gap-3 border-b border-slate-50 pb-1">
-                                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-wider">Category Option #{cIdx + 1}: <strong className="text-blue-600">{catKey}</strong></span>
-                                          </div>
-
-                                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            {/* Button Title / Label */}
-                                            <div className="flex flex-col gap-0.5">
-                                              <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Button Label (Title - Max 24 Chars)</label>
-                                              <input 
-                                                className={`text-xs font-bold text-slate-700 outline-none border-b py-1 transition-all focus:border-blue-500 ${isLabelExceeded ? 'border-red-300 text-red-500' : 'border-slate-200'}`}
-                                                placeholder={catKey}
-                                                value={label}
-                                                maxLength={30}
-                                                onChange={(e) => updateCategoryConfigOption(qualKey, catKey, 'label', e.target.value)}
-                                              />
-                                              <div className="flex justify-between text-[8px] text-slate-400 font-medium">
-                                                <span>Main button title</span>
-                                                <span className={isLabelExceeded ? 'text-red-500 font-bold' : ''}>{label.length}/24</span>
-                                              </div>
-                                            </div>
-
-                                            {/* Button Sub-label / Description */}
-                                            <div className="flex flex-col gap-0.5">
-                                              <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Sub-label / Description (Max 72 Chars)</label>
-                                              <input 
-                                                className={`text-xs text-slate-500 outline-none border-b py-1 transition-all focus:border-blue-500 ${isDescExceeded ? 'border-red-300 text-red-500' : 'border-slate-200'}`}
-                                                placeholder="e.g., Cyber Security, Cloud, AI..."
-                                                value={description}
-                                                maxLength={85}
-                                                onChange={(e) => updateCategoryConfigOption(qualKey, catKey, 'description', e.target.value)}
-                                              />
-                                              <div className="flex justify-between text-[8px] text-slate-400 font-medium">
-                                                <span>Optional description</span>
-                                                <span className={isDescExceeded ? 'text-red-500 font-bold' : ''}>{description.length}/72</span>
-                                              </div>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
+                        <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block">Dynamic Program Mapping (JSON)</label>
+                        <p className="text-xs text-blue-800 mb-2">Programs are automatically mapped based on the selected qualification. Edit the raw JSON mapping below:</p>
+                        <textarea 
+                           className="w-full text-[10px] p-3 rounded-xl border border-blue-200 outline-none h-48 font-mono focus:ring-2 focus:ring-blue-500/20 font-medium text-slate-700"
+                           value={programMapJson}
+                           onChange={(e) => {
+                              setProgramMapJson(e.target.value);
+                              try {
+                                const parsed = JSON.parse(e.target.value);
+                                setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, programMap: parsed}}));
+                              } catch(err) {
+                                // Silent catch during typing
+                              }
+                           }}
+                           onBlur={(e) => {
+                              try {
+                                const parsed = JSON.parse(e.target.value);
+                                setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, programMap: parsed}}));
+                                toast.success('Program mapping format is valid!');
+                              } catch(err) {
+                                toast.error('Invalid JSON format! Please correct before saving.');
+                              }
+                           }}
+                        />
                       </div>
                     ) : (
                       <>

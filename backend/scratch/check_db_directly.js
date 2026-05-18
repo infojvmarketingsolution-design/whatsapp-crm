@@ -14,11 +14,10 @@ async function checkSettings() {
   await mongoose.connect(process.env.CORE_DB_URI);
   const settings = await Settings.find({});
   for (const s of settings) {
-     console.log("Tenant:", s.tenantId);
+     console.log(`Tenant: \${s.tenantId}`);
      if (s.automation && s.automation.aiPrompts) {
           console.log("Qualifications:", s.automation.aiPrompts.qualificationOptions);
           console.log("ProgramMap:", JSON.stringify(s.automation.aiPrompts.programMap, null, 2));
-          console.log("prdFlowSteps:", JSON.stringify(s.automation.aiPrompts.prdFlowSteps, null, 2));
      } else {
           console.log("No automation or aiPrompts found.");
      }

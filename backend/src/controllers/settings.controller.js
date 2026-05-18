@@ -61,87 +61,86 @@ exports.getSettings = async (req, res) => {
     }
 
     let settings = await Settings.findOne({ tenantId });
-    let isNew = false;
     if (!settings) {
        settings = new Settings({ tenantId });
-       isNew = true;
-    }
-
-    let updated = isNew;
-    if (!settings.automation) {
-       settings.automation = { botEnabled: false, botMode: 'PRD', aiPrompts: {} };
-       updated = true;
-    }
-    if (!settings.automation.aiPrompts) {
-       settings.automation.aiPrompts = {};
-       updated = true;
-    }
-    const qualOptionsCleaned = (settings.automation.aiPrompts.qualificationOptions || []).filter(o => {
-       if (!o) return false;
-       if (typeof o === 'string') return o.trim() !== "";
-       if (typeof o === 'object') {
-          const lbl = o.label || '';
-          return typeof lbl === 'string' && lbl.trim() !== "";
-       }
-       return false;
-     });
-    if (qualOptionsCleaned.length === 0) {
-       settings.automation.aiPrompts.qualificationOptions = ['12th Pass', 'Graduation', 'Other'];
-       updated = true;
-    }
-    if (!settings.automation.aiPrompts.programMap || Object.keys(settings.automation.aiPrompts.programMap).length === 0) {
-       settings.automation.aiPrompts.programMap = {
-     "12th Pass": {
-             "Trending Programs": [
-                     "B.Voc Cyber Security",
-                     "B.Voc Fintech",
-                     "B.Sc IT Ai & ML",
-                     "B.Sc IT Data Analytics"
-             ],
-             "Traditional Programs": [
-                     "B.Com",
-                     "B.Tech",
-                     "BBA"
-             ]
-     },
-     "Graduation": {
-             "Trending Programs": [
-                     "Cyber Security & Digital Forensics",
-                     "Cloud Automation",
-                     "Data Analytics",
-                     "Animation, VFX & Game Design",
-                     "Blockchain Technology",
-                     "Software & Mobile App Development"
-             ],
-             "Traditional Programs": [
-                     "M.Com",
-                     "MBA",
-                     "M.Tech",
-                     "M.Sc",
-                     "Other"
-             ]
-     }
-   };
-        updated = true;
-    }
-    if (!settings.automation.aiPrompts.prdFlowSteps || settings.automation.aiPrompts.prdFlowSteps.length === 0) {
-       settings.automation.aiPrompts.prdFlowSteps = [
-         { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Greeting & Name Request', message: 'Welcome to Gandhinagar University 🎓\n\nWe’re excited to help you choose the right career path.\n\nMay I know your name?', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
-         { id: 'qualification', type: 'QUALIFICATION', title: 'Qualification Request', message: 'Nice to meet you {{name}} 😊\n\nPlease select your qualification.' },
-         { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Please select your preferred program category.', categoryMessage: 'Please select program category.' },
-         { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: 'Excellent choice 🚀\n\nWhen should our counselor contact you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
-         { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counselor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' }
-       ];
-       updated = true;
-    }
-    if (updated) {
-       settings.markModified('automation');
-       settings.markModified('automation.aiPrompts');
-       settings.markModified('automation.aiPrompts.qualificationOptions');
-       settings.markModified('automation.aiPrompts.programMap');
-       settings.markModified('automation.aiPrompts.prdFlowSteps');
        await settings.save();
-       console.log("✅ Seeded default settings for tenant:", tenantId);
+    } else {
+       let updated = false;
+       if (!settings.automation) {
+          settings.automation = { botEnabled: false, botMode: 'PRD', aiPrompts: {} };
+          updated = true;
+       }
+       if (!settings.automation.aiPrompts) {
+          settings.automation.aiPrompts = {};
+          updated = true;
+       }
+       const qualOptionsCleaned = (settings.automation.aiPrompts.qualificationOptions || []).filter(o => {
+          if (!o) return false;
+          if (typeof o === 'string') return o.trim() !== "";
+          if (typeof o === 'object') {
+             const lbl = o.label || '';
+             return typeof lbl === 'string' && lbl.trim() !== "";
+          }
+          return false;
+        });
+       if (qualOptionsCleaned.length === 0) {
+          settings.automation.aiPrompts.qualificationOptions = ['12th Pass', 'Graduation', 'Other'];
+          updated = true;
+       }
+       if (!settings.automation.aiPrompts.programMap || Object.keys(settings.automation.aiPrompts.programMap).length === 0) {
+          settings.automation.aiPrompts.programMap = {
+        "12th Pass": {
+                "Trending Programs": [
+                        "B.Voc Cyber Security",
+                        "B.Voc Fintech",
+                        "B.Sc IT Ai & ML",
+                        "B.Sc IT Data Analytics"
+                ],
+                "Traditional Programs": [
+                        "B.Com",
+                        "B.Tech",
+                        "BBA"
+                ]
+        },
+        "Graduation": {
+                "Trending Programs": [
+                        "Cyber Security & Digital Forensics",
+                        "Cloud Automation",
+                        "Data Analytics",
+                        "Animation, VFX & Game Design",
+                        "Blockchain Technology",
+                        "Software & Mobile App Development"
+                ],
+                "Traditional Programs": [
+                        "M.Com",
+                        "MBA",
+                        "M.Tech",
+                        "M.Sc",
+                        "Other"
+                ]
+        }
+      };
+           updated = true;
+       }
+       if (!settings.automation.aiPrompts.prdFlowSteps || settings.automation.aiPrompts.prdFlowSteps.length === 0) {
+          settings.automation.aiPrompts.prdFlowSteps = [
+            { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Greeting & Name Request', message: 'Welcome to Gandhinagar University 🎓\n\nWe’re excited to help you choose the right career path.\n\nMay I know your name?', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+            { id: 'qualification', type: 'QUALIFICATION', title: 'Qualification Request', message: 'Nice to meet you {{name}} 😊\n\nPlease select your qualification.' },
+            { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Please select your preferred program category.', categoryMessage: 'Please select program category.' },
+            { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: 'Excellent choice 🚀\n\nWhen should our counselor contact you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
+            { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counselor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' }
+          ];
+          updated = true;
+       }
+       if (updated) {
+          settings.markModified('automation');
+          settings.markModified('automation.aiPrompts');
+          settings.markModified('automation.aiPrompts.qualificationOptions');
+          settings.markModified('automation.aiPrompts.programMap');
+          settings.markModified('automation.aiPrompts.prdFlowSteps');
+          await settings.save();
+          console.log("✅ Seeded default settings for tenant:", tenantId);
+       }
     }
 
     console.log("Tenant:", tenantId, "qualificationOptions:", settings?.automation?.aiPrompts?.qualificationOptions);

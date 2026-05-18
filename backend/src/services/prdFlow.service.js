@@ -675,7 +675,8 @@ class PRDFlowService {
                                });
 
         const streamName = contact.selectedStream || '';
-        let programs = (matchedQualKey && streamName && programMap[matchedQualKey] && programMap[matchedQualKey][streamName]) ? programMap[matchedQualKey][streamName] : [];
+        const val = (matchedQualKey && streamName && programMap[matchedQualKey]) ? programMap[matchedQualKey][streamName] : [];
+        let programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || []) : (val || []);
 
         let selectedProg = messageText.trim();
 
@@ -964,17 +965,25 @@ class PRDFlowService {
     const MessageSchema = require('../models/tenant/Message');
     const { getTenantConnection } = require('../config/db');
 
-    // 1. Find index of completed step
-    let completedIdx = steps.findIndex(s => s.id === completedTypeOrId || s.type === completedTypeOrId);
+    // 1. Find index of completed step (with robust case-insensitivity)
+    const completedLower = (completedTypeOrId || '').toLowerCase().trim();
+    let completedIdx = steps.findIndex(s => {
+      const sId = (s.id || '').toLowerCase().trim();
+      const sType = (s.type || '').toLowerCase().trim();
+      return sId === completedLower || sType === completedLower;
+    });
+
     if (completedIdx === -1) {
-      if (completedTypeOrId.includes('program')) {
-        completedIdx = steps.findIndex(s => s.type === 'PROGRAM_SELECTION');
-      } else if (completedTypeOrId.includes('qualification')) {
-        completedIdx = steps.findIndex(s => s.type === 'QUALIFICATION');
-      } else if (completedTypeOrId.includes('name')) {
-        completedIdx = steps.findIndex(s => s.type === 'NAME_CAPTURE');
-      } else if (completedTypeOrId.includes('call_time')) {
-        completedIdx = steps.findIndex(s => s.type === 'CALL_TIME');
+      if (completedLower.includes('program')) {
+        completedIdx = steps.findIndex(s => (s.type || '').toUpperCase() === 'PROGRAM_SELECTION');
+      } else if (completedLower.includes('qualification')) {
+        completedIdx = steps.findIndex(s => (s.type || '').toUpperCase() === 'QUALIFICATION');
+      } else if (completedLower.includes('name')) {
+        completedIdx = steps.findIndex(s => (s.type || '').toUpperCase() === 'NAME_CAPTURE');
+      } else if (completedLower.includes('call_time') || completedLower.includes('time')) {
+        completedIdx = steps.findIndex(s => (s.type || '').toUpperCase() === 'CALL_TIME');
+      } else if (completedLower.includes('greeting')) {
+        completedIdx = steps.findIndex(s => (s.type || '').toUpperCase() === 'GREETING');
       }
     }
 
@@ -982,7 +991,7 @@ class PRDFlowService {
 
     if (!nextStep) {
       // Fallbacks if no next step exists in visual builder
-      if (completedTypeOrId.includes('program') || completedTypeOrId === 'PROGRAM_SELECTION') {
+      if (completedLower.includes('program') || completedLower === 'program_selection') {
         await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_call_time' } });
         const callTimeMsg = "What would be the best time for our counsellor to call you?";
         await this.sendInteractiveOptionsHelper(contact, waService, callTimeMsg, [
@@ -1044,25 +1053,46 @@ class PRDFlowService {
       };
 
       let resMsg;
-      if (media) {
+      let singleInteractiveSent = false;
+      const buttonLabels = (nextStep.buttons && nextStep.buttons.length > 0)
+        ? nextStep.buttons.map(b => typeof b === 'string' ? b : b.label)
+        : ["Continue ➡️"];
+
+      if (media && buttonLabels.length <= 3 && !buttonLabels.some(opt => opt.length > 20)) {
         try {
-          resMsg = await waService.sendMedia(contact.phone, 'image', null, msg, media);
-          await saveAndEmit('image', msg, resMsg);
+          resMsg = await waService.sendInteractiveButtonMessage(contact.phone, {
+            header: { type: 'image', link: media },
+            body: msg || "Please select an option:",
+            buttons: buttonLabels
+          });
+          await saveAndEmit('interactive', msg, resMsg);
+          singleInteractiveSent = true;
         } catch (mediaErr) {
+          console.error('[PRD] Failed to send single interactive media message, falling back to split sending:', mediaErr.message);
+        }
+      }
+
+      if (!singleInteractiveSent) {
+        if (media) {
+          try {
+            resMsg = await waService.sendMedia(contact.phone, 'image', null, msg, media);
+            await saveAndEmit('image', msg, resMsg);
+          } catch (mediaErr) {
+            resMsg = await waService.sendTextMessage(contact.phone, msg);
+            await saveAndEmit('text', msg, resMsg);
+          }
+        } else {
           resMsg = await waService.sendTextMessage(contact.phone, msg);
           await saveAndEmit('text', msg, resMsg);
         }
-      } else {
-        resMsg = await waService.sendTextMessage(contact.phone, msg);
-        await saveAndEmit('text', msg, resMsg);
-      }
 
-      // If the custom step has interactive buttons, send them! Otherwise send a "Continue" button or wait for any text reply
-      if (nextStep.buttons && nextStep.buttons.length > 0) {
-        const buttonLabels = nextStep.buttons.map(b => typeof b === 'string' ? b : b.label);
-        await this.sendInteractiveOptionsHelper(contact, waService, "Please select an option:", buttonLabels, settings, io);
-      } else {
-        await this.sendInteractiveOptionsHelper(contact, waService, "Press below to proceed:", ["Continue ➡️"], settings, io);
+        // If the custom step has interactive buttons, send them! Otherwise send a "Continue" button or wait for any text reply
+        if (nextStep.buttons && nextStep.buttons.length > 0) {
+          const buttonLabels = nextStep.buttons.map(b => typeof b === 'string' ? b : b.label);
+          await this.sendInteractiveOptionsHelper(contact, waService, "Please select an option:", buttonLabels, settings, io);
+        } else {
+          await this.sendInteractiveOptionsHelper(contact, waService, "Press below to proceed:", ["Continue ➡️"], settings, io);
+        }
       }
     }
     else if (nextStep.type === 'QUALIFICATION') {
@@ -1144,6 +1174,42 @@ class PRDFlowService {
         const res = await waService.sendTextMessage(contact.phone, customMsg);
       }
     }
+    else if (nextStep.type === 'NAME_CAPTURE') {
+      await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_name' } });
+      let nameMsg = nextStep.message || nextStep.text || `May I know your name?`;
+      nameMsg = this.populatePlaceholders(nameMsg, contact, nameVal);
+      
+      const image = nextStep.image || '';
+      const media = this.makeAbsolute(image);
+      if (media) {
+        try {
+          await waService.sendMedia(contact.phone, 'image', null, nameMsg, media);
+        } catch (err) {
+          await waService.sendTextMessage(contact.phone, nameMsg);
+        }
+      } else {
+        await waService.sendTextMessage(contact.phone, nameMsg);
+      }
+    }
+    else if (nextStep.type === 'GREETING') {
+      let greetMsg = nextStep.message || nextStep.text || `Welcome!`;
+      greetMsg = this.populatePlaceholders(greetMsg, contact, nameVal);
+      
+      const image = nextStep.image || '';
+      const media = this.makeAbsolute(image);
+      if (media) {
+        try {
+          await waService.sendMedia(contact.phone, 'image', null, greetMsg, media);
+        } catch (err) {
+          await waService.sendTextMessage(contact.phone, greetMsg);
+        }
+      } else {
+        await waService.sendTextMessage(contact.phone, greetMsg);
+      }
+      
+      // Auto transition to the next step after GREETING!
+      await this.transitionToNextStepAfter(nextStep.id, contact, ContactModel, steps, settings, waService, nameVal, io);
+    }
     else {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_additional_help' } });
       const thankYouMsg = `Thank you ${nameVal} 😊\n\nYour request has been submitted. Our counselor will contact you.`;
@@ -1181,7 +1247,8 @@ class PRDFlowService {
     });
 
     const hasLongOption = optionStrings.some(opt => opt.length > 20);
-    if (options.length <= 3 && !hasLongOption) {
+    const hasDescriptions = options.some(opt => typeof opt === 'object' && opt?.description);
+    if (options.length <= 3 && !hasLongOption && !hasDescriptions) {
       res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: optionStrings });
     } else {
       res = await waService.sendListMessage(contact.phone, {
