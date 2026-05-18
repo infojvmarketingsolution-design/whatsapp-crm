@@ -974,6 +974,7 @@ class PRDFlowService {
 
   async transitionToNextStepAfter(completedTypeOrId, contact, ContactModel, steps, settings, waService, nameVal, io = null) {
     if (!steps || steps.length === 0) steps = this.DEFAULT_PRD_FLOW_STEPS || [];
+    console.log("[PRD Flow] Steps in transition for", contact.phone, ":", JSON.stringify(steps.map(s => ({id: s.id, type: s.type})), null, 2));
     const MessageSchema = require('../models/tenant/Message');
     const { getTenantConnection } = require('../config/db');
 
