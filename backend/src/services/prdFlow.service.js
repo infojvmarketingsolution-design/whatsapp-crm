@@ -51,6 +51,23 @@ class PRDFlowService {
 
   sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
+  getMatchedQualificationKey(programMap, qualification) {
+    if (!programMap || !qualification) return null;
+    const qualLower = qualification.toLowerCase().trim();
+    const directMatch = Object.keys(programMap).find(k => k.toLowerCase().trim() === qualLower);
+    if (directMatch) return directMatch;
+    let mappedOption = qualLower;
+    if (mappedOption.includes('bachelor')) mappedOption = '12th pass';
+    else if (mappedOption.includes('master')) mappedOption = 'graduate';
+    const mappedMatch = Object.keys(programMap).find(k => k.toLowerCase().trim() === mappedOption);
+    if (mappedMatch) return mappedMatch;
+    return Object.keys(programMap).find(k => {
+      const cleanK = k.toLowerCase().trim();
+      return cleanK.includes(mappedOption) || mappedOption.includes(cleanK) ||
+             (mappedOption.includes('grad') && cleanK.includes('grad'));
+    });
+  }
+
   makeAbsolute(url) {
     if (!url || typeof url !== 'string' || url.trim() === '') return '';
     if (url.toLowerCase().endsWith('.webp') || url.toLowerCase().includes('.webp')) {
@@ -474,13 +491,7 @@ class PRDFlowService {
         let programMap = settings?.automation?.aiPrompts?.programMap;
         if (!programMap || Object.keys(programMap).length === 0) programMap = DEFAULT_PROGRAM_MAP;
 
-        const matchedQualKey = Object.keys(programMap).find(k => k.toLowerCase().trim() === selectedOption.toLowerCase().trim()) || 
-                               Object.keys(programMap).find(k => {
-                                 const cleanK = k.toLowerCase().trim();
-                                 const cleanSel = selectedOption.toLowerCase().trim();
-                                 return cleanK.includes(cleanSel) || cleanSel.includes(cleanK) ||
-                                        (cleanSel.includes('grad') && cleanK.includes('grad'));
-                               });
+        const matchedQualKey = this.getMatchedQualificationKey(programMap, selectedOption);
 
         if (matchedQualKey && programMap[matchedQualKey]) {
           const categories = Object.keys(programMap[matchedQualKey]).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
@@ -584,13 +595,7 @@ class PRDFlowService {
         if (!programMap || Object.keys(programMap).length === 0) programMap = DEFAULT_PROGRAM_MAP;
 
         const contactQual = contact.qualification || '';
-        const matchedQualKey = Object.keys(programMap).find(k => k.toLowerCase().trim() === contactQual.toLowerCase().trim()) || 
-                               Object.keys(programMap).find(k => {
-                                 const cleanK = k.toLowerCase().trim();
-                                 const cleanSel = contactQual.toLowerCase().trim();
-                                 return cleanK.includes(cleanSel) || cleanSel.includes(cleanK) ||
-                                        (cleanSel.includes('grad') && cleanK.includes('grad'));
-                               });
+        const matchedQualKey = this.getMatchedQualificationKey(programMap, contactQual);
 
         const categories = matchedQualKey && programMap[matchedQualKey] 
           ? Object.keys(programMap[matchedQualKey]).filter(k => !k.startsWith('_') && k !== 'categoryMessage') 
@@ -666,13 +671,7 @@ class PRDFlowService {
         if (!programMap || Object.keys(programMap).length === 0) programMap = DEFAULT_PROGRAM_MAP;
 
         const contactQual = contact.qualification || '';
-        const matchedQualKey = Object.keys(programMap).find(k => k.toLowerCase().trim() === contactQual.toLowerCase().trim()) || 
-                               Object.keys(programMap).find(k => {
-                                 const cleanK = k.toLowerCase().trim();
-                                 const cleanSel = contactQual.toLowerCase().trim();
-                                 return cleanK.includes(cleanSel) || cleanSel.includes(cleanK) ||
-                                        (cleanSel.includes('grad') && cleanK.includes('grad'));
-                               });
+        const matchedQualKey = this.getMatchedQualificationKey(programMap, contactQual);
 
         const streamName = contact.selectedStream || '';
         const val = (matchedQualKey && streamName && programMap[matchedQualKey]) ? programMap[matchedQualKey][streamName] : [];
@@ -1109,13 +1108,7 @@ class PRDFlowService {
       let programMap = settings?.automation?.aiPrompts?.programMap;
       if (!programMap || Object.keys(programMap).length === 0) programMap = DEFAULT_PROGRAM_MAP;
 
-      const matchedQualKey = Object.keys(programMap).find(k => k.toLowerCase().trim() === contactQual.toLowerCase().trim()) || 
-                             Object.keys(programMap).find(k => {
-                               const cleanK = k.toLowerCase().trim();
-                               const cleanSel = contactQual.toLowerCase().trim();
-                               return cleanK.includes(cleanSel) || cleanSel.includes(cleanK) ||
-                                      (cleanSel.includes('grad') && cleanK.includes('grad'));
-                             });
+      const matchedQualKey = this.getMatchedQualificationKey(programMap, contactQual);
 
       if (matchedQualKey && programMap[matchedQualKey]) {
         const categories = Object.keys(programMap[matchedQualKey]).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
