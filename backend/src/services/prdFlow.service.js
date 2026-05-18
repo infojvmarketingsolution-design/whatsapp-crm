@@ -233,8 +233,20 @@ class PRDFlowService {
           for (const btn of greetingStep.buttons) {
             try {
               if (btn.type === 'url') {
-                let url = (btn.value || btn.label || '').trim();
-                let title = btn.value ? (btn.label || 'Open Website') : 'Open Website';
+                let url = (btn.value || '').trim();
+                let label = (btn.label || '').trim();
+                
+                // Smart Heal: If value is stale ('option') or empty, and label is a URL, swap them!
+                if ((!url || url === 'option' || url === 'reply') && (label.startsWith('http') || label.includes('.'))) {
+                  url = label;
+                  label = 'Open Website';
+                }
+                if (!url) {
+                  url = label;
+                  label = 'Open Website';
+                }
+                
+                let title = label || 'Open Website';
                 if (url && !url.startsWith('http')) {
                   url = `https://${url}`;
                 }
@@ -246,8 +258,20 @@ class PRDFlowService {
                 });
                 await saveAndEmit('interactive', title, resCta);
               } else if (btn.type === 'call') {
-                let phone = (btn.value || btn.label || '').trim();
-                let title = btn.value ? (btn.label || 'Call Counselor') : 'Call Counselor';
+                let phone = (btn.value || '').trim();
+                let label = (btn.label || '').trim();
+                
+                // Smart Heal: If phone is stale ('option') or empty, and label contains digits, swap them!
+                if ((!phone || phone === 'option' || phone === 'reply') && /\d/.test(label)) {
+                  phone = label;
+                  label = 'Call Counselor';
+                }
+                if (!phone) {
+                  phone = label;
+                  label = 'Call Counselor';
+                }
+                
+                let title = label || 'Call Counselor';
                 const resCta = await waService.sendCtaMessage(contact.phone, {
                   type: 'call',
                   body: `Hotline Support:`,
