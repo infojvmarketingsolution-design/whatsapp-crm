@@ -233,24 +233,28 @@ class PRDFlowService {
           for (const btn of greetingStep.buttons) {
             try {
               if (btn.type === 'url') {
-                let url = (btn.label || '').trim();
+                let url = (btn.value || btn.label || '').trim();
+                let title = btn.value ? (btn.label || 'Open Website') : 'Open Website';
                 if (url && !url.startsWith('http')) {
                   url = `https://${url}`;
                 }
                 const resCta = await waService.sendCtaMessage(contact.phone, {
                   type: 'url',
                   body: `Official Website:`,
-                  title: 'Open Website',
+                  title: title,
                   value: url
                 });
-                await saveAndEmit('interactive', 'Open Website', resCta);
+                await saveAndEmit('interactive', title, resCta);
               } else if (btn.type === 'call') {
-                // Meta Cloud API doesn't support cta_call in free-form messages. Send as a standard reply button!
-                const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
-                  body: `Hotline Support:\n📞 ${btn.label}`,
-                  buttons: ['Call Counselor']
+                let phone = (btn.value || btn.label || '').trim();
+                let title = btn.value ? (btn.label || 'Call Counselor') : 'Call Counselor';
+                const resCta = await waService.sendCtaMessage(contact.phone, {
+                  type: 'call',
+                  body: `Hotline Support:`,
+                  title: title,
+                  value: phone
                 });
-                await saveAndEmit('interactive', 'Call Counselor', resBtn);
+                await saveAndEmit('interactive', title, resCta);
               } else if (btn.type === 'reply') {
                 const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
                   body: `Selected Option:`,

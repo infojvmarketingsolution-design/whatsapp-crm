@@ -602,11 +602,29 @@ export default function AIChatbot() {
                              <option value="call">Call</option>
                              <option value="handoff">Handoff</option>
                           </select>
-                          <input 
-                            className="flex-1 text-xs font-bold text-slate-700 outline-none border-b border-transparent focus:border-blue-500"
-                            value={btn.label}
-                            onChange={(e) => updateStepButton(step.id, bIdx, 'label', e.target.value)}
-                          />
+                           {(btn.type === 'url' || btn.type === 'call') ? (
+                             <div className="flex-1 flex flex-col sm:flex-row gap-2">
+                               <input 
+                                 className="flex-1 text-xs font-bold text-slate-700 outline-none border-b border-slate-200 focus:border-blue-500 py-1"
+                                 placeholder={btn.type === 'url' ? "Button Label (e.g., Learn More)" : "Button Label (e.g., Call Us)"}
+                                 value={btn.label || ''}
+                                 onChange={(e) => updateStepButton(step.id, bIdx, 'label', e.target.value)}
+                               />
+                               <input 
+                                 className="flex-1 text-xs text-slate-500 outline-none border-b border-slate-200 focus:border-blue-500 py-1 font-mono"
+                                 placeholder={btn.type === 'url' ? "Website URL (e.g., https://...)" : "Phone Number (e.g., +91...)"}
+                                 value={btn.value || ''}
+                                 onChange={(e) => updateStepButton(step.id, bIdx, 'value', e.target.value)}
+                               />
+                             </div>
+                           ) : (
+                             <input 
+                               className="flex-1 text-xs font-bold text-slate-700 outline-none border-b border-transparent focus:border-blue-500"
+                               placeholder="Button Text"
+                               value={btn.label || ''}
+                               onChange={(e) => updateStepButton(step.id, bIdx, 'label', e.target.value)}
+                             />
+                           )}
                           <button onClick={() => removeStepButton(step.id, bIdx)} className="text-slate-300 hover:text-red-400 p-1">
                             <X size={14} />
                           </button>
