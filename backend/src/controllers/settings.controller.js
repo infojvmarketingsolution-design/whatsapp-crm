@@ -76,25 +76,27 @@ exports.getSettings = async (req, res) => {
        }
        const qualOptionsCleaned = (settings.automation.aiPrompts.qualificationOptions || []).filter(o => o && o.trim() !== "");
        if (qualOptionsCleaned.length === 0) {
-          settings.automation.aiPrompts.qualificationOptions = ['10th Pass', '12th Pass', 'Graduate', 'Working Professional'];
+          settings.automation.aiPrompts.qualificationOptions = ['12th Pass', 'Graduation', 'Other'];
           updated = true;
        }
        if (!settings.automation.aiPrompts.programMap || Object.keys(settings.automation.aiPrompts.programMap).length === 0) {
           settings.automation.aiPrompts.programMap = {
-            '10th Pass': {
-              'Diploma Programs': ['IT Diploma', 'Mechanical Diploma', 'Civil Diploma']
-            },
             '12th Pass': {
-              'Trending Programs': ['B.Sc Cyber Security', 'B.Sc AI & ML', 'B.Sc Animation', 'B.Sc Cloud Automation', 'B.Sc Software Development', 'B.Sc Blockchain Technology', 'B.Sc Data Analytics'],
+              'Trending Programs': ['B.Voc Cyber Security', 'B.Voc Fintech', 'B.Sc IT Ai & ML', 'B.Sc IT Data Analytics'],
               'Traditional Programs': ['B.Com', 'B.Tech', 'BBA']
             },
-            'Graduate': {
-              'Master Programs': ['MBA', 'MCA', 'M.Tech', 'M.Sc']
-            },
-            'Working Professional': {
-              'Executive Programs': ['Executive MBA', 'Certification Courses']
+            'Graduation': {
+              'Master Traditional Program': ['M.Com', 'MBA', 'M.Tech', 'M.Sc', 'Other'],
+              'Master Trending Program': [
+                'M.Sc IT in Cyber Security & Digital Forensics',
+                'M.Sc IT in Cloud Automation',
+                'M.Sc IT in Data Analytics',
+                'M.Sc IT in Animation, VFX & Game Design',
+                'M.Sc IT in Blockchain Technology',
+                'M.Sc IT in Software & Mobile App Development'
+              ]
             }
-          };
+          }
           updated = true;
        }
        if (!settings.automation.aiPrompts.prdFlowSteps || settings.automation.aiPrompts.prdFlowSteps.length === 0) {
