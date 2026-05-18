@@ -491,8 +491,29 @@ class PRDFlowService {
             });
             const progStep = steps.find(s => s.type === 'PROGRAM_SELECTION');
             let catMsg = progStep?.categoryMessage || progStep?.message || progStep?.text || "Please select program category.";
+            let optionsToSend = categories;
+
+            const config = this.getCategoryConfig(progStep, matchedQualKey);
+            if (config) {
+              if (config.message) {
+                catMsg = config.message;
+              }
+              if (config.categories && config.categories.length > 0) {
+                optionsToSend = categories.map(cat => {
+                  const matchedConfigCat = config.categories.find(cc => cc.key === cat);
+                  if (matchedConfigCat) {
+                    return {
+                      label: matchedConfigCat.label || cat,
+                      description: matchedConfigCat.description || ''
+                    };
+                  }
+                  return cat;
+                });
+              }
+            }
+
             catMsg = this.populatePlaceholders(catMsg, contact, contact.flowVariables?.name || contact.name || 'Student');
-            await sendInteractiveOptions(catMsg, categories);
+            await sendInteractiveOptions(catMsg, optionsToSend);
           } else {
              // No categories, ask custom
              await ContactModel.updateOne({ phone: contact.phone }, {
@@ -597,8 +618,29 @@ class PRDFlowService {
         } else {
           const progStep = steps.find(s => s.type === 'PROGRAM_SELECTION');
           let errMsg = progStep?.categoryMessage || progStep?.message || progStep?.text || "Please select program category:";
+          let optionsToSend = categories.length ? categories : ['Traditional', 'Trending'];
+
+          const config = this.getCategoryConfig(progStep, matchedQualKey);
+          if (config && categories.length > 0) {
+            if (config.message) {
+              errMsg = config.message;
+            }
+            if (config.categories && config.categories.length > 0) {
+              optionsToSend = categories.map(cat => {
+                const matchedConfigCat = config.categories.find(cc => cc.key === cat);
+                if (matchedConfigCat) {
+                  return {
+                    label: matchedConfigCat.label || cat,
+                    description: matchedConfigCat.description || ''
+                  };
+                }
+                return cat;
+              });
+            }
+          }
+
           errMsg = this.populatePlaceholders(errMsg, contact, contact.flowVariables?.name || contact.name || 'Student');
-          await sendInteractiveOptions(errMsg, categories.length ? categories : ['Traditional', 'Trending']);
+          await sendInteractiveOptions(errMsg, optionsToSend);
         }
 
         this.activeProcesses.delete(lockKey);
@@ -1055,8 +1097,29 @@ class PRDFlowService {
             }
           });
           let catMsg = nextStep.categoryMessage || nextStep.message || nextStep.text || "Please select program category.";
+          let optionsToSend = categories;
+
+          const config = this.getCategoryConfig(nextStep, matchedQualKey);
+          if (config) {
+            if (config.message) {
+              catMsg = config.message;
+            }
+            if (config.categories && config.categories.length > 0) {
+              optionsToSend = categories.map(cat => {
+                const matchedConfigCat = config.categories.find(cc => cc.key === cat);
+                if (matchedConfigCat) {
+                  return {
+                    label: matchedConfigCat.label || cat,
+                    description: matchedConfigCat.description || ''
+                  };
+                }
+                return cat;
+              });
+            }
+          }
+
           catMsg = this.populatePlaceholders(catMsg, fresh, nameVal);
-          await this.sendInteractiveOptionsHelper(contact, waService, catMsg, categories, settings, io);
+          await this.sendInteractiveOptionsHelper(contact, waService, catMsg, optionsToSend, settings, io);
         } else {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: { currentFlowStep: 'ask_custom_program' }
@@ -1101,6 +1164,13 @@ class PRDFlowService {
         }
       }
     }
+  getCategoryConfig(progStep, matchedQualKey) {
+    if (!progStep || !progStep.categoryConfigs || !matchedQualKey) return null;
+    const cleanQual = matchedQualKey.toLowerCase().trim();
+    return progStep.categoryConfigs.find(c => {
+      const cleanKey = (c.qualKey || '').toLowerCase().trim();
+      return cleanKey === cleanQual || cleanQual.includes(cleanKey) || cleanKey.includes(cleanQual);
+    });
   }
 
   async sendInteractiveOptionsHelper(contact, waService, body, options, settings = null, io = null) {
