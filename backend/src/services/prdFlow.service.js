@@ -384,32 +384,44 @@ class PRDFlowService {
           const matchLst = replyValue.match(/list_(\d+)/i);
           const idx = matchBtn ? parseInt(matchBtn[1]) : (matchLst ? parseInt(matchLst[1]) : -1);
           if (idx >= 0 && idx < options.length) {
-            selectedOption = options[idx];
+            const opt = options[idx];
+            selectedOption = typeof opt === 'string' ? opt : (opt?.description || opt?.label || '');
           }
         }
         if (!selectedOption) {
           const matchIdx = options.findIndex(opt => {
-            const cleanOpt = opt.toLowerCase().trim();
-            return normalizedInput === cleanOpt || normalizedInput.includes(cleanOpt);
+            const cleanOpt = typeof opt === 'string'
+              ? opt.toLowerCase().trim()
+              : (opt?.description || opt?.label || '').toLowerCase().trim();
+            const cleanLabel = typeof opt === 'string'
+              ? ''
+              : (opt?.label || '').toLowerCase().trim();
+            return normalizedInput === cleanOpt || normalizedInput.includes(cleanOpt) ||
+                   (cleanLabel && (normalizedInput === cleanLabel || normalizedInput.includes(cleanLabel)));
           });
-          if (matchIdx !== -1) selectedOption = options[matchIdx];
+          if (matchIdx !== -1) {
+            const opt = options[matchIdx];
+            selectedOption = typeof opt === 'string' ? opt : (opt?.description || opt?.label || '');
+          }
         }
 
         // Fallbacks
         if (!selectedOption) {
-          if (normalizedInput.includes('12') || normalizedInput.includes('twelfth')) selectedOption = options.find(o => o.toLowerCase().includes('12')) || '12th Pass';
-          else if (normalizedInput.includes('grad') || normalizedInput.includes('bachelor') || normalizedInput.includes('degree')) selectedOption = options.find(o => o.toLowerCase().includes('grad') || o.toLowerCase().includes('bach')) || 'Graduation';
-          else if (normalizedInput.includes('diploma')) selectedOption = options.find(o => o.toLowerCase().includes('diploma')) || 'Diploma';
-          else if (normalizedInput.includes('master') || normalizedInput.includes('postgrad')) selectedOption = options.find(o => o.toLowerCase().includes('master')) || 'Master Completed';
-          else if (normalizedInput.includes('10') || normalizedInput.includes('tenth') || normalizedInput.includes('ssc')) selectedOption = options.find(o => o.toLowerCase().includes('10')) || '10th Pass';
-          else if (normalizedInput.includes('working') || normalizedInput.includes('professional')) selectedOption = options.find(o => o.toLowerCase().includes('working') || o.toLowerCase().includes('prof')) || 'Working Professional';
+          const optStrings = options.map(opt => typeof opt === 'string' ? opt : (opt?.description || opt?.label || ''));
+          if (normalizedInput.includes('12') || normalizedInput.includes('twelfth')) selectedOption = optStrings.find(o => o.toLowerCase().includes('12')) || '12th Pass';
+          else if (normalizedInput.includes('grad') || normalizedInput.includes('bachelor') || normalizedInput.includes('degree')) selectedOption = optStrings.find(o => o.toLowerCase().includes('grad') || o.toLowerCase().includes('bach')) || 'Graduation';
+          else if (normalizedInput.includes('diploma')) selectedOption = optStrings.find(o => o.toLowerCase().includes('diploma')) || 'Diploma';
+          else if (normalizedInput.includes('master') || normalizedInput.includes('postgrad')) selectedOption = optStrings.find(o => o.toLowerCase().includes('master')) || 'Master Completed';
+          else if (normalizedInput.includes('10') || normalizedInput.includes('tenth') || normalizedInput.includes('ssc')) selectedOption = optStrings.find(o => o.toLowerCase().includes('10')) || '10th Pass';
+          else if (normalizedInput.includes('working') || normalizedInput.includes('professional')) selectedOption = optStrings.find(o => o.toLowerCase().includes('working') || o.toLowerCase().includes('prof')) || 'Working Professional';
         }
 
         if (!selectedOption) {
+          const optStrings = options.map(opt => typeof opt === 'string' ? opt : (opt?.description || opt?.label || ''));
           if (normalizedInput === 'other' || normalizedReply.includes('other')) {
             selectedOption = 'Other';
           } else {
-            selectedOption = options.find(o => o.toLowerCase().includes('other')) || options[0] || '12th Pass';
+            selectedOption = optStrings.find(o => o.toLowerCase().includes('other')) || optStrings[0] || '12th Pass';
           }
         }
 
@@ -1081,20 +1093,39 @@ class PRDFlowService {
 
   async sendInteractiveOptionsHelper(contact, waService, body, options, settings = null, io = null) {
     let res;
-    const hasLongOption = options.some(opt => opt.length > 20);
+    // Normalize options array to clean strings for buttons path
+    const optionStrings = options.map(opt => {
+      if (typeof opt === 'string') return opt;
+      if (opt && typeof opt === 'object') return opt.label || opt.title || '';
+      return '';
+    });
+
+    const hasLongOption = optionStrings.some(opt => opt.length > 20);
     if (options.length <= 3 && !hasLongOption) {
-      res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: options });
+      res = await waService.sendInteractiveButtonMessage(contact.phone, { body, buttons: optionStrings });
     } else {
       res = await waService.sendListMessage(contact.phone, {
         body,
         buttonText: 'View Options',
         sections: [{
           title: 'Available Options',
-          rows: options.slice(0, 10).map((opt, i) => ({ 
-            id: `list_${i}`, 
-            title: opt.substring(0, 24), 
-            description: opt.length > 24 ? opt.substring(0, 72) : undefined 
-          }))
+          rows: options.slice(0, 10).map((opt, i) => {
+            if (typeof opt === 'string') {
+              return {
+                id: `list_${i}`,
+                title: opt.substring(0, 24),
+                description: opt.length > 24 ? opt.substring(0, 72) : undefined
+              };
+            } else {
+              const title = (opt?.label || opt?.title || '').trim().substring(0, 24);
+              const desc = (opt?.description || opt?.text || '').trim().substring(0, 72);
+              return {
+                id: `list_${i}`,
+                title: title || `Option ${i+1}`,
+                description: desc || undefined
+              };
+            }
+          })
         }]
       });
     }

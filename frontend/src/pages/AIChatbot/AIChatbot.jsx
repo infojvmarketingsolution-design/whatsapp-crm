@@ -543,16 +543,103 @@ export default function AIChatbot() {
                   </div>
 
                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    {step.type === 'QUALIFICATION' ? (
                       <div>
-                        <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-2 block">Qualification Options (Comma Separated)</label>
-                        <textarea 
-                           className="w-full text-xs p-3 rounded-xl border border-amber-200 outline-none focus:ring-2 focus:ring-amber-500/20"
-                           placeholder="10th Pass, 12th Pass, Diploma, Graduation..."
-                           value={(settings.aiPrompts.qualificationOptions || []).join(', ')}
-                           onChange={(e) => setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, qualificationOptions: e.target.value.split(',').map(s=>s.trim())}}))}
-                        />
-                        <p className="text-[10px] text-slate-400 mt-2">These options will be sent to the user as an interactive list.</p>
+                        <div className="flex justify-between items-center mb-3">
+                          <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest block">Qualification Choices (Interactive List Options)</label>
+                          <button 
+                            onClick={() => {
+                              const opts = [...(settings.aiPrompts.qualificationOptions || [])];
+                              opts.push({ label: 'New Option', description: 'Description' });
+                              setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, qualificationOptions: opts}}));
+                            }} 
+                            className="text-[9px] font-black text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100/80 px-2.5 py-1.5 rounded-lg border border-amber-200 shadow-sm transition-all flex items-center gap-1"
+                          >
+                            <Plus size={10} className="mr-0.5" /> Add Option
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          {(settings.aiPrompts.qualificationOptions || []).map((opt, oIdx) => {
+                            const isObj = opt && typeof opt === 'object';
+                            const labelValue = isObj ? (opt.label || '') : opt;
+                            const descValue = isObj ? (opt.description || '') : '';
+                            
+                            return (
+                              <div key={oIdx} className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col gap-2 relative group hover:border-amber-400/50 transition-all">
+                                <div className="flex items-center gap-3">
+                                  {/* Label/Title Input */}
+                                  <div className="flex-1 flex flex-col gap-0.5">
+                                    <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Option Label (Title - Max 24 Chars)</label>
+                                    <input 
+                                      type="text"
+                                      className={`text-xs font-bold text-slate-700 outline-none border-b py-1 transition-all focus:border-amber-500 ${labelValue.length > 24 ? 'border-red-300 text-red-500' : 'border-slate-200'}`}
+                                      placeholder="e.g. Bachelor Programs (12th"
+                                      value={labelValue}
+                                      maxLength={24}
+                                      onChange={(e) => {
+                                        const opts = [...(settings.aiPrompts.qualificationOptions || [])];
+                                        if (isObj) {
+                                          opts[oIdx] = { ...opts[oIdx], label: e.target.value };
+                                        } else {
+                                          opts[oIdx] = { label: e.target.value, description: '' };
+                                        }
+                                        setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, qualificationOptions: opts}}));
+                                      }}
+                                    />
+                                    <div className="flex justify-between text-[8px] text-slate-400 font-medium">
+                                      <span>Main text displayed in WhatsApp list option</span>
+                                      <span className={labelValue.length > 24 ? 'text-red-500 font-bold' : ''}>{labelValue.length}/24</span>
+                                    </div>
+                                  </div>
+
+                                  {/* Remove Button */}
+                                  <button 
+                                    onClick={() => {
+                                      const opts = (settings.aiPrompts.qualificationOptions || []).filter((_, i) => i !== oIdx);
+                                      setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, qualificationOptions: opts}}));
+                                    }}
+                                    className="text-slate-300 hover:text-red-500 p-1.5 self-center mt-3"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+
+                                {/* Sub-level/Description Input */}
+                                <div className="flex flex-col gap-0.5">
+                                  <label className="text-[8px] font-black text-slate-400 uppercase tracking-widest">Sub-level / Description (Max 72 Chars)</label>
+                                  <input 
+                                    type="text"
+                                    className={`text-xs text-slate-500 outline-none border-b py-1 transition-all focus:border-amber-500 ${descValue.length > 72 ? 'border-red-300 text-red-500' : 'border-slate-200'}`}
+                                    placeholder="e.g. Bachelor Programs (12th Complete)"
+                                    value={descValue}
+                                    maxLength={72}
+                                    onChange={(e) => {
+                                      const opts = [...(settings.aiPrompts.qualificationOptions || [])];
+                                      if (isObj) {
+                                        opts[oIdx] = { ...opts[oIdx], description: e.target.value };
+                                      } else {
+                                        opts[oIdx] = { label: opt, description: e.target.value };
+                                      }
+                                      setSettings(prev => ({...prev, aiPrompts: {...prev.aiPrompts, qualificationOptions: opts}}));
+                                    }}
+                                  />
+                                  <div className="flex justify-between text-[8px] text-slate-400 font-medium">
+                                    <span>Secondary text displayed below label in WhatsApp list</span>
+                                    <span className={descValue.length > 72 ? 'text-red-500 font-bold' : ''}>{descValue.length}/72</span>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                          
+                          {(settings.aiPrompts.qualificationOptions || []).length === 0 && (
+                            <div className="text-center p-6 bg-white border border-dashed border-slate-200 rounded-2xl text-slate-400">
+                              <GraduationCap size={24} className="mx-auto mb-2 text-slate-300" />
+                              <span className="text-xs font-bold block">No Qualification Choices Configured</span>
+                              <span className="text-[10px] text-slate-400 block mt-0.5">Click "Add Option" above to build your list.</span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ) : step.type === 'PROGRAM_SELECTION' ? (
                       <div>
