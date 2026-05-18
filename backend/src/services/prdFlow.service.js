@@ -40,10 +40,11 @@ const DEFAULT_PROGRAM_MAP = {
 class PRDFlowService {
   constructor() {
     this.DEFAULT_PRD_FLOW_STEPS = [
-      { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Greeting & Name Request', message: 'Welcome to Gandhinagar University 🎓\n\nWe’re excited to help you choose the right career path.\n\nMay I know your name?', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
-      { id: 'qualification', type: 'QUALIFICATION', title: 'Qualification Request', message: 'Nice to meet you {{name}} 😊\n\nPlease select your qualification.' },
+      { id: 'greeting', type: 'GREETING', title: 'Greeting Message', message: 'Welcome to Gandhinagar University 🎓\n\nWe’re excited to help you choose the right career path.', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+      { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Ask Name', message: 'Please enter your full name.' },
+      { id: 'qualification', type: 'QUALIFICATION', title: 'Ask Qualification', message: 'Nice to meet you {{name}} 😊\n\nPlease select your qualification.' },
       { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Please select your preferred program category.', categoryMessage: 'Please select program category.' },
-      { id: 'call_time', type: 'CALL_TIME', title: 'Consultation Call', message: 'Excellent choice 🚀\n\nWhen should our counselor contact you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
+      { id: 'call_time', type: 'CALL_TIME', title: 'Counselling Time', message: 'Excellent choice 🚀\n\nWhen should our counselor contact you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
       { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counselor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' }
     ];
     this.activeProcesses = new Set();
@@ -939,7 +940,7 @@ class PRDFlowService {
           const Settings = require('../models/core/Settings');
           const settingsObj = await Settings.findOne({ tenantId });
           const uniName = settingsObj?.workspace?.name || "our institution";
-          const goodbyeMsg = `Thank you for contacting ${uniName}.\nHave a great day!`;
+          const goodbyeMsg = settingsObj?.automation?.aiPrompts?.goodbyeMessage || `Thank you for contacting Gandhinagar University.\nHave a great day!`;
           const res = await waService.sendTextMessage(contact.phone, goodbyeMsg);
           await saveAndEmit('text', goodbyeMsg, res);
 

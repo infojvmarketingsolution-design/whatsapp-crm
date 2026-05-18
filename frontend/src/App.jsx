@@ -1085,88 +1085,6 @@ function Dashboard() {
                             </div>
                             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest leading-relaxed">No contacts found in this<br/>category at the moment.</p>
                          </div>
-<<<<<<< HEAD
-                       ) : leadDetailsModal.data.map((lead, i) => (
-                          <div key={i} onClick={() => openLeadProfile(lead)} className="group flex flex-col p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98]">
-                             <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center space-x-4">
-                                   <div className="w-12 h-12 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-teal-600 font-black text-lg group-hover:bg-teal-50 group-hover:scale-110 transition-all">
-                                      {lead.name?.charAt(0) || 'L'}
-                                   </div>
-                                   <div>
-                                      <div className="flex items-center gap-2">
-                                         <p className="text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors">{lead.name}</p>
-                                         <span className="text-[8px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">View Details →</span>
-                                      </div>
-                                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{lead.phone}</p>
-                                   </div>
-                                </div>
-                                <div className="text-right">
-                                   <span className="inline-block px-3 py-1 bg-teal-50 text-teal-600 text-[9px] font-black uppercase rounded-lg border border-teal-100 group-hover:bg-teal-100 group-hover:text-teal-700 transition-colors">
-                                      {lead.status}
-                                   </span>
-                                </div>
-                             </div>
-                             
-                             {/* Render Last Remark & Follow-up Details on the card */}
-                             {(() => {
-                                // Normalize status to match standard groups
-                                const upperStatus = (lead.status || '').toUpperCase().replace(/_/g, ' ');
-                                const showRemarkGroup = [
-                                   'NEW LEAD', 'NEW',
-                                   'OPEN', 'CONTACTED', 'INTERESTED', 'FOLLOW UP',
-                                   'CLOSE', 'CLOSED', 'CLOSED LOST',
-                                   'ADMISSION', 'CLOSED WON'
-                                ].includes(upperStatus);
-                                
-                                if (!showRemarkGroup) return null;
-
-                                // Find last note
-                                const lastNote = lead.notes && lead.notes.length > 0 ? lead.notes[lead.notes.length - 1] : null;
-                                // Find last task
-                                const lastTask = lead.tasks && lead.tasks.length > 0 ? lead.tasks[lead.tasks.length - 1] : null;
-
-                                if (!lastNote && !lastTask) return null;
-
-                                return (
-                                   <div className="mt-4 pt-3 border-t border-slate-100 space-y-2 text-[10px] w-full text-left">
-                                      {lastNote && (
-                                         <div className="bg-teal-50/50 p-2.5 rounded-xl border border-teal-100/30 flex items-start space-x-2">
-                                            <FileText size={12} className="text-teal-600 mt-0.5 shrink-0" />
-                                            <div className="min-w-0 flex-1">
-                                               <div className="flex justify-between items-center mb-0.5">
-                                                  <span className="font-bold text-teal-800">Last Remark Note ({lastNote.createdBy || 'Agent'})</span>
-                                                  <span className="text-[8px] text-teal-500 font-bold">
-                                                     {lastNote.createdAt ? new Date(lastNote.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
-                                                  </span>
-                                               </div>
-                                               <p className="text-slate-600 font-medium truncate leading-normal" title={lastNote.content}>{lastNote.content}</p>
-                                            </div>
-                                         </div>
-                                      )}
-                                      
-                                      {lastTask && (
-                                         <div className="bg-indigo-50/50 p-2.5 rounded-xl border border-indigo-100/30 flex items-start space-x-2">
-                                            <Calendar size={12} className="text-indigo-600 mt-0.5 shrink-0" />
-                                            <div className="min-w-0 flex-1">
-                                               <div className="flex justify-between items-center mb-0.5">
-                                                  <span className="font-bold text-indigo-800">Last Follow-up: {lastTask.title}</span>
-                                                  <span className="text-[8px] text-indigo-500 font-bold">
-                                                     {lastTask.date ? new Date(lastTask.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}
-                                                  </span>
-                                               </div>
-                                               {lastTask.description && (
-                                                  <p className="text-slate-600 font-medium truncate leading-normal" title={lastTask.description}>{lastTask.description}</p>
-                                               )}
-                                            </div>
-                                         </div>
-                                      )}
-                                   </div>
-                                );
-                             })()}
-                          </div>
-                       ))}
-=======
                         ) : leadDetailsModal.data.map((lead, i) => {
                            const fullContact = allContacts.find(c => c._id === lead._id || c.phone === lead.phone) || lead;
                            return (
@@ -1270,7 +1188,6 @@ function Dashboard() {
                            </div>
                            );
                         })}
->>>>>>> 2d1e08c85a3ac8b175cacef31ab98ab4c8c1a908
                     </div>
                   )}
                </div>

@@ -206,6 +206,25 @@ export default function AIChatbot() {
     });
   };
 
+  const loadPerfectSequence = () => {
+    const perfectSteps = [
+      { id: 'greeting', type: 'GREETING', title: 'Greeting Message', message: 'Welcome to Gandhinagar University 🎓\n\nWe’re excited to help you choose the right career path.', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+      { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Ask Name', message: 'Please enter your full name.' },
+      { id: 'qualification', type: 'QUALIFICATION', title: 'Ask Qualification', message: 'Nice to meet you {{name}} 😊\n\nPlease select your qualification.' },
+      { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Please select your preferred program category.', categoryMessage: 'Please select program category.' },
+      { id: 'call_time', type: 'CALL_TIME', title: 'Counselling Time', message: 'Excellent choice 🚀\n\nWhen should our counselor contact you?', buttons: ['Morning', 'Afternoon', 'Evening'] },
+      { id: 'thank_you', type: 'CUSTOM_MESSAGE', title: 'Thank You Message', message: 'Thank you {{name}} 🙌\n\n🎓 Qualification: {{qualification}}\n📘 Program: {{program}}\n⏰ Time: {{time}}\n\nOur counselor will call you at your preferred time 📞\n\nThank you for your time, {{name}} 😊' }
+    ];
+    setSettings(prev => ({
+      ...prev,
+      aiPrompts: {
+        ...prev.aiPrompts,
+        prdFlowSteps: perfectSteps
+      }
+    }));
+    toast.success('Perfect sequence loaded! Click Save to apply.');
+  };
+
   if (loading) return <div className="p-8">Loading AI Chatbot...</div>;
 
   return (
@@ -218,13 +237,21 @@ export default function AIChatbot() {
             </h1>
             <p className="text-xs text-slate-500 mt-1 font-bold uppercase tracking-widest">Configure your automation flows</p>
           </div>
-          <button 
-            onClick={handleSave} 
-            disabled={saving}
-            className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg"
-          >
-            {saving ? 'Saving...' : 'Save Configuration'}
-          </button>
+          <div className="flex gap-4">
+            <button 
+              onClick={loadPerfectSequence} 
+              className="px-6 py-3 bg-emerald-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-emerald-700 transition-all shadow-lg"
+            >
+              Load Perfect Sequence
+            </button>
+            <button 
+              onClick={handleSave} 
+              disabled={saving}
+              className="px-8 py-3 bg-slate-900 text-white rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg"
+            >
+              {saving ? 'Saving...' : 'Save Configuration'}
+            </button>
+          </div>
         </div>
 
         {/* 🤖 GLOBAL AI ENGINE CONTROLLERS */}
@@ -772,6 +799,35 @@ export default function AIChatbot() {
                 </div>
               </div>
             ))}
+
+            {/* 📝 GLOBAL MESSAGES (e.g. Goodbye Message) */}
+            <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all p-6 mt-6">
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="p-2 bg-slate-100 text-slate-600 rounded-xl">
+                   <Settings size={18} />
+                </div>
+                <div>
+                   <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">Global Messages</h3>
+                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Messages sent outside the main flow sequence</p>
+                </div>
+              </div>
+              
+              <div>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Goodbye Message (Sent when user doesn't need other help)</label>
+                <textarea 
+                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm min-h-[100px] outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                  value={settings.aiPrompts.goodbyeMessage || ''}
+                  onChange={(e) => setSettings(prev => ({
+                    ...prev,
+                    aiPrompts: {
+                      ...prev.aiPrompts,
+                      goodbyeMessage: e.target.value
+                    }
+                  }))}
+                  placeholder="Type goodbye message..."
+                />
+              </div>
+            </div>
             
             {(settings.aiPrompts.prdFlowSteps || []).length === 0 && (
               <div className="text-center py-20 bg-white border-2 border-dashed border-slate-200 rounded-[3rem]">

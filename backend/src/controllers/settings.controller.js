@@ -34,7 +34,8 @@ exports.getSettings = async (req, res) => {
               successProofImage: '',
               callTimePrompt: '{{name}}, what is your preferred time for our counsellor to call you? 📞',
               agentTransferPrompt: 'Transferring you to a human agent... 👨‍💻',
-              fallbackMessage: "I'm sorry, I didn't quite get that. Could you please rephrase?"
+              fallbackMessage: "I'm sorry, I didn't quite get that. Could you please rephrase?",
+              goodbyeMessage: 'Thank you for contacting Gandhinagar University.\nHave a great day!'
             }
           },
           security: {
@@ -201,6 +202,7 @@ exports.updateSettings = async (req, res) => {
           if (ai.callTimePrompt !== undefined) settings.automation.aiPrompts.callTimePrompt = ai.callTimePrompt;
           if (ai.agentTransferPrompt !== undefined) settings.automation.aiPrompts.agentTransferPrompt = ai.agentTransferPrompt;
           if (ai.fallbackMessage !== undefined) settings.automation.aiPrompts.fallbackMessage = ai.fallbackMessage;
+          if (ai.goodbyeMessage !== undefined) settings.automation.aiPrompts.goodbyeMessage = ai.goodbyeMessage;
           
           // Mixed and custom array/object fields
           if (ai.qualificationOptions !== undefined) {
