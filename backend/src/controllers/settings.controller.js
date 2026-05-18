@@ -181,6 +181,12 @@ exports.updateSettings = async (req, res) => {
        settings[category] = { ...currentData, ...updates };
     }
     settings.markModified(category);
+     if (category === 'automation') {
+        settings.markModified('automation.aiPrompts');
+        settings.markModified('automation.aiPrompts.prdFlowSteps');
+        settings.markModified('automation.aiPrompts.programMap');
+        settings.markModified('automation.aiPrompts.qualificationOptions');
+     }
     await settings.save();
     
     res.json(settings);
