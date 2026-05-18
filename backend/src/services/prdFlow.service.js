@@ -272,13 +272,11 @@ class PRDFlowService {
                 }
                 
                 let title = label || 'Call Counselor';
-                const resCta = await waService.sendCtaMessage(contact.phone, {
-                  type: 'call',
-                  body: `Hotline Support:`,
-                  title: title,
-                  value: phone
+                const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
+                  body: `Hotline Support:\n📞 ${phone}`,
+                  buttons: [title.substring(0, 20)]
                 });
-                await saveAndEmit('interactive', title, resCta);
+                await saveAndEmit('interactive', title, resBtn);
               } else if (btn.type === 'reply') {
                 const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
                   body: `Selected Option:`,
