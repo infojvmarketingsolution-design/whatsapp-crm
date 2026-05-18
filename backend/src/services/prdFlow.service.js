@@ -261,7 +261,7 @@ class PRDFlowService {
         const nameStep = steps.find(s => s.type === 'NAME_CAPTURE');
         const hasSeparateNameCard = !!nameStep && greetingStep?.type === 'GREETING' && steps.indexOf(greetingStep) < steps.indexOf(nameStep);
 
-        if (!welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
+        if (!hasSeparateNameCard && !welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
           welcomeMsg = `${welcomeMsg.trim()}\n\nPlease enter your full name.`;
         }
 
