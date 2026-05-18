@@ -261,7 +261,7 @@ class PRDFlowService {
         const nameStep = steps.find(s => s.type === 'NAME_CAPTURE');
         const hasSeparateNameCard = !!nameStep && greetingStep?.type === 'GREETING' && steps.indexOf(greetingStep) < steps.indexOf(nameStep);
 
-        if (!hasSeparateNameCard && !welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
+        if (!welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
           welcomeMsg = `${welcomeMsg.trim()}\n\nPlease enter your full name.`;
         }
 
@@ -377,6 +377,18 @@ class PRDFlowService {
       // ==========================================
       if (currentState === 'ask_name') {
         const nameInput = messageText.trim();
+        
+        // Check if the input matches any button labels from the greeting step
+        const btnLabels = greetingStep?.buttons?.map(b => (b.label || b.title || '').toLowerCase().trim()) || [];
+        if (btnLabels.includes(nameInput.toLowerCase())) {
+          console.log(`[PRD] User clicked a button "${nameInput}" instead of entering name.`);
+          const askNameMsg = "Please enter your full name to proceed.";
+          const res = await waService.sendTextMessage(contact.phone, askNameMsg);
+          await saveAndEmit('text', askNameMsg, res);
+          this.activeProcesses.delete(lockKey);
+          return;
+        }
+
         if (nameInput.length < 2) {
           const errMsg = "Please enter a valid full name (minimum 2 characters).";
           const resErr = await waService.sendTextMessage(contact.phone, errMsg);
@@ -966,10 +978,10 @@ class PRDFlowService {
     const { getTenantConnection } = require('../config/db');
 
     // 1. Find index of completed step (with robust case-insensitivity)
-    const completedLower = (completedTypeOrId || '').toLowerCase().trim();
+    const completedLower = (completedTypeOrId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
     let completedIdx = steps.findIndex(s => {
-      const sId = (s.id || '').toLowerCase().trim();
-      const sType = (s.type || '').toLowerCase().trim();
+      const sId = (s.id || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const sType = (s.type || '').toLowerCase().replace(/[^a-z0-9]/g, '');
       return sId === completedLower || sType === completedLower;
     });
 
@@ -980,7 +992,7 @@ class PRDFlowService {
         completedIdx = steps.findIndex(s => (s.type || '').toUpperCase() === 'QUALIFICATION');
       } else if (completedLower.includes('name')) {
         completedIdx = steps.findIndex(s => (s.type || '').toUpperCase() === 'NAME_CAPTURE');
-      } else if (completedLower.includes('call_time') || completedLower.includes('time')) {
+      } else if (completedLower.includes('calltime') || completedLower.includes('time')) {
         completedIdx = steps.findIndex(s => (s.type || '').toUpperCase() === 'CALL_TIME');
       } else if (completedLower.includes('greeting')) {
         completedIdx = steps.findIndex(s => (s.type || '').toUpperCase() === 'GREETING');
@@ -989,7 +1001,7 @@ class PRDFlowService {
 
     let nextStep = (completedIdx !== -1 && completedIdx + 1 < steps.length) ? steps[completedIdx + 1] : null;
 
-    if (!nextStep && completedLower === 'name_capture') {
+    if (!nextStep && (completedLower === 'namecapture' || completedLower === 'name_capture')) {
       if (steps.length > 0) {
         // If name capture was completed but not found in list, go to first step that is not name capture
         nextStep = steps.find(s => (s.type || '').toUpperCase() !== 'NAME_CAPTURE') || steps[0];
