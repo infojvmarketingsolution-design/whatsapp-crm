@@ -134,7 +134,7 @@ class PRDFlowService {
       // ==========================================
       // STATE: CUSTOM STEP RESUMING
       // ==========================================
-      const customStepIndex = steps.findIndex(s => s.id === currentState);
+      const customStepIndex = steps.findIndex(s => s.id === currentState && s.type !== 'NAME_CAPTURE' && s.type !== 'QUALIFICATION' && s.type !== 'PROGRAM_SELECTION' && s.type !== 'CALL_TIME');
       if (customStepIndex !== -1) {
         console.log(`[PRD Flow] 📥 User replied to custom step: "${steps[customStepIndex].title}"`);
         const fresh = await ContactModel.findOne({ phone: contact.phone });
@@ -295,53 +295,21 @@ class PRDFlowService {
           console.error('[PRD] AI Extraction Name Failed:', e.message);
         }
 
-        // Fetch settings dynamically to check if QUALIFICATION step is deleted from visual builder
+        // Fetch settings dynamically
         const Settings = require('../models/core/Settings');
         const settings = await Settings.findOne({ tenantId });
         const prdFlowSteps = settings?.automation?.aiPrompts?.prdFlowSteps || [];
-        const hasQualStep = prdFlowSteps.some(s => s.type === 'QUALIFICATION');
 
-        if (!hasQualStep) {
-          // 🚀 QUALIFICATION STEP IS DELETED - SKIP IT!
-          await ContactModel.updateOne({ phone: contact.phone }, {
-            $set: {
-              name: extractedName,
-              'flowVariables.name': extractedName,
-              qualification: 'Direct Onboarding',
-              'flowVariables.qualification': 'Direct Onboarding',
-              currentFlowStep: 'ask_program_category_12th' // Skip direct to program categories selection
-            }
-          });
-
-          const progStep = prdFlowSteps.find(s => s.type === 'PROGRAM_SELECTION');
-          let catMsg = progStep?.message || progStep?.text || "Please select program category.";
-          catMsg = this.populatePlaceholders(catMsg, contact, extractedName);
-
-          await sendInteractiveOptions(catMsg, ['Traditional Program', 'Trending Program']);
-
-          this.activeProcesses.delete(lockKey);
-          return;
-        }
-
-        // Standard flow - Qualification Choice step is active
+        // Save name to database immediately
         await ContactModel.updateOne({ phone: contact.phone }, {
           $set: {
             name: extractedName,
-            'flowVariables.name': extractedName,
-            currentFlowStep: 'ask_qualification'
+            'flowVariables.name': extractedName
           }
         });
 
-        const qualStep = prdFlowSteps.find(s => s.type === 'QUALIFICATION');
-        let qualMsg = qualStep?.message || qualStep?.text || `Nice to meet you ${extractedName} 😊\n\nPlease select your qualification.`;
-        qualMsg = this.populatePlaceholders(qualMsg, contact, extractedName);
-
-        let options = settings?.automation?.aiPrompts?.qualificationOptions || ['12th Pass', 'Graduation', 'Other'];
-        if (!options || options.length === 0 || (options.length === 1 && !options[0])) {
-          options = ['12th Pass', 'Graduation', 'Other'];
-        }
-
-        await sendInteractiveOptions(qualMsg, options);
+        // Trigger dynamic transition to next step after NAME_CAPTURE
+        await this.transitionToNextStepAfter('NAME_CAPTURE', contact, ContactModel, prdFlowSteps, settings, waService, extractedName, io);
         
         this.activeProcesses.delete(lockKey);
         return;
@@ -1203,7 +1171,8 @@ class PRDFlowService {
     }
     else if (nextStep.type === 'QUALIFICATION') {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_qualification' } });
-      const qualMsg = nextStep.message || nextStep.text || `Please select your qualification.`;
+      let qualMsg = nextStep.message || nextStep.text || `Please select your qualification.`;
+      qualMsg = this.populatePlaceholders(qualMsg, contact, nameVal);
       let options = settings?.automation?.aiPrompts?.qualificationOptions || ['12th Pass', 'Graduation', 'Other'];
       await this.sendInteractiveOptionsHelper(contact, waService, qualMsg, options);
     }
@@ -1214,7 +1183,8 @@ class PRDFlowService {
       await ContactModel.updateOne({ phone: contact.phone }, { 
         $set: { currentFlowStep: isGrad ? 'ask_program_category_grad' : 'ask_program_category_12th' } 
       });
-      const catMsg = nextStep.message || nextStep.text || "Please select program category.";
+      let catMsg = nextStep.message || nextStep.text || "Please select program category.";
+      catMsg = this.populatePlaceholders(catMsg, fresh, nameVal);
       await this.sendInteractiveOptionsHelper(contact, waService, catMsg, isGrad ? ['Master Traditional Program', 'Master Trending Program'] : ['Traditional Program', 'Trending Program']);
     }
     else {
