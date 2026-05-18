@@ -244,7 +244,7 @@ class PRDFlowService {
         // Reset and initialize session
         await ContactModel.updateOne({ phone: contact.phone }, {
           $set: {
-            currentFlowStep: 'ask_name',
+            currentFlowStep: steps[0]?.id || 'ask_name',
             isFlowActive: true,
             flowVariables: {},
             qualification: null,
@@ -262,9 +262,7 @@ class PRDFlowService {
         const nameStep = steps.find(s => s.type === 'NAME_CAPTURE');
         const hasSeparateNameCard = !!nameStep && greetingStep?.type === 'GREETING' && steps.indexOf(greetingStep) < steps.indexOf(nameStep);
 
-        if (!hasSeparateNameCard && !welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
-          welcomeMsg = `${welcomeMsg.trim()}\n\nPlease enter your full name.`;
-        }
+        // Removed auto-appending of name prompt to respect user's custom greeting message.
 
         const media = this.makeAbsolute(greetingImage);
         let resGreeting;
