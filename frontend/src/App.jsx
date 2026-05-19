@@ -2207,73 +2207,62 @@ function AppLayout() {
              // Play premium synthesized dual-tone audio chime
              playChime();
 
-             // Display premium, oversized robust toast notification
-             toast((t) => (
-                <div className="flex flex-col space-y-4 p-2 w-full">
-                   <div className="flex items-start space-x-4">
-                      <div className="shrink-0 relative">
-                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-600 text-white flex items-center justify-center text-2xl shadow-xl shadow-teal-600/30">
-                            💬
+             // Display premium, oversized robust toast notification via custom modal wrapper
+             toast.custom((t) => (
+                <div className={`fixed inset-0 z-[99999] flex items-center justify-center pointer-events-none transition-opacity duration-300 ${t.visible ? 'opacity-100' : 'opacity-0'}`}>
+                   <div className="pointer-events-auto flex flex-col space-y-4 p-5 bg-white/98 backdrop-blur-xl rounded-[24px] shadow-[0_30px_60px_-15px_rgba(20,184,166,0.3)] border border-teal-500/30 w-full min-w-[380px] max-w-[480px] m-4">
+                      <div className="flex items-start space-x-4">
+                         <div className="shrink-0 relative">
+                            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-600 text-white flex items-center justify-center text-2xl shadow-xl shadow-teal-600/30">
+                               💬
+                            </div>
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                               <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
+                            </span>
                          </div>
-                         <span className="absolute -top-1 -right-1 flex h-4 w-4">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
-                         </span>
-                      </div>
-                      <div className="flex-1">
-                         <div className="flex items-center space-x-2">
-                           <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black tracking-widest uppercase rounded-md animate-pulse">
-                              Hot Lead
-                           </span>
-                           <p className="text-[11px] font-black text-teal-800 uppercase tracking-widest opacity-80">Handoff Request</p>
+                         <div className="flex-1">
+                            <div className="flex items-center space-x-2">
+                              <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black tracking-widest uppercase rounded-md animate-pulse">
+                                 Hot Lead
+                              </span>
+                              <p className="text-[11px] font-black text-teal-800 uppercase tracking-widest opacity-80">Handoff Request</p>
+                            </div>
+                            <h3 className="text-base sm:text-lg font-black text-slate-800 mt-1 leading-tight tracking-tight">
+                               Live Chat Waiting!
+                            </h3>
+                            <p className="text-xs font-semibold text-slate-500 mt-1">
+                               {data.contact?.name || data.contact?.phone || 'New Customer'} needs human assistance.
+                            </p>
                          </div>
-                         <h3 className="text-base sm:text-lg font-black text-slate-800 mt-1 leading-tight tracking-tight">
-                            Live Chat Waiting!
-                         </h3>
-                         <p className="text-xs font-semibold text-slate-500 mt-1">
-                            {data.contact?.name || data.contact?.phone || 'New Customer'} needs human assistance.
-                         </p>
                       </div>
-                   </div>
-                   <div className="flex space-x-3 pt-2 border-t border-slate-100/50">
-                      <button
-                         onClick={() => {
-                            toast.dismiss(t.id);
-                            if (data.contact?.phone) {
-                               navigate('/inbox', { state: { selectedContact: data.contact.phone } });
-                            } else {
-                               navigate('/inbox');
-                            }
-                         }}
-                         className="flex-1 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 hover:-translate-y-0.5 transition-all focus:outline-none flex items-center justify-center space-x-2"
-                      >
-                         <span>Reply Now</span>
-                         <span className="text-lg leading-none">→</span>
-                      </button>
-                      <button
-                         onClick={() => toast.dismiss(t.id)}
-                         className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors focus:outline-none"
-                      >
-                         Dismiss
-                      </button>
+                      <div className="flex space-x-3 pt-2 border-t border-slate-100/50">
+                         <button
+                            onClick={() => {
+                               toast.dismiss(t.id);
+                               if (data.contact?.phone) {
+                                  navigate('/inbox', { state: { selectedContact: data.contact.phone } });
+                               } else {
+                                  navigate('/inbox');
+                               }
+                            }}
+                            className="flex-1 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 hover:-translate-y-0.5 transition-all focus:outline-none flex items-center justify-center space-x-2"
+                         >
+                            <span>Reply Now</span>
+                            <span className="text-lg leading-none">→</span>
+                         </button>
+                         <button
+                            onClick={() => toast.dismiss(t.id)}
+                            className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors focus:outline-none"
+                         >
+                            Dismiss
+                         </button>
+                      </div>
                    </div>
                 </div>
              ), {
                 duration: Infinity,
-                position: 'top-center',
-                style: {
-                   marginTop: '30vh',
-                   borderRadius: '24px',
-                   background: 'rgba(255, 255, 255, 0.98)',
-                   color: '#1e293b',
-                   border: '1px solid rgba(20, 184, 166, 0.3)',
-                   backdropFilter: 'blur(12px)',
-                   boxShadow: '0 25px 50px -12px rgba(20, 184, 166, 0.25)',
-                   padding: '16px',
-                   width: '100%',
-                   minWidth: '380px',
-                   maxWidth: '480px',
-                }
+                id: data.contact?.phone ? `handoff-${data.contact.phone}` : 'handoff-toast'
              });
           }
        });
