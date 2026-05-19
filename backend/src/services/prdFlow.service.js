@@ -854,7 +854,7 @@ class PRDFlowService {
         const isPickDate = input === 'btn_2' || input.includes('custom') || input.includes('text');
 
         const slotsMsg = `Great! Please select your preferred time slot for Morning:`;
-        const callTimeStep = (settings.aiPrompts?.prdFlowSteps || []).find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
+        const callTimeStep = (settings?.automation?.aiPrompts?.prdFlowSteps || []).find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
         const customSlots = (callTimeStep && callTimeStep.buttons && callTimeStep.buttons.length > 0)
           ? callTimeStep.buttons.map(b => typeof b === 'string' ? b : (b.label || b.text || ''))
           : [
@@ -948,7 +948,7 @@ class PRDFlowService {
             });
 
             const slotsMsg = `Great! Please select your preferred time slot for Morning:`;
-            const callTimeStep = (settings.aiPrompts?.prdFlowSteps || []).find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
+            const callTimeStep = (settings?.automation?.aiPrompts?.prdFlowSteps || []).find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
             const customSlots = (callTimeStep && callTimeStep.buttons && callTimeStep.buttons.length > 0)
               ? callTimeStep.buttons.map(b => typeof b === 'string' ? b : (b.label || b.text || ''))
               : [
@@ -1052,7 +1052,7 @@ class PRDFlowService {
       // STATE: ASK_CALL_TIME_SLOT
       // ==========================================
       if (currentState === 'ask_call_time_slot') {
-        const callTimeStep = (settings.aiPrompts?.prdFlowSteps || []).find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
+        const callTimeStep = (settings?.automation?.aiPrompts?.prdFlowSteps || []).find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
         const customSlots = (callTimeStep && callTimeStep.buttons && callTimeStep.buttons.length > 0)
           ? callTimeStep.buttons.map(b => typeof b === 'string' ? b : (b.label || b.text || ''))
           : [
