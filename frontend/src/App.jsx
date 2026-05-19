@@ -2207,83 +2207,55 @@ function AppLayout() {
              // Play premium synthesized dual-tone audio chime
              playChime();
 
-             // Display standard robust toast notification
+             // Display premium, oversized robust toast notification
              toast((t) => (
-                <div className="flex w-full min-w-[320px] max-w-[460px] bg-white rounded-3xl overflow-hidden border border-emerald-500/10 shadow-xl">
-                   {/* Left Gradient Accent Bar */}
-                   <div className="w-2.5 bg-gradient-to-b from-teal-500 via-emerald-500 to-teal-600 shrink-0" />
-                   
-                   {/* Main Content Area */}
-                   <div className="flex-1 p-5 flex flex-col">
-                      {/* Header row with Title and Close button */}
-                      <div className="flex justify-between items-center mb-2">
-                         <div className="flex items-center space-x-2">
-                            {/* Pulse alert indicator */}
-                            <span className="relative flex h-2.5 w-2.5">
-                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                            </span>
-                            <p className="text-[10px] font-black text-teal-600 uppercase tracking-widest leading-none">
-                               HANDOFF REQUESTED
-                            </p>
+                <div className="flex flex-col space-y-4 p-2 w-full">
+                   <div className="flex items-start space-x-4">
+                      <div className="shrink-0 relative">
+                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-emerald-600 text-white flex items-center justify-center text-2xl shadow-xl shadow-teal-600/30">
+                            💬
                          </div>
-                         <button 
-                            onClick={() => toast.dismiss(t.id)}
-                            className="text-slate-400 hover:text-slate-600 transition-colors p-1 rounded-full hover:bg-slate-50"
-                         >
-                            <X size={14} />
-                         </button>
-                      </div>
-
-                      {/* Action Alert Description */}
-                      <h4 className="text-sm font-bold text-slate-800 tracking-tight leading-snug">
-                         A lead responded and is waiting for a counselor!
-                      </h4>
-
-                      {/* Lead Details Card */}
-                      <div className="bg-slate-50 border border-slate-100 rounded-2xl p-3.5 my-3 flex items-center justify-between gap-3">
-                         <div className="flex items-center space-x-3 min-w-0">
-                            <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-100 text-teal-600 flex items-center justify-center font-bold text-base shadow-sm shrink-0">
-                               👤
-                            </div>
-                            <div className="min-w-0">
-                               <p className="text-xs font-black text-slate-800 truncate">
-                                  {data.contact?.name || 'New Lead'}
-                               </p>
-                               <p className="text-[10px] font-semibold text-slate-500 mt-0.5 truncate">
-                                  {data.contact?.phone}
-                               </p>
-                            </div>
-                         </div>
-                         <span className="text-[9px] font-bold bg-emerald-100/70 text-emerald-700 px-2 py-0.5 rounded-full uppercase tracking-wider shrink-0 animate-pulse">
-                            ⚡ Live Alert
+                         <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-4 w-4 bg-emerald-500 border-2 border-white"></span>
                          </span>
                       </div>
-
-                      {/* Buttons Container */}
-                      <div className="flex items-center justify-end space-x-2">
-                         <button
-                            onClick={() => toast.dismiss(t.id)}
-                            className="px-4 py-2 border border-slate-200 hover:border-slate-300 text-slate-500 hover:text-slate-700 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all focus:outline-none"
-                         >
-                            Dismiss
-                         </button>
-                         <button
-                            onClick={() => {
-                               toast.dismiss(t.id);
-                               navigate('/inbox', { 
-                                  state: { 
-                                     selectedContact: data.contact?.phone,
-                                     selectedContactId: data.contact?._id 
-                                  } 
-                                });
-                            }}
-                            className="px-5 py-2.5 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md shadow-emerald-500/20 hover:shadow-lg transition-all transform hover:-translate-y-0.5 active:translate-y-0 focus:outline-none flex items-center space-x-1 animate-pulse"
-                         >
-                            <span>REPLY NOW</span>
-                            <span>→</span>
-                         </button>
+                      <div className="flex-1">
+                         <div className="flex items-center space-x-2">
+                           <span className="px-2 py-0.5 bg-rose-100 text-rose-700 text-[10px] font-black tracking-widest uppercase rounded-md animate-pulse">
+                              Hot Lead
+                           </span>
+                           <p className="text-[11px] font-black text-teal-800 uppercase tracking-widest opacity-80">Handoff Request</p>
+                         </div>
+                         <h3 className="text-base sm:text-lg font-black text-slate-800 mt-1 leading-tight tracking-tight">
+                            Live Chat Waiting!
+                         </h3>
+                         <p className="text-xs font-semibold text-slate-500 mt-1">
+                            {data.contact?.name || data.contact?.phone || 'New Customer'} needs human assistance.
+                         </p>
                       </div>
+                   </div>
+                   <div className="flex space-x-3 pt-2 border-t border-slate-100/50">
+                      <button
+                         onClick={() => {
+                            toast.dismiss(t.id);
+                            if (data.contact?.phone) {
+                               navigate('/inbox', { state: { selectedContact: data.contact.phone } });
+                            } else {
+                               navigate('/inbox');
+                            }
+                         }}
+                         className="flex-1 py-3 bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-teal-500/20 hover:-translate-y-0.5 transition-all focus:outline-none flex items-center justify-center space-x-2"
+                      >
+                         <span>Reply Now</span>
+                         <span className="text-lg leading-none">→</span>
+                      </button>
+                      <button
+                         onClick={() => toast.dismiss(t.id)}
+                         className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors focus:outline-none"
+                      >
+                         Dismiss
+                      </button>
                    </div>
                 </div>
              ), {
@@ -2291,11 +2263,15 @@ function AppLayout() {
                 position: 'top-right',
                 style: {
                    borderRadius: '24px',
-                   background: 'transparent',
-                   boxShadow: 'none',
-                   padding: '0px',
+                   background: 'rgba(255, 255, 255, 0.98)',
+                   color: '#1e293b',
+                   border: '1px solid rgba(20, 184, 166, 0.3)',
+                   backdropFilter: 'blur(12px)',
+                   boxShadow: '0 25px 50px -12px rgba(20, 184, 166, 0.25)',
+                   padding: '16px',
+                   width: '100%',
+                   minWidth: '380px',
                    maxWidth: '480px',
-                   border: 'none',
                 }
              });
           }

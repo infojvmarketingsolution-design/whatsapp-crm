@@ -82,15 +82,10 @@ export default function Inbox({ roleAccess }) {
 
   const EMOJIS = ['😀', '😂', '😍', '🙌', '🔥', '✅', '❌', '🚀', '🙏', '👍', '❤️', '⚠️', '⭐', '🎁', '📅', '💬', '🏠', '💼', '📊', '🤝'];
 
-  // Handle navigation from other pages or notification toasts
+  // Handle navigation from Tasks page
   useEffect(() => {
-    if ((location.state?.selectedContact || location.state?.selectedContactId) && contacts.length > 0) {
-      const targetPhone = location.state.selectedContact;
-      const targetId = location.state.selectedContactId;
-      const contact = contacts.find(c => 
-         (targetId && String(c._id) === String(targetId)) || 
-         (targetPhone && String(c.phone) === String(targetPhone))
-      );
+    if (location.state?.selectedContact && contacts.length > 0) {
+      const contact = contacts.find(c => c.phone === location.state.selectedContact);
       if (contact) {
         setActiveChat(contact);
         // Clear state to prevent re-selection

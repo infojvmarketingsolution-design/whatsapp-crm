@@ -132,9 +132,7 @@ export default function NotificationCenter({ isOpen, onClose }) {
              desc: `A new lead "${data.contact?.name || 'Unknown'}" has entered the pipeline.`,
              time: 'Just now',
              icon: MessageSquare,
-             color: 'text-emerald-600 bg-emerald-50',
-             contactPhone: data.contact?.phone,
-             contactId: data.contact?._id
+             color: 'text-emerald-600 bg-emerald-50'
            };
            setSocketNotifications(prev => [newLeadNote, ...prev]);
          }
@@ -181,9 +179,7 @@ export default function NotificationCenter({ isOpen, onClose }) {
              desc: `A new lead "${data.contact?.name || data.contact?.phone || 'Unknown'}" is waiting for your response.`,
              time: 'Just now',
              icon: MessageSquare,
-             color: 'text-amber-600 bg-amber-50',
-             contactPhone: data.contact?.phone,
-             contactId: data.contact?._id
+             color: 'text-amber-600 bg-amber-50'
            };
            setSocketNotifications(prev => [handoffNote, ...prev]);
          }
@@ -217,12 +213,7 @@ export default function NotificationCenter({ isOpen, onClose }) {
     } else if (note.id === 'api-status') {
       navigate('/settings');
     } else if (note.type === 'CHAT' || note.id.toString().startsWith('new-lead') || note.id.toString().startsWith('handoff')) {
-      navigate('/inbox', { 
-         state: { 
-            selectedContact: note.contactPhone, 
-            selectedContactId: note.contactId 
-         } 
-      });
+      navigate('/inbox');
     }
     onClose();
   };
