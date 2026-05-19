@@ -888,9 +888,26 @@ class PRDFlowService {
               currentFlowStep: 'ask_call_custom_date'
             }
           });
-          const typeDateMsg = "Please type your preferred date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
-          const res = await waService.sendTextMessage(contact.phone, typeDateMsg);
-          await saveAndEmit('text', typeDateMsg, res);
+          
+          const days = [];
+          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          for (let i = 2; i < 9; i++) {
+            const nextD = new Date(istNow);
+            nextD.setDate(istNow.getDate() + i);
+            const dStr = nextD.getDate().toString().padStart(2, '0');
+            const mStr = (nextD.getMonth() + 1).toString().padStart(2, '0');
+            const yStr = nextD.getFullYear();
+            const fullDate = `${dStr}-${mStr}-${yStr}`;
+
+            const dayOfWeek = dayNames[nextD.getDay()];
+            const monthName = months[nextD.getMonth()];
+            const label = `${dayOfWeek} (${nextD.getDate()} ${monthName})`;
+            days.push({ label, description: fullDate });
+          }
+
+          const selectDateMsg = "Please select your preferred date:";
+          await this.sendInteractiveOptionsHelper(contact, waService, selectDateMsg, days, settings, io);
         }
         else {
           const formatShort = (date) => {
@@ -917,7 +934,30 @@ class PRDFlowService {
       // STATE: ASK_CALL_CUSTOM_DATE
       // ==========================================
       if (currentState === 'ask_call_custom_date') {
-        const inputDate = messageText.trim();
+        let inputDate = messageText.trim();
+
+        // 1. Check if the user selected a date from the list option
+        if (replyValue && replyValue.startsWith('list_')) {
+          const idx = parseInt(replyValue.split('_')[1], 10);
+          const getISTDate = () => {
+            const utc = new Date().getTime() + new Date().getTimezoneOffset() * 60000;
+            return new Date(utc + (3600000 * 5.5));
+          };
+          const istNow = getISTDate();
+          const days = [];
+          for (let i = 2; i < 9; i++) {
+            const nextD = new Date(istNow);
+            nextD.setDate(istNow.getDate() + i);
+            const dStr = nextD.getDate().toString().padStart(2, '0');
+            const mStr = (nextD.getMonth() + 1).toString().padStart(2, '0');
+            const yStr = nextD.getFullYear();
+            days.push(`${dStr}-${mStr}-${yStr}`);
+          }
+          if (idx >= 0 && idx < days.length) {
+            inputDate = days[idx];
+          }
+        }
+
         const dateRegex = /^\d{1,2}-\d{1,2}-\d{4}$/;
 
         if (dateRegex.test(inputDate)) {
@@ -942,14 +982,35 @@ class PRDFlowService {
             ];
             await this.sendInteractiveOptionsHelper(contact, waService, timeSlotMsg, buttons, settings, io);
           } else {
-            const invalidMsg = "Invalid date. Please type a valid calendar date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
+            const invalidMsg = "Invalid date. Please choose a date from the list or type a valid calendar date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
             const res = await waService.sendTextMessage(contact.phone, invalidMsg);
             await saveAndEmit('text', invalidMsg, res);
           }
         } else {
-          const invalidFormatMsg = "Invalid format. Please enter your preferred date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
-          const res = await waService.sendTextMessage(contact.phone, invalidFormatMsg);
-          await saveAndEmit('text', invalidFormatMsg, res);
+          // If formatting is invalid, send the next 7 days list again to guide them beautifully
+          const getISTDate = () => {
+            const utc = new Date().getTime() + new Date().getTimezoneOffset() * 60000;
+            return new Date(utc + (3600000 * 5.5));
+          };
+          const istNow = getISTDate();
+          const days = [];
+          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          for (let i = 2; i < 9; i++) {
+            const nextD = new Date(istNow);
+            nextD.setDate(istNow.getDate() + i);
+            const dStr = nextD.getDate().toString().padStart(2, '0');
+            const mStr = (nextD.getMonth() + 1).toString().padStart(2, '0');
+            const yStr = nextD.getFullYear();
+            const fullDate = `${dStr}-${mStr}-${yStr}`;
+
+            const dayOfWeek = dayNames[nextD.getDay()];
+            const monthName = months[nextD.getMonth()];
+            days.push({ label: `${dayOfWeek} (${nextD.getDate()} ${monthName})`, description: fullDate });
+          }
+
+          const invalidFormatMsg = "Please choose a date from the list below, or type in *DD-MM-YYYY* format:";
+          await this.sendInteractiveOptionsHelper(contact, waService, invalidFormatMsg, days, settings, io);
         }
 
         this.activeProcesses.delete(lockKey);
