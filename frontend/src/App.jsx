@@ -2259,7 +2259,7 @@ function AppLayout() {
                    </div>
                 </div>
              ), {
-                duration: 20000,
+                duration: Infinity,
                 position: 'top-right',
                 style: {
                    borderRadius: '24px',
