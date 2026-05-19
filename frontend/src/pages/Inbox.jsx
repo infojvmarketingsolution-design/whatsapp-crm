@@ -652,8 +652,22 @@ export default function Inbox({ roleAccess }) {
            
            {/* Loop through live DB messages if available */}
            {messages.length > 0 ? (
-              messages.map((m, idx) => (
-                 <div key={m._id || idx} className={`relative group max-w-[85%] sm:max-w-[70%] w-fit animate-msg-enter ${m.direction === 'OUTBOUND' ? 'self-end' : 'self-start'}`} style={{ animationDelay: `${idx * 0.1}s` }}>
+              messages.map((m, idx) => {
+                 const isHandoffSystemMessage = m.content?.includes('Connecting you with our counsellor') || m.content?.includes('Human chat started');
+                 
+                 if (isHandoffSystemMessage) {
+                    return (
+                       <div key={m._id || idx} className="w-full flex justify-center my-4 animate-fade-in" style={{ animationDelay: `${idx * 0.1}s` }}>
+                          <div className="bg-teal-50/80 backdrop-blur border border-teal-200/50 text-teal-700 px-4 py-1.5 rounded-full text-[11px] font-black uppercase tracking-wider shadow-sm flex items-center space-x-2">
+                             <span className="text-sm leading-none">🤝</span>
+                             <span>Human Chat Started</span>
+                          </div>
+                       </div>
+                    );
+                 }
+
+                 return (
+                  <div key={m._id || idx} className={`relative group max-w-[85%] sm:max-w-[70%] w-fit animate-msg-enter ${m.direction === 'OUTBOUND' ? 'self-end' : 'self-start'}`} style={{ animationDelay: `${idx * 0.1}s` }}>
                    
                    {/* Internal Team Note Decoration */}
                    {m.isInternal && (
@@ -741,7 +755,8 @@ export default function Inbox({ roleAccess }) {
                       )}
                     </div>
                  </div>
-              ))
+               )})
+              )
            ) : (
              <div className="text-center text-gray-400 mt-10 font-medium">No messages in this conversation.</div>
            )}
