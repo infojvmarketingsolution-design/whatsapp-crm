@@ -2260,8 +2260,9 @@ function AppLayout() {
                 </div>
              ), {
                 duration: Infinity,
-                position: 'top-right',
+                position: 'top-center',
                 style: {
+                   marginTop: '30vh',
                    borderRadius: '24px',
                    background: 'rgba(255, 255, 255, 0.98)',
                    color: '#1e293b',
