@@ -122,6 +122,31 @@ export default function NotificationCenter({ isOpen, onClose }) {
       }
     });
 
+    socket.on('handoff_request', (data) => {
+      const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
+      const loggedInUserId = loggedInUser._id || loggedInUser.id;
+      const assignedAgentId = data.contact?.assignedAgent;
+      const assignedCounsellorId = data.contact?.assignedCounsellor;
+      
+      const isAssigned = (assignedAgentId && String(assignedAgentId) === String(loggedInUserId)) ||
+                         (assignedCounsellorId && String(assignedCounsellorId) === String(loggedInUserId));
+      
+      const isUnassigned = !assignedAgentId && !assignedCounsellorId;
+      
+      if (isAssigned || isUnassigned) {
+        const handoffNote = {
+          id: `handoff-${Date.now()}`,
+          type: 'CHAT',
+          title: 'Handoff Requested 🙋‍♂️',
+          desc: `A new lead "${data.contact?.name || data.contact?.phone || 'Unknown'}" is waiting for your response.`,
+          time: 'Just now',
+          icon: MessageSquare,
+          color: 'text-amber-600 bg-amber-50'
+        };
+        setNotifications(prev => [handoffNote, ...prev]);
+      }
+    });
+
     return () => socket.disconnect();
   }, [isOpen]);
 
@@ -130,7 +155,7 @@ export default function NotificationCenter({ isOpen, onClose }) {
       navigate('/tasks');
     } else if (note.id === 'api-status') {
       navigate('/settings');
-    } else if (note.type === 'CHAT' || note.id.toString().startsWith('new-lead')) {
+    } else if (note.type === 'CHAT' || note.id.toString().startsWith('new-lead') || note.id.toString().startsWith('handoff')) {
       navigate('/inbox');
     }
     onClose();

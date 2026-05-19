@@ -2096,6 +2096,55 @@ function AppLayout() {
        }
     });
 
+    socket.on('handoff_request', (data) => {
+       console.log('🔔 Handoff Request:', data);
+       const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
+       const loggedInUserId = loggedInUser._id || loggedInUser.id;
+       const assignedAgentId = data.contact?.assignedAgent;
+       const assignedCounsellorId = data.contact?.assignedCounsellor;
+       
+       const isAssigned = (assignedAgentId && String(assignedAgentId) === String(loggedInUserId)) ||
+                          (assignedCounsellorId && String(assignedCounsellorId) === String(loggedInUserId));
+       
+       const isUnassigned = !assignedAgentId && !assignedCounsellorId;
+       
+       if (isAssigned || isUnassigned) {
+          toast.custom((t) => (
+             <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex border border-teal-500/20 overflow-hidden`}>
+                <div className="flex-1 w-0 p-4">
+                   <div className="flex items-start">
+                      <div className="shrink-0 pt-0.5">
+                         <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold shadow-lg shadow-teal-600/20">
+                            🙋‍♂️
+                         </div>
+                      </div>
+                      <div className="ml-3 flex-1">
+                         <p className="text-xs font-black text-teal-800 uppercase tracking-widest">Handoff Requested</p>
+                         <p className="mt-1 text-xs font-bold text-slate-800">
+                            A new lead is waiting for your response
+                         </p>
+                         <p className="text-[10px] font-medium text-slate-400 mt-0.5">
+                            Lead: {data.contact?.name || data.contact?.phone || 'New Customer'}
+                         </p>
+                      </div>
+                   </div>
+                </div>
+                <div className="flex border-l border-slate-100">
+                   <button
+                      onClick={() => {
+                         toast.dismiss(t.id);
+                         navigate('/inbox');
+                      }}
+                      className="w-full border border-transparent rounded-none rounded-r-2xl px-6 py-4 flex items-center justify-center text-xs font-black uppercase tracking-widest text-teal-600 hover:text-teal-700 bg-teal-50/50 hover:bg-teal-50 transition-all focus:outline-none"
+                   >
+                      Reply
+                   </button>
+                </div>
+             </div>
+          ), { duration: 15000 });
+       }
+    });
+
     // Listen for custom event from CustomizationSettings
     const handleBrandingUpdate = (e) => {
        if (e.detail?.color) {

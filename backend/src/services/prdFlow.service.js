@@ -1299,6 +1299,9 @@ class PRDFlowService {
           // Pause chatbot so live agent takes over
           await ContactModel.updateOne({ phone: contact.phone }, { $set: { isBotPaused: true } });
 
+          // Retrieve updated contact to ensure all fields are current
+          const updatedContact = await ContactModel.findOne({ phone: contact.phone });
+
           // Send admin handoff alert
           notificationService.sendAdminAlert(tenantId, {
             subject: 'Human Handoff Requested 🙋‍♂️',
@@ -1307,6 +1310,15 @@ class PRDFlowService {
 
           // Reset flow session
           await this.clearPRDFlowSession(tenantId, contact.phone, ContactModel);
+
+          // Emit real-time handoff request socket event to assigned agents/counsellors in CRM
+          if (io) {
+            const contactObj = updatedContact ? (typeof updatedContact.toObject === 'function' ? updatedContact.toObject() : updatedContact) : contact;
+            io.to(tenantId).emit('handoff_request', {
+              contact: contactObj,
+              message: 'A new lead is waiting for your response'
+            });
+          }
         }
         else if (isNo) {
           const Settings = require('../models/core/Settings');
