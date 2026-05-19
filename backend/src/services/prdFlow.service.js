@@ -55,13 +55,38 @@ class PRDFlowService {
   getMatchedQualificationKey(programMap, qualification) {
     if (!programMap || !qualification) return null;
     const qualLower = qualification.toLowerCase().trim();
+    
+    // 1. Direct Case-Insensitive Match
     const directMatch = Object.keys(programMap).find(k => k.toLowerCase().trim() === qualLower);
     if (directMatch) return directMatch;
+
+    // 2. Smart Mapping: If qualification contains '12' or 'twelfth' -> matches 'bachelor'
+    if (qualLower.includes('12') || qualLower.includes('twelfth')) {
+      const match = Object.keys(programMap).find(k => k.toLowerCase().includes('bachelor') || k.toLowerCase().includes('12'));
+      if (match) return match;
+    }
+
+    // 3. Smart Mapping: If qualification contains 'grad' or 'degree' or 'bach' (meaning holds a bachelor's) or 'master' -> matches 'master'
+    if (qualLower.includes('grad') || qualLower.includes('degree') || qualLower.includes('bach') || qualLower.includes('master')) {
+      const match = Object.keys(programMap).find(k => k.toLowerCase().includes('master') || k.toLowerCase().includes('grad') || k.toLowerCase().includes('post'));
+      if (match) return match;
+    }
+
+    // 4. Substring Matches
+    const substringMatch = Object.keys(programMap).find(k => {
+      const cleanK = k.toLowerCase().trim();
+      return cleanK.includes(qualLower) || qualLower.includes(cleanK);
+    });
+    if (substringMatch) return substringMatch;
+
+    // 5. Fallback: standard mapping
     let mappedOption = qualLower;
     if (mappedOption.includes('bachelor')) mappedOption = '12th pass';
     else if (mappedOption.includes('master')) mappedOption = 'graduate';
+    
     const mappedMatch = Object.keys(programMap).find(k => k.toLowerCase().trim() === mappedOption);
     if (mappedMatch) return mappedMatch;
+
     return Object.keys(programMap).find(k => {
       const cleanK = k.toLowerCase().trim();
       return cleanK.includes(mappedOption) || mappedOption.includes(cleanK) ||
@@ -493,7 +518,7 @@ class PRDFlowService {
           const idx = matchBtn ? parseInt(matchBtn[1]) : (matchLst ? parseInt(matchLst[1]) : -1);
           if (idx >= 0 && idx < options.length) {
             const opt = options[idx];
-            selectedOption = typeof opt === 'string' ? opt : (opt?.description || opt?.label || '');
+            selectedOption = typeof opt === 'string' ? opt : (opt?.label || opt?.description || '');
           }
         }
         if (!selectedOption) {
@@ -509,13 +534,13 @@ class PRDFlowService {
           });
           if (matchIdx !== -1) {
             const opt = options[matchIdx];
-            selectedOption = typeof opt === 'string' ? opt : (opt?.description || opt?.label || '');
+            selectedOption = typeof opt === 'string' ? opt : (opt?.label || opt?.description || '');
           }
         }
 
         // Fallbacks
         if (!selectedOption) {
-          const optStrings = options.map(opt => typeof opt === 'string' ? opt : (opt?.description || opt?.label || ''));
+          const optStrings = options.map(opt => typeof opt === 'string' ? opt : (opt?.label || opt?.description || ''));
           if (normalizedInput.includes('12') || normalizedInput.includes('twelfth')) selectedOption = optStrings.find(o => o.toLowerCase().includes('12')) || '12th Pass';
           else if (normalizedInput.includes('grad') || normalizedInput.includes('bachelor') || normalizedInput.includes('degree')) selectedOption = optStrings.find(o => o.toLowerCase().includes('grad') || o.toLowerCase().includes('bach')) || 'Graduation';
           else if (normalizedInput.includes('diploma')) selectedOption = optStrings.find(o => o.toLowerCase().includes('diploma')) || 'Diploma';
@@ -525,7 +550,7 @@ class PRDFlowService {
         }
 
         if (!selectedOption) {
-          const optStrings = options.map(opt => typeof opt === 'string' ? opt : (opt?.description || opt?.label || ''));
+          const optStrings = options.map(opt => typeof opt === 'string' ? opt : (opt?.label || opt?.description || ''));
           if (normalizedInput === 'other' || normalizedReply.includes('other')) {
             selectedOption = 'Other';
           } else {
