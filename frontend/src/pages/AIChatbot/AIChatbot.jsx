@@ -465,7 +465,9 @@ export default function AIChatbot() {
 
         {activeTab === 'builder' && (
           <div className="space-y-6 pb-20 animate-fade-in">
-            {(settings.aiPrompts.prdFlowSteps || []).map((step, index) => (
+            {(settings.aiPrompts.prdFlowSteps || []).map((step, index) => {
+              const stepTypeUpper = (step.type || '').toUpperCase();
+              return (
               <div key={step.id} className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all">
                 <div className="px-6 py-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
                   <div className="flex items-center space-x-3">
@@ -481,7 +483,7 @@ export default function AIChatbot() {
                   <div className="flex items-center space-x-2">
                     <select 
                       className="bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-[10px] font-black uppercase text-slate-500 outline-none focus:ring-1 focus:ring-blue-500"
-                      value={step.type}
+                      value={stepTypeUpper}
                       onChange={(e) => updateStep(step.id, 'type', e.target.value)}
                     >
                       <option value="GREETING">Greeting</option>
@@ -508,7 +510,7 @@ export default function AIChatbot() {
                       placeholder="Type message..."
                     />
 
-                    {step.type === 'PROGRAM_SELECTION' && (
+                    {stepTypeUpper === 'PROGRAM_SELECTION' && (
                       <div className="mt-4 animate-fade-in">
                         <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest block mb-2">Category Selection Message</label>
                         <p className="text-[10px] text-slate-400 mb-2 font-bold uppercase tracking-wider">This question will be shown above the interactive category buttons (e.g. Master Traditional / Master Trending):</p>
@@ -523,7 +525,7 @@ export default function AIChatbot() {
                     )}
 
                     {/* 🖼️ PREMIUM IMAGE BANNER UPLOADER & PREVIEW */}
-                    {(step.type === 'GREETING' || step.type === 'SUCCESS_PROOF' || step.type === 'NAME_CAPTURE' || step.type === 'CUSTOM_MESSAGE') && (
+                    {(stepTypeUpper === 'GREETING' || stepTypeUpper === 'SUCCESS_PROOF' || stepTypeUpper === 'NAME_CAPTURE' || stepTypeUpper === 'CUSTOM_MESSAGE') && (
                       <div className="mt-4 p-4 bg-slate-50 border border-slate-200/60 rounded-2xl animate-fade-in">
                         <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Greeting / Proof Image Banner</label>
                         
@@ -614,7 +616,7 @@ export default function AIChatbot() {
                   </div>
 
                   <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                    {step.type === 'QUALIFICATION' ? (
+                    {stepTypeUpper === 'QUALIFICATION' ? (
                       <div>
                         <div className="flex justify-between items-center mb-4">
                           <label className="text-[10px] font-black text-amber-600 uppercase tracking-widest">Qualification Options</label>
@@ -677,7 +679,7 @@ export default function AIChatbot() {
                         </div>
                         <p className="text-[9px] text-slate-400 mt-2 font-bold uppercase tracking-wider">These options will be sent to the user as an interactive list menu.</p>
                       </div>
-                    ) : step.type === 'PROGRAM_SELECTION' ? (
+                    ) : stepTypeUpper === 'PROGRAM_SELECTION' ? (
                       <div>
                         <label className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2 block">Dynamic Program Mapping (JSON)</label>
                         <p className="text-xs text-blue-800 mb-2">Programs are automatically mapped based on the selected qualification. Edit the raw JSON mapping below:</p>
@@ -798,7 +800,7 @@ export default function AIChatbot() {
                    </button>
                 </div>
               </div>
-            ))}
+            ); })}
 
             {/* 📝 GLOBAL MESSAGES (e.g. Goodbye Message) */}
             <div className="bg-white border border-slate-200 rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all p-6 mt-6">

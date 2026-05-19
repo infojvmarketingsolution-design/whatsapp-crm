@@ -4,7 +4,7 @@ import '@xyflow/react/dist/style.css';
 import { MessageSquare, HelpCircle, Award, Target } from 'lucide-react';
 
 const CustomNode = ({ data }) => {
-  const isStart = data.id === 'GREETING';
+  const isStart = (data.id || '').toUpperCase() === 'GREETING' || (data.type || '').toUpperCase() === 'GREETING';
   const Icon = data.type === 'QUESTION' ? HelpCircle : data.type === 'SUCCESS_PROOF' ? Award : MessageSquare;
   
   return (

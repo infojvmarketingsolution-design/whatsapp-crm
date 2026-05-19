@@ -135,7 +135,7 @@ class PRDFlowService {
       const aiPrompts = settings?.automation?.aiPrompts || {};
       const steps = aiPrompts.prdFlowSteps || [];
       console.log('[PRD FLOW DEBUG] Loaded steps count:', steps.length);
-      const greetingStep = steps.find(s => s.type === 'GREETING') || steps.find(s => s.type === 'NAME_CAPTURE');
+      const greetingStep = steps.find(s => (s.type || '').toUpperCase() === 'GREETING') || steps.find(s => (s.type || '').toUpperCase() === 'NAME_CAPTURE');
       if (greetingStep) {
          console.log('[PRD FLOW DEBUG] Greeting step buttons:', JSON.stringify(greetingStep.buttons, null, 2));
       }
@@ -227,7 +227,10 @@ class PRDFlowService {
       // ==========================================
       // STATE: CUSTOM STEP RESUMING
       // ==========================================
-      const customStepIndex = steps.findIndex(s => s.id === currentState && s.type !== 'NAME_CAPTURE' && s.type !== 'QUALIFICATION' && s.type !== 'PROGRAM_SELECTION' && s.type !== 'CALL_TIME');
+      const customStepIndex = steps.findIndex(s => {
+        const sType = (s.type || '').toUpperCase();
+        return s.id === currentState && sType !== 'NAME_CAPTURE' && sType !== 'QUALIFICATION' && sType !== 'PROGRAM_SELECTION' && sType !== 'CALL_TIME';
+      });
       if (customStepIndex !== -1) {
         console.log(`[PRD Flow] 📥 User replied to custom step: "${steps[customStepIndex].title}"`);
         const fresh = await ContactModel.findOne({ phone: contact.phone });
@@ -244,7 +247,7 @@ class PRDFlowService {
         // Reset and initialize session
         await ContactModel.updateOne({ phone: contact.phone }, {
           $set: {
-            currentFlowStep: steps[0]?.id || 'ask_name',
+            currentFlowStep: 'ask_name',
             isFlowActive: true,
             flowVariables: {},
             qualification: null,
@@ -259,30 +262,84 @@ class PRDFlowService {
         
 
 
-        const nameStep = steps.find(s => s.type === 'NAME_CAPTURE');
-        const hasSeparateNameCard = !!nameStep && greetingStep?.type === 'GREETING' && steps.indexOf(greetingStep) < steps.indexOf(nameStep);
+        const nameStep = steps.find(s => (s.type || '').toUpperCase() === 'NAME_CAPTURE');
+        const hasSeparateNameCard = !!nameStep && (greetingStep?.type || '').toUpperCase() === 'GREETING' && steps.indexOf(greetingStep) < steps.indexOf(nameStep);
 
-        // Removed auto-appending of name prompt to respect user's custom greeting message.
+        if (!hasSeparateNameCard && !welcomeMsg.toLowerCase().includes('enter your full name') && !welcomeMsg.toLowerCase().includes('may i know your name')) {
+          welcomeMsg = `${welcomeMsg.trim()}\n\nPlease enter your full name.`;
+        }
+
+        const greetButtons = greetingStep?.buttons || [];
+        const replyButtons = greetButtons.filter(b => b.type === 'reply');
+        const ctaButtons = greetButtons.filter(b => b.type === 'url' || b.type === 'call');
 
         const media = this.makeAbsolute(greetingImage);
         let resGreeting;
-        if (media) {
-          try {
-            resGreeting = await waService.sendMedia(contact.phone, 'image', null, welcomeMsg, media);
-            await saveAndEmit('image', welcomeMsg, resGreeting);
-          } catch (mediaErr) {
-            console.error('[PRD] Media send failed, falling back to text greeting:', mediaErr.message);
+        let singleInteractiveSent = false;
+
+        const replyLabels = replyButtons.map(b => (b.label || '').trim()).filter(l => l.length > 0);
+
+        if (replyLabels.length > 0 && replyLabels.length <= 3 && !replyLabels.some(l => l.length > 20)) {
+          if (media) {
+            try {
+              resGreeting = await waService.sendInteractiveButtonMessage(contact.phone, {
+                header: { type: 'image', link: media },
+                body: welcomeMsg,
+                buttons: replyLabels
+              });
+              await saveAndEmit('interactive', welcomeMsg, resGreeting);
+              singleInteractiveSent = true;
+            } catch (mediaErr) {
+              console.error('[PRD] Failed to send unified interactive media greeting:', mediaErr.message);
+            }
+          } else {
+            try {
+              resGreeting = await waService.sendInteractiveButtonMessage(contact.phone, {
+                body: welcomeMsg,
+                buttons: replyLabels
+              });
+              await saveAndEmit('interactive', welcomeMsg, resGreeting);
+              singleInteractiveSent = true;
+            } catch (err) {
+              console.error('[PRD] Failed to send unified interactive greeting:', err.message);
+            }
+          }
+        }
+
+        // If not sent as a single interactive card (or failed), fall back to separate media/text sending
+        if (!singleInteractiveSent) {
+          if (media) {
+            try {
+              resGreeting = await waService.sendMedia(contact.phone, 'image', null, welcomeMsg, media);
+              await saveAndEmit('image', welcomeMsg, resGreeting);
+            } catch (mediaErr) {
+              console.error('[PRD] Media send failed, falling back to text greeting:', mediaErr.message);
+              resGreeting = await waService.sendTextMessage(contact.phone, welcomeMsg);
+              await saveAndEmit('text', welcomeMsg, resGreeting);
+            }
+          } else {
             resGreeting = await waService.sendTextMessage(contact.phone, welcomeMsg);
             await saveAndEmit('text', welcomeMsg, resGreeting);
           }
-        } else {
-          resGreeting = await waService.sendTextMessage(contact.phone, welcomeMsg);
-          await saveAndEmit('text', welcomeMsg, resGreeting);
+
+          // Send split reply buttons
+          for (const btn of replyButtons) {
+            try {
+              let bodyText = (btn.text || 'Selected Option:').trim();
+              const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
+                body: bodyText,
+                buttons: [btn.label]
+              });
+              await saveAndEmit('interactive', btn.label, resBtn);
+            } catch (btnErr) {
+              console.error('[PRD] Failed to send split reply button:', btnErr.message);
+            }
+          }
         }
 
-        // Send premium real WhatsApp interactive buttons (URL and Call buttons) immediately after the greeting card
-        if (greetingStep?.buttons && greetingStep.buttons.length > 0) {
-          for (const btn of greetingStep.buttons) {
+        // Always send real interactive CTA buttons (URL and Call buttons) immediately after the main greeting card
+        if (ctaButtons.length > 0) {
+          for (const btn of ctaButtons) {
             try {
               if (btn.type === 'url') {
                 let url = (btn.value || '').trim();
@@ -331,16 +388,9 @@ class PRDFlowService {
                   buttons: [title.substring(0, 20)]
                 });
                 await saveAndEmit('interactive', title, resBtn);
-              } else if (btn.type === 'reply') {
-                let bodyText = (btn.text || 'Selected Option:').trim();
-                const resBtn = await waService.sendInteractiveButtonMessage(contact.phone, {
-                  body: bodyText,
-                  buttons: [btn.label]
-                });
-                await saveAndEmit('interactive', btn.label, resBtn);
               }
             } catch (btnErr) {
-              console.error('[PRD] Failed to send real interactive button:', btnErr.message);
+              console.error('[PRD] Failed to send real interactive CTA button:', btnErr.message);
             }
           }
         }
@@ -530,7 +580,7 @@ class PRDFlowService {
                 currentFlowStep: 'ask_program_category'
               }
             });
-            const progStep = steps.find(s => s.type === 'PROGRAM_SELECTION');
+            const progStep = steps.find(s => (s.type || '').toUpperCase() === 'PROGRAM_SELECTION');
             let catMsg = programMap[matchedQualKey]?._categoryMessage || programMap[matchedQualKey]?.categoryMessage || progStep?.categoryMessage || progStep?.message || progStep?.text || "Please select program category.";
             catMsg = this.populatePlaceholders(catMsg, contact, contact.flowVariables?.name || contact.name || 'Student');
 
@@ -652,7 +702,7 @@ class PRDFlowService {
           const progMsg = "Please select your preferred program.";
           await sendInteractiveOptions(progMsg, programs);
         } else {
-          const progStep = steps.find(s => s.type === 'PROGRAM_SELECTION');
+          const progStep = steps.find(s => (s.type || '').toUpperCase() === 'PROGRAM_SELECTION');
           let errMsg = programMap[matchedQualKey]?._categoryMessage || programMap[matchedQualKey]?.categoryMessage || progStep?.categoryMessage || progStep?.message || progStep?.text || "Please select program category:";
           errMsg = this.populatePlaceholders(errMsg, contact, contact.flowVariables?.name || contact.name || 'Student');
           
@@ -851,7 +901,7 @@ class PRDFlowService {
           });
 
           // 4. Send Thank You Message (Dynamic from builder steps)
-          const thankYouStep = steps.find(s => s.id === 'thank_you' || s.type === 'CUSTOM_MESSAGE');
+          const thankYouStep = steps.find(s => s.id === 'thank_you' || (s.type || '').toUpperCase() === 'CUSTOM_MESSAGE');
           let thankYouMsg = thankYouStep?.message || thankYouStep?.text || `Thank you ${name} 😊\n\nYour counselling request has been submitted successfully.\nOur counsellor will contact you at your preferred time.`;
           thankYouMsg = this.populatePlaceholders(thankYouMsg, fresh, name, qual, prog, time);
 
@@ -963,19 +1013,12 @@ class PRDFlowService {
 
   populatePlaceholders(text, contact, name = '', qual = '', prog = '', time = '') {
     if (!text || typeof text !== 'string') return '';
-    let resolvedName = name || contact.flowVariables?.name || contact.name || '';
-    let processedText = text
-      .replace(/\{\{\s*name\s*\}\}/gi, resolvedName || 'Student')
+    return text
+      .replace(/\{\{\s*name\s*\}\}/gi, name || contact.flowVariables?.name || contact.name || 'Student')
       .replace(/\{\{\s*contact\s*\}\}/gi, contact.phone || '')
       .replace(/\{\{\s*qualification\s*\}\}/gi, qual || contact.flowVariables?.qualification || contact.qualification || '')
       .replace(/\{\{\s*program\s*\}\}/gi, prog || contact.flowVariables?.program || contact.selectedProgram || '')
       .replace(/\{\{\s*time\s*\}\}/gi, time || contact.flowVariables?.time || contact.preferredCallTime || '');
-
-    // Prepend name if available and not already in the text (to fulfill "every question first tell name")
-    if (resolvedName && !text.toLowerCase().includes(resolvedName.toLowerCase()) && !text.includes('{{name}}')) {
-      processedText = `${resolvedName}, ${processedText}`;
-    }
-    return processedText;
   }
 
   async transitionToNextStepAfter(completedTypeOrId, contact, ContactModel, steps, settings, waService, nameVal, io = null) {
@@ -1033,9 +1076,10 @@ class PRDFlowService {
       return;
     }
 
-    console.log(`[PRD Flow] 🔀 Transitioning dynamically from "${completedTypeOrId}" to "${nextStep.title}" (Type: ${nextStep.type}, ID: ${nextStep.id})`);
+    const nextStepType = (nextStep.type || '').toUpperCase();
+    console.log(`[PRD Flow] 🔀 Transitioning dynamically from "${completedTypeOrId}" to "${nextStep.title}" (Type: ${nextStepType}, ID: ${nextStep.id})`);
 
-    if (nextStep.type === 'CALL_TIME') {
+    if (nextStepType === 'CALL_TIME') {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_call_time' } });
       const callTimeMsg = nextStep.message || nextStep.text || "What would be the best time for our counsellor to call you?";
       const buttons = (nextStep.buttons && nextStep.buttons.length > 0) ? nextStep.buttons : [
@@ -1043,7 +1087,7 @@ class PRDFlowService {
       ];
       await this.sendInteractiveOptionsHelper(contact, waService, callTimeMsg, buttons, settings, io);
     }
-    else if (nextStep.type === 'CUSTOM_MESSAGE' || nextStep.type === 'SUCCESS_PROOF') {
+    else if (nextStepType === 'CUSTOM_MESSAGE' || nextStepType === 'SUCCESS_PROOF') {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: nextStep.id } });
 
       // Construct fresh values if available
@@ -1116,14 +1160,14 @@ class PRDFlowService {
         }
       }
     }
-    else if (nextStep.type === 'QUALIFICATION') {
+    else if (nextStepType === 'QUALIFICATION') {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_qualification' } });
       let qualMsg = nextStep.message || nextStep.text || `Please select your qualification.`;
       qualMsg = this.populatePlaceholders(qualMsg, contact, nameVal);
       let options = settings?.automation?.aiPrompts?.qualificationOptions || ['12th Pass', 'Graduation', 'Other'];
       await this.sendInteractiveOptionsHelper(contact, waService, qualMsg, options, settings, io);
     }
-    else if (nextStep.type === 'PROGRAM_SELECTION') {
+    else if (nextStepType === 'PROGRAM_SELECTION') {
       const fresh = await ContactModel.findOne({ phone: contact.phone });
       const contactQual = fresh.qualification || '';
       
@@ -1189,7 +1233,7 @@ class PRDFlowService {
         const res = await waService.sendTextMessage(contact.phone, customMsg);
       }
     }
-    else if (nextStep.type === 'NAME_CAPTURE') {
+    else if (nextStepType === 'NAME_CAPTURE') {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_name' } });
       let nameMsg = nextStep.message || nextStep.text || `May I know your name?`;
       nameMsg = this.populatePlaceholders(nameMsg, contact, nameVal);
@@ -1206,7 +1250,7 @@ class PRDFlowService {
         await waService.sendTextMessage(contact.phone, nameMsg);
       }
     }
-    else if (nextStep.type === 'GREETING') {
+    else if (nextStepType === 'GREETING') {
       let greetMsg = nextStep.message || nextStep.text || `Welcome!`;
       greetMsg = this.populatePlaceholders(greetMsg, contact, nameVal);
       
