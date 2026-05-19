@@ -753,11 +753,11 @@ export default function Inbox({ roleAccess }) {
                           )}
                         </div>
                       )}
-                    </div>
-                 </div>
-               )})
-              )
-           ) : (
+                     </div>
+                  </div>
+                 );
+               })
+            ) : (
              <div className="text-center text-gray-400 mt-10 font-medium">No messages in this conversation.</div>
            )}
            {/* Invisible element to auto-scroll to */}
