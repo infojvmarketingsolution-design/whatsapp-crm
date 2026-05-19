@@ -827,6 +827,7 @@ class PRDFlowService {
       }
 
       // ==========================================
+      // ==========================================
       // STATE: ASK_CALL_DATE
       // ==========================================
       if (currentState === 'ask_call_date') {
@@ -848,9 +849,24 @@ class PRDFlowService {
         const tomorrowFull = formatFull(tomorrowDate);
 
         const input = (replyValue || messageText || '').toLowerCase().trim();
-        const isToday = input === 'btn_0' || input.includes('today');
-        const isTomorrow = input === 'btn_1' || input.includes('tomorrow');
-        const isPickDate = input === 'btn_2' || input.includes('pick') || input.includes('date');
+        const isToday = input === 'btn_0' || input === 'today';
+        const isTomorrow = input === 'btn_1' || input === 'tomorrow';
+        const isPickDate = input === 'btn_2' || input.includes('custom') || input.includes('text');
+
+        const timeSlotMsg = `Great! What time slot works best for you? Please reply with the number of your choice (1 to 13):\n\n` +
+          `1️⃣ *08:00 AM to 09:00 AM*\n` +
+          `2️⃣ *09:00 AM to 10:00 AM*\n` +
+          `3️⃣ *10:00 AM to 11:00 AM*\n` +
+          `4️⃣ *11:00 AM to 12:00 PM*\n` +
+          `5️⃣ *12:00 PM to 01:00 PM*\n` +
+          `6️⃣ *01:00 PM to 02:00 PM*\n` +
+          `7️⃣ *02:00 PM to 03:00 PM*\n` +
+          `8️⃣ *03:00 PM to 04:00 PM*\n` +
+          `9️⃣ *04:00 PM to 05:00 PM*\n` +
+          `🔟 *05:00 PM to 06:00 PM*\n` +
+          `11. *06:00 PM to 07:00 PM*\n` +
+          `12. *07:00 PM to 08:00 PM*\n` +
+          `13. *08:00 PM to 09:00 PM*`;
 
         if (isToday) {
           await ContactModel.updateOne({ phone: contact.phone }, {
@@ -860,12 +876,8 @@ class PRDFlowService {
             }
           });
           
-          const timeSlotMsg = "Great! What time slot works best for you?";
-          const callTimeStep = steps.find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
-          const buttons = (callTimeStep && callTimeStep.buttons && callTimeStep.buttons.length > 0) ? callTimeStep.buttons : [
-            'Morning', 'Afternoon', 'Evening'
-          ];
-          await this.sendInteractiveOptionsHelper(contact, waService, timeSlotMsg, buttons, settings, io);
+          const res = await waService.sendTextMessage(contact.phone, timeSlotMsg);
+          await saveAndEmit('text', timeSlotMsg, res);
         }
         else if (isTomorrow) {
           await ContactModel.updateOne({ phone: contact.phone }, {
@@ -875,12 +887,8 @@ class PRDFlowService {
             }
           });
           
-          const timeSlotMsg = "Great! What time slot works best for you?";
-          const callTimeStep = steps.find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
-          const buttons = (callTimeStep && callTimeStep.buttons && callTimeStep.buttons.length > 0) ? callTimeStep.buttons : [
-            'Morning', 'Afternoon', 'Evening'
-          ];
-          await this.sendInteractiveOptionsHelper(contact, waService, timeSlotMsg, buttons, settings, io);
+          const res = await waService.sendTextMessage(contact.phone, timeSlotMsg);
+          await saveAndEmit('text', timeSlotMsg, res);
         }
         else if (isPickDate) {
           await ContactModel.updateOne({ phone: contact.phone }, {
@@ -888,39 +896,15 @@ class PRDFlowService {
               currentFlowStep: 'ask_call_custom_date'
             }
           });
-          
-          const days = [];
-          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          for (let i = 2; i < 9; i++) {
-            const nextD = new Date(istNow);
-            nextD.setDate(istNow.getDate() + i);
-            const dStr = nextD.getDate().toString().padStart(2, '0');
-            const mStr = (nextD.getMonth() + 1).toString().padStart(2, '0');
-            const yStr = nextD.getFullYear();
-            const fullDate = `${dStr}-${mStr}-${yStr}`;
-
-            const dayOfWeek = dayNames[nextD.getDay()];
-            const monthName = months[nextD.getMonth()];
-            const label = `${dayOfWeek} (${nextD.getDate()} ${monthName})`;
-            days.push({ label, description: fullDate });
-          }
-
-          const selectDateMsg = "Please select your preferred date:";
-          await this.sendInteractiveOptionsHelper(contact, waService, selectDateMsg, days, settings, io);
+          const typeDateMsg = "Please type your preferred date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
+          const res = await waService.sendTextMessage(contact.phone, typeDateMsg);
+          await saveAndEmit('text', typeDateMsg, res);
         }
         else {
-          const formatShort = (date) => {
-            const d = date.getDate().toString().padStart(2, '0');
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            return `${d} ${months[date.getMonth()]}`;
-          };
-          const todayStr = formatShort(istNow);
-          const tomorrowStr = formatShort(tomorrowDate);
           const dateButtons = [
-            `Today (${todayStr})`,
-            `Tomorrow (${tomorrowStr})`,
-            `Pick a Date`
+            'TODAY',
+            'TOMORROW',
+            'CUSTOM DATE (TEXT)'
           ];
           const invalidMsg = "Invalid option. Please choose when should our counselor contact you:";
           await this.sendInteractiveOptionsHelper(contact, waService, invalidMsg, dateButtons, settings, io);
@@ -934,30 +918,7 @@ class PRDFlowService {
       // STATE: ASK_CALL_CUSTOM_DATE
       // ==========================================
       if (currentState === 'ask_call_custom_date') {
-        let inputDate = messageText.trim();
-
-        // 1. Check if the user selected a date from the list option
-        if (replyValue && replyValue.startsWith('list_')) {
-          const idx = parseInt(replyValue.split('_')[1], 10);
-          const getISTDate = () => {
-            const utc = new Date().getTime() + new Date().getTimezoneOffset() * 60000;
-            return new Date(utc + (3600000 * 5.5));
-          };
-          const istNow = getISTDate();
-          const days = [];
-          for (let i = 2; i < 9; i++) {
-            const nextD = new Date(istNow);
-            nextD.setDate(istNow.getDate() + i);
-            const dStr = nextD.getDate().toString().padStart(2, '0');
-            const mStr = (nextD.getMonth() + 1).toString().padStart(2, '0');
-            const yStr = nextD.getFullYear();
-            days.push(`${dStr}-${mStr}-${yStr}`);
-          }
-          if (idx >= 0 && idx < days.length) {
-            inputDate = days[idx];
-          }
-        }
-
+        const inputDate = messageText.trim();
         const dateRegex = /^\d{1,2}-\d{1,2}-\d{4}$/;
 
         if (dateRegex.test(inputDate)) {
@@ -975,42 +936,31 @@ class PRDFlowService {
               }
             });
 
-            const timeSlotMsg = "Great! What time slot works best for you?";
-            const callTimeStep = steps.find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
-            const buttons = (callTimeStep && callTimeStep.buttons && callTimeStep.buttons.length > 0) ? callTimeStep.buttons : [
-              'Morning', 'Afternoon', 'Evening'
-            ];
-            await this.sendInteractiveOptionsHelper(contact, waService, timeSlotMsg, buttons, settings, io);
+            const timeSlotMsg = `Great! What time slot works best for you? Please reply with the number of your choice (1 to 13):\n\n` +
+              `1️⃣ *08:00 AM to 09:00 AM*\n` +
+              `2️⃣ *09:00 AM to 10:00 AM*\n` +
+              `3️⃣ *10:00 AM to 11:00 AM*\n` +
+              `4️⃣ *11:00 AM to 12:00 PM*\n` +
+              `5️⃣ *12:00 PM to 01:00 PM*\n` +
+              `6️⃣ *01:00 PM to 02:00 PM*\n` +
+              `7️⃣ *02:00 PM to 03:00 PM*\n` +
+              `8️⃣ *03:00 PM to 04:00 PM*\n` +
+              `9️⃣ *04:00 PM to 05:00 PM*\n` +
+              `🔟 *05:00 PM to 06:00 PM*\n` +
+              `11. *06:00 PM to 07:00 PM*\n` +
+              `12. *07:00 PM to 08:00 PM*\n` +
+              `13. *08:00 PM to 09:00 PM*`;
+            const res = await waService.sendTextMessage(contact.phone, timeSlotMsg);
+            await saveAndEmit('text', timeSlotMsg, res);
           } else {
-            const invalidMsg = "Invalid date. Please choose a date from the list or type a valid calendar date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
+            const invalidMsg = "Invalid date. Please type a valid calendar date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
             const res = await waService.sendTextMessage(contact.phone, invalidMsg);
             await saveAndEmit('text', invalidMsg, res);
           }
         } else {
-          // If formatting is invalid, send the next 7 days list again to guide them beautifully
-          const getISTDate = () => {
-            const utc = new Date().getTime() + new Date().getTimezoneOffset() * 60000;
-            return new Date(utc + (3600000 * 5.5));
-          };
-          const istNow = getISTDate();
-          const days = [];
-          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          for (let i = 2; i < 9; i++) {
-            const nextD = new Date(istNow);
-            nextD.setDate(istNow.getDate() + i);
-            const dStr = nextD.getDate().toString().padStart(2, '0');
-            const mStr = (nextD.getMonth() + 1).toString().padStart(2, '0');
-            const yStr = nextD.getFullYear();
-            const fullDate = `${dStr}-${mStr}-${yStr}`;
-
-            const dayOfWeek = dayNames[nextD.getDay()];
-            const monthName = months[nextD.getMonth()];
-            days.push({ label: `${dayOfWeek} (${nextD.getDate()} ${monthName})`, description: fullDate });
-          }
-
-          const invalidFormatMsg = "Please choose a date from the list below, or type in *DD-MM-YYYY* format:";
-          await this.sendInteractiveOptionsHelper(contact, waService, invalidFormatMsg, days, settings, io);
+          const invalidFormatMsg = "Invalid format. Please enter your preferred date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
+          const res = await waService.sendTextMessage(contact.phone, invalidFormatMsg);
+          await saveAndEmit('text', invalidFormatMsg, res);
         }
 
         this.activeProcesses.delete(lockKey);
@@ -1021,54 +971,79 @@ class PRDFlowService {
       // STATE: ASK_CALL_TIME_SLOT
       // ==========================================
       if (currentState === 'ask_call_time_slot') {
-        const callTimeStep = steps.find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
-        const timeSlotOpts = (callTimeStep && callTimeStep.buttons && callTimeStep.buttons.length > 0) ? callTimeStep.buttons : [
-          'Morning', 'Afternoon', 'Evening'
+        const timeSlotOpts = [
+          '08:00 AM to 09:00 AM',
+          '09:00 AM to 10:00 AM',
+          '10:00 AM to 11:00 AM',
+          '11:00 AM to 12:00 PM',
+          '12:00 PM to 01:00 PM',
+          '01:00 PM to 02:00 PM',
+          '02:00 PM to 03:00 PM',
+          '03:00 PM to 04:00 PM',
+          '04:00 PM to 05:00 PM',
+          '05:00 PM to 06:00 PM',
+          '06:00 PM to 07:00 PM',
+          '07:00 PM to 08:00 PM',
+          '08:00 PM to 09:00 PM'
         ];
 
-        let selectedSlot = messageText.trim();
-
-        if (replyValue) {
-          if (replyValue.startsWith('list_')) {
-            const idx = parseInt(replyValue.split('_')[1], 10);
-            if (idx >= 0 && idx < timeSlotOpts.length) {
-              selectedSlot = timeSlotOpts[idx];
-            }
-          } else if (replyValue.startsWith('btn_')) {
-            const idx = parseInt(replyValue.split('_')[1], 10);
-            if (idx >= 0 && idx < timeSlotOpts.length) {
-              selectedSlot = timeSlotOpts[idx];
-            }
-          }
+        let selectedSlot = null;
+        const replyText = messageText.trim();
+        
+        // 1. Try parsing reply as a number index (1-13)
+        const matchNum = replyText.match(/^([1-9]|1[0-3])$/);
+        if (matchNum) {
+          const idx = parseInt(matchNum[1], 10) - 1;
+          selectedSlot = timeSlotOpts[idx];
         } else {
-          const lowerText = selectedSlot.toLowerCase();
+          // 2. Try partial text matching
+          const lowerText = replyText.toLowerCase();
           const matchedOpt = timeSlotOpts.find(opt => {
-            const label = typeof opt === 'string' ? opt : opt.label || '';
-            return label.toLowerCase() === lowerText || lowerText.includes(label.toLowerCase());
+            return opt.toLowerCase() === lowerText || lowerText.includes(opt.toLowerCase());
           });
           if (matchedOpt) {
-            selectedSlot = typeof matchedOpt === 'string' ? matchedOpt : matchedOpt.label;
+            selectedSlot = matchedOpt;
           }
         }
 
-        const freshContact = await ContactModel.findOne({ phone: contact.phone });
-        const savedDate = freshContact.flowVariables?.temp_call_date || '';
-        const name = freshContact.flowVariables?.name || freshContact.name || 'Student';
-        const qual = freshContact.flowVariables?.qualification || freshContact.qualification || '';
-        const prog = freshContact.flowVariables?.program || freshContact.selectedProgram || '';
+        if (selectedSlot) {
+          const freshContact = await ContactModel.findOne({ phone: contact.phone });
+          const savedDate = freshContact.flowVariables?.temp_call_date || '';
+          const name = freshContact.flowVariables?.name || freshContact.name || 'Student';
+          const qual = freshContact.flowVariables?.qualification || freshContact.qualification || '';
+          const prog = freshContact.flowVariables?.program || freshContact.selectedProgram || '';
 
-        const finalMergedTime = `${savedDate} at ${selectedSlot}`;
+          const finalMergedTime = `${savedDate} at ${selectedSlot}`;
 
-        await ContactModel.updateOne({ phone: contact.phone }, {
-          $set: {
-            preferredCallTime: finalMergedTime,
-            'flowVariables.time': finalMergedTime,
-            currentFlowStep: 'ask_confirmation'
-          }
-        });
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              preferredCallTime: finalMergedTime,
+              'flowVariables.time': finalMergedTime,
+              currentFlowStep: 'ask_confirmation'
+            }
+          });
 
-        const summaryMsg = `Please confirm your details:\n\nName: ${name}\nQualification: ${qual}\nProgram: ${prog}\nPreferred Call Time: ${finalMergedTime}\n\nIs this correct?`;
-        await sendInteractiveOptions(summaryMsg, ['Yes', 'Edit']);
+          const summaryMsg = `Please confirm your details:\n\nName: ${name}\nQualification: ${qual}\nProgram: ${prog}\nPreferred Call Time: ${finalMergedTime}\n\nIs this correct?`;
+          await sendInteractiveOptions(summaryMsg, ['Yes', 'Edit']);
+        } else {
+          // Send invalid input message and re-list options
+          const invalidMsg = "Invalid option. Please reply with a number from 1 to 13 to select your time slot:\n\n" +
+            `1️⃣ *08:00 AM to 09:00 AM*\n` +
+            `2️⃣ *09:00 AM to 10:00 AM*\n` +
+            `3️⃣ *10:00 AM to 11:00 AM*\n` +
+            `4️⃣ *11:00 AM to 12:00 PM*\n` +
+            `5️⃣ *12:00 PM to 01:00 PM*\n` +
+            `6️⃣ *01:00 PM to 02:00 PM*\n` +
+            `7️⃣ *02:00 PM to 03:00 PM*\n` +
+            `8️⃣ *03:00 PM to 04:00 PM*\n` +
+            `9️⃣ *04:00 PM to 05:00 PM*\n` +
+            `🔟 *05:00 PM to 06:00 PM*\n` +
+            `11. *06:00 PM to 07:00 PM*\n` +
+            `12. *07:00 PM to 08:00 PM*\n` +
+            `13. *08:00 PM to 09:00 PM*`;
+          const res = await waService.sendTextMessage(contact.phone, invalidMsg);
+          await saveAndEmit('text', invalidMsg, res);
+        }
 
         this.activeProcesses.delete(lockKey);
         return;
@@ -1080,25 +1055,10 @@ class PRDFlowService {
       if (currentState === 'ask_call_time') {
         await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_call_date' } });
         const callTimeMsg = "When should our counselor contact you?";
-        const getISTDate = () => {
-          const utc = new Date().getTime() + new Date().getTimezoneOffset() * 60000;
-          return new Date(utc + (3600000 * 5.5));
-        };
-        const istNow = getISTDate();
-        const formatShort = (date) => {
-          const d = date.getDate().toString().padStart(2, '0');
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          return `${d} ${months[date.getMonth()]}`;
-        };
-        const todayStr = formatShort(istNow);
-        const tomorrowDate = new Date(istNow);
-        tomorrowDate.setDate(istNow.getDate() + 1);
-        const tomorrowStr = formatShort(tomorrowDate);
-
         const dateButtons = [
-          `Today (${todayStr})`,
-          `Tomorrow (${tomorrowStr})`,
-          `Pick a Date`
+          'TODAY',
+          'TOMORROW',
+          'CUSTOM DATE (TEXT)'
         ];
         await this.sendInteractiveOptionsHelper(contact, waService, callTimeMsg, dateButtons, settings, io);
         this.activeProcesses.delete(lockKey);
@@ -1321,25 +1281,10 @@ class PRDFlowService {
       if (completedLower.includes('program') || completedLower === 'program_selection') {
         await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_call_date' } });
         const callTimeMsg = "When should our counselor contact you?";
-        const getISTDate = () => {
-          const utc = new Date().getTime() + new Date().getTimezoneOffset() * 60000;
-          return new Date(utc + (3600000 * 5.5));
-        };
-        const istNow = getISTDate();
-        const formatShort = (date) => {
-          const d = date.getDate().toString().padStart(2, '0');
-          const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-          return `${d} ${months[date.getMonth()]}`;
-        };
-        const todayStr = formatShort(istNow);
-        const tomorrowDate = new Date(istNow);
-        tomorrowDate.setDate(istNow.getDate() + 1);
-        const tomorrowStr = formatShort(tomorrowDate);
-
         const dateButtons = [
-          `Today (${todayStr})`,
-          `Tomorrow (${tomorrowStr})`,
-          `Pick a Date`
+          'TODAY',
+          'TOMORROW',
+          'CUSTOM DATE (TEXT)'
         ];
         await this.sendInteractiveOptionsHelper(contact, waService, callTimeMsg, dateButtons, settings, io);
         return;
@@ -1363,25 +1308,10 @@ class PRDFlowService {
     if (nextStepType === 'CALL_TIME') {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_call_date' } });
       const callTimeMsg = nextStep.message || nextStep.text || "When should our counselor contact you?";
-      const getISTDate = () => {
-        const utc = new Date().getTime() + new Date().getTimezoneOffset() * 60000;
-        return new Date(utc + (3600000 * 5.5));
-      };
-      const istNow = getISTDate();
-      const formatShort = (date) => {
-        const d = date.getDate().toString().padStart(2, '0');
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        return `${d} ${months[date.getMonth()]}`;
-      };
-      const todayStr = formatShort(istNow);
-      const tomorrowDate = new Date(istNow);
-      tomorrowDate.setDate(istNow.getDate() + 1);
-      const tomorrowStr = formatShort(tomorrowDate);
-
       const dateButtons = [
-        `Today (${todayStr})`,
-        `Tomorrow (${tomorrowStr})`,
-        `Pick a Date`
+        'TODAY',
+        'TOMORROW',
+        'CUSTOM DATE (TEXT)'
       ];
       await this.sendInteractiveOptionsHelper(contact, waService, callTimeMsg, dateButtons, settings, io);
     }
