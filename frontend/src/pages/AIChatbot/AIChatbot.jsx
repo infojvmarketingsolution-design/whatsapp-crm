@@ -814,20 +814,54 @@ export default function AIChatbot() {
                 </div>
               </div>
               
-              <div>
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Goodbye Message (Sent when user doesn't need other help)</label>
-                <textarea 
-                  className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm min-h-[100px] outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
-                  value={settings.aiPrompts.goodbyeMessage || ''}
-                  onChange={(e) => setSettings(prev => ({
-                    ...prev,
-                    aiPrompts: {
-                      ...prev.aiPrompts,
-                      goodbyeMessage: e.target.value
-                    }
-                  }))}
-                  placeholder="Type goodbye message..."
-                />
+              <div className="grid grid-cols-1 gap-6">
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Goodbye Message (Sent when user doesn't need other help)</label>
+                  <textarea 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm min-h-[100px] outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                    value={settings.aiPrompts.goodbyeMessage || ''}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      aiPrompts: {
+                        ...prev.aiPrompts,
+                        goodbyeMessage: e.target.value
+                      }
+                    }))}
+                    placeholder="Type goodbye message..."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Fallback Message (Sent when bot doesn't understand the user's input)</label>
+                  <textarea 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm min-h-[100px] outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                    value={settings.aiPrompts.fallbackMessage || ''}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      aiPrompts: {
+                        ...prev.aiPrompts,
+                        fallbackMessage: e.target.value
+                      }
+                    }))}
+                    placeholder="Type fallback message..."
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Agent Transfer Message (Sent when transitioning to a human counselor)</label>
+                  <textarea 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-4 text-sm min-h-[100px] outline-none focus:bg-white focus:ring-2 focus:ring-blue-500/10 focus:border-blue-500 transition-all"
+                    value={settings.aiPrompts.agentTransferPrompt || ''}
+                    onChange={(e) => setSettings(prev => ({
+                      ...prev,
+                      aiPrompts: {
+                        ...prev.aiPrompts,
+                        agentTransferPrompt: e.target.value
+                      }
+                    }))}
+                    placeholder="Type agent transfer message..."
+                  />
+                </div>
               </div>
             </div>
             
