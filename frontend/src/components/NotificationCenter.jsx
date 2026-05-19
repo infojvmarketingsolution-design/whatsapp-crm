@@ -4,10 +4,14 @@ import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 
 export default function NotificationCenter({ isOpen, onClose }) {
-  const [notifications, setNotifications] = useState([]);
+  const [socketNotifications, setSocketNotifications] = useState([]);
+  const [systemNotifications, setSystemNotifications] = useState([]);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const notifications = [...socketNotifications, ...systemNotifications];
+
+  // Hook 1: Fetch static/system notifications when drawer opens
   useEffect(() => {
     const fetchNotifications = async () => {
       setLoading(true);
@@ -94,7 +98,7 @@ export default function NotificationCenter({ isOpen, onClose }) {
           }
         }
 
-        setNotifications(newNotes);
+        setSystemNotifications(newNotes);
       } catch (err) {
         console.error('Failed to load notifications', err);
       } finally {
@@ -103,66 +107,105 @@ export default function NotificationCenter({ isOpen, onClose }) {
     };
 
     if (isOpen) fetchNotifications();
-
-    const tenantId = localStorage.getItem('tenantId');
-    const socket = io('', { query: { tenantId } });
-
-    socket.on('new_message', (data) => {
-      if (data.content === 'New Lead Established' || data.type === 'new_lead') {
-        const newLeadNote = {
-          id: `new-lead-${Date.now()}`,
-          type: 'CHAT',
-          title: 'New Lead Assigned',
-          desc: `A new lead "${data.contact?.name || 'Unknown'}" has entered the pipeline.`,
-          time: 'Just now',
-          icon: MessageSquare,
-          color: 'text-emerald-600 bg-emerald-50'
-        };
-        setNotifications(prev => [newLeadNote, ...prev]);
-      }
-    });
-
-    socket.on('handoff_request', (data) => {
-      const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
-      const loggedInUserId = loggedInUser._id || loggedInUser.id;
-      const assignedAgentId = data.contact?.assignedAgent;
-      const assignedCounsellorId = data.contact?.assignedCounsellor;
-      
-      const isAssigned = (assignedAgentId && String(assignedAgentId) === String(loggedInUserId)) ||
-                         (assignedCounsellorId && String(assignedCounsellorId) === String(loggedInUserId));
-      
-      const isUnassigned = !assignedAgentId && !assignedCounsellorId;
-      
-      const userRole = (loggedInUser?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
-      const isAdminOrManager = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'MANAGER_COUNSELLOUR'].includes(userRole);
-      
-      console.log('[Handoff Evaluation NotificationCenter.jsx]', {
-        loggedInUserId,
-        assignedAgentId,
-        assignedCounsellorId,
-        isAssigned,
-        isUnassigned,
-        userRole,
-        isAdminOrManager,
-        willAddNotification: isAssigned || isUnassigned || isAdminOrManager
-      });
-      
-      if (isAssigned || isUnassigned || isAdminOrManager) {
-        const handoffNote = {
-          id: `handoff-${Date.now()}`,
-          type: 'CHAT',
-          title: 'Handoff Requested 🙋‍♂️',
-          desc: `A new lead "${data.contact?.name || data.contact?.phone || 'Unknown'}" is waiting for your response.`,
-          time: 'Just now',
-          icon: MessageSquare,
-          color: 'text-amber-600 bg-amber-50'
-        };
-        setNotifications(prev => [handoffNote, ...prev]);
-      }
-    });
-
-    return () => socket.disconnect();
   }, [isOpen]);
+
+  // Hook 2: Socket connection for persistent background real-time notifications
+  useEffect(() => {
+    let socket = null;
+    let checkInterval = null;
+
+    const establishConnection = () => {
+       const tenantId = localStorage.getItem('tenantId');
+       if (!tenantId) {
+          return false;
+       }
+
+       console.log('[NotificationCenter.jsx Socket] Connecting socket...');
+       socket = io('', { query: { tenantId } });
+
+       socket.on('new_message', (data) => {
+         if (data.content === 'New Lead Established' || data.type === 'new_lead') {
+           const newLeadNote = {
+             id: `new-lead-${Date.now()}`,
+             type: 'CHAT',
+             title: 'New Lead Assigned',
+             desc: `A new lead "${data.contact?.name || 'Unknown'}" has entered the pipeline.`,
+             time: 'Just now',
+             icon: MessageSquare,
+             color: 'text-emerald-600 bg-emerald-50'
+           };
+           setSocketNotifications(prev => [newLeadNote, ...prev]);
+         }
+       });
+
+       socket.on('handoff_request', (data) => {
+         console.log('🔔 Handoff Request received in NotificationCenter:', data);
+         const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
+         const loggedInUserId = loggedInUser._id || loggedInUser.id;
+         
+         const getUserId = (val) => {
+            if (!val) return null;
+            if (typeof val === 'object') return val._id || val.id || null;
+            return val;
+         };
+
+         const assignedAgentId = getUserId(data.contact?.assignedAgent);
+         const assignedCounsellorId = getUserId(data.contact?.assignedCounsellor);
+         
+         const isAssigned = (assignedAgentId && String(assignedAgentId) === String(loggedInUserId)) ||
+                            (assignedCounsellorId && String(assignedCounsellorId) === String(loggedInUserId));
+         
+         const isUnassigned = !assignedAgentId && !assignedCounsellorId;
+         
+         const userRole = (loggedInUser?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
+         const isAdminOrManagerOrStaff = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'MANAGER_COUNSELLOUR', 'COUNSELLOR', 'AGENT', 'TELECALLER'].includes(userRole);
+         
+         console.log('[Handoff Evaluation NotificationCenter.jsx]', {
+           loggedInUserId,
+           assignedAgentId,
+           assignedCounsellorId,
+           isAssigned,
+           isUnassigned,
+           userRole,
+           isAdminOrManagerOrStaff,
+           willAddNotification: isAssigned || isUnassigned || isAdminOrManagerOrStaff
+         });
+         
+         if (isAssigned || isUnassigned || isAdminOrManagerOrStaff) {
+           const handoffNote = {
+             id: `handoff-${Date.now()}`,
+             type: 'CHAT',
+             title: 'Handoff Requested 🙋‍♂️',
+             desc: `A new lead "${data.contact?.name || data.contact?.phone || 'Unknown'}" is waiting for your response.`,
+             time: 'Just now',
+             icon: MessageSquare,
+             color: 'text-amber-600 bg-amber-50'
+           };
+           setSocketNotifications(prev => [handoffNote, ...prev]);
+         }
+       });
+
+       return true;
+    };
+
+    const connected = establishConnection();
+    if (!connected) {
+       checkInterval = setInterval(() => {
+          const ok = establishConnection();
+          if (ok) {
+             clearInterval(checkInterval);
+          }
+       }, 1000);
+    }
+
+    return () => {
+       if (checkInterval) clearInterval(checkInterval);
+       if (socket) {
+          console.log('[NotificationCenter.jsx Socket] Disconnecting socket...');
+          socket.disconnect();
+       }
+    };
+  }, []);
 
   const handleNoteClick = (note) => {
     if (note.id === 'overdue' || note.id === 'due-today' || note.id === 'pending') {
@@ -175,7 +218,10 @@ export default function NotificationCenter({ isOpen, onClose }) {
     onClose();
   };
 
-  const clearAll = () => setNotifications([]);
+  const clearAll = () => {
+    setSocketNotifications([]);
+    setSystemNotifications([]);
+  };
 
   return (
     <>

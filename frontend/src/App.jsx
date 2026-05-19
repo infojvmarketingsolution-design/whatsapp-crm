@@ -1944,6 +1944,42 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+const playChime = () => {
+  try {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    // First tone (C5, 523.25 Hz)
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = 'sine';
+    osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
+    gain1.gain.setValueAtTime(0, ctx.currentTime);
+    gain1.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.05);
+    gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(ctx.currentTime);
+    osc1.stop(ctx.currentTime + 0.35);
+
+    // Second tone (E5, 659.25 Hz, slightly delayed)
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(659.25, ctx.currentTime + 0.12);
+    gain2.gain.setValueAtTime(0, ctx.currentTime + 0.12);
+    gain2.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.17);
+    gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(ctx.currentTime + 0.12);
+    osc2.stop(ctx.currentTime + 0.5);
+  } catch (e) {
+    console.error('Audio chime play failed:', e);
+  }
+};
+
 function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -2110,87 +2146,130 @@ function AppLayout() {
   React.useEffect(() => {
     if (isAuthPage) return;
 
-    const tenantId = localStorage.getItem('tenantId');
-    if (!tenantId) return;
+    let socket = null;
+    let checkInterval = null;
 
-    const socket = io('', { query: { tenantId } });
-
-    socket.on('template_status_update', (data) => {
-       console.log('🔔 Template Status Update:', data);
-       if (data.status === 'APPROVED') {
-          toast.success(`Template "${data.name}" was APPROVED! ✅`, { duration: 6000 });
-       } else if (data.status === 'REJECTED') {
-          toast.error(`Template "${data.name}" was REJECTED. ❌`, { duration: 8000 });
-       } else {
-          toast(`Template "${data.name}" status updated to: ${data.status}`, { icon: 'ℹ️' });
+    const establishConnection = () => {
+       const tenantId = localStorage.getItem('tenantId');
+       if (!tenantId) {
+          console.log('[App.jsx Socket] Waiting for tenantId in localStorage...');
+          return false;
        }
-    });
 
-    socket.on('handoff_request', (data) => {
-       console.log('🔔 Handoff Request:', data);
-       const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
-       const loggedInUserId = loggedInUser._id || loggedInUser.id;
-       const assignedAgentId = data.contact?.assignedAgent;
-       const assignedCounsellorId = data.contact?.assignedCounsellor;
-       
-       const isAssigned = (assignedAgentId && String(assignedAgentId) === String(loggedInUserId)) ||
-                          (assignedCounsellorId && String(assignedCounsellorId) === String(loggedInUserId));
-       
-       const isUnassigned = !assignedAgentId && !assignedCounsellorId;
-       
-       const userRole = (loggedInUser?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
-       const isAdminOrManager = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'MANAGER_COUNSELLOUR'].includes(userRole);
-       
-       console.log('[Handoff Evaluation App.jsx]', {
-          loggedInUserId,
-          assignedAgentId,
-          assignedCounsellorId,
-          isAssigned,
-          isUnassigned,
-          userRole,
-          isAdminOrManager,
-          willShowToast: isAssigned || isUnassigned || isAdminOrManager
+       console.log('[App.jsx Socket] Initializing socket connection for tenantId:', tenantId);
+       socket = io('', { query: { tenantId } });
+
+       socket.on('template_status_update', (data) => {
+          console.log('🔔 Template Status Update:', data);
+          if (data.status === 'APPROVED') {
+             toast.success(`Template "${data.name}" was APPROVED! ✅`, { duration: 6000 });
+          } else if (data.status === 'REJECTED') {
+             toast.error(`Template "${data.name}" was REJECTED. ❌`, { duration: 8000 });
+          } else {
+             toast(`Template "${data.name}" status updated to: ${data.status}`, { icon: 'ℹ️' });
+          }
        });
-       
-       if (isAssigned || isUnassigned || isAdminOrManager) {
-          toast.custom((t) => (
-             <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex border border-teal-500/20 overflow-hidden`}>
-                <div className="flex-1 w-0 p-4">
-                   <div className="flex items-start">
-                      <div className="shrink-0 pt-0.5">
-                         <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold shadow-lg shadow-teal-600/20">
-                            🙋‍♂️
-                         </div>
-                      </div>
-                      <div className="ml-3 flex-1">
-                         <p className="text-xs font-black text-teal-800 uppercase tracking-widest">Handoff Requested</p>
-                         <p className="mt-1 text-xs font-bold text-slate-800">
-                            A new lead is waiting for your response
-                         </p>
-                         <p className="text-[10px] font-medium text-slate-400 mt-0.5">
-                            Lead: {data.contact?.name || data.contact?.phone || 'New Customer'}
-                         </p>
+
+       socket.on('handoff_request', (data) => {
+          console.log('🔔 Handoff Request received:', data);
+          const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
+          const loggedInUserId = loggedInUser._id || loggedInUser.id;
+          
+          const getUserId = (val) => {
+             if (!val) return null;
+             if (typeof val === 'object') return val._id || val.id || null;
+             return val;
+          };
+
+          const assignedAgentId = getUserId(data.contact?.assignedAgent);
+          const assignedCounsellorId = getUserId(data.contact?.assignedCounsellor);
+          
+          const isAssigned = (assignedAgentId && String(assignedAgentId) === String(loggedInUserId)) ||
+                             (assignedCounsellorId && String(assignedCounsellorId) === String(loggedInUserId));
+          
+          const isUnassigned = !assignedAgentId && !assignedCounsellorId;
+          
+          const userRole = (loggedInUser?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
+          const isAdminOrManagerOrStaff = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'MANAGER_COUNSELLOUR', 'COUNSELLOR', 'AGENT', 'TELECALLER'].includes(userRole);
+          
+          console.log('[Handoff Evaluation App.jsx]', {
+             loggedInUserId,
+             assignedAgentId,
+             assignedCounsellorId,
+             isAssigned,
+             isUnassigned,
+             userRole,
+             isAdminOrManagerOrStaff,
+             willShowToast: isAssigned || isUnassigned || isAdminOrManagerOrStaff
+          });
+          
+          if (isAssigned || isUnassigned || isAdminOrManagerOrStaff) {
+             // Play premium synthesized dual-tone audio chime
+             playChime();
+
+             // Display standard robust toast notification
+             toast((t) => (
+                <div className="flex items-center space-x-3 p-1">
+                   <div className="shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 text-white flex items-center justify-center font-bold shadow-lg shadow-teal-600/20">
+                         🙋‍♂️
                       </div>
                    </div>
-                </div>
-                <div className="flex border-l border-slate-100">
+                   <div className="flex-1 min-w-[200px]">
+                      <p className="text-[10px] font-black text-teal-800 uppercase tracking-widest leading-none">Handoff Requested</p>
+                      <p className="text-xs font-bold text-slate-800 mt-1">A lead is waiting for response</p>
+                      <p className="text-[10px] font-medium text-slate-400 mt-0.5">
+                         {data.contact?.name || data.contact?.phone || 'New Customer'}
+                      </p>
+                   </div>
                    <button
                       onClick={() => {
                          toast.dismiss(t.id);
                          navigate('/inbox');
                       }}
-                      className="w-full border border-transparent rounded-none rounded-r-2xl px-6 py-4 flex items-center justify-center text-xs font-black uppercase tracking-widest text-teal-600 hover:text-teal-700 bg-teal-50/50 hover:bg-teal-50 transition-all focus:outline-none"
+                      className="px-3 py-1.5 bg-teal-500 hover:bg-teal-600 text-white rounded-lg text-[10px] font-black uppercase tracking-wider transition-colors focus:outline-none shrink-0"
                    >
                       Reply
                    </button>
                 </div>
-             </div>
-          ), { duration: 15000 });
-       }
-    });
+             ), {
+                duration: 15000,
+                position: 'top-right',
+                style: {
+                   borderRadius: '16px',
+                   background: 'rgba(255, 255, 255, 0.95)',
+                   color: '#1e293b',
+                   border: '1px solid rgba(20, 184, 166, 0.2)',
+                   backdropFilter: 'blur(8px)',
+                   boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                   padding: '8px 12px',
+                   maxWidth: '420px',
+                }
+             });
+          }
+       });
+
+       return true;
+    };
+
+    // Attempt immediate connection
+    const connected = establishConnection();
+    if (!connected) {
+       // If we don't have tenantId yet, poll every 1 second
+       checkInterval = setInterval(() => {
+          const ok = establishConnection();
+          if (ok) {
+             clearInterval(checkInterval);
+          }
+       }, 1000);
+    }
 
     return () => {
-       socket.disconnect();
+       if (checkInterval) clearInterval(checkInterval);
+       if (socket) {
+          console.log('[App.jsx Socket] Disconnecting socket...');
+          socket.disconnect();
+       }
     };
   }, [isAuthPage]);
   const appStyle = {
