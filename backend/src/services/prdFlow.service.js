@@ -963,12 +963,19 @@ class PRDFlowService {
 
   populatePlaceholders(text, contact, name = '', qual = '', prog = '', time = '') {
     if (!text || typeof text !== 'string') return '';
-    return text
-      .replace(/\{\{\s*name\s*\}\}/gi, name || contact.flowVariables?.name || contact.name || 'Student')
+    let resolvedName = name || contact.flowVariables?.name || contact.name || '';
+    let processedText = text
+      .replace(/\{\{\s*name\s*\}\}/gi, resolvedName || 'Student')
       .replace(/\{\{\s*contact\s*\}\}/gi, contact.phone || '')
       .replace(/\{\{\s*qualification\s*\}\}/gi, qual || contact.flowVariables?.qualification || contact.qualification || '')
       .replace(/\{\{\s*program\s*\}\}/gi, prog || contact.flowVariables?.program || contact.selectedProgram || '')
       .replace(/\{\{\s*time\s*\}\}/gi, time || contact.flowVariables?.time || contact.preferredCallTime || '');
+
+    // Prepend name if available and not already in the text (to fulfill "every question first tell name")
+    if (resolvedName && !text.toLowerCase().includes(resolvedName.toLowerCase()) && !text.includes('{{name}}')) {
+      processedText = `${resolvedName}, ${processedText}`;
+    }
+    return processedText;
   }
 
   async transitionToNextStepAfter(completedTypeOrId, contact, ContactModel, steps, settings, waService, nameVal, io = null) {
