@@ -706,6 +706,92 @@ export default function AIChatbot() {
                            }}
                         />
                       </div>
+                    ) : stepTypeUpper === 'CALL_TIME' ? (
+                      <div className="bg-gradient-to-br from-slate-900 to-indigo-950 p-6 rounded-[2rem] border border-indigo-500/20 shadow-xl relative overflow-hidden">
+                        {/* Background subtle glow */}
+                        <div className="absolute -top-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+                        <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                        
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/5 mb-5">
+                          <div className="flex items-center space-x-3.5">
+                            <div className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl shadow-lg shadow-indigo-500/20 animate-pulse">
+                              <Calendar size={20} />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <h4 className="text-xs font-black text-white uppercase tracking-wider">Dynamic Scheduling Engine</h4>
+                                <span className="px-2 py-0.5 bg-emerald-500/10 text-emerald-400 text-[8px] font-black rounded-md uppercase tracking-widest border border-emerald-500/20 animate-bounce">Active</span>
+                              </div>
+                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Automated Native WhatsApp Appointment Flow</p>
+                            </div>
+                          </div>
+                          <div className="text-[10px] font-black text-indigo-300 uppercase tracking-widest bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
+                            ⏰ 13 Active Slots
+                          </div>
+                        </div>
+
+                        <p className="text-xs text-slate-300 leading-relaxed font-semibold mb-6">
+                          To minimize student drop-offs, the CRM has bypassed intermediate Morning/Afternoon/Evening quick replies. The system now natively manages dynamic date options and paginated time slot selections directly on WhatsApp.
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                          {/* Date selection card */}
+                          <div className="bg-white/5 border border-white/10 p-4 rounded-2xl">
+                            <span className="text-[9px] font-black text-indigo-400 uppercase tracking-widest block mb-3">🗓️ Date Options Provided</span>
+                            <div className="space-y-2">
+                              {[
+                                { title: 'TODAY', desc: 'Auto-calculates current date' },
+                                { title: 'TOMORROW', desc: 'Auto-calculates next day' },
+                                { title: 'CUSTOM DATE', desc: 'Allows custom text inputs' }
+                              ].map((item, idx) => (
+                                <div key={idx} className="flex items-center justify-between p-2.5 bg-slate-900/50 border border-white/5 rounded-xl">
+                                  <div className="flex items-center space-x-2">
+                                    <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full shadow shadow-emerald-400/50" />
+                                    <span className="text-[10px] font-black text-white uppercase tracking-wider">{item.title}</span>
+                                  </div>
+                                  <span className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">{item.desc}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Time slots scroll list card */}
+                          <div className="bg-white/5 border border-white/10 p-4 rounded-2xl">
+                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest block mb-3">🕒 Available Slots (Native Pagination)</span>
+                            <div className="max-h-[120px] overflow-y-auto pr-1 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                              {[
+                                "08:00 AM to 09:00 AM",
+                                "09:00 AM to 10:00 AM",
+                                "10:00 AM to 11:00 AM",
+                                "11:00 AM to 12:00 PM",
+                                "12:00 PM to 01:00 PM",
+                                "01:00 PM to 02:00 PM",
+                                "02:00 PM to 03:00 PM",
+                                "03:00 PM to 04:00 PM",
+                                "04:00 PM to 05:00 PM",
+                                "05:00 PM to 06:00 PM",
+                                "06:00 PM to 07:00 PM",
+                                "07:00 PM to 08:00 PM",
+                                "08:00 PM to 09:00 PM"
+                              ].map((slot) => (
+                                <div key={slot} className="flex items-center space-x-2 text-[9px] text-slate-300 font-bold bg-slate-900/40 border border-white/5 px-2.5 py-1.5 rounded-lg">
+                                  <div className="w-1 h-1 bg-blue-400 rounded-full shadow shadow-blue-400/50" />
+                                  <span>{slot}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-5 p-3.5 bg-emerald-500/10 border border-emerald-500/25 rounded-2xl flex items-center space-x-2.5">
+                          <div className="p-1 bg-emerald-500/20 text-emerald-400 rounded-lg">
+                            <Bot size={14} />
+                          </div>
+                          <p className="text-[9px] text-emerald-300 font-bold uppercase tracking-wider">
+                            💡 Dynamic pagination (Page 1/2) is automatically handled to keep selection intuitive on WhatsApp.
+                          </p>
+                        </div>
+                      </div>
                     ) : (
                       <>
                         <div className="flex justify-between items-center mb-4">
