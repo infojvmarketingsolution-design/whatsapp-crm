@@ -853,42 +853,27 @@ class PRDFlowService {
         const isTomorrow = input === 'btn_1' || input === 'tomorrow';
         const isPickDate = input === 'btn_2' || input.includes('custom') || input.includes('text');
 
-        const timeSlotMsg = `Great! What time slot works best for you? Please reply with the number of your choice (1 to 13):\n\n` +
-          `1️⃣ *08:00 AM to 09:00 AM*\n` +
-          `2️⃣ *09:00 AM to 10:00 AM*\n` +
-          `3️⃣ *10:00 AM to 11:00 AM*\n` +
-          `4️⃣ *11:00 AM to 12:00 PM*\n` +
-          `5️⃣ *12:00 PM to 01:00 PM*\n` +
-          `6️⃣ *01:00 PM to 02:00 PM*\n` +
-          `7️⃣ *02:00 PM to 03:00 PM*\n` +
-          `8️⃣ *03:00 PM to 04:00 PM*\n` +
-          `9️⃣ *04:00 PM to 05:00 PM*\n` +
-          `🔟 *05:00 PM to 06:00 PM*\n` +
-          `11. *06:00 PM to 07:00 PM*\n` +
-          `12. *07:00 PM to 08:00 PM*\n` +
-          `13. *08:00 PM to 09:00 PM*`;
+        const timePeriodMsg = `Please select your preferred period for the counselling call:`;
 
         if (isToday) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               'flowVariables.temp_call_date': todayFull,
-              currentFlowStep: 'ask_call_time_slot'
+              currentFlowStep: 'ask_call_time_period'
             }
           });
           
-          const res = await waService.sendTextMessage(contact.phone, timeSlotMsg);
-          await saveAndEmit('text', timeSlotMsg, res);
+          await this.sendInteractiveOptionsHelper(contact, waService, timePeriodMsg, ['Morning (8AM-12PM)', 'Afternoon (12-4PM)', 'Evening (4PM-9PM)'], settings, io);
         }
         else if (isTomorrow) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
               'flowVariables.temp_call_date': tomorrowFull,
-              currentFlowStep: 'ask_call_time_slot'
+              currentFlowStep: 'ask_call_time_period'
             }
           });
           
-          const res = await waService.sendTextMessage(contact.phone, timeSlotMsg);
-          await saveAndEmit('text', timeSlotMsg, res);
+          await this.sendInteractiveOptionsHelper(contact, waService, timePeriodMsg, ['Morning (8AM-12PM)', 'Afternoon (12-4PM)', 'Evening (4PM-9PM)'], settings, io);
         }
         else if (isPickDate) {
           await ContactModel.updateOne({ phone: contact.phone }, {
@@ -932,26 +917,12 @@ class PRDFlowService {
             await ContactModel.updateOne({ phone: contact.phone }, {
               $set: {
                 'flowVariables.temp_call_date': inputDate,
-                currentFlowStep: 'ask_call_time_slot'
+                currentFlowStep: 'ask_call_time_period'
               }
             });
 
-            const timeSlotMsg = `Great! What time slot works best for you? Please reply with the number of your choice (1 to 13):\n\n` +
-              `1️⃣ *08:00 AM to 09:00 AM*\n` +
-              `2️⃣ *09:00 AM to 10:00 AM*\n` +
-              `3️⃣ *10:00 AM to 11:00 AM*\n` +
-              `4️⃣ *11:00 AM to 12:00 PM*\n` +
-              `5️⃣ *12:00 PM to 01:00 PM*\n` +
-              `6️⃣ *01:00 PM to 02:00 PM*\n` +
-              `7️⃣ *02:00 PM to 03:00 PM*\n` +
-              `8️⃣ *03:00 PM to 04:00 PM*\n` +
-              `9️⃣ *04:00 PM to 05:00 PM*\n` +
-              `🔟 *05:00 PM to 06:00 PM*\n` +
-              `11. *06:00 PM to 07:00 PM*\n` +
-              `12. *07:00 PM to 08:00 PM*\n` +
-              `13. *08:00 PM to 09:00 PM*`;
-            const res = await waService.sendTextMessage(contact.phone, timeSlotMsg);
-            await saveAndEmit('text', timeSlotMsg, res);
+            const timePeriodMsg = `Please select your preferred period for the counselling call:`;
+            await this.sendInteractiveOptionsHelper(contact, waService, timePeriodMsg, ['Morning (8AM-12PM)', 'Afternoon (12-4PM)', 'Evening (4PM-9PM)'], settings, io);
           } else {
             const invalidMsg = "Invalid date. Please type a valid calendar date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
             const res = await waService.sendTextMessage(contact.phone, invalidMsg);
@@ -961,6 +932,64 @@ class PRDFlowService {
           const invalidFormatMsg = "Invalid format. Please enter your preferred date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
           const res = await waService.sendTextMessage(contact.phone, invalidFormatMsg);
           await saveAndEmit('text', invalidFormatMsg, res);
+        }
+
+        this.activeProcesses.delete(lockKey);
+        return;
+      }
+
+      // ==========================================
+      // STATE: ASK_CALL_TIME_PERIOD
+      // ==========================================
+      if (currentState === 'ask_call_time_period') {
+        const input = (replyValue || messageText || '').toLowerCase().trim();
+        const isMorning = input === 'btn_0' || input.includes('morning') || input === 'morning';
+        const isAfternoon = input === 'btn_1' || input.includes('afternoon') || input === 'afternoon';
+        const isEvening = input === 'btn_2' || input.includes('evening') || input === 'evening';
+
+        let selectedPeriod = null;
+        let periodSlots = [];
+
+        if (isMorning) {
+          selectedPeriod = 'Morning';
+          periodSlots = [
+            '08:00 AM to 09:00 AM',
+            '09:00 AM to 10:00 AM',
+            '10:00 AM to 11:00 AM',
+            '11:00 AM to 12:00 PM'
+          ];
+        } else if (isAfternoon) {
+          selectedPeriod = 'Afternoon';
+          periodSlots = [
+            '12:00 PM to 01:00 PM',
+            '01:00 PM to 02:00 PM',
+            '02:00 PM to 03:00 PM',
+            '03:00 PM to 04:00 PM'
+          ];
+        } else if (isEvening) {
+          selectedPeriod = 'Evening';
+          periodSlots = [
+            '04:00 PM to 05:00 PM',
+            '05:00 PM to 06:00 PM',
+            '06:00 PM to 07:00 PM',
+            '07:00 PM to 08:00 PM',
+            '08:00 PM to 09:00 PM'
+          ];
+        }
+
+        if (selectedPeriod) {
+          await ContactModel.updateOne({ phone: contact.phone }, {
+            $set: {
+              'flowVariables.temp_call_period': selectedPeriod,
+              currentFlowStep: 'ask_call_time_slot'
+            }
+          });
+
+          const slotsMsg = `Great! Please select your preferred time slot for ${selectedPeriod}:`;
+          await this.sendInteractiveOptionsHelper(contact, waService, slotsMsg, periodSlots, settings, io);
+        } else {
+          const timePeriodMsg = `Invalid option. Please select your preferred period for the counselling call:`;
+          await this.sendInteractiveOptionsHelper(contact, waService, timePeriodMsg, ['Morning (8AM-12PM)', 'Afternoon (12-4PM)', 'Evening (4PM-9PM)'], settings, io);
         }
 
         this.activeProcesses.delete(lockKey);
@@ -990,20 +1019,13 @@ class PRDFlowService {
         let selectedSlot = null;
         const replyText = messageText.trim();
         
-        // 1. Try parsing reply as a number index (1-13)
-        const matchNum = replyText.match(/^([1-9]|1[0-3])$/);
-        if (matchNum) {
-          const idx = parseInt(matchNum[1], 10) - 1;
-          selectedSlot = timeSlotOpts[idx];
-        } else {
-          // 2. Try partial text matching
-          const lowerText = replyText.toLowerCase();
-          const matchedOpt = timeSlotOpts.find(opt => {
-            return opt.toLowerCase() === lowerText || lowerText.includes(opt.toLowerCase());
-          });
-          if (matchedOpt) {
-            selectedSlot = matchedOpt;
-          }
+        // Try partial or exact text matching
+        const lowerText = replyText.toLowerCase();
+        const matchedOpt = timeSlotOpts.find(opt => {
+          return opt.toLowerCase() === lowerText || lowerText.includes(opt.toLowerCase());
+        });
+        if (matchedOpt) {
+          selectedSlot = matchedOpt;
         }
 
         if (selectedSlot) {
@@ -1026,23 +1048,46 @@ class PRDFlowService {
           const summaryMsg = `Please confirm your details:\n\nName: ${name}\nQualification: ${qual}\nProgram: ${prog}\nPreferred Call Time: ${finalMergedTime}\n\nIs this correct?`;
           await sendInteractiveOptions(summaryMsg, ['Yes', 'Edit']);
         } else {
-          // Send invalid input message and re-list options
-          const invalidMsg = "Invalid option. Please reply with a number from 1 to 13 to select your time slot:\n\n" +
-            `1️⃣ *08:00 AM to 09:00 AM*\n` +
-            `2️⃣ *09:00 AM to 10:00 AM*\n` +
-            `3️⃣ *10:00 AM to 11:00 AM*\n` +
-            `4️⃣ *11:00 AM to 12:00 PM*\n` +
-            `5️⃣ *12:00 PM to 01:00 PM*\n` +
-            `6️⃣ *01:00 PM to 02:00 PM*\n` +
-            `7️⃣ *02:00 PM to 03:00 PM*\n` +
-            `8️⃣ *03:00 PM to 04:00 PM*\n` +
-            `9️⃣ *04:00 PM to 05:00 PM*\n` +
-            `🔟 *05:00 PM to 06:00 PM*\n` +
-            `11. *06:00 PM to 07:00 PM*\n` +
-            `12. *07:00 PM to 08:00 PM*\n` +
-            `13. *08:00 PM to 09:00 PM*`;
-          const res = await waService.sendTextMessage(contact.phone, invalidMsg);
-          await saveAndEmit('text', invalidMsg, res);
+          const freshContact = await ContactModel.findOne({ phone: contact.phone });
+          const selectedPeriod = freshContact.flowVariables?.temp_call_period;
+          
+          let periodSlots = [];
+          if (selectedPeriod === 'Morning') {
+            periodSlots = [
+              '08:00 AM to 09:00 AM',
+              '09:00 AM to 10:00 AM',
+              '10:00 AM to 11:00 AM',
+              '11:00 AM to 12:00 PM'
+            ];
+          } else if (selectedPeriod === 'Afternoon') {
+            periodSlots = [
+              '12:00 PM to 01:00 PM',
+              '01:00 PM to 02:00 PM',
+              '02:00 PM to 03:00 PM',
+              '03:00 PM to 04:00 PM'
+            ];
+          } else if (selectedPeriod === 'Evening') {
+            periodSlots = [
+              '04:00 PM to 05:00 PM',
+              '05:00 PM to 06:00 PM',
+              '06:00 PM to 07:00 PM',
+              '07:00 PM to 08:00 PM',
+              '08:00 PM to 09:00 PM'
+            ];
+          }
+
+          if (selectedPeriod && periodSlots.length > 0) {
+            const invalidMsg = `Invalid option. Please select your preferred time slot for ${selectedPeriod}:`;
+            await this.sendInteractiveOptionsHelper(contact, waService, invalidMsg, periodSlots, settings, io);
+          } else {
+            await ContactModel.updateOne({ phone: contact.phone }, {
+              $set: {
+                currentFlowStep: 'ask_call_time_period'
+              }
+            });
+            const timePeriodMsg = `Invalid option. Please select your preferred period for the counselling call:`;
+            await this.sendInteractiveOptionsHelper(contact, waService, timePeriodMsg, ['Morning (8AM-12PM)', 'Afternoon (12-4PM)', 'Evening (4PM-9PM)'], settings, io);
+          }
         }
 
         this.activeProcesses.delete(lockKey);
