@@ -726,7 +726,7 @@ export default function AIChatbot() {
                             </div>
                           </div>
                           <div className="text-[10px] font-black text-indigo-300 uppercase tracking-widest bg-white/5 border border-white/10 px-3 py-1.5 rounded-xl">
-                            ⏰ 13 Active Slots
+                            ⏰ {((step.buttons && step.buttons.length > 0) ? step.buttons.length : 13)} Active Slots
                           </div>
                         </div>
 
@@ -755,30 +755,118 @@ export default function AIChatbot() {
                             </div>
                           </div>
 
-                          {/* Time slots scroll list card */}
+                          {/* Time slots scroll list card with Editor capability */}
                           <div className="bg-white/5 border border-white/10 p-4 rounded-2xl">
-                            <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest block mb-3">🕒 Available Slots (Native Pagination)</span>
-                            <div className="max-h-[120px] overflow-y-auto pr-1 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
-                              {[
-                                "08:00 AM to 09:00 AM",
-                                "09:00 AM to 10:00 AM",
-                                "10:00 AM to 11:00 AM",
-                                "11:00 AM to 12:00 PM",
-                                "12:00 PM to 01:00 PM",
-                                "01:00 PM to 02:00 PM",
-                                "02:00 PM to 03:00 PM",
-                                "03:00 PM to 04:00 PM",
-                                "04:00 PM to 05:00 PM",
-                                "05:00 PM to 06:00 PM",
-                                "06:00 PM to 07:00 PM",
-                                "07:00 PM to 08:00 PM",
-                                "08:00 PM to 09:00 PM"
-                              ].map((slot) => (
-                                <div key={slot} className="flex items-center space-x-2 text-[9px] text-slate-300 font-bold bg-slate-900/40 border border-white/5 px-2.5 py-1.5 rounded-lg">
-                                  <div className="w-1 h-1 bg-blue-400 rounded-full shadow shadow-blue-400/50" />
-                                  <span>{slot}</span>
-                                </div>
-                              ))}
+                            <div className="flex justify-between items-center mb-3">
+                              <span className="text-[9px] font-black text-blue-400 uppercase tracking-widest">🕒 Slots Editor</span>
+                              <button 
+                                onClick={() => {
+                                  const currentSlots = step.buttons && step.buttons.length > 0 ? step.buttons : [
+                                    { label: "08:00 AM to 09:00 AM", type: 'reply' },
+                                    { label: "09:00 AM to 10:00 AM", type: 'reply' },
+                                    { label: "10:00 AM to 11:00 AM", type: 'reply' },
+                                    { label: "11:00 AM to 12:00 PM", type: 'reply' },
+                                    { label: "12:00 PM to 01:00 PM", type: 'reply' },
+                                    { label: "01:00 PM to 02:00 PM", type: 'reply' },
+                                    { label: "02:00 PM to 03:00 PM", type: 'reply' },
+                                    { label: "03:00 PM to 04:00 PM", type: 'reply' },
+                                    { label: "04:00 PM to 05:00 PM", type: 'reply' },
+                                    { label: "05:00 PM to 06:00 PM", type: 'reply' },
+                                    { label: "06:00 PM to 07:00 PM", type: 'reply' },
+                                    { label: "07:00 PM to 08:00 PM", type: 'reply' },
+                                    { label: "08:00 PM to 09:00 PM", type: 'reply' }
+                                  ];
+                                  const nextSlotHour = 8 + (currentSlots.length % 12);
+                                  const nextSlotHourFormatted = nextSlotHour.toString().padStart(2, '0');
+                                  const endHourFormatted = ((nextSlotHour + 1) % 12 || 12).toString().padStart(2, '0');
+                                  const period = nextSlotHour >= 12 ? 'PM' : 'AM';
+                                  const endPeriod = (nextSlotHour + 1) >= 12 ? 'PM' : 'AM';
+                                  const newSlotLabel = `${nextSlotHourFormatted}:00 ${period} to ${endHourFormatted}:00 ${endPeriod}`;
+                                  
+                                  updateStep(step.id, 'buttons', [...currentSlots, { label: newSlotLabel, type: 'reply' }]);
+                                  toast.success('New time slot added!');
+                                }}
+                                className="text-[8px] font-black text-blue-400 bg-white/5 border border-white/10 px-2 py-1 rounded-lg hover:bg-white/10 hover:text-white transition-all flex items-center gap-1"
+                              >
+                                <Plus size={10} />
+                                <span>Add Slot</span>
+                              </button>
+                            </div>
+
+                            <div className="max-h-[160px] overflow-y-auto pr-1 space-y-1.5 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
+                              {((step.buttons && step.buttons.length > 0 ? step.buttons : [
+                                { label: "08:00 AM to 09:00 AM", type: 'reply' },
+                                { label: "09:00 AM to 10:00 AM", type: 'reply' },
+                                { label: "10:00 AM to 11:00 AM", type: 'reply' },
+                                { label: "11:00 AM to 12:00 PM", type: 'reply' },
+                                { label: "12:00 PM to 01:00 PM", type: 'reply' },
+                                { label: "01:00 PM to 02:00 PM", type: 'reply' },
+                                { label: "02:00 PM to 03:00 PM", type: 'reply' },
+                                { label: "03:00 PM to 04:00 PM", type: 'reply' },
+                                { label: "04:00 PM to 05:00 PM", type: 'reply' },
+                                { label: "05:00 PM to 06:00 PM", type: 'reply' },
+                                { label: "06:00 PM to 07:00 PM", type: 'reply' },
+                                { label: "07:00 PM to 08:00 PM", type: 'reply' },
+                                { label: "08:00 PM to 09:00 PM", type: 'reply' }
+                              ])).map((btn, bIdx) => {
+                                const labelValue = typeof btn === 'string' ? btn : (btn.label || '');
+                                return (
+                                  <div key={bIdx} className="flex items-center space-x-2 bg-slate-900/40 border border-white/5 px-2.5 py-1.5 rounded-lg group/slot hover:border-white/15 transition-all">
+                                    <div className="w-1 h-1 bg-blue-400 rounded-full flex-shrink-0 shadow shadow-blue-400/50" />
+                                    <input 
+                                      className="flex-1 bg-transparent border-none text-[10px] text-slate-300 font-bold outline-none focus:ring-0 p-0 focus:text-white transition-colors"
+                                      value={labelValue}
+                                      placeholder="e.g. 08:00 AM to 09:00 AM"
+                                      onChange={(e) => {
+                                        const currentSlots = [...(step.buttons && step.buttons.length > 0 ? step.buttons : [
+                                          { label: "08:00 AM to 09:00 AM", type: 'reply' },
+                                          { label: "09:00 AM to 10:00 AM", type: 'reply' },
+                                          { label: "10:00 AM to 11:00 AM", type: 'reply' },
+                                          { label: "11:00 AM to 12:00 PM", type: 'reply' },
+                                          { label: "12:00 PM to 01:00 PM", type: 'reply' },
+                                          { label: "01:00 PM to 02:00 PM", type: 'reply' },
+                                          { label: "02:00 PM to 03:00 PM", type: 'reply' },
+                                          { label: "03:00 PM to 04:00 PM", type: 'reply' },
+                                          { label: "04:00 PM to 05:00 PM", type: 'reply' },
+                                          { label: "05:00 PM to 06:00 PM", type: 'reply' },
+                                          { label: "06:00 PM to 07:00 PM", type: 'reply' },
+                                          { label: "07:00 PM to 08:00 PM", type: 'reply' },
+                                          { label: "08:00 PM to 09:00 PM", type: 'reply' }
+                                        ])];
+                                        const item = typeof currentSlots[bIdx] === 'string' ? { label: currentSlots[bIdx] } : { ...currentSlots[bIdx] };
+                                        item.label = e.target.value;
+                                        currentSlots[bIdx] = item;
+                                        updateStep(step.id, 'buttons', currentSlots);
+                                      }}
+                                    />
+                                    <button 
+                                      onClick={() => {
+                                        const currentSlots = (step.buttons && step.buttons.length > 0 ? step.buttons : [
+                                          { label: "08:00 AM to 09:00 AM", type: 'reply' },
+                                          { label: "09:00 AM to 10:00 AM", type: 'reply' },
+                                          { label: "10:00 AM to 11:00 AM", type: 'reply' },
+                                          { label: "11:00 AM to 12:00 PM", type: 'reply' },
+                                          { label: "12:00 PM to 01:00 PM", type: 'reply' },
+                                          { label: "01:00 PM to 02:00 PM", type: 'reply' },
+                                          { label: "02:00 PM to 03:00 PM", type: 'reply' },
+                                          { label: "03:00 PM to 04:00 PM", type: 'reply' },
+                                          { label: "04:00 PM to 05:00 PM", type: 'reply' },
+                                          { label: "05:00 PM to 06:00 PM", type: 'reply' },
+                                          { label: "06:00 PM to 07:00 PM", type: 'reply' },
+                                          { label: "07:00 PM to 08:00 PM", type: 'reply' },
+                                          { label: "08:00 PM to 09:00 PM", type: 'reply' }
+                                        ]).filter((_, idx) => idx !== bIdx);
+                                        updateStep(step.id, 'buttons', currentSlots);
+                                        toast.success('Time slot removed.');
+                                      }}
+                                      className="text-slate-500 hover:text-red-400 p-1 opacity-0 group-hover/slot:opacity-100 transition-all flex-shrink-0"
+                                      title="Delete Slot"
+                                    >
+                                      <X size={11} />
+                                    </button>
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         </div>
@@ -788,7 +876,7 @@ export default function AIChatbot() {
                             <Bot size={14} />
                           </div>
                           <p className="text-[9px] text-emerald-300 font-bold uppercase tracking-wider">
-                            💡 Dynamic pagination (Page 1/2) is automatically handled to keep selection intuitive on WhatsApp.
+                            💡 Dynamic pagination is automatically handled to keep WhatsApp list menus under Meta's 10-row limit.
                           </p>
                         </div>
                       </div>

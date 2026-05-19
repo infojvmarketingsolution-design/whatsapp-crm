@@ -854,18 +854,32 @@ class PRDFlowService {
         const isPickDate = input === 'btn_2' || input.includes('custom') || input.includes('text');
 
         const slotsMsg = `Great! Please select your preferred time slot for Morning:`;
-        const page1Slots = [
-          '08:00 AM to 09:00 AM',
-          '09:00 AM to 10:00 AM',
-          '10:00 AM to 11:00 AM',
-          '11:00 AM to 12:00 PM',
-          '12:00 PM to 01:00 PM',
-          '01:00 PM to 02:00 PM',
-          '02:00 PM to 03:00 PM',
-          '03:00 PM to 04:00 PM',
-          '04:00 PM to 05:00 PM',
-          'More Options... ➡️'
-        ];
+        const callTimeStep = (settings.aiPrompts?.prdFlowSteps || []).find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
+        const customSlots = (callTimeStep && callTimeStep.buttons && callTimeStep.buttons.length > 0)
+          ? callTimeStep.buttons.map(b => typeof b === 'string' ? b : (b.label || b.text || ''))
+          : [
+              '08:00 AM to 09:00 AM',
+              '09:00 AM to 10:00 AM',
+              '10:00 AM to 11:00 AM',
+              '11:00 AM to 12:00 PM',
+              '12:00 PM to 01:00 PM',
+              '01:00 PM to 02:00 PM',
+              '02:00 PM to 03:00 PM',
+              '03:00 PM to 04:00 PM',
+              '04:00 PM to 05:00 PM',
+              '05:00 PM to 06:00 PM',
+              '06:00 PM to 07:00 PM',
+              '07:00 PM to 08:00 PM',
+              '08:00 PM to 09:00 PM'
+            ];
+
+        const allTimeSlots = customSlots;
+        let page1Slots = [];
+        if (allTimeSlots.length <= 10) {
+          page1Slots = [...allTimeSlots];
+        } else {
+          page1Slots = allTimeSlots.slice(0, 9).concat(['More Options... ➡️']);
+        }
 
         if (isToday) {
           await ContactModel.updateOne({ phone: contact.phone }, {
@@ -934,18 +948,32 @@ class PRDFlowService {
             });
 
             const slotsMsg = `Great! Please select your preferred time slot for Morning:`;
-            const page1Slots = [
-              '08:00 AM to 09:00 AM',
-              '09:00 AM to 10:00 AM',
-              '10:00 AM to 11:00 AM',
-              '11:00 AM to 12:00 PM',
-              '12:00 PM to 01:00 PM',
-              '01:00 PM to 02:00 PM',
-              '02:00 PM to 03:00 PM',
-              '03:00 PM to 04:00 PM',
-              '04:00 PM to 05:00 PM',
-              'More Options... ➡️'
-            ];
+            const callTimeStep = (settings.aiPrompts?.prdFlowSteps || []).find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
+            const customSlots = (callTimeStep && callTimeStep.buttons && callTimeStep.buttons.length > 0)
+              ? callTimeStep.buttons.map(b => typeof b === 'string' ? b : (b.label || b.text || ''))
+              : [
+                  '08:00 AM to 09:00 AM',
+                  '09:00 AM to 10:00 AM',
+                  '10:00 AM to 11:00 AM',
+                  '11:00 AM to 12:00 PM',
+                  '12:00 PM to 01:00 PM',
+                  '01:00 PM to 02:00 PM',
+                  '02:00 PM to 03:00 PM',
+                  '03:00 PM to 04:00 PM',
+                  '04:00 PM to 05:00 PM',
+                  '05:00 PM to 06:00 PM',
+                  '06:00 PM to 07:00 PM',
+                  '07:00 PM to 08:00 PM',
+                  '08:00 PM to 09:00 PM'
+                ];
+
+            const allTimeSlots = customSlots;
+            let page1Slots = [];
+            if (allTimeSlots.length <= 10) {
+              page1Slots = [...allTimeSlots];
+            } else {
+              page1Slots = allTimeSlots.slice(0, 9).concat(['More Options... ➡️']);
+            }
             await this.sendInteractiveOptionsHelper(contact, waService, slotsMsg, page1Slots, settings, io, 'Show all Option');
           } else {
             const invalidMsg = "Invalid date. Please type a valid calendar date in *DD-MM-YYYY* format (e.g., 25-05-2026):";
@@ -1024,47 +1052,41 @@ class PRDFlowService {
       // STATE: ASK_CALL_TIME_SLOT
       // ==========================================
       if (currentState === 'ask_call_time_slot') {
-        const allTimeSlots = [
-          '08:00 AM to 09:00 AM',
-          '09:00 AM to 10:00 AM',
-          '10:00 AM to 11:00 AM',
-          '11:00 AM to 12:00 PM',
-          '12:00 PM to 01:00 PM',
-          '01:00 PM to 02:00 PM',
-          '02:00 PM to 03:00 PM',
-          '03:00 PM to 04:00 PM',
-          '04:00 PM to 05:00 PM',
-          '05:00 PM to 06:00 PM',
-          '06:00 PM to 07:00 PM',
-          '07:00 PM to 08:00 PM',
-          '08:00 PM to 09:00 PM'
-        ];
+        const callTimeStep = (settings.aiPrompts?.prdFlowSteps || []).find(s => (s.type || '').toUpperCase() === 'CALL_TIME');
+        const customSlots = (callTimeStep && callTimeStep.buttons && callTimeStep.buttons.length > 0)
+          ? callTimeStep.buttons.map(b => typeof b === 'string' ? b : (b.label || b.text || ''))
+          : [
+              '08:00 AM to 09:00 AM',
+              '09:00 AM to 10:00 AM',
+              '10:00 AM to 11:00 AM',
+              '11:00 AM to 12:00 PM',
+              '12:00 PM to 01:00 PM',
+              '01:00 PM to 02:00 PM',
+              '02:00 PM to 03:00 PM',
+              '03:00 PM to 04:00 PM',
+              '04:00 PM to 05:00 PM',
+              '05:00 PM to 06:00 PM',
+              '06:00 PM to 07:00 PM',
+              '07:00 PM to 08:00 PM',
+              '08:00 PM to 09:00 PM'
+            ];
 
-        const page1Slots = [
-          '08:00 AM to 09:00 AM',
-          '09:00 AM to 10:00 AM',
-          '10:00 AM to 11:00 AM',
-          '11:00 AM to 12:00 PM',
-          '12:00 PM to 01:00 PM',
-          '01:00 PM to 02:00 PM',
-          '02:00 PM to 03:00 PM',
-          '03:00 PM to 04:00 PM',
-          '04:00 PM to 05:00 PM'
-        ];
-
-        const page2Slots = [
-          '05:00 PM to 06:00 PM',
-          '06:00 PM to 07:00 PM',
-          '07:00 PM to 08:00 PM',
-          '08:00 PM to 09:00 PM'
-        ];
+        const allTimeSlots = customSlots;
+        let page1Slots = [];
+        let page2Slots = [];
+        if (allTimeSlots.length <= 10) {
+          page1Slots = [...allTimeSlots];
+        } else {
+          page1Slots = allTimeSlots.slice(0, 9);
+          page2Slots = allTimeSlots.slice(9);
+        }
 
         let selectedSlot = null;
         const replyText = messageText.trim();
         const lowerText = replyText.toLowerCase();
 
         // 1. Check if user clicked "More Options... ➡️"
-        if (lowerText.includes('more options') || lowerText.includes('more times') || replyText === 'list_9') {
+        if (allTimeSlots.length > 10 && (lowerText.includes('more options') || lowerText.includes('more times') || replyText === 'list_9')) {
           const slotsMsg = `Great! Please select your preferred time slot for Morning:`;
           const page2Opts = [
             ...page2Slots,
@@ -1076,7 +1098,7 @@ class PRDFlowService {
         }
 
         // 2. Check if user clicked "⬅️ Back to Main"
-        if (lowerText.includes('back to main') || replyText === 'list_4' || lowerText.includes('back')) {
+        if (allTimeSlots.length > 10 && (lowerText.includes('back to main') || replyText === `list_${page2Slots.length}` || lowerText.includes('back'))) {
           const slotsMsg = `Great! Please select your preferred time slot for Morning:`;
           const page1Opts = [
             ...page1Slots,
@@ -1087,7 +1109,7 @@ class PRDFlowService {
           return;
         }
 
-        // 3. Try exact/partial matching against all 13 slots
+        // 3. Try exact/partial matching against all slots
         const matchedOpt = allTimeSlots.find(opt => {
           return opt.toLowerCase() === lowerText || lowerText.includes(opt.toLowerCase());
         });
@@ -1118,10 +1140,9 @@ class PRDFlowService {
         } else {
           // Send Page 1 slots again on invalid option
           const slotsMsg = `Invalid option. Please select your preferred time slot for Morning:`;
-          const page1Opts = [
-            ...page1Slots,
-            'More Options... ➡️'
-          ];
+          const page1Opts = (allTimeSlots.length <= 10)
+            ? [...page1Slots]
+            : [...page1Slots, 'More Options... ➡️'];
           await this.sendInteractiveOptionsHelper(contact, waService, slotsMsg, page1Opts, settings, io, 'Show all Option');
         }
 
