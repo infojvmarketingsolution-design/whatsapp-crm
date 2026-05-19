@@ -133,7 +133,21 @@ export default function NotificationCenter({ isOpen, onClose }) {
       
       const isUnassigned = !assignedAgentId && !assignedCounsellorId;
       
-      if (isAssigned || isUnassigned) {
+      const userRole = (loggedInUser?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
+      const isAdminOrManager = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'MANAGER_COUNSELLOUR'].includes(userRole);
+      
+      console.log('[Handoff Evaluation NotificationCenter.jsx]', {
+        loggedInUserId,
+        assignedAgentId,
+        assignedCounsellorId,
+        isAssigned,
+        isUnassigned,
+        userRole,
+        isAdminOrManager,
+        willAddNotification: isAssigned || isUnassigned || isAdminOrManager
+      });
+      
+      if (isAssigned || isUnassigned || isAdminOrManager) {
         const handoffNote = {
           id: `handoff-${Date.now()}`,
           type: 'CHAT',

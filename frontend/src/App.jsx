@@ -2081,10 +2081,40 @@ function AppLayout() {
     fetchWhatsappConfig();
     const configInterval = setInterval(fetchWhatsappConfig, 30000); // Poll every 30 seconds
     
-    // 3. Socket Listener for Template Status Updates
+    // Listen for custom event from CustomizationSettings
+    const handleBrandingUpdate = (e) => {
+       if (e.detail?.color) {
+          setThemeColor(e.detail.color);
+          localStorage.setItem('themeColor', e.detail.color);
+       }
+       if (e.detail?.customization) {
+          setCustomization(e.detail.customization);
+          localStorage.setItem('customLogin', e.detail.customization.customLogin);
+       }
+    };
+    const handleResize = () => {
+       setIsMobile(window.innerWidth < 1024);
+    };
+    window.addEventListener('themeChanged', handleBrandingUpdate);
+    window.addEventListener('brandingUpdated', handleBrandingUpdate);
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+       window.removeEventListener('themeChanged', handleBrandingUpdate);
+       window.removeEventListener('brandingUpdated', handleBrandingUpdate);
+       window.removeEventListener('resize', handleResize);
+       clearInterval(configInterval);
+    };
+  }, [])
+
+  React.useEffect(() => {
+    if (isAuthPage) return;
+
     const tenantId = localStorage.getItem('tenantId');
+    if (!tenantId) return;
+
     const socket = io('', { query: { tenantId } });
-    
+
     socket.on('template_status_update', (data) => {
        console.log('🔔 Template Status Update:', data);
        if (data.status === 'APPROVED') {
@@ -2108,7 +2138,21 @@ function AppLayout() {
        
        const isUnassigned = !assignedAgentId && !assignedCounsellorId;
        
-       if (isAssigned || isUnassigned) {
+       const userRole = (loggedInUser?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
+       const isAdminOrManager = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'MANAGER_COUNSELLOUR'].includes(userRole);
+       
+       console.log('[Handoff Evaluation App.jsx]', {
+          loggedInUserId,
+          assignedAgentId,
+          assignedCounsellorId,
+          isAssigned,
+          isUnassigned,
+          userRole,
+          isAdminOrManager,
+          willShowToast: isAssigned || isUnassigned || isAdminOrManager
+       });
+       
+       if (isAssigned || isUnassigned || isAdminOrManager) {
           toast.custom((t) => (
              <div className={`${t.visible ? 'animate-enter' : 'animate-leave'} max-w-md w-full bg-white shadow-2xl rounded-2xl pointer-events-auto flex border border-teal-500/20 overflow-hidden`}>
                 <div className="flex-1 w-0 p-4">
@@ -2145,32 +2189,10 @@ function AppLayout() {
        }
     });
 
-    // Listen for custom event from CustomizationSettings
-    const handleBrandingUpdate = (e) => {
-       if (e.detail?.color) {
-          setThemeColor(e.detail.color);
-          localStorage.setItem('themeColor', e.detail.color);
-       }
-       if (e.detail?.customization) {
-          setCustomization(e.detail.customization);
-          localStorage.setItem('customLogin', e.detail.customization.customLogin);
-       }
-    };
-    const handleResize = () => {
-       setIsMobile(window.innerWidth < 1024);
-    };
-    window.addEventListener('themeChanged', handleBrandingUpdate);
-    window.addEventListener('brandingUpdated', handleBrandingUpdate);
-    window.addEventListener('resize', handleResize);
-
     return () => {
-       window.removeEventListener('themeChanged', handleBrandingUpdate);
-       window.removeEventListener('brandingUpdated', handleBrandingUpdate);
-       window.removeEventListener('resize', handleResize);
-       clearInterval(configInterval);
        socket.disconnect();
     };
-  }, [])
+  }, [isAuthPage]);
   const appStyle = {
     '--theme-bg': themeColor === '#10b981' ? '#075E54' : themeColor,
     '--theme-text': themeColor === '#10b981' ? '#075E54' : themeColor,

@@ -1312,12 +1312,16 @@ class PRDFlowService {
           await this.clearPRDFlowSession(tenantId, contact.phone, ContactModel);
 
           // Emit real-time handoff request socket event to assigned agents/counsellors in CRM
+          console.log(`[PRD Handoff] Emitting 'handoff_request' event. Tenant: ${tenantId}, Contact Phone: ${contact.phone}, AssignedAgent: ${updatedContact?.assignedAgent || 'none'}, AssignedCounsellor: ${updatedContact?.assignedCounsellor || 'none'}`);
           if (io) {
             const contactObj = updatedContact ? (typeof updatedContact.toObject === 'function' ? updatedContact.toObject() : updatedContact) : contact;
             io.to(tenantId).emit('handoff_request', {
               contact: contactObj,
               message: 'A new lead is waiting for your response'
             });
+            console.log(`[PRD Handoff] Socket emit completed to room ${tenantId}`);
+          } else {
+            console.warn('[PRD Handoff] Warning: io is not available inside processStep');
           }
         }
         else if (isNo) {
