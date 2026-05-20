@@ -399,7 +399,7 @@ const performContactAction = async (req, res) => {
                 $push: { 
                    timeline: { 
                       eventType: 'FIELD_UPDATED', 
-                      description: `Profile Sync [${diagnostic}]`, 
+                      description: diagnostic, 
                       timestamp: new Date() 
                    }
                 }

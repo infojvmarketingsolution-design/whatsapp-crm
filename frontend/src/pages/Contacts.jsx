@@ -1545,8 +1545,13 @@ export default function Contacts({ roleAccess }) {
                                                       <div className="flex flex-wrap gap-2 mt-2">
                                                          {(() => {
                                                             try {
-                                                               if (event.description.startsWith('Profile Sync JSON:')) {
-                                                                  const jsonStr = event.description.replace('Profile Sync JSON:', '').trim();
+                                                               let jsonStr = '';
+                                                               if (event.description.includes('Profile Sync JSON:')) {
+                                                                  jsonStr = event.description.substring(event.description.indexOf('Profile Sync JSON:') + 18).trim();
+                                                                  if (jsonStr.endsWith(']')) jsonStr = jsonStr.slice(0, -1);
+                                                               }
+                                                               
+                                                               if (jsonStr) {
                                                                   const diffs = JSON.parse(jsonStr);
                                                                   if (!diffs || diffs.length === 0) return null;
                                                                   
