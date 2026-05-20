@@ -6,7 +6,7 @@ require('dotenv').config();
 (async () => {
   try {
     await connectCoreDB();
-    const Settings = mongoose.model('Settings', require('./src/models/core/Settings'));
+    const Settings = require('./src/models/core/Settings');
     const allSettings = await Settings.find({});
     
     for (const s of allSettings) {
