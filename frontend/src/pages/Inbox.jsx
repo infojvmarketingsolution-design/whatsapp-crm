@@ -351,6 +351,8 @@ export default function Inbox({ roleAccess }) {
     socket.on('contact_updated', (data) => {
       const { contactId, contact } = data;
       setContacts(prev => {
+         if (!contact) return prev;
+         
          const showAssignedOnly = roleData?.permissions?.includes('chat_show_assigned_only');
          const isAssignedToMe = (contact.assignedAgent?.toString() === user._id?.toString()) || 
                                (contact.assignedCounsellor?.toString() === user._id?.toString());

@@ -1357,7 +1357,7 @@ class PRDFlowService {
              const AIServiceLocal = require('./ai.service');
              const { score, heatLevel, botQuestionsAnswered } = await AIServiceLocal.calculateLeadScore(c, msgs);
              await ContactModelLocal.findByIdAndUpdate(c._id, { score, heatLevel, botQuestionsAnswered });
-             if (io) io.to(tenantId).emit('contact_updated', { contactId: c._id, score, heatLevel, botQuestionsAnswered });
+             if (io) io.to(tenantId).emit('lead_score_updated', { contactId: c._id, score, heatLevel, botQuestionsAnswered });
          }
       } catch (scoreErr) {
          console.error('[PRD] Score update failed:', scoreErr.message);
@@ -1728,7 +1728,7 @@ class PRDFlowService {
       const messages = await Message.find({ contactId }).sort({ createdAt: -1 }).limit(10);
       const { score, heatLevel, botQuestionsAnswered } = await AIService.calculateLeadScore(contact, messages);
       await Contact.findByIdAndUpdate(contactId, { score, heatLevel, botQuestionsAnswered });
-      if (io) io.to(tenantId).emit('contact_updated', { contactId, score, heatLevel, botQuestionsAnswered });
+      if (io) io.to(tenantId).emit('lead_score_updated', { contactId, score, heatLevel, botQuestionsAnswered });
     } catch (err) {}
   }
 }
