@@ -900,7 +900,7 @@ export default function Contacts({ roleAccess }) {
                                       <span>1st Priority</span>
                                    </span>
                                 )}
-                                {c.botQuestionsAnswered >= 7 && (
+                                {c.botQuestionsAnswered >= 4 && (
                                    <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${c.botQuestionsAnswered} bot questions`}>
                                       <Bot size={10} className="text-blue-600" />
                                       <span>{c.score || 0}/100</span>
@@ -1025,7 +1025,7 @@ export default function Contacts({ roleAccess }) {
                                             <span>1st Priority</span>
                                          </span>
                                       )}
-                                      {c.botQuestionsAnswered >= 7 && (
+                                      {c.botQuestionsAnswered >= 4 && (
                                          <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${c.botQuestionsAnswered} bot questions`}>
                                             <Bot size={10} className="text-blue-600" />
                                             <span>{c.score || 0}/100</span>
