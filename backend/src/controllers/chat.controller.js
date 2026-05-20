@@ -1156,16 +1156,27 @@ const getUserBreakdownStats = async (req, res) => {
     const userIds = stats.map(s => s._id).filter(Boolean);
     const users = await User.find({ _id: { $in: userIds } }).select('name email role');
 
-    const result = stats.map(s => {
-      const user = users.find(u => u._id.toString() === s._id?.toString());
-      return {
-        userId: s._id,
-        name: user ? user.name : 'Unassigned',
-        email: user ? user.email : 'N/A',
-        role: user ? user.role : 'N/A',
-        count: s.count
-      };
-    }).sort((a, b) => b.count - a.count);
+    // Merge duplicates that might arise from String vs ObjectId or null/empty string
+    const mergedResult = {};
+    
+    stats.forEach(s => {
+      let uidStr = s._id ? s._id.toString().trim() : null;
+      if (!uidStr || uidStr === '') uidStr = 'unassigned';
+      
+      if (!mergedResult[uidStr]) {
+         const user = users.find(u => u._id.toString() === uidStr);
+         mergedResult[uidStr] = {
+           userId: uidStr === 'unassigned' ? null : uidStr,
+           name: user ? user.name : 'Unassigned',
+           email: user ? user.email : 'N/A',
+           role: user ? user.role : 'N/A',
+           count: 0
+         };
+      }
+      mergedResult[uidStr].count += s.count;
+    });
+
+    const result = Object.values(mergedResult).sort((a, b) => b.count - a.count);
 
     res.json(result);
   } catch (error) {
