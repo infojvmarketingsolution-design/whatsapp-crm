@@ -568,9 +568,16 @@ export default function Inbox({ roleAccess }) {
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-center">
                     <div className="flex items-center space-x-1.5 flex-1 min-w-0">
-                      <h3 className={`text-sm font-bold truncate ${
-                          activeChat && activeChat._id === c._id ? 'text-gray-900' : 'text-gray-800'
-                        }`}>{c.name}</h3>
+                      <div className="flex items-center space-x-1 min-w-0">
+                         <h3 className={`text-sm font-bold truncate ${
+                             activeChat && activeChat._id === c._id ? 'text-gray-900' : 'text-gray-800'
+                           }`}>{c.name}</h3>
+                         {c.heatLevel === 'Hot' && (
+                            <span className="text-[7px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-1 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
+                              <span>1st Priority</span>
+                            </span>
+                         )}
+                      </div>
                       {c.assignedAgentName && (
                         <span className="text-[9px] font-bold bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded border border-teal-100 flex-shrink-0">
                           {c.assignedAgentName}
@@ -631,7 +638,14 @@ export default function Inbox({ roleAccess }) {
 
             <img src={getAvatarUrl(activeChat?.name)} className="w-8 h-8 rounded-full object-cover shadow-sm border border-white/20 shrink-0" alt="avatar" />
             <div className="flex flex-col min-w-0">
-               <span className="font-semibold text-sm leading-tight truncate">{activeChat?.name}</span>
+               <div className="flex items-center space-x-2">
+                 <span className="font-semibold text-sm leading-tight truncate">{activeChat?.name}</span>
+                 {activeChat?.heatLevel === 'Hot' && (
+                    <span className="text-[8px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-1.5 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
+                      <span>1st Priority</span>
+                    </span>
+                 )}
+               </div>
                 <span className="text-white/70 text-[10px] font-medium tracking-wide leading-tight truncate">
                   {activeChat?.phone}
                 </span>
@@ -896,7 +910,14 @@ export default function Inbox({ roleAccess }) {
               </div>
             )}
 
-            <h2 className="text-xl font-bold text-gray-800">{activeChat?.name}</h2>
+            <div className="flex items-center space-x-2">
+               <h2 className="text-xl font-bold text-gray-800">{activeChat?.name}</h2>
+               {activeChat?.heatLevel === 'Hot' && (
+                  <span className="text-[10px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-2 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
+                     <span>1st Priority</span>
+                  </span>
+               )}
+            </div>
             <p className="text-sm text-gray-500 font-semibold tracking-wide mt-1">{activeChat?.phone || '+91 987654321'}</p>
          </div>
 

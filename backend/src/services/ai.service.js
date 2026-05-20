@@ -168,6 +168,8 @@ class AIService {
     if (contact.selectedProgram) score += 20;
     if (contact.preferredCallTime) score += 10;
 
+    const hasAllAnswers = contact.name && contact.qualification && contact.selectedProgram && contact.preferredCallTime;
+
     // 2. Interaction signals (Scanning messages)
     const history = messages.slice(-10).map(m => m.content).join(" ").toLowerCase();
     
@@ -180,11 +182,15 @@ class AIService {
     if (messages.length > 5) score += 10;
 
     // Cap at 100
-    score = Math.min(score, 100);
+    if (hasAllAnswers) {
+        score = 100; // 100% priority lead
+    } else {
+        score = Math.min(score, 100);
+    }
 
     // Determine Heat Level
     let heatLevel = 'Cold';
-    if (score >= 70) heatLevel = 'Hot';
+    if (score >= 70 || hasAllAnswers) heatLevel = 'Hot';
     else if (score >= 40) heatLevel = 'Warm';
 
     return { score, heatLevel };

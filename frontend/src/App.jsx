@@ -1095,8 +1095,13 @@ function Dashboard() {
                                        {lead.name?.charAt(0) || 'L'}
                                     </div>
                                     <div>
-                                       <div className="flex items-center gap-2">
+                                       <div className="flex items-center flex-wrap gap-2">
                                           <p className="text-sm font-black text-slate-800 group-hover:text-blue-600 transition-colors">{lead.name}</p>
+                                          {fullContact.heatLevel === 'Hot' && (
+                                             <span className="text-[8px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-1.5 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
+                                                <span>1st Priority</span>
+                                             </span>
+                                          )}
                                           <span className="text-[8px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">View Details →</span>
                                        </div>
                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{lead.phone}</p>
