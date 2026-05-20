@@ -1138,8 +1138,9 @@ export default function Contacts({ roleAccess }) {
                            onClick={() => {
                               console.log("[Sync] Triggering Save for:", selectedContact._id);
                               const changes = {};
+                              const normalize = (val) => (val === undefined || val === null) ? '' : val;
                               for (const key in editedContact) {
-                                 if (editedContact[key] !== selectedContact[key] && !['timeline', '_id', '__v', 'createdAt', 'updatedAt', 'notes'].includes(key)) {
+                                 if (normalize(editedContact[key]) !== normalize(selectedContact[key]) && !['timeline', '_id', '__v', 'createdAt', 'updatedAt', 'notes'].includes(key)) {
                                     changes[key] = editedContact[key];
                                  }
                               }
