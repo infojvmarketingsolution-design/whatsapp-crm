@@ -1566,15 +1566,27 @@ export default function Contacts({ roleAccess }) {
                                                                      let colorClass = 'bg-slate-50 border-slate-200 text-slate-600';
                                                                      let actionText = '';
                                                                      
+                                                                     let displayNew = diff.new;
+                                                                     let displayOld = diff.old;
+                                                                     if (diff.key === 'assignedCounsellor' || diff.key === 'assignedAgent') {
+                                                                         const getAgentName = (id) => {
+                                                                             if (!id) return '';
+                                                                             const agent = agents?.find(a => String(a._id) === String(id));
+                                                                             return agent ? agent.name : id;
+                                                                         };
+                                                                         displayNew = getAgentName(diff.new);
+                                                                         displayOld = getAgentName(diff.old);
+                                                                     }
+                                                                     
                                                                      if (diff.action === 'Added') {
                                                                          colorClass = 'bg-emerald-50 border-emerald-200 text-emerald-700';
-                                                                         actionText = `Added ${label}: ${diff.new}`;
+                                                                         actionText = `Added ${label}: ${displayNew}`;
                                                                      } else if (diff.action === 'Removed') {
                                                                          colorClass = 'bg-rose-50 border-rose-200 text-rose-700';
-                                                                         actionText = `Removed ${label}: ${diff.old}`;
+                                                                         actionText = `Removed ${label}: ${displayOld}`;
                                                                      } else if (diff.action === 'Updated') {
                                                                          colorClass = 'bg-blue-50 border-blue-200 text-blue-700';
-                                                                         actionText = `${label}: ${diff.old || '(empty)'} ➔ ${diff.new}`;
+                                                                         actionText = `${label}: ${displayOld || '(empty)'} ➔ ${displayNew}`;
                                                                      }
                                                                      
                                                                      return (
