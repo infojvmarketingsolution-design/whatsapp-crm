@@ -1548,11 +1548,17 @@ export default function Contacts({ roleAccess }) {
                                                                let jsonStr = '';
                                                                if (event.description.includes('Profile Sync JSON:')) {
                                                                   jsonStr = event.description.substring(event.description.indexOf('Profile Sync JSON:') + 18).trim();
-                                                                  if (jsonStr.endsWith(']')) jsonStr = jsonStr.slice(0, -1);
                                                                }
                                                                
                                                                if (jsonStr) {
-                                                                  const diffs = JSON.parse(jsonStr);
+                                                                  let diffs;
+                                                                  try {
+                                                                     diffs = JSON.parse(jsonStr);
+                                                                  } catch (e) {
+                                                                     if (jsonStr.endsWith(']')) {
+                                                                        diffs = JSON.parse(jsonStr.slice(0, -1));
+                                                                     }
+                                                                  }
                                                                   if (!diffs || diffs.length === 0) return null;
                                                                   
                                                                   return diffs.map((diff, i) => {
