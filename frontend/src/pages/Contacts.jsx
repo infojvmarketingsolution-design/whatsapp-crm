@@ -1264,7 +1264,7 @@ export default function Contacts({ roleAccess }) {
                                     <div className="relative group">
                                        <select value={editedContact.area || ''} onChange={e=>handleFieldChange('area', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
                                           <option value="">Choose Area</option>
-                                          {popularCityAreas[editedContact.city].map(a => <option key={a} value={a}>{a}</option>)}
+                                          {popularCityAreas[editedContact.city].slice().sort((a, b) => a.localeCompare(b)).map(a => <option key={a} value={a}>{a}</option>)}
                                        </select>
                                        <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                                     </div>
