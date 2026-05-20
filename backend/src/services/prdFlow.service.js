@@ -1347,6 +1347,21 @@ class PRDFlowService {
     } catch (err) {
       console.error(`[PRD State Machine] ❌ Error in processStep:`, err);
     } finally {
+      try {
+         const tenantDb = require('../config/db').getTenantConnection(tenantId);
+         const ContactModelLocal = tenantDb.model('Contact', require('../models/tenant/Contact'));
+         const MessageModelLocal = tenantDb.model('Message', require('../models/tenant/Message'));
+         const c = await ContactModelLocal.findOne({ phone: contact.phone });
+         if (c) {
+             const msgs = await MessageModelLocal.find({ contactId: c._id }).sort({ timestamp: -1 }).limit(10);
+             const AIServiceLocal = require('./ai.service');
+             const { score, heatLevel, botQuestionsAnswered } = await AIServiceLocal.calculateLeadScore(c, msgs);
+             await ContactModelLocal.findByIdAndUpdate(c._id, { score, heatLevel, botQuestionsAnswered });
+             if (io) io.to(tenantId).emit('contact_updated', { contactId: c._id, score, heatLevel, botQuestionsAnswered });
+         }
+      } catch (scoreErr) {
+         console.error('[PRD] Score update failed:', scoreErr.message);
+      }
       this.activeProcesses.delete(lockKey);
     }
   }
