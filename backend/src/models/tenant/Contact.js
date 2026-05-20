@@ -78,6 +78,7 @@ const ContactSchema = new mongoose.Schema({
   societyName: { type: String },
   streetAddress: { type: String },
   city: { type: String },
+  area: { type: String },
   collectionAmount: { type: Number, default: 0 },
   pendingCollectionAmount: { type: Number, default: 0 },
   isClosed: { type: Boolean, default: false },

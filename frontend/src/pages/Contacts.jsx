@@ -13,6 +13,17 @@ import { State, City } from 'country-state-city';
 
 const indiaStates = State.getStatesOfCountry('IN');
 
+const popularCityAreas = {
+  'Ahmedabad': ['Shahibaug', 'Sabarmati', 'Danilimda', 'Navrangpura', 'Vastrapur', 'Bopal', 'Maninagar', 'Satellite', 'Thaltej', 'Gota', 'Naroda', 'Bapunagar', 'Paldi', 'Ellisbridge', 'Bodakdev', 'Vastral', 'Chandkheda', 'Motera', 'Iscon', 'SG Highway', 'C.G. Road', 'Ashram Road', 'Naranpura', 'Ghatlodia', 'Ranip', 'Vejalpur', 'Jodhpur', 'Prahlad Nagar', 'Makarba', 'Sarkhej', 'Ambawadi', 'Gulbai Tekra', 'Law Garden', 'Memnagar', 'Gurukul', 'Drive-in Road', 'Science City', 'Sola', 'Chandlodia', 'Nirnay Nagar', 'New Ranip', 'Kali', 'Zundal', 'Sughad', 'Bhat', 'Koteshwar', 'Hansol', 'Airport', 'Sardarnagar', 'Noblenagar', 'Krishnanagar', 'Nikol', 'Odhav', 'Ramol', 'Hathijan', 'Vatva', 'Isanpur', 'Kankaria', 'Ghodasar', 'Behrampura', 'Jamalpur', 'Khadia', 'Kalupur', 'Dariapur', 'Shahpur', 'Asarwa', 'Meghaninagar', 'Rakhial', 'Gomtipur', 'Amraiwadi', 'CTM', 'Hatkeshwar', 'Gita Mandir'],
+  'Surat': ['Adajan', 'Vesu', 'Varachha', 'Piplod', 'Athwa', 'Katargam', 'Udhna', 'Sachin', 'Palsana', 'Bhatar', 'City Light', 'Althan', 'Pandesara', 'Nanpura', 'Rander', 'Amroli', 'Sayan', 'Olpad', 'Kamrej', 'Kadodara', 'Navsari', 'Bardoli', 'Mahuva', 'Mandvi', 'Mangrol', 'Umarpada', 'Choryasi'],
+  'Vadodara': ['Alkapuri', 'Akota', 'Sayajigunj', 'Fatehgunj', 'Manjalpur', 'Makarpura', 'Gotri', 'Gorwa', 'Subhanpura', 'Karelibaug', 'Sama', 'Nizampura', 'Chhani', 'Bhayli', 'Vasna', 'Tandalja', 'Atladara', 'Kalali', 'Vadsar', 'Maneja', 'Jetalpur', 'Waghodia', 'Ajwa', 'Khanderao Market', 'Mandvi', 'Nyay Mandir', 'Raopura', 'Dandia Bazar', 'Kothi', 'Panigate', 'Wadi', 'Gajrawadi', 'Pratapnagar', 'Dabhoi', 'Padra', 'Karjan', 'Sinor', 'Savli', 'Desar', 'Vaghodia'],
+  'Rajkot': ['Kalawad Road', 'University Road', 'Amin Marg', 'Yagnik Road', 'Race Course', 'Nana Mava', 'Mavdi', '150 Feet Ring Road', 'Gondal Road', 'Kuvadava Road', 'Morbi Road', 'Jamnagar Road', 'Bhavnagar Road', 'Dhebar Road', 'Sorathiyawadi', 'Kothariya', 'Aji GIDC', 'Metoda GIDC', 'Shapar Veraval', 'Gondal', 'Jasdan', 'Jetpur', 'Dhoraji', 'Upleta', 'Paddhari', 'Lodhika', 'Kotda Sangani', 'Vinchhiya'],
+  'Delhi': ['Connaught Place', 'Karol Bagh', 'Chandni Chowk', 'Paharganj', 'Dwarka', 'Rohini', 'Pitampura', 'Janakpuri', 'Vasant Kunj', 'Saket', 'Hauz Khas', 'Green Park', 'Greater Kailash', 'Lajpat Nagar', 'South Extension', 'Defence Colony', 'Vasant Vihar', 'Chanakyapuri', 'RK Puram', 'Munirka', 'Sarojini Nagar', 'Laxmi Nagar', 'Preet Vihar', 'Mayur Vihar', 'Patparganj', 'Shahdara', 'Seelampur', 'Yamuna Vihar', 'Dilshad Garden', 'Narela', 'Bawana', 'Alipur', 'Najafgarh', 'Kapashera', 'Mehrauli', 'Chattarpur', 'Okhla', 'Badarpur', 'Tughlakabad', 'Sangam Vihar', 'Deoli'],
+  'Mumbai': ['Andheri', 'Bandra', 'Borivali', 'Dadar', 'Goregaon', 'Juhu', 'Kandivali', 'Malad', 'Powai', 'Worli', 'Colaba', 'Churchgate', 'Fort', 'Nariman Point', 'Malabar Hill', 'Marine Drive', 'Tardeo', 'Mahalaxmi', 'Byculla', 'Parel', 'Dharavi', 'Matunga', 'Sion', 'Kurla', 'Ghatkopar', 'Vidyavihar', 'Vikhroli', 'Bhandup', 'Mulund', 'Chembur', 'Govandi', 'Mankhurd', 'Bhayandar', 'Mira Road', 'Dahisar', 'Jogeshwari', 'Vile Parle', 'Santacruz', 'Khar', 'Vasai', 'Virar', 'Nalasopara', 'Palghar', 'Boisar', 'Dahanu', 'Thane', 'Kalyan', 'Dombivli', 'Ulhasnagar', 'Ambernath', 'Badlapur', 'Bhiwandi', 'Shahapur', 'Murbad', 'Navi Mumbai', 'Vashi', 'Nerul', 'Belapur', 'Kharghar', 'Panvel', 'Uran', 'Pen', 'Alibag', 'Karjat', 'Khopoli', 'Lonavala'],
+  'Pune': ['Kothrud', 'Hinjewadi', 'Viman Nagar', 'Koregaon Park', 'Baner', 'Wakad', 'Hadapsar', 'Magarpatta', 'Kalyani Nagar', 'Aundh', 'Shivajinagar', 'Camp', 'Deccan Gymkhana', 'Swargate', 'Katraj', 'Dhankawadi', 'Bibwewadi', 'Market Yard', 'Gultekdi', 'Bhavani Peth', 'Nana Peth', 'Rasta Peth', 'Somwar Peth', 'Mangalwar Peth', 'Budhwar Peth', 'Shukrawar Peth', 'Raviwar Peth', 'Sadashiv Peth', 'Narayan Peth', 'Shaniwar Peth', 'Erandwane', 'Karve Nagar', 'Bavdhan', 'Pashan', 'Balewadi', 'Pimple Saudagar', 'Pimple Nilakh', 'Pimple Gurav', 'Sangvi', 'Dapodi', 'Bhosari', 'Nigdi', 'Akurdi', 'Chinchwad', 'Pimpri', 'Thergaon', 'Kalewadi', 'Rahatani', 'Wadgaon Sheri', 'Chandan Nagar', 'Kharadi', 'Mundhwa', 'Keshav Nagar', 'Manjri', 'Phursungi', 'Uruli Devachi', 'Kondhwa', 'NIBM', 'Wanowrie', 'Fatima Nagar', 'Lulla Nagar', 'Salunke Vihar', 'Undri', 'Pisoli', 'Mohammed Wadi'],
+  'Bangalore': ['Koramangala', 'Indiranagar', 'Jayanagar', 'Whitefield', 'HSR Layout', 'BTM Layout', 'Malleswaram', 'Rajajinagar', 'Basavanagudi', 'Marathahalli', 'Electronic City', 'Bellandur', 'Hebbal', 'Yelahanka', 'RT Nagar', 'Banashankari', 'JP Nagar', 'Bannerghatta Road', 'Sarjapur Road', 'Outer Ring Road', 'Old Airport Road', 'MG Road', 'Brigade Road', 'Commercial Street', 'Shivajinagar', 'Frazer Town', 'Cox Town', 'Cooke Town', 'Benson Town', 'Richards Town', 'Vasanth Nagar', 'Seshadripuram', 'Sadashivanagar', 'Yeshwanthpur', 'Peenya', 'Dasarahalli', 'Jalahalli', 'Mathikere', 'Sanjaynagar', 'Sahakarnagar', 'Vidyaranyapura', 'Kammanahalli', 'Kalyan Nagar', 'HBR Layout', 'HRBR Layout', 'Banaswadi', 'Ramamurthy Nagar', 'KR Puram', 'Mahadevapura', 'Brookefield', 'Kadugodi', 'ITPL', 'Hoodi', 'CV Raman Nagar', 'Domlur', 'Ulsoor', 'Victoria Layout', 'Richmond Town', 'Langford Town', 'Shanti Nagar', 'Wilson Garden', 'Adugodi', 'Sg Palya', 'Tavarekere', 'Madiwala', 'Bommanahalli', 'Hongasandra', 'Mangammanapalya', 'Singasandra', 'Kudlu', 'Haralur', 'Kasavanahalli', 'Carmelaram', 'Doddanekundi'],
+};
+
 export default function Contacts({ roleAccess }) {
   const navigate = useNavigate();
   const [contacts, setContacts] = useState([]);
@@ -1225,7 +1236,10 @@ export default function Contacts({ roleAccess }) {
                               <input value={editedContact.streetAddress || ''} onChange={e=>handleFieldChange('streetAddress', e.target.value)} placeholder="Street Address" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                  <div className="relative group">
-                                    <select value={editedContact.city || ''} onChange={e=>handleFieldChange('city', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
+                                    <select value={editedContact.city || ''} onChange={e=>{
+                                       handleFieldChange('city', e.target.value);
+                                       handleFieldChange('area', '');
+                                    }} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
                                        <option value="">Choose City</option>
                                        {editedContact.state && indiaStates.find(s => s.name === editedContact.state) 
                                           ? City.getCitiesOfState('IN', indiaStates.find(s => s.name === editedContact.state).isoCode).map(c => <option key={c.name} value={c.name}>{c.name}</option>)
@@ -1245,10 +1259,22 @@ export default function Contacts({ roleAccess }) {
                                     <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                                  </div>
                               </div>
-                              <div className="grid grid-cols-2 gap-4">
-                                 <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-bold text-slate-400 rounded-2xl flex items-center uppercase trackingest">India</div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 {editedContact.city && popularCityAreas[editedContact.city] ? (
+                                    <div className="relative group">
+                                       <select value={editedContact.area || ''} onChange={e=>handleFieldChange('area', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
+                                          <option value="">Choose Area</option>
+                                          {popularCityAreas[editedContact.city].map(a => <option key={a} value={a}>{a}</option>)}
+                                       </select>
+                                       <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                                    </div>
+                                 ) : (
+                                    <input value={editedContact.area || ''} onChange={e=>handleFieldChange('area', e.target.value)} placeholder="Area (Locality)" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
+                                 )}
                                  <input value={editedContact.pincode || ''} onChange={e=>handleFieldChange('pincode', e.target.value)} placeholder="Pincode" className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all" />
                               </div>
+                              <div className="w-full bg-slate-100/50 border-2 border-transparent py-3 px-5 text-[10px] font-bold text-slate-400 rounded-2xl flex items-center uppercase tracking-widest mt-4">India</div>
+
                            </div>
                         </div>
                      </div>
