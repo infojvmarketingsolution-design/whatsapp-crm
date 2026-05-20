@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2, Megaphone, Video, Home, School, MapPin, Phone, Users, UserCircle } from 'lucide-react';
+import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2, Megaphone, Video, Home, School, MapPin, Phone, Users, UserCircle, Bot } from 'lucide-react';
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -577,6 +577,12 @@ export default function Inbox({ roleAccess }) {
                               <span>1st Priority</span>
                             </span>
                          )}
+                         {c.botQuestionsAnswered >= 7 && (
+                            <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${c.botQuestionsAnswered} bot questions`}>
+                              <Bot size={10} className="text-blue-600" />
+                              <span>{c.score}/100</span>
+                            </span>
+                         )}
                       </div>
                       {c.assignedAgentName && (
                         <span className="text-[9px] font-bold bg-teal-50 text-teal-600 px-1.5 py-0.5 rounded border border-teal-100 flex-shrink-0">
@@ -643,6 +649,12 @@ export default function Inbox({ roleAccess }) {
                  {activeChat?.heatLevel === 'Hot' && (
                     <span className="text-[8px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-1.5 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
                       <span>1st Priority</span>
+                    </span>
+                 )}
+                 {activeChat?.botQuestionsAnswered >= 7 && (
+                    <span className="text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1.5 shrink-0" title={`Answered ${activeChat.botQuestionsAnswered} bot questions`}>
+                      <Bot size={12} className="text-blue-600" />
+                      <span>{activeChat.score}/100</span>
                     </span>
                  )}
                </div>
@@ -915,6 +927,12 @@ export default function Inbox({ roleAccess }) {
                {activeChat?.heatLevel === 'Hot' && (
                   <span className="text-[10px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-2 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
                      <span>1st Priority</span>
+                  </span>
+               )}
+               {activeChat?.botQuestionsAnswered >= 7 && (
+                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1.5 shrink-0" title={`Answered ${activeChat.botQuestionsAnswered} bot questions`}>
+                     <Bot size={14} className="text-blue-600" />
+                     <span>{activeChat.score}/100</span>
                   </span>
                )}
             </div>

@@ -1102,6 +1102,12 @@ function Dashboard() {
                                                 <span>1st Priority</span>
                                              </span>
                                           )}
+                                          {fullContact.botQuestionsAnswered >= 7 && (
+                                             <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${fullContact.botQuestionsAnswered} bot questions`}>
+                                                <Bot size={10} className="text-blue-600" />
+                                                <span>{fullContact.score || 0}/100</span>
+                                             </span>
+                                          )}
                                           <span className="text-[8px] font-bold text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity">View Details →</span>
                                        </div>
                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{lead.phone}</p>

@@ -1711,9 +1711,9 @@ class PRDFlowService {
       const contact = await Contact.findById(contactId);
       if (!contact) return;
       const messages = await Message.find({ contactId }).sort({ createdAt: -1 }).limit(10);
-      const { score, heatLevel } = await AIService.calculateLeadScore(contact, messages);
-      await Contact.findByIdAndUpdate(contactId, { score, heatLevel });
-      if (io) io.to(tenantId).emit('contact_updated', { contactId, score, heatLevel });
+      const { score, heatLevel, botQuestionsAnswered } = await AIService.calculateLeadScore(contact, messages);
+      await Contact.findByIdAndUpdate(contactId, { score, heatLevel, botQuestionsAnswered });
+      if (io) io.to(tenantId).emit('contact_updated', { contactId, score, heatLevel, botQuestionsAnswered });
     } catch (err) {}
   }
 }

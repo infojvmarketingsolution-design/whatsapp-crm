@@ -161,6 +161,19 @@ class AIService {
    */
   async calculateLeadScore(contact, messages = []) {
     let score = 0;
+    
+    let botQuestionsAnswered = 0;
+    const trackedFields = [
+      'name', 'email', 'qualification', 'selectedStream', 'selectedProgram', 
+      'preferredCallTime', 'budget', 'purchaseTimeline', 'decisionMakerStatus',
+      'profession', 'companyName', 'city', 'state'
+    ];
+    trackedFields.forEach(field => {
+      if (contact[field]) botQuestionsAnswered++;
+    });
+    if (contact.flowVariables && typeof contact.flowVariables === 'object') {
+      botQuestionsAnswered += Object.keys(contact.flowVariables).length;
+    }
 
     // 1. Data Points (Max 50)
     if (contact.name) score += 5;
@@ -193,7 +206,7 @@ class AIService {
     if (score >= 70 || hasAllAnswers) heatLevel = 'Hot';
     else if (score >= 40) heatLevel = 'Warm';
 
-    return { score, heatLevel };
+    return { score, heatLevel, botQuestionsAnswered };
   }
 
   /**

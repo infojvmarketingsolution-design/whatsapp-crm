@@ -7,7 +7,7 @@ import {
   Clock, Activity, Target, Tag, Save, Filter, 
   Briefcase, Building2, Download, MoreVertical, 
   Flame, Sun, Snowflake, ArrowUpRight, Send, Shield, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones, ChevronDown, UserCircle, RefreshCw, Sparkles, Edit3, Trash2, MoreHorizontal,
-  Award, CheckCircle, Video, Home, School, Map, GraduationCap, Star
+  Award, CheckCircle, Video, Home, School, Map, GraduationCap, Star, Bot
 } from 'lucide-react';
 
 export default function Contacts({ roleAccess }) {
@@ -893,7 +893,20 @@ export default function Contacts({ roleAccess }) {
                              {c.firstName?.charAt(0) || c.name?.charAt(0) || 'U'}
                           </div>
                           <div>
-                             <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{c.name || 'Unknown'}</p>
+                             <div className="flex items-center flex-wrap gap-2">
+                                <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{c.name || 'Unknown'}</p>
+                                {c.heatLevel === 'Hot' && (
+                                   <span className="text-[8px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-1.5 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
+                                      <span>1st Priority</span>
+                                   </span>
+                                )}
+                                {c.botQuestionsAnswered >= 7 && (
+                                   <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${c.botQuestionsAnswered} bot questions`}>
+                                      <Bot size={10} className="text-blue-600" />
+                                      <span>{c.score || 0}/100</span>
+                                   </span>
+                                )}
+                             </div>
                              <div className="flex items-center space-x-2 mt-0.5">
                                 <Smartphone size={10} className="text-slate-300" />
                                 <p className="text-[10px] font-bold text-slate-400">{c.phone}</p>
@@ -1003,9 +1016,22 @@ export default function Contacts({ roleAccess }) {
                                    {c.firstName ? c.firstName.charAt(0) : (c.name?.charAt(0) || 'U')}
                                 </div>
                                 <div>
-                                   <p className="text-[13px] font-bold text-slate-800 leading-none mb-1.5">
-                                      {c.firstName && c.lastName ? `${c.firstName} ${c.lastName}` : (c.name || 'Unknown User')}
-                                   </p>
+                                   <div className="flex items-center flex-wrap gap-2 mb-1.5">
+                                      <p className="text-[13px] font-bold text-slate-800 leading-none">
+                                         {c.firstName && c.lastName ? `${c.firstName} ${c.lastName}` : (c.name || 'Unknown User')}
+                                      </p>
+                                      {c.heatLevel === 'Hot' && (
+                                         <span className="text-[8px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-1.5 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
+                                            <span>1st Priority</span>
+                                         </span>
+                                      )}
+                                      {c.botQuestionsAnswered >= 7 && (
+                                         <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${c.botQuestionsAnswered} bot questions`}>
+                                            <Bot size={10} className="text-blue-600" />
+                                            <span>{c.score || 0}/100</span>
+                                         </span>
+                                      )}
+                                   </div>
                                    <p className="text-[10px] font-bold text-gray-400 capitalize">{c.phone}</p>
                                  </div>
                              </div>

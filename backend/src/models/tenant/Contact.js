@@ -44,6 +44,7 @@ const ContactSchema = new mongoose.Schema({
   preferredCallTime: { type: String },
   score: { type: Number, default: 0 },
   heatLevel: { type: String, enum: ['Cold', 'Warm', 'Hot'], default: 'Cold' },
+  botQuestionsAnswered: { type: Number, default: 0 },
   budget: { type: String }, // e.g. "< 50k", "50k-1L", "> 1L"
   purchaseTimeline: { type: String }, // e.g. "Immediate", "1-3 Months"
   decisionMakerStatus: { type: String }, // e.g. "Self", "Family", "Other"
