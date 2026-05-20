@@ -1539,36 +1539,70 @@ export default function Contacts({ roleAccess }) {
                                              <div className="flex justify-between items-start gap-4">
                                                 <div className="flex flex-col gap-1">
                                                    <p className="text-sm font-bold text-slate-700 leading-tight">
-                                                      {event.description?.startsWith('Profile Sync [') ? 'Profile Updated' : event.description?.split(' - ')[0]}
+                                                      {event.description?.startsWith('Profile Sync') ? 'Profile Updated' : event.description?.split(' - ')[0]}
                                                    </p>
-                                                   {event.description?.startsWith('Profile Sync [') && (
-                                                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                                   {event.description?.startsWith('Profile Sync') && (
+                                                      <div className="flex flex-wrap gap-2 mt-2">
                                                          {(() => {
-                                                            const isOld = event.description.startsWith('Profile Sync [Keys:');
-                                                            const match = event.description.match(/\[(?:Keys|Diff):\s*(.*?)\s*(?:\||\])/);
-                                                            if (!match || !match[1]) return null;
-                                                            
-                                                            const items = match[1].split(',').map(k => k.trim()).filter(Boolean);
-                                                            if (items.length === 1 && items[0] === 'No changes') return null;
-
-                                                            return items.map((item, i) => {
-                                                               let key = item;
-                                                               let action = '';
-                                                               let colorClass = 'bg-slate-100 text-slate-500 border-slate-200';
-                                                               
-                                                               if (!isOld && item.includes(':')) {
-                                                                  [key, action] = item.split(':');
-                                                                  if (action === 'Added') colorClass = 'bg-emerald-50 text-emerald-600 border-emerald-200';
-                                                                  else if (action === 'Updated') colorClass = 'bg-blue-50 text-blue-600 border-blue-200';
-                                                                  else if (action === 'Removed') colorClass = 'bg-rose-50 text-rose-600 border-rose-200';
+                                                            try {
+                                                               if (event.description.startsWith('Profile Sync JSON:')) {
+                                                                  const jsonStr = event.description.replace('Profile Sync JSON:', '').trim();
+                                                                  const diffs = JSON.parse(jsonStr);
+                                                                  if (!diffs || diffs.length === 0) return null;
+                                                                  
+                                                                  return diffs.map((diff, i) => {
+                                                                     const label = diff.key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                                                                     let colorClass = 'bg-slate-50 border-slate-200 text-slate-600';
+                                                                     let actionText = '';
+                                                                     
+                                                                     if (diff.action === 'Added') {
+                                                                         colorClass = 'bg-emerald-50 border-emerald-200 text-emerald-700';
+                                                                         actionText = `Added ${label}: ${diff.new}`;
+                                                                     } else if (diff.action === 'Removed') {
+                                                                         colorClass = 'bg-rose-50 border-rose-200 text-rose-700';
+                                                                         actionText = `Removed ${label}: ${diff.old}`;
+                                                                     } else if (diff.action === 'Updated') {
+                                                                         colorClass = 'bg-blue-50 border-blue-200 text-blue-700';
+                                                                         actionText = `${label}: ${diff.old || '(empty)'} ➔ ${diff.new}`;
+                                                                     }
+                                                                     
+                                                                     return (
+                                                                        <div key={i} className={`px-2.5 py-1 rounded-md text-[10px] font-semibold border shadow-sm ${colorClass}`}>
+                                                                           {actionText}
+                                                                        </div>
+                                                                     );
+                                                                  });
                                                                }
                                                                
-                                                               return (
-                                                                  <span key={i} className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${colorClass}`}>
-                                                                     {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} {action}
-                                                                  </span>
-                                                               );
-                                                            });
+                                                               // Legacy Parsing
+                                                               const isOld = event.description.startsWith('Profile Sync [Keys:');
+                                                               const match = event.description.match(/\[(?:Keys|Diff):\s*(.*?)\s*(?:\||\])/);
+                                                               if (!match || !match[1]) return null;
+                                                               
+                                                               const items = match[1].split(',').map(k => k.trim()).filter(Boolean);
+                                                               if (items.length === 1 && items[0] === 'No changes') return null;
+
+                                                               return items.map((item, i) => {
+                                                                  let key = item;
+                                                                  let action = '';
+                                                                  let colorClass = 'bg-slate-100 text-slate-500 border-slate-200';
+                                                                  
+                                                                  if (!isOld && item.includes(':')) {
+                                                                     [key, action] = item.split(':');
+                                                                     if (action === 'Added') colorClass = 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                                                                     else if (action === 'Updated') colorClass = 'bg-blue-50 text-blue-600 border-blue-200';
+                                                                     else if (action === 'Removed') colorClass = 'bg-rose-50 text-rose-600 border-rose-200';
+                                                                  }
+                                                                  
+                                                                  return (
+                                                                     <span key={i} className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${colorClass}`}>
+                                                                        {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} {action}
+                                                                     </span>
+                                                                  );
+                                                               });
+                                                            } catch (err) {
+                                                               return null;
+                                                            }
                                                          })()}
                                                       </div>
                                                    )}
@@ -1577,7 +1611,7 @@ export default function Contacts({ roleAccess }) {
                                                    {event.eventType?.replace('_', ' ')}
                                                 </span>
                                              </div>
-                                             {event.description?.includes(' - ') && !event.description?.startsWith('Profile Sync [') && (
+                                             {event.description?.includes(' - ') && !event.description?.startsWith('Profile Sync') && (
                                                 <p className="text-[11px] text-slate-500 font-medium mt-1.5 bg-slate-50/50 p-2 rounded-xl border border-slate-100/50 italic">
                                                    {event.description.split(' - ').slice(1).join(' - ')}
                                                 </p>

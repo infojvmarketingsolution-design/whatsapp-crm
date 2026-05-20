@@ -369,16 +369,20 @@ const performContactAction = async (req, res) => {
              const newVal = normalize(updatePayload[key]);
              
              if (oldVal === '' && newVal !== '') {
-                 diffs.push(`${key}:Added`);
+                 diffs.push({ key, action: 'Added', new: newVal });
              } else if (oldVal !== '' && newVal === '') {
-                 diffs.push(`${key}:Removed`);
+                 diffs.push({ key, action: 'Removed', old: oldVal });
              } else if (oldVal !== newVal) {
-                 diffs.push(`${key}:Updated`);
+                 diffs.push({ key, action: 'Updated', old: oldVal, new: newVal });
              }
           });
-          if (diffs.length === 0) diffs.push('No changes');
-
-          const diagnostic = `Diff: ${diffs.join(', ')}`;
+          
+          let diagnostic = '';
+          if (diffs.length === 0) {
+              diagnostic = `Profile Sync [Diff: No changes]`;
+          } else {
+              diagnostic = `Profile Sync JSON: ${JSON.stringify(diffs)}`;
+          }
           
           await ContactModel.collection.updateOne(
              { _id: rawId },
