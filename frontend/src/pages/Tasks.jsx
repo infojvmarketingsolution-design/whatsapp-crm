@@ -1062,17 +1062,16 @@ export default function Tasks() {
                                value={editedContact.status || 'NEW LEAD'} 
                                onChange={e => handleFieldChange('status', e.target.value)}
                                className={`text-[10px] sm:text-[11px] font-bold capitalize px-4 sm:px-6 py-2.5 rounded-xl border-2 shadow-sm transition-all outline-none appearance-none pr-10 ${
-                                  editedContact.status === 'CLOSED_WON' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
-                                  editedContact.status === 'CLOSED_LOST' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                  editedContact.status === 'ADMISSION' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                                  editedContact.status === 'CLOSED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
                                   'bg-white border-slate-100 text-slate-700 hover:border-slate-300'
                                }`}
                             >
-                               <option value="NEW LEAD">New Lead</option>
-                               <option value="CONTACTED">Contacted</option>
-                               <option value="INTERESTED">Interested</option>
-                               <option value="FOLLOW_UP">Follow Up</option>
-                               <option value="CLOSED_WON">Admission follow up update</option>
-                               <option value="CLOSED_LOST">Admission Cancelled</option>
+                               <option value="NEW LEAD">New</option>
+                               <option value="OPEN">Open</option>
+                               <option value="CLOSED">Close</option>
+                               <option value="VISITED">Visit</option>
+                               <option value="ADMISSION">Admission</option>
                             </select>
                             <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-slate-600 transition-colors" />
                          </div>
