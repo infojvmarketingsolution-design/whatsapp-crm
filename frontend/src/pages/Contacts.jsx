@@ -9,6 +9,9 @@ import {
   Flame, Sun, Snowflake, ArrowUpRight, Send, Shield, ShieldCheck, History, Calendar, CheckCircle2, TrendingUp, Globe, Smartphone, Bell, Landmark, Hash, Wallet, Headphones, ChevronDown, UserCircle, RefreshCw, Sparkles, Edit3, Trash2, MoreHorizontal,
   Award, CheckCircle, Video, Home, School, Map, GraduationCap, Star, Bot
 } from 'lucide-react';
+import { State, City } from 'country-state-city';
+
+const indiaStates = State.getStatesOfCountry('IN');
 
 export default function Contacts({ roleAccess }) {
   const navigate = useNavigate();
@@ -1224,14 +1227,20 @@ export default function Contacts({ roleAccess }) {
                                  <div className="relative group">
                                     <select value={editedContact.city || ''} onChange={e=>handleFieldChange('city', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
                                        <option value="">Choose City</option>
-                                       {['Ahmedabad', 'Surat', 'Vadodara', 'Rajkot', 'Mumbai', 'Pune', 'Bangalore', 'Delhi'].map(c => <option key={c} value={c}>{c}</option>)}
+                                       {editedContact.state && indiaStates.find(s => s.name === editedContact.state) 
+                                          ? City.getCitiesOfState('IN', indiaStates.find(s => s.name === editedContact.state).isoCode).map(c => <option key={c.name} value={c.name}>{c.name}</option>)
+                                          : <option disabled value="">Select state first</option>
+                                       }
                                     </select>
                                     <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                                  </div>
                                  <div className="relative group">
-                                    <select value={editedContact.state || ''} onChange={e=>handleFieldChange('state', e.target.value)} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
+                                    <select value={editedContact.state || ''} onChange={e=>{
+                                       handleFieldChange('state', e.target.value);
+                                       handleFieldChange('city', '');
+                                    }} className="w-full bg-slate-50/50 border-2 border-slate-50 py-3 px-5 text-xs font-bold text-slate-700 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-10">
                                        <option value="">Choose State</option>
-                                       {['Gujarat', 'Maharashtra', 'Karnataka', 'Rajasthan', 'Madhya Pradesh', 'Delhi'].map(s => <option key={s} value={s}>{s}</option>)}
+                                       {indiaStates.map(s => <option key={s.isoCode} value={s.name}>{s.name}</option>)}
                                     </select>
                                     <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                                  </div>
