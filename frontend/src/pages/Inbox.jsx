@@ -593,13 +593,13 @@ export default function Inbox({ roleAccess }) {
                            }`}>{c.name}</h3>
                          {c.heatLevel === 'Hot' && (
                             <span className="text-[7px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-1 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
-                              <span>1st Priority</span>
+                              <span>HOT</span>
                             </span>
                          )}
                          {computedBotQuestions >= 4 && (
                             <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${computedBotQuestions} bot questions`}>
                               <Bot size={10} className="text-blue-600" />
-                              <span>{c.score}/100</span>
+                              <span>{c.score}</span>
                             </span>
                          )}
                       </div>
@@ -624,15 +624,7 @@ export default function Inbox({ roleAccess }) {
                       {c.heatLevel === 'Warm' && <Flame size={13} className="text-orange-400 fill-orange-400/10" />}
                     </div>
                     <div className="flex flex-col items-end">
-                      {c.score > 0 && (
-                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border shadow-sm ${
-                          c.score >= 70 ? 'bg-red-50 text-red-600 border-red-100' : 
-                          c.score >= 40 ? 'bg-orange-50 text-orange-600 border-orange-100' : 
-                          'bg-gray-50 text-gray-500 border-gray-100'
-                        }`}>
-                          {c.score}
-                        </span>
-                      )}
+
                     </div>
                   </div>
                   <p className="text-[12px] text-gray-500 truncate mt-0.5">
@@ -668,13 +660,13 @@ export default function Inbox({ roleAccess }) {
                  <span className="font-semibold text-sm leading-tight truncate">{activeChat?.name}</span>
                  {activeChat?.heatLevel === 'Hot' && (
                     <span className="text-[8px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-1.5 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
-                      <span>1st Priority</span>
+                      <span>HOT</span>
                     </span>
                  )}
                {computeBotQuestions(activeChat) >= 4 && (
                     <span className="text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1.5 shrink-0" title={`Answered ${computeBotQuestions(activeChat)} bot questions`}>
                       <Bot size={12} className="text-blue-600" />
-                      <span>{activeChat.score}/100</span>
+                      <span>{activeChat.score}</span>
                     </span>
                  )}
                </div>
@@ -946,13 +938,13 @@ export default function Inbox({ roleAccess }) {
                <h2 className="text-xl font-bold text-gray-800">{activeChat?.name}</h2>
                {activeChat?.heatLevel === 'Hot' && (
                   <span className="text-[10px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-2 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
-                     <span>1st Priority</span>
+                     <span>HOT</span>
                   </span>
                )}
                {computeBotQuestions(activeChat) >= 4 && (
                   <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1.5 shrink-0" title={`Answered ${computeBotQuestions(activeChat)} bot questions`}>
                      <Bot size={14} className="text-blue-600" />
-                     <span>{activeChat.score}/100</span>
+                     <span>{activeChat.score}</span>
                   </span>
                )}
             </div>

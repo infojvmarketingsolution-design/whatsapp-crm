@@ -907,13 +907,13 @@ export default function Contacts({ roleAccess }) {
                                 <p className="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">{c.name || 'Unknown'}</p>
                                 {c.heatLevel === 'Hot' && (
                                    <span className="text-[8px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-1.5 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
-                                      <span>1st Priority</span>
+                                      <span>HOT</span>
                                    </span>
                                 )}
                                       {computeBotQuestions(c) >= 4 && (
                                    <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${c.botQuestionsAnswered} bot questions`}>
                                       <Bot size={10} className="text-blue-600" />
-                                      <span>{c.score || 0}/100</span>
+                                      <span>{c.score || 0}</span>
                                    </span>
                                 )}
                              </div>
@@ -1032,13 +1032,13 @@ export default function Contacts({ roleAccess }) {
                                       </p>
                                       {c.heatLevel === 'Hot' && (
                                          <span className="text-[8px] font-black text-teal-900 bg-gradient-to-r from-yellow-300 to-yellow-500 px-1.5 py-0.5 rounded shadow-sm uppercase tracking-widest flex items-center shrink-0">
-                                            <span>1st Priority</span>
+                                            <span>HOT</span>
                                          </span>
                                       )}
                                             {computeBotQuestions(c) >= 4 && (
                                          <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${c.botQuestionsAnswered} bot questions`}>
                                             <Bot size={10} className="text-blue-600" />
-                                            <span>{c.score || 0}/100</span>
+                                            <span>{c.score || 0}</span>
                                          </span>
                                       )}
                                    </div>
