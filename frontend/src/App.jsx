@@ -2384,9 +2384,10 @@ function AppLayout() {
                   <button
                      onClick={() => {
                         const contactPhone = handoffAlert.contact?.phone;
+                        const agentName = user?.name || 'Agent';
                         setHandoffAlert(null);
                         if (contactPhone) {
-                           navigate('/inbox', { state: { selectedContact: contactPhone } });
+                           navigate('/inbox', { state: { selectedContact: contactPhone, autoMessage: `Hello, i am ${agentName}` } });
                         } else {
                            navigate('/inbox');
                         }

@@ -88,6 +88,11 @@ export default function Inbox({ roleAccess }) {
       const contact = contacts.find(c => c.phone === location.state.selectedContact);
       if (contact) {
         setActiveChat(contact);
+        
+        if (location.state?.autoMessage) {
+           setNewMessage(location.state.autoMessage);
+        }
+        
         // Clear state to prevent re-selection
         navigate(location.pathname, { replace: true, state: {} });
       }
