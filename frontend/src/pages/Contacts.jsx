@@ -624,6 +624,11 @@ export default function Contacts({ roleAccess }) {
       setEditedContact(prev => {
          let updates = { ...prev, [field]: value };
          
+         if (field === 'name') {
+            updates.firstName = value;
+            updates.lastName = '';
+         }
+         
          // AUTOMATIC STATUS & STAGE SYNC
          if (field === 'status') {
             if (value === 'ADMISSION' || value === 'CLOSED_WON') {
@@ -1156,8 +1161,8 @@ export default function Contacts({ roleAccess }) {
                               <label className="text-[9px] font-bold text-slate-400 capitalize ml-1">Legal Full Name</label>
                               <div className="relative group">
                                  <input 
-                                   value={editedContact.firstName || editedContact.name || ''} 
-                                   onChange={e=>handleFieldChange('firstName', e.target.value)} 
+                                   value={editedContact.name || editedContact.firstName || ''} 
+                                   onChange={e=>handleFieldChange('name', e.target.value)} 
                                    placeholder="Enter full name" 
                                    className="w-full bg-slate-50/50 border-2 border-slate-50 py-3.5 px-5 text-sm font-bold text-slate-800 rounded-2xl outline-none focus:bg-white focus:border-teal-500/20 focus:ring-4 focus:ring-teal-500/5 transition-all" 
                                  />
