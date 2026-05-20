@@ -1111,36 +1111,57 @@ const getUserBreakdownStats = async (req, res) => {
     const { category } = req.query;
     const Contact = req.tenantDb.model('Contact', ContactSchema);
 
-    let matchQuery = {};
+    // Visibility Filtering
+    const settings = await Settings.findOne({ tenantId: req.tenantId });
+    const userRole = (req.user?.role || 'AGENT').toUpperCase();
+    const normalizedRole = userRole.replace(/\s/g, '_');
+    const isHighLevel = ['ADMIN', 'SUPER_ADMIN', 'BUSINESS_HEAD', 'BUSINESS HEAD', 'OWNER'].includes(userRole);
+    
+    const roleAccess = settings?.roleAccess instanceof Map ? 
+                       (settings.roleAccess.get(normalizedRole) || settings.roleAccess.get(userRole)) : 
+                       (settings?.roleAccess?.[normalizedRole] || settings?.roleAccess?.[userRole]);
+
+    const mustRestrict = !isHighLevel && (!roleAccess || roleAccess.allAccess !== true);
+
+    let matchQuery = { isArchived: { $ne: true } };
+    
+    if (mustRestrict) {
+       const uid = new mongoose.Types.ObjectId(req.user._id);
+       matchQuery.$or = [
+          { assignedAgent: uid },
+          { assignedCounsellor: uid }
+       ];
+    }
+
     let groupField = '$assignedAgent'; // Default to assigned agent
 
     switch (category) {
       case 'new_leads':
-        matchQuery = { status: 'NEW LEAD' };
+        matchQuery.status = { $in: ['NEW LEAD', 'NEW'] };
         groupField = { $ifNull: ['$assignedAgent', '$assignedCounsellor'] };
         break;
       case 'open_leads':
-        matchQuery = { isArchived: { $ne: true }, isClosed: { $ne: true } };
+        matchQuery.status = { $in: ['OPEN', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP'] };
         groupField = { $ifNull: ['$assignedAgent', '$assignedCounsellor'] };
         break;
       case 'closed_leads':
-        matchQuery = { isClosed: true };
+        matchQuery.status = { $in: ['CLOSE', 'CLOSED', 'CLOSED_LOST'] };
         groupField = { $ifNull: ['$assignedAgent', '$assignedCounsellor'] };
         break;
       case 'admissions':
-        matchQuery = { admissionStatus: 'Admitted' };
+        matchQuery.status = { $in: ['ADMISSION', 'CLOSED_WON'] };
         groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
         break;
       case 'pending_admissions':
-        matchQuery = { admissionStatus: 'Pending' };
+        matchQuery.admissionStatus = 'Pending';
         groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
         break;
       case 'collections':
-        matchQuery = { collectionAmount: { $gt: 0 } };
+        matchQuery.collectionAmount = { $gt: 0 };
         groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
         break;
       case 'pending_collections':
-        matchQuery = { pendingCollectionAmount: { $gt: 0 } };
+        matchQuery.pendingCollectionAmount = { $gt: 0 };
         groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
         break;
       default:
