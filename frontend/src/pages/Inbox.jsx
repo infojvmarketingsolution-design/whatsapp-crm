@@ -640,7 +640,8 @@ export default function Inbox({ roleAccess }) {
                   </p>
                 </div>
               </div>
-            ))
+              )
+            })
         )}
         </div>
       </div>
