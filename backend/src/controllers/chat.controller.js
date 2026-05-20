@@ -160,7 +160,9 @@ const getContacts = async (req, res) => {
           referencePhone: 1,
           b2bOrgName: 1,
           b2bPersonName: 1,
-          b2bPhone: 1
+          b2bPhone: 1,
+          botQuestionsAnswered: 1,
+          flowVariables: 1
         }
       },
       { $sort: { lastMessageAt: -1 } }
@@ -1353,7 +1355,7 @@ const getLeadDetailsStats = async (req, res) => {
     }
 
     const contacts = await Contact.find(matchQuery)
-      .select('name phone email status leadSourceType score heatLevel createdAt lastActivity notes tasks')
+      .select('name phone email status leadSourceType score heatLevel createdAt lastActivity notes tasks botQuestionsAnswered flowVariables qualification selectedStream selectedProgram preferredCallTime budget purchaseTimeline decisionMakerStatus profession companyName city state')
       .sort({ updatedAt: -1 })
       .limit(1000);
 

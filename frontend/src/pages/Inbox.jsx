@@ -596,7 +596,7 @@ export default function Inbox({ roleAccess }) {
                               <span>1st Priority</span>
                             </span>
                          )}
-                         {computedBotQuestions >= 4 && c.score > 0 && (
+                         {computedBotQuestions >= 4 && (
                             <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${computedBotQuestions} bot questions`}>
                               <Bot size={10} className="text-blue-600" />
                               <span>{c.score}/100</span>
@@ -671,7 +671,7 @@ export default function Inbox({ roleAccess }) {
                       <span>1st Priority</span>
                     </span>
                  )}
-                 {computeBotQuestions(activeChat) >= 4 && activeChat.score > 0 && (
+               {computeBotQuestions(activeChat) >= 4 && (
                     <span className="text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1.5 shrink-0" title={`Answered ${computeBotQuestions(activeChat)} bot questions`}>
                       <Bot size={12} className="text-blue-600" />
                       <span>{activeChat.score}/100</span>
@@ -949,7 +949,7 @@ export default function Inbox({ roleAccess }) {
                      <span>1st Priority</span>
                   </span>
                )}
-               {computeBotQuestions(activeChat) >= 4 && activeChat.score > 0 && (
+               {computeBotQuestions(activeChat) >= 4 && (
                   <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1.5 shrink-0" title={`Answered ${computeBotQuestions(activeChat)} bot questions`}>
                      <Bot size={14} className="text-blue-600" />
                      <span>{activeChat.score}/100</span>
