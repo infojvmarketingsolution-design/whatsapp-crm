@@ -1087,6 +1087,12 @@ function Dashboard() {
                          </div>
                         ) : leadDetailsModal.data.map((lead, i) => {
                            const fullContact = allContacts.find(c => c._id === lead._id || c.phone === lead.phone) || lead;
+                           let computedBotQuestions = fullContact.botQuestionsAnswered || 0;
+                           if (!fullContact.botQuestionsAnswered) {
+                              const tracked = ['name', 'email', 'qualification', 'selectedStream', 'selectedProgram', 'preferredCallTime', 'budget', 'purchaseTimeline', 'decisionMakerStatus', 'profession', 'companyName', 'city', 'state'];
+                              tracked.forEach(f => { if(fullContact[f]) computedBotQuestions++; });
+                              if (fullContact.flowVariables) computedBotQuestions += Object.keys(fullContact.flowVariables).length;
+                           }
                            return (
                            <div key={i} onClick={() => openLeadProfile(lead)} className="group flex flex-col p-5 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-300 hover:-translate-y-0.5 transition-all duration-300 cursor-pointer active:scale-[0.98]">
                               <div className="flex items-center justify-between w-full">
@@ -1102,8 +1108,8 @@ function Dashboard() {
                                                 <span>1st Priority</span>
                                              </span>
                                           )}
-                                          {fullContact.botQuestionsAnswered >= 4 && (
-                                             <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${fullContact.botQuestionsAnswered} bot questions`}>
+                                          {computedBotQuestions >= 4 && fullContact.score > 0 && (
+                                             <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${computedBotQuestions} bot questions`}>
                                                 <Bot size={10} className="text-blue-600" />
                                                 <span>{fullContact.score || 0}/100</span>
                                              </span>

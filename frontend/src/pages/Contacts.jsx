@@ -16,6 +16,17 @@ export default function Contacts({ roleAccess }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [activeTab, setActiveTab] = useState('timeline');
+  
+  const computeBotQuestions = (c) => {
+     if (!c) return 0;
+     if (c.botQuestionsAnswered) return c.botQuestionsAnswered;
+     let count = 0;
+     const tracked = ['name', 'email', 'qualification', 'selectedStream', 'selectedProgram', 'preferredCallTime', 'budget', 'purchaseTimeline', 'decisionMakerStatus', 'profession', 'companyName', 'city', 'state'];
+     tracked.forEach(f => { if(c[f]) count++; });
+     if (c.flowVariables) count += Object.keys(c.flowVariables).length;
+     return count;
+  };
   const [newLeadName, setNewLeadName] = useState('');
   const [newLeadPhone, setNewLeadPhone] = useState('');
   const [isSavingLead, setIsSavingLead] = useState(false);
@@ -900,7 +911,7 @@ export default function Contacts({ roleAccess }) {
                                       <span>1st Priority</span>
                                    </span>
                                 )}
-                                {c.botQuestionsAnswered >= 4 && (
+                                {computeBotQuestions(c) >= 4 && c.score > 0 && (
                                    <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${c.botQuestionsAnswered} bot questions`}>
                                       <Bot size={10} className="text-blue-600" />
                                       <span>{c.score || 0}/100</span>
@@ -1025,7 +1036,7 @@ export default function Contacts({ roleAccess }) {
                                             <span>1st Priority</span>
                                          </span>
                                       )}
-                                      {c.botQuestionsAnswered >= 4 && (
+                                      {computeBotQuestions(c) >= 4 && c.score > 0 && (
                                          <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${c.botQuestionsAnswered} bot questions`}>
                                             <Bot size={10} className="text-blue-600" />
                                             <span>{c.score || 0}/100</span>

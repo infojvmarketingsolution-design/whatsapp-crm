@@ -18,6 +18,16 @@ export default function Inbox({ roleAccess }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [noteText, setNoteText] = useState('');
   const [showNoteInput, setShowNoteInput] = useState(false);
+  
+  const computeBotQuestions = (c) => {
+     if (!c) return 0;
+     if (c.botQuestionsAnswered) return c.botQuestionsAnswered;
+     let count = 0;
+     const tracked = ['name', 'email', 'qualification', 'selectedStream', 'selectedProgram', 'preferredCallTime', 'budget', 'purchaseTimeline', 'decisionMakerStatus', 'profession', 'companyName', 'city', 'state'];
+     tracked.forEach(f => { if(c[f]) count++; });
+     if (c.flowVariables) count += Object.keys(c.flowVariables).length;
+     return count;
+  };
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const [showCallModal, setShowCallModal] = useState(false);
   const [callOutcome, setCallOutcome] = useState('Connected');
@@ -546,9 +556,18 @@ export default function Inbox({ roleAccess }) {
           {filteredContacts.length === 0 ? (
             <div className="p-6 text-center text-xs font-medium text-gray-400">No contacts match your search.</div>
           ) : (
-            filteredContacts.map((c) => (
+            filteredContacts.map((c) => {
+              // Calculate bot questions on the fly if backend hasn't updated yet
+              let computedBotQuestions = c.botQuestionsAnswered || 0;
+              if (!c.botQuestionsAnswered) {
+                 const tracked = ['name', 'email', 'qualification', 'selectedStream', 'selectedProgram', 'preferredCallTime', 'budget', 'purchaseTimeline', 'decisionMakerStatus', 'profession', 'companyName', 'city', 'state'];
+                 tracked.forEach(f => { if(c[f]) computedBotQuestions++; });
+                 if (c.flowVariables) computedBotQuestions += Object.keys(c.flowVariables).length;
+              }
+              
+              return (
               <div 
-                key={c._id} 
+                key={c._id}  
                 onClick={() => setActiveChat(c)}
                 className={`p-4 cursor-pointer flex items-center space-x-4 transition-colors relative border-b border-gray-50 ${
                   activeChat && activeChat._id === c._id 
@@ -577,8 +596,8 @@ export default function Inbox({ roleAccess }) {
                               <span>1st Priority</span>
                             </span>
                          )}
-                         {c.botQuestionsAnswered >= 4 && (
-                            <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${c.botQuestionsAnswered} bot questions`}>
+                         {computedBotQuestions >= 4 && c.score > 0 && (
+                            <span className="text-[8px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full shadow-sm flex items-center space-x-1 shrink-0" title={`Answered ${computedBotQuestions} bot questions`}>
                               <Bot size={10} className="text-blue-600" />
                               <span>{c.score}/100</span>
                             </span>
@@ -651,8 +670,8 @@ export default function Inbox({ roleAccess }) {
                       <span>1st Priority</span>
                     </span>
                  )}
-                 {activeChat?.botQuestionsAnswered >= 4 && (
-                    <span className="text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1.5 shrink-0" title={`Answered ${activeChat.botQuestionsAnswered} bot questions`}>
+                 {computeBotQuestions(activeChat) >= 4 && activeChat.score > 0 && (
+                    <span className="text-[9px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1.5 shrink-0" title={`Answered ${computeBotQuestions(activeChat)} bot questions`}>
                       <Bot size={12} className="text-blue-600" />
                       <span>{activeChat.score}/100</span>
                     </span>
@@ -929,8 +948,8 @@ export default function Inbox({ roleAccess }) {
                      <span>1st Priority</span>
                   </span>
                )}
-               {activeChat?.botQuestionsAnswered >= 4 && (
-                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1.5 shrink-0" title={`Answered ${activeChat.botQuestionsAnswered} bot questions`}>
+               {computeBotQuestions(activeChat) >= 4 && activeChat.score > 0 && (
+                  <span className="text-[10px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shadow-sm flex items-center space-x-1.5 shrink-0" title={`Answered ${computeBotQuestions(activeChat)} bot questions`}>
                      <Bot size={14} className="text-blue-600" />
                      <span>{activeChat.score}/100</span>
                   </span>
