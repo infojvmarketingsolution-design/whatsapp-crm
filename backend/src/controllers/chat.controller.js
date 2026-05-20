@@ -361,8 +361,24 @@ const performContactAction = async (req, res) => {
           // Perform atomic update using the raw MongoDB driver for 100% reliability
           const rawId = new mongoose.Types.ObjectId(contactId);
           
-          // Diagnostic: Create a string of the received fields to see in the timeline
-          const diagnostic = `Keys: ${Object.keys(updatePayload).join(', ')} | Type: ${type} | Social: ${social}`;
+          // Calculate explicit changes (Added, Updated, Removed) for the timeline
+          const diffs = [];
+          const normalize = (val) => (val === undefined || val === null) ? '' : val;
+          Object.keys(updatePayload).forEach(key => {
+             const oldVal = normalize(contact[key]);
+             const newVal = normalize(updatePayload[key]);
+             
+             if (oldVal === '' && newVal !== '') {
+                 diffs.push(`${key}:Added`);
+             } else if (oldVal !== '' && newVal === '') {
+                 diffs.push(`${key}:Removed`);
+             } else if (oldVal !== newVal) {
+                 diffs.push(`${key}:Updated`);
+             }
+          });
+          if (diffs.length === 0) diffs.push('No changes');
+
+          const diagnostic = `Diff: ${diffs.join(', ')}`;
           
           await ContactModel.collection.updateOne(
              { _id: rawId },
