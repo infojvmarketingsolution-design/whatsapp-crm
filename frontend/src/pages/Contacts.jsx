@@ -16,7 +16,6 @@ export default function Contacts({ roleAccess }) {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [activeTab, setActiveTab] = useState('timeline');
   
   const computeBotQuestions = (c) => {
      if (!c) return 0;
