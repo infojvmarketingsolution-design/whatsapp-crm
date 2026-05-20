@@ -1137,7 +1137,17 @@ export default function Contacts({ roleAccess }) {
                         <button 
                            onClick={() => {
                               console.log("[Sync] Triggering Save for:", selectedContact._id);
-                              updateContactDetail(selectedContact._id, editedContact);
+                              const changes = {};
+                              for (const key in editedContact) {
+                                 if (editedContact[key] !== selectedContact[key] && !['timeline', '_id', '__v', 'createdAt', 'updatedAt', 'notes'].includes(key)) {
+                                    changes[key] = editedContact[key];
+                                 }
+                              }
+                              if (Object.keys(changes).length === 0) {
+                                 setShowSaveFab(false);
+                                 return;
+                              }
+                              updateContactDetail(selectedContact._id, changes);
                            }}
                            disabled={isUpdatingContact}
                            className={`h-11 sm:h-12 px-5 sm:px-10 rounded-2xl text-[10px] sm:text-[12px] font-bold uppercase tracking-[0.1em] shadow-lg transition-all flex items-center justify-center active:scale-95 ${
