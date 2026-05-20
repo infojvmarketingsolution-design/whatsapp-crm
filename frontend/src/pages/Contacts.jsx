@@ -1526,12 +1526,30 @@ export default function Contacts({ roleAccess }) {
                                           </div>
                                           <div className="flex flex-col">
                                              <div className="flex justify-between items-start gap-4">
-                                                <p className="text-sm font-bold text-slate-700 leading-tight">{event.description?.split(' - ')[0]}</p>
+                                                <div className="flex flex-col gap-1">
+                                                   <p className="text-sm font-bold text-slate-700 leading-tight">
+                                                      {event.description?.startsWith('Profile Sync [Keys:') ? 'Profile Updated' : event.description?.split(' - ')[0]}
+                                                   </p>
+                                                   {event.description?.startsWith('Profile Sync [Keys:') && (
+                                                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                                         {(() => {
+                                                            const match = event.description.match(/\[Keys:\s*(.*?)\s*(?:\||\])/);
+                                                            if (!match || !match[1]) return null;
+                                                            const keys = match[1].split(',').map(k => k.trim()).filter(Boolean);
+                                                            return keys.map((key, i) => (
+                                                               <span key={i} className="px-2 py-0.5 bg-slate-100 text-slate-500 rounded-md text-[10px] font-semibold border border-slate-200">
+                                                                  {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                                                               </span>
+                                                            ));
+                                                         })()}
+                                                      </div>
+                                                   )}
+                                                </div>
                                                 <span className="shrink-0 text-[8px] font-black text-slate-300 uppercase tracking-widest bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
                                                    {event.eventType?.replace('_', ' ')}
                                                 </span>
                                              </div>
-                                             {event.description?.includes(' - ') && (
+                                             {event.description?.includes(' - ') && !event.description?.startsWith('Profile Sync [Keys:') && (
                                                 <p className="text-[11px] text-slate-500 font-medium mt-1.5 bg-slate-50/50 p-2 rounded-xl border border-slate-100/50 italic">
                                                    {event.description.split(' - ').slice(1).join(' - ')}
                                                 </p>
