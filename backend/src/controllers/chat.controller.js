@@ -952,8 +952,8 @@ const getDashboardStats = async (req, res) => {
         totalVisit: { $sum: { $cond: [{ $eq: ["$status", "VISITED"] }, 1, 0] } },
         pendingVisit: { $sum: { $cond: [{ $eq: ["$status", "PENDING_VISIT"] }, 1, 0] } },
         totalAdmission: { $sum: { $cond: [{ $in: ["$status", ["ADMISSION", "CLOSED_WON"]] }, 1, 0] } },
-        totalCollection: { $sum: { $ifNull: ["$collectionAmount", 0] } },
-        pendingCollection: { $sum: { $ifNull: ["$pendingCollectionAmount", 0] } }
+        totalCollection: { $sum: { $convert: { input: "$collectionAmount", to: "double", onError: 0, onNull: 0 } } },
+        pendingCollection: { $sum: { $convert: { input: "$pendingCollectionAmount", to: "double", onError: 0, onNull: 0 } } }
       }}
     ]);
     const counselStats = counselStatsArr[0] || { 
@@ -1179,11 +1179,11 @@ const getUserBreakdownStats = async (req, res) => {
         groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
         break;
       case 'collections':
-        matchQuery.collectionAmount = { $gt: 0 };
+        matchQuery.$expr = { $gt: [{ $convert: { input: "$collectionAmount", to: "double", onError: 0, onNull: 0 } }, 0] };
         groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
         break;
       case 'pending_collections':
-        matchQuery.pendingCollectionAmount = { $gt: 0 };
+        matchQuery.$expr = { $gt: [{ $convert: { input: "$pendingCollectionAmount", to: "double", onError: 0, onNull: 0 } }, 0] };
         groupField = { $ifNull: ['$assignedCounsellor', '$assignedAgent'] };
         break;
       default:
@@ -1365,10 +1365,10 @@ const getLeadDetailsStats = async (req, res) => {
         matchQuery.status = { $in: ['ADMISSION', 'CLOSED_WON'] };
         break;
       case 'collections':
-        matchQuery.collectionAmount = { $gt: 0 };
+        matchQuery.$expr = { $gt: [{ $convert: { input: "$collectionAmount", to: "double", onError: 0, onNull: 0 } }, 0] };
         break;
       case 'pending_collections':
-        matchQuery.pendingCollectionAmount = { $gt: 0 };
+        matchQuery.$expr = { $gt: [{ $convert: { input: "$pendingCollectionAmount", to: "double", onError: 0, onNull: 0 } }, 0] };
         break;
       default:
         return res.status(400).json({ error: 'Invalid category' });

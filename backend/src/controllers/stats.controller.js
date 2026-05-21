@@ -56,7 +56,7 @@ const getTeamStats = async (req, res) => {
             isArchived: { $ne: true }
           } 
         },
-        { $group: { _id: null, total: { $sum: "$collectionAmount" }, pending: { $sum: "$pendingCollectionAmount" } } }
+        { $group: { _id: null, total: { $sum: { $convert: { input: "$collectionAmount", to: "double", onError: 0, onNull: 0 } } }, pending: { $sum: { $convert: { input: "$pendingCollectionAmount", to: "double", onError: 0, onNull: 0 } } } } }
       ]);
 
       const collectionTotal = collections.length > 0 ? collections[0].total : 0;
