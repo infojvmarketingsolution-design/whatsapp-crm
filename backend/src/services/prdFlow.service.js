@@ -40,7 +40,7 @@ const DEFAULT_PROGRAM_MAP = {
 class PRDFlowService {
   constructor() {
     this.DEFAULT_PRD_FLOW_STEPS = [
-      { id: 'greeting', type: 'GREETING', title: 'Greeting Message', message: 'Welcome to Gandhinagar University 🎓\n\nWe’re excited to help you choose the right career path.', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+      { id: 'greeting', type: 'GREETING', title: 'Greeting Message', message: 'Welcome to our University 🎓\n\nWe’re excited to help you choose the right career path.', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
       { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Ask Name', message: 'Please enter your full name.' },
       { id: 'qualification', type: 'QUALIFICATION', title: 'Ask Qualification', message: 'Nice to meet you {{name}} 😊\n\nPlease select your qualification.' },
       { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Please select your preferred program category.', categoryMessage: 'Please select program category.' },

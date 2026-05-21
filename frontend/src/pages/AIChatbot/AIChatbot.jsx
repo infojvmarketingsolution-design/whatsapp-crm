@@ -208,7 +208,7 @@ export default function AIChatbot() {
 
   const loadPerfectSequence = () => {
     const perfectSteps = [
-      { id: 'greeting', type: 'GREETING', title: 'Greeting Message', message: 'Welcome to Gandhinagar University 🎓\n\nWe’re excited to help you choose the right career path.', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
+      { id: 'greeting', type: 'GREETING', title: 'Greeting Message', message: 'Welcome to our University 🎓\n\nWe’re excited to help you choose the right career path.', image: 'https://wapipulse.com/uploads/prompts/tenant_demo_001/prompt_1774743344804.jpeg' },
       { id: 'ask_name', type: 'NAME_CAPTURE', title: 'Ask Name', message: 'Please enter your full name.' },
       { id: 'qualification', type: 'QUALIFICATION', title: 'Ask Qualification', message: 'Nice to meet you {{name}} 😊\n\nPlease select your qualification.' },
       { id: 'program', type: 'PROGRAM_SELECTION', title: 'Program Selection', message: 'Please select your preferred program category.', categoryMessage: 'Please select program category.' },
@@ -358,7 +358,7 @@ export default function AIChatbot() {
               
               <textarea 
                 className="w-full bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs font-semibold text-slate-700 outline-none focus:bg-white focus:ring-2 focus:ring-amber-500/10 focus:border-amber-500 transition-all h-36"
-                placeholder="e.g. Speak warmly like a top academic counsellor named Sarah from Gandhinagar University. Keep answers concise, highly polite, and recommend B.Sc Trending courses."
+                placeholder="e.g. Speak warmly like a top academic counsellor named Sarah. Keep answers concise, highly polite, and recommend B.Sc Trending courses."
                 value={settings.aiPrompts.aiSystemInstructions || ''}
                 onChange={(e) => setSettings(prev => ({
                   ...prev,
