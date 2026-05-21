@@ -14,9 +14,9 @@ async function run() {
 
         for (const dbInfo of databases) {
             // Only target tenant databases
-            if (!dbInfo.name.startsWith('tenant_')) continue;
+            if (!dbInfo.name.startsWith('jv_tenant_')) continue;
 
-            const tDb = mongoose.connection.useDb(dbInfo.name.replace('tenant_', ''));
+            const tDb = mongoose.connection.useDb(dbInfo.name);
             const Contact = tDb.collection('contacts');
 
             // Find all contacts that have collectionAmount or pendingCollectionAmount
