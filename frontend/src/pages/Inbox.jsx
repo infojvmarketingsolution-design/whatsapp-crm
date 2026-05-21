@@ -888,15 +888,15 @@ export default function Inbox({ roleAccess }) {
 
       {/* Chat Profile Panel (Right) */}
       {activeChat && showProfile && (
+      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex justify-end animate-fade-in" onClick={() => setShowProfile(false)}>
       <div className={`
-        ${showProfile ? 'flex' : 'hidden'} 
-        fixed inset-y-0 right-0 z-[100] w-full sm:w-[350px] bg-white border-l border-gray-100 shadow-2xl lg:shadow-none lg:relative lg:flex lg:z-20
-        flex-col overflow-y-auto custom-scrollbar animate-slide-in-right lg:animate-none
-      `}>
-        <div className="lg:hidden p-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-30">
+        w-full sm:w-[450px] bg-white shadow-2xl 
+        flex flex-col overflow-y-auto custom-scrollbar animate-slide-in-right relative border-l border-white/20
+      `} onClick={e => e.stopPropagation()}>
+        <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-30">
           <h3 className="text-sm font-bold text-slate-800 capitalize">Lead Profile</h3>
-          <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-slate-100 rounded-xl transition-all">
-            <X size={20} className="text-slate-400" />
+          <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all">
+            <X size={20} />
           </button>
         </div>
          
@@ -1810,7 +1810,7 @@ export default function Inbox({ roleAccess }) {
               
             </div>
          </div>
-
+      </div>
       </div>
       )}
       
