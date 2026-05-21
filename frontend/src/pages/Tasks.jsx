@@ -51,6 +51,7 @@ export default function Tasks() {
   const [assignedCounsellorId, setAssignedCounsellorId] = useState('');
   const [meetingType, setMeetingType] = useState('Office Visit');
   const [isSubmittingCompletion, setIsSubmittingCompletion] = useState(false);
+  const [leadStatus, setLeadStatus] = useState('');
 
   // Edit Task State
   const [editingTask, setEditingTask] = useState(null);
@@ -96,11 +97,16 @@ export default function Tasks() {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setActiveDropdown(null);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    if (completingTask) {
+      setLeadStatus(completingTask.contactStatus || 'NEW LEAD');
+    }
+  }, [completingTask]);
 
   const fetchAgents = async () => {
     try {
@@ -504,6 +510,15 @@ export default function Tasks() {
            method: 'PUT',
            headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
            body: JSON.stringify({ action: 'add_followup', payload: { title: nextFollowUpTitle || 'Next Follow-up', dateTime: nextFollowUpDate, description: nextFollowUpDescription || 'Created from task completion' } })
+         });
+       }
+
+       // 4. Update Lead Status if changed
+       if (leadStatus && leadStatus !== completingTask.contactStatus) {
+         await fetch(`/api/chat/action`, {
+           method: 'POST',
+           headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId, 'Content-Type': 'application/json' },
+           body: JSON.stringify({ contactId: completingTask.contactId, action: 'update_contact', payload: { status: leadStatus } })
          });
        }
 
@@ -1437,7 +1452,30 @@ export default function Tasks() {
                          ))}
                       </div>
                    </div>
-                )}
+                 )}
+
+                 {/* Lead Status Update */}
+                 <div className="animate-fade-in">
+                    <label className="text-[9px] sm:text-[10px] font-bold text-slate-400 capitalize block mb-2 sm:mb-3">Update Lead Status</label>
+                    <div className="relative group">
+                       <select 
+                          value={leadStatus} 
+                          onChange={e => setLeadStatus(e.target.value)}
+                          className={`w-full text-[10px] sm:text-[12px] font-bold capitalize px-4 sm:px-5 py-3 rounded-xl sm:rounded-2xl border-2 transition-all outline-none appearance-none pr-10 ${
+                             leadStatus === 'ADMISSION' ? 'bg-emerald-50 border-emerald-100 text-emerald-600' :
+                             leadStatus === 'CLOSED' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                             'bg-white border-slate-100 text-slate-700 hover:border-teal-500/30 focus:border-teal-500'
+                          }`}
+                       >
+                          <option value="NEW LEAD">New</option>
+                          <option value="OPEN">Open</option>
+                          <option value="CLOSED">Close</option>
+                          <option value="VISITED">Visit</option>
+                          <option value="ADMISSION">Admission</option>
+                       </select>
+                       <ChevronDown size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-teal-500 transition-colors" />
+                    </div>
+                 </div>
 
                 {/* Outcome Remarks */}
                 <div className="animate-fade-in">
