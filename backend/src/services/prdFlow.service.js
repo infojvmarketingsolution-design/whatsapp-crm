@@ -60,29 +60,34 @@ class PRDFlowService {
     const directMatch = Object.keys(programMap).find(k => k.toLowerCase().trim() === qualLower);
     if (directMatch) return directMatch;
 
-    // 2. Smart Mapping: If qualification contains '12' or 'twelfth' -> matches 'bachelor'
+    // 2. Smart Mapping: If qualification contains '12' or 'twelfth' -> matches '12th'
     if (qualLower.includes('12') || qualLower.includes('twelfth')) {
-      const match = Object.keys(programMap).find(k => k.toLowerCase().includes('bachelor') || k.toLowerCase().includes('12'));
+      const match = Object.keys(programMap).find(k => k.toLowerCase().includes('12'));
       if (match) return match;
     }
 
-    // 3. Smart Mapping: If qualification contains 'grad' or 'degree' or 'bach' (meaning holds a bachelor's) or 'master' -> matches 'master'
-    if (qualLower.includes('grad') || qualLower.includes('degree') || qualLower.includes('bach') || qualLower.includes('master')) {
+    // 3. Smart Mapping: If qualification explicitly asks for "bachelor" programs (meaning they want to do a bachelor's) -> maps to 12th Pass
+    if (qualLower.includes('bachelor')) {
+      const match = Object.keys(programMap).find(k => k.toLowerCase().includes('12') || k.toLowerCase().includes('bachelor'));
+      if (match) return match;
+    }
+
+    // 4. Smart Mapping: If qualification contains 'grad' or 'degree' or 'master' -> matches 'master' or 'grad'
+    if (qualLower.includes('grad') || qualLower.includes('degree') || qualLower.includes('master') || qualLower.includes('post')) {
       const match = Object.keys(programMap).find(k => k.toLowerCase().includes('master') || k.toLowerCase().includes('grad') || k.toLowerCase().includes('post'));
       if (match) return match;
     }
 
-    // 4. Substring Matches
+    // 5. Substring Matches
     const substringMatch = Object.keys(programMap).find(k => {
       const cleanK = k.toLowerCase().trim();
       return cleanK.includes(qualLower) || qualLower.includes(cleanK);
     });
     if (substringMatch) return substringMatch;
 
-    // 5. Fallback: standard mapping
+    // 6. Fallback: standard mapping
     let mappedOption = qualLower;
-    if (mappedOption.includes('bachelor')) mappedOption = '12th pass';
-    else if (mappedOption.includes('master')) mappedOption = 'graduate';
+    if (mappedOption.includes('master')) mappedOption = 'graduate';
     
     const mappedMatch = Object.keys(programMap).find(k => k.toLowerCase().trim() === mappedOption);
     if (mappedMatch) return mappedMatch;
