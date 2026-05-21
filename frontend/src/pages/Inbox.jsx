@@ -976,17 +976,17 @@ export default function Inbox({ roleAccess }) {
                   <PhoneCall size={16} className="mb-1 opacity-80" />
                   <span className="text-[9px] font-bold uppercase tracking-wider">Call</span>
                </button>
+               <button onClick={() => { setShowFollowupModal(!showFollowupModal); setShowCallModal(false); setShowMeetingModal(false); setShowNoteInput(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-2 transition-all text-[var(--theme-text)]">
+                  <Clock size={16} className="mb-1 opacity-80" />
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Followup</span>
+               </button>
                <button onClick={() => { setShowMeetingModal(!showMeetingModal); setShowCallModal(false); setShowNoteInput(false); setShowFollowupModal(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-2 transition-all text-[var(--theme-text)]">
                   <Calendar size={16} className="mb-1 opacity-80" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider">Meet</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Meeting</span>
                </button>
                <button onClick={() => { setShowNoteInput(!showNoteInput); setShowCallModal(false); setShowMeetingModal(false); setShowFollowupModal(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-2 transition-all text-[var(--theme-text)]">
                   <StickyNote size={16} className="mb-1 opacity-80" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider">Note</span>
-               </button>
-               <button onClick={() => { setShowFollowupModal(!showFollowupModal); setShowCallModal(false); setShowMeetingModal(false); setShowNoteInput(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-2 transition-all text-[var(--theme-text)]">
-                  <Clock size={16} className="mb-1 opacity-80" />
-                  <span className="text-[9px] font-bold uppercase tracking-wider">Follow</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider">Notes</span>
                </button>
             </div>
 
