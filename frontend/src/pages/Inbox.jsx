@@ -916,8 +916,8 @@ export default function Inbox({ roleAccess }) {
         <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
            {/* LEFT COLUMN */}
            <div className="w-full lg:w-1/2 flex flex-col overflow-y-auto custom-scrollbar border-r border-slate-100 bg-slate-50/30">
-             <div className="p-8 pb-6 flex flex-col items-center justify-center border-b border-gray-50 text-center relative mt-2">
-                <img src={getAvatarUrl(activeChat?.name)} className="w-24 h-24 rounded-full shadow-lg object-cover border-4 border-white mb-4" />
+             <div className="p-4 pb-3 flex flex-col items-center justify-center border-b border-gray-50 text-center relative mt-1">
+                <img src={getAvatarUrl(activeChat?.name)} className="w-16 h-16 rounded-full shadow-md object-cover border-2 border-white mb-2" />
             
             {isAdmin && (
               <button 
@@ -966,26 +966,26 @@ export default function Inbox({ roleAccess }) {
                   </span>
                )}
             </div>
-            <p className="text-sm text-gray-500 font-semibold tracking-wide mt-1">{activeChat?.phone || '+91 987654321'}</p>
+            <p className="text-xs text-gray-500 font-semibold tracking-wide mt-0.5">{activeChat?.phone || '+91 987654321'}</p>
          </div>
 
          {/* 1-Click Action Panel */}
-         <div className="px-6 pt-2 pb-4">
-            <div className="grid grid-cols-4 gap-2">
-               <button onClick={() => { setShowCallModal(!showCallModal); setShowMeetingModal(false); setShowNoteInput(false); setShowFollowupModal(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl p-3 transition-all text-[var(--theme-text)]">
-                  <PhoneCall size={18} className="mb-1.5 opacity-80" />
+         <div className="px-4 pt-2 pb-3">
+            <div className="grid grid-cols-4 gap-1.5">
+               <button onClick={() => { setShowCallModal(!showCallModal); setShowMeetingModal(false); setShowNoteInput(false); setShowFollowupModal(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-2 transition-all text-[var(--theme-text)]">
+                  <PhoneCall size={16} className="mb-1 opacity-80" />
                   <span className="text-[9px] font-bold uppercase tracking-wider">Call</span>
                </button>
-               <button onClick={() => { setShowMeetingModal(!showMeetingModal); setShowCallModal(false); setShowNoteInput(false); setShowFollowupModal(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl p-3 transition-all text-[var(--theme-text)]">
-                  <Calendar size={18} className="mb-1.5 opacity-80" />
+               <button onClick={() => { setShowMeetingModal(!showMeetingModal); setShowCallModal(false); setShowNoteInput(false); setShowFollowupModal(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-2 transition-all text-[var(--theme-text)]">
+                  <Calendar size={16} className="mb-1 opacity-80" />
                   <span className="text-[9px] font-bold uppercase tracking-wider">Meet</span>
                </button>
-               <button onClick={() => { setShowNoteInput(!showNoteInput); setShowCallModal(false); setShowMeetingModal(false); setShowFollowupModal(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl p-3 transition-all text-[var(--theme-text)]">
-                  <StickyNote size={18} className="mb-1.5 opacity-80" />
+               <button onClick={() => { setShowNoteInput(!showNoteInput); setShowCallModal(false); setShowMeetingModal(false); setShowFollowupModal(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-2 transition-all text-[var(--theme-text)]">
+                  <StickyNote size={16} className="mb-1 opacity-80" />
                   <span className="text-[9px] font-bold uppercase tracking-wider">Note</span>
                </button>
-               <button onClick={() => { setShowFollowupModal(!showFollowupModal); setShowCallModal(false); setShowMeetingModal(false); setShowNoteInput(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-xl p-3 transition-all text-[var(--theme-text)]">
-                  <Clock size={18} className="mb-1.5 opacity-80" />
+               <button onClick={() => { setShowFollowupModal(!showFollowupModal); setShowCallModal(false); setShowMeetingModal(false); setShowNoteInput(false); }} className="flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 border border-gray-100 rounded-lg p-2 transition-all text-[var(--theme-text)]">
+                  <Clock size={16} className="mb-1 opacity-80" />
                   <span className="text-[9px] font-bold uppercase tracking-wider">Follow</span>
                </button>
             </div>
@@ -1338,108 +1338,107 @@ export default function Inbox({ roleAccess }) {
 
          
           {/* Identity Records (Address, Secondary WhatsApp) */}
-                    <div className="px-6 py-2">
-            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 shadow-sm relative overflow-hidden group border-l-4 border-l-teal-500">
+          <div className="px-4 py-2">
+            <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 shadow-sm relative overflow-hidden group border-l-4 border-l-teal-500">
               <div className="absolute top-0 right-0 p-1 bg-teal-50 rounded-bl-lg">
                 <ShieldCheck size={12} className="text-teal-600" />
               </div>
-              <h3 className="text-[10px] font-bold text-teal-800 mb-4 tracking-[0.2em] uppercase flex items-center">
+              <h3 className="text-[10px] font-bold text-teal-800 mb-2 tracking-[0.2em] uppercase flex items-center">
                 Identity Records
               </h3>
               
-              <div className="space-y-4">
-                {/* Secondary WhatsApp */}
-                <div>
-                   <label className="text-[9px] font-bold text-slate-400 capitalize block mb-1.5 ml-1">Secondary WhatsApp</label>
-                   <input 
-                      type="tel" 
-                      defaultValue={activeChat?.secondaryPhone || ''} 
-                      onBlur={(e) => handleAction('update_contact', { secondaryPhone: e.target.value })}
-                      placeholder="+91..."
-                      className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm"
-                   />
-                </div>
-
-                {/* Alternative Mobile */}
-                <div>
-                   <label className="text-[9px] font-bold text-slate-400 capitalize block mb-1.5 ml-1">Alternative Mobile</label>
-                   <input 
-                      type="tel" 
-                      defaultValue={activeChat?.altMobile || ''} 
-                      onBlur={(e) => handleAction('update_contact', { altMobile: e.target.value })}
-                      placeholder="Alternative mobile..."
-                      className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none focus:ring-4 focus:ring-teal-100/50 transition shadow-sm"
-                   />
+              <div className="space-y-2">
+                <div className="flex space-x-2">
+                   <div className="w-1/2">
+                      <label className="text-[9px] font-bold text-slate-400 capitalize block mb-1 ml-1">Secondary WhatsApp</label>
+                      <input 
+                         type="tel" 
+                         defaultValue={activeChat?.secondaryPhone || ''} 
+                         onBlur={(e) => handleAction('update_contact', { secondaryPhone: e.target.value })}
+                         placeholder="+91..."
+                         className="w-full bg-white border border-slate-100 rounded-lg px-2.5 py-1.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-teal-100/50 transition shadow-sm"
+                      />
+                   </div>
+                   <div className="w-1/2">
+                      <label className="text-[9px] font-bold text-slate-400 capitalize block mb-1 ml-1">Alternative Mobile</label>
+                      <input 
+                         type="tel" 
+                         defaultValue={activeChat?.altMobile || ''} 
+                         onBlur={(e) => handleAction('update_contact', { altMobile: e.target.value })}
+                         placeholder="Alt mobile..."
+                         className="w-full bg-white border border-slate-100 rounded-lg px-2.5 py-1.5 text-[11px] font-bold outline-none focus:ring-2 focus:ring-teal-100/50 transition shadow-sm"
+                      />
+                   </div>
                 </div>
 
                 {/* Address Fields */}
                 <div className="pt-2 border-t border-slate-200/50">
-                   <label className="text-[9px] font-bold text-slate-400 capitalize block mb-1.5 ml-1">House No & Society</label>
-                   <div className="flex space-x-2 mb-2">
+                   <label className="text-[9px] font-bold text-slate-400 capitalize block mb-1 ml-1">House, Society & Street</label>
+                   <div className="flex space-x-1.5 mb-1.5">
                       <input 
                          placeholder="House No"
                          defaultValue={activeChat?.houseNo || ''} 
                          onBlur={(e) => handleAction('update_contact', { houseNo: e.target.value })}
-                         className="w-1/3 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm"
+                         className="w-1/4 bg-white border border-slate-100 rounded-lg px-2 py-1.5 text-[11px] font-bold outline-none shadow-sm"
                       />
                       <input 
                          placeholder="Society Name"
                          defaultValue={activeChat?.societyName || ''} 
                          onBlur={(e) => handleAction('update_contact', { societyName: e.target.value })}
-                         className="w-2/3 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm"
+                         className="w-3/4 bg-white border border-slate-100 rounded-lg px-2 py-1.5 text-[11px] font-bold outline-none shadow-sm"
                       />
                    </div>
                    <input 
                       placeholder="Street Address"
                       defaultValue={activeChat?.streetAddress || ''} 
                       onBlur={(e) => handleAction('update_contact', { streetAddress: e.target.value })}
-                      className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm mb-2"
+                      className="w-full bg-white border border-slate-100 rounded-lg px-2.5 py-1.5 text-[11px] font-bold outline-none shadow-sm mb-1.5"
                    />
                    <div className="flex space-x-2 mb-2">
                       <div className="relative w-1/2 group">
                          <select value={activeChat?.state || ''} onChange={e=>{
                             handleAction('update_contact', { state: e.target.value, city: '', area: '' });
-                         }} className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm appearance-none pr-8 cursor-pointer">
+                         }} className="w-full bg-white border border-slate-100 rounded-lg px-2.5 py-1.5 text-[11px] font-bold outline-none shadow-sm appearance-none pr-6 cursor-pointer">
                             <option value="">Choose State</option>
                             {indiaStates.map(s => <option key={s.isoCode} value={s.name}>{s.name}</option>)}
                          </select>
-                         <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                         <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                       </div>
                       <div className="relative w-1/2 group">
                          <select value={activeChat?.city || ''} onChange={e=>{
                             handleAction('update_contact', { city: e.target.value, area: '' });
-                         }} className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm appearance-none pr-8 cursor-pointer">
+                         }} className="w-full bg-white border border-slate-100 rounded-lg px-2.5 py-1.5 text-[11px] font-bold outline-none shadow-sm appearance-none pr-6 cursor-pointer">
                             <option value="">Choose City</option>
                             {activeChat?.state && indiaStates.find(s => s.name === activeChat.state) 
                                ? City.getCitiesOfState('IN', indiaStates.find(s => s.name === activeChat.state).isoCode).map(c => <option key={c.name} value={c.name}>{c.name}</option>)
                                : <option disabled value="">Select state first</option>
                             }
                          </select>
-                         <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                         <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                       </div>
                    </div>
-                   <div className="flex space-x-2">
+                   <div className="flex space-x-1.5">
                       {activeChat?.city && popularCityAreas[activeChat.city] ? (
                          <div className="relative w-1/2 group">
-                            <select value={activeChat?.area || ''} onChange={e=>handleAction('update_contact', { area: e.target.value })} className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm appearance-none pr-8 cursor-pointer">
+                            <select value={activeChat?.area || ''} onChange={e=>handleAction('update_contact', { area: e.target.value })} className="w-full bg-white border border-slate-100 rounded-lg px-2.5 py-1.5 text-[11px] font-bold outline-none shadow-sm appearance-none pr-6 cursor-pointer">
                                <option value="">Choose Area</option>
                                {popularCityAreas[activeChat.city].slice().sort((a, b) => a.localeCompare(b)).map(a => <option key={a} value={a}>{a}</option>)}
                             </select>
-                            <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                            <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
                          </div>
                       ) : (
                          <input 
                             placeholder="Area (Locality)"
                             defaultValue={activeChat?.area || ''} 
                             onBlur={(e) => handleAction('update_contact', { area: e.target.value })}
-                            className="w-1/2 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm"
+                            className="w-1/2 bg-white border border-slate-100 rounded-lg px-2.5 py-1.5 text-[11px] font-bold outline-none shadow-sm"
                          />
                       )}
                       <input 
                          placeholder="Pincode"
                          defaultValue={activeChat?.pincode || ''} 
                          onBlur={(e) => handleAction('update_contact', { pincode: e.target.value })}
-                         className="w-1/2 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm"
+                         className="w-1/2 bg-white border border-slate-100 rounded-lg px-2.5 py-1.5 text-[11px] font-bold outline-none shadow-sm"
                       />
                    </div>
                 </div>
@@ -1528,9 +1527,9 @@ export default function Inbox({ roleAccess }) {
 
          {/* RIGHT COLUMN */}
          <div className="w-full lg:w-1/2 flex flex-col overflow-y-auto custom-scrollbar bg-white">
-         <div className="px-6 py-2 pb-5 mt-4">
-            <div className="bg-gradient-to-br from-[#def3ee] to-[#e8f7f4] rounded-xl p-4 border border-teal-100/50 shadow-sm">
-              <div className="space-y-4">
+         <div className="px-4 py-2 mt-2">
+            <div className="bg-gradient-to-br from-[#def3ee] to-[#e8f7f4] rounded-xl p-3 border border-teal-100/50 shadow-sm">
+              <div className="space-y-3">
                   <div className="flex justify-between items-center text-xs relative">
                     <span className="text-teal-800/70 font-bold tracking-wide">PIPELINE STATUS</span>
                     <div className="relative">
@@ -1563,7 +1562,7 @@ export default function Inbox({ roleAccess }) {
                   </div>
 
                   {/* LEAD OWNERSHIP & TEAM */}
-                  <div className="pt-4 border-t border-teal-200/50 space-y-4">
+                  <div className="pt-2 border-t border-teal-200/50 space-y-2">
                     <div className="flex items-center space-x-2 mb-2">
                        <ShieldCheck size={14} className="text-teal-600" />
                        <span className="text-[10px] font-bold text-teal-800 tracking-[0.2em] uppercase">Ownership & Team</span>
@@ -1630,8 +1629,8 @@ export default function Inbox({ roleAccess }) {
             </div>
          </div>
 
-          <div className="px-6 py-2" key={`counselling-${activeChat?._id}`}>
-             <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100/50 shadow-sm relative overflow-hidden">
+          <div className="px-4 py-1" key={`counselling-${activeChat?._id}`}>
+             <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-3 border border-indigo-100/50 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-1 bg-indigo-100 rounded-bl-lg">
                    <Megaphone size={12} className="text-indigo-600" />
                 </div>
@@ -1699,8 +1698,8 @@ export default function Inbox({ roleAccess }) {
 
 
 
-         <div className="px-6 py-5 border-t border-gray-50 mt-2">
-            <div className="flex justify-between items-center mb-3">
+         <div className="px-4 py-3 border-t border-gray-50 mt-1">
+            <div className="flex justify-between items-center mb-2">
                <h3 className="text-xs font-bold text-gray-400 tracking-wider uppercase">Tags</h3>
                <button onClick={() => setShowTagInput(!showTagInput)} className="text-[10px] font-bold text-teal-600 hover:text-teal-800 uppercase tracking-wider bg-teal-50 px-2 py-0.5 rounded border border-teal-100">+ Add</button>
             </div>
