@@ -1714,14 +1714,89 @@ export default function Inbox({ roleAccess }) {
                    <div key={idx} className="relative animate-fade-in">
                      <div className={`absolute -left-[27px] top-1.5 w-3 h-3 rounded-full border-[3px] border-white shadow-sm z-10 ${color}`}></div>
                      <div className="flex flex-col">
-                        <h4 className={`text-xs font-bold leading-tight ${textColor} pr-2`}>{event.description.split(' - ')[0]}</h4>
-                        {event.description?.includes(' - ') && (
-                          <p className="text-[11px] text-gray-500 font-bold mt-1 bg-white/50 p-2 rounded-lg border border-gray-100 shadow-sm italic leading-relaxed">
-                            {event.description.split(' - ').slice(1).join(' - ')}
-                          </p>
-                        )}
+                        <div className="flex justify-between items-start mb-1.5">
+                            <h4 className={`text-xs font-bold leading-tight ${textColor} pr-2`}>
+                               {event.description?.startsWith('Profile Sync') ? 'Profile Updated' : event.description?.split(' - ')[0]}
+                            </h4>
+                            <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap bg-slate-50 px-2 py-0.5 rounded border border-slate-100/50">
+                               {new Date(event.timestamp).toLocaleString()}
+                            </span>
+                         </div>
+                         {event.description?.startsWith('Profile Sync') && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                               {(() => {
+                                  try {
+                                     let jsonStr = '';
+                                     if (event.description.includes('Profile Sync JSON:')) {
+                                        jsonStr = event.description.substring(event.description.indexOf('Profile Sync JSON:') + 18).trim();
+                                     }
+                                     if (jsonStr) {
+                                        let diffs;
+                                        try { diffs = JSON.parse(jsonStr); } catch (e) {
+                                           if (jsonStr.endsWith(']')) diffs = JSON.parse(jsonStr.slice(0, -1));
+                                        }
+                                        if (!diffs || diffs.length === 0) return null;
+                                        return diffs.map((diff, i) => {
+                                           const label = diff.key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase());
+                                           let colorClass = 'bg-slate-50 border-slate-200 text-slate-600';
+                                           let actionText = '';
+                                           let displayNew = diff.new;
+                                           let displayOld = diff.old;
+                                           if (diff.key === 'assignedCounsellor' || diff.key === 'assignedAgent') {
+                                               const getAgentName = (id) => {
+                                                   if (!id) return '';
+                                                   const agent = agents?.find(a => String(a._id) === String(id));
+                                                   return agent ? agent.name : id;
+                                               };
+                                               displayNew = getAgentName(diff.new);
+                                               displayOld = getAgentName(diff.old);
+                                           }
+                                           if (diff.action === 'Added') {
+                                               colorClass = 'bg-emerald-50 border-emerald-200 text-emerald-700';
+                                               actionText = `Added ${label}: ${displayNew}`;
+                                           } else if (diff.action === 'Removed') {
+                                               colorClass = 'bg-rose-50 border-rose-200 text-rose-700';
+                                               actionText = `Removed ${label}: ${displayOld}`;
+                                           } else if (diff.action === 'Updated') {
+                                               colorClass = 'bg-blue-50 border-blue-200 text-blue-700';
+                                               actionText = `${label}: ${displayOld || '(empty)'} ➔ ${displayNew}`;
+                                           }
+                                           return (
+                                              <div key={i} className={`px-2.5 py-1 rounded-md text-[10px] font-semibold border shadow-sm ${colorClass}`}>
+                                                 {actionText}
+                                              </div>
+                                           );
+                                        });
+                                     }
+                                     const isOld = event.description.startsWith('Profile Sync [Keys:');
+                                     const match = event.description.match(/\[(?:Keys|Diff):\s*(.*?)\s*(?:\||\])/);
+                                     if (!match || !match[1]) return null;
+                                     const items = match[1].split(',').map(k => k.trim()).filter(Boolean);
+                                     if (items.length === 1 && items[0] === 'No changes') return null;
+                                     return items.map((item, i) => {
+                                        let key = item; let action = ''; let colorClass = 'bg-slate-100 text-slate-500 border-slate-200';
+                                        if (!isOld && item.includes(':')) {
+                                           [key, action] = item.split(':');
+                                           if (action === 'Added') colorClass = 'bg-emerald-50 text-emerald-600 border-emerald-200';
+                                           else if (action === 'Updated') colorClass = 'bg-blue-50 text-blue-600 border-blue-200';
+                                           else if (action === 'Removed') colorClass = 'bg-rose-50 text-rose-600 border-rose-200';
+                                        }
+                                        return (
+                                           <span key={i} className={`px-2 py-0.5 rounded-md text-[10px] font-semibold border ${colorClass}`}>
+                                              {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} {action}
+                                           </span>
+                                        );
+                                     });
+                                  } catch (err) { return null; }
+                               })()}
+                            </div>
+                         )}
+                         {event.description?.includes(' - ') && !event.description?.startsWith('Profile Sync') && (
+                             <p className="text-[11px] text-slate-500 font-medium bg-slate-50 p-2.5 rounded-xl border border-slate-100/50 leading-relaxed mt-1.5">
+                                {event.description.split(' - ').slice(1).join(' - ')}
+                             </p>
+                         )}
                       </div>
-                     <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-wide">{new Date(event.timestamp).toLocaleString()}</p>
                    </div>
                  );
               })}
