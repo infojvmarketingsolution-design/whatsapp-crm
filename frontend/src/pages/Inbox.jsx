@@ -888,20 +888,23 @@ export default function Inbox({ roleAccess }) {
 
       {/* Chat Profile Panel (Right) */}
       {activeChat && showProfile && (
-      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex justify-end animate-fade-in" onClick={() => setShowProfile(false)}>
+      <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[100] flex items-center justify-center p-4 sm:p-8 animate-fade-in" onClick={() => setShowProfile(false)}>
       <div className={`
-        w-full sm:w-[450px] bg-white shadow-2xl 
-        flex flex-col overflow-y-auto custom-scrollbar animate-slide-in-right relative border-l border-white/20
+        w-full max-w-5xl bg-white shadow-2xl rounded-3xl
+        flex flex-col h-[90vh] overflow-hidden animate-zoom-in relative
       `} onClick={e => e.stopPropagation()}>
-        <div className="p-4 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-30">
-          <h3 className="text-sm font-bold text-slate-800 capitalize">Lead Profile</h3>
-          <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all">
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between bg-white shrink-0">
+          <h3 className="text-lg font-bold text-slate-800 capitalize">Lead Profile</h3>
+          <button onClick={() => setShowProfile(false)} className="p-2 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl transition-all border border-transparent hover:border-rose-100">
             <X size={20} />
           </button>
         </div>
-         
-         <div className="p-8 pb-6 flex flex-col items-center justify-center border-b border-gray-50 text-center relative mt-2">
-            <img src={getAvatarUrl(activeChat?.name)} className="w-24 h-24 rounded-full shadow-lg object-cover border-4 border-white mb-4" />
+        
+        <div className="flex flex-col lg:flex-row flex-1 overflow-hidden">
+           {/* LEFT COLUMN */}
+           <div className="w-full lg:w-1/2 flex flex-col overflow-y-auto custom-scrollbar border-r border-slate-100 bg-slate-50/30">
+             <div className="p-8 pb-6 flex flex-col items-center justify-center border-b border-gray-50 text-center relative mt-2">
+                <img src={getAvatarUrl(activeChat?.name)} className="w-24 h-24 rounded-full shadow-lg object-cover border-4 border-white mb-4" />
             
             {isAdmin && (
               <button 
@@ -1475,8 +1478,11 @@ export default function Inbox({ roleAccess }) {
                 </div>
              )}
          </div>
+         </div> {/* END LEFT COLUMN */}
 
-          <div className="px-6 py-2" key={`counselling-${activeChat?._id}`}>
+         {/* RIGHT COLUMN */}
+         <div className="w-full lg:w-1/2 flex flex-col overflow-y-auto custom-scrollbar bg-white">
+          <div className="px-6 py-2 mt-4" key={`counselling-${activeChat?._id}`}>
              <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-4 border border-indigo-100/50 shadow-sm relative overflow-hidden">
                 <div className="absolute top-0 right-0 p-1 bg-indigo-100 rounded-bl-lg">
                    <Megaphone size={12} className="text-indigo-600" />
@@ -1810,6 +1816,8 @@ export default function Inbox({ roleAccess }) {
               
             </div>
          </div>
+         </div> {/* END RIGHT COLUMN */}
+        </div> {/* END ROW */}
       </div>
       </div>
       )}
