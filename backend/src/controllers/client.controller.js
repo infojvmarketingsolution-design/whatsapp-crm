@@ -8,22 +8,7 @@ const ContactSchema = require('../models/tenant/Contact');
 const getClients = async (req, res) => {
   try {
     const clients = await Client.find({});
-    // Bypass MongoDB for Shreyarth
-    const modifiedClients = clients.map(c => {
-      const clientObj = c.toObject();
-      const isShreyarth = clientObj.tenantId?.toLowerCase().includes('shreyarth') || clientObj.companyName?.toLowerCase().includes('shreyarth') || clientObj.name?.toLowerCase().includes('shreyarth');
-      if (isShreyarth) {
-        clientObj.whatsappConfig = {
-          phoneNumberId: '1074613152404424',
-          wabaId: '1433761851305451',
-          accessToken: 'EAAUZAwz8PZCJABRfcA4XgJmp8UzJ4ixXbpVA7CvnldS3pkDXdUkbtE2hyfYFHYsZAcZBgKaDwGpHCLf5N0iQfCTfJZAu0iwLmhrbcy2TON4DBvkEeZBZCKhLsSnZCF0ZBASOjWQwtv8ZA2mSZC2ZB0UtQiWcvuPwukLlzAJbLqdkkkW7QPNzJZAWVUKZAQEnPYo2wxzQZDZD',
-          phoneNumber: '+91 63566 00606',
-          wabaName: 'Shreyarth university'
-        };
-      }
-      return clientObj;
-    });
-    res.json(modifiedClients);
+    res.json(clients);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -197,17 +182,20 @@ const getGlobalAnalytics = async (req, res) => {
     const activeClients = await Client.countDocuments({ status: 'ACTIVE' });
     const totalUsers = await User.countDocuments({ role: { $ne: 'SUPER_ADMIN' } });
     
-    // For more complex analytics (messages, revenue), we'd need to aggregate across tenant DBs or store global stats
-    // For now, let's provide basic counts
+    const basicCount = await Client.countDocuments({ plan: 'BASIC' });
+    const proCount = await Client.countDocuments({ plan: 'PRO' });
+    const premiumCount = await Client.countDocuments({ plan: 'PREMIUM' });
+    const totalRevenue = (basicCount * 999) + (proCount * 1999) + (premiumCount * 2999);
+
     res.json({
       totalClients,
       activeClients,
       totalUsers,
-      totalRevenue: totalClients * 1999, // Placeholder calculation
+      totalRevenue: totalRevenue,
       planDistribution: {
-        basic: await Client.countDocuments({ plan: 'BASIC' }),
-        pro: await Client.countDocuments({ plan: 'PRO' }),
-        premium: await Client.countDocuments({ plan: 'PREMIUM' })
+        basic: basicCount,
+        pro: proCount,
+        premium: premiumCount
       }
     });
   } catch (error) {

@@ -47,8 +47,8 @@ const AdminDashboard = () => {
   const statCards = [
     { title: 'Total Clients', value: stats?.totalClients || 0, icon: <Building2 className="text-blue-500" />, subtext: `${stats?.activeClients || 0} active now` },
     { title: 'Total Users', value: stats?.totalUsers || 0, icon: <Users className="text-purple-500" />, subtext: 'Across all tenants' },
-    { title: 'Est. Monthly Revenue', value: `₹${stats?.totalRevenue?.toLocaleString() || 0}`, icon: <CreditCard className="text-emerald-500" />, subtext: '+12% from last month' },
-    { title: 'Growth Rate', value: '18%', icon: <TrendingUp className="text-orange-500" />, subtext: 'New signups' },
+    { title: 'Est. Monthly Revenue', value: `₹${stats?.totalRevenue?.toLocaleString() || 0}`, icon: <CreditCard className="text-emerald-500" />, subtext: 'Based on active plans' },
+    { title: 'Growth Rate', value: 'N/A', icon: <TrendingUp className="text-orange-500" />, subtext: 'Pending historical data' },
   ];
 
   return (
@@ -120,59 +120,7 @@ const AdminDashboard = () => {
                 </div>
             ))}
       
-      {/* System Status Modal */}
-      {showStatusModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
-            <div className="flex justify-between items-center p-6 border-b border-slate-100">
-                <h2 className="text-xl font-bold text-slate-900">System Health</h2>
-                <button onClick={() => setShowStatusModal(false)} className="text-slate-400 hover:text-slate-600 p-2"><X size={20} /></button>
-            </div>
-            <div className="p-6 space-y-4">
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span className="text-sm font-bold text-slate-700">Core Database</span>
-                    </div>
-                    <span className="text-xs font-bold text-emerald-600 uppercase">Connected</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span className="text-sm font-bold text-slate-700">Meta Cloud API</span>
-                    </div>
-                    <span className="text-xs font-bold text-emerald-600 uppercase">Service Up</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                        <span className="text-sm font-bold text-slate-700">Backend Server</span>
-                    </div>
-                    <span className="text-xs font-bold text-emerald-600 uppercase">Operational</span>
-                </div>
-                <div className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
-                    <div className="flex items-center space-x-3">
-                        <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                        <span className="text-sm font-bold text-slate-700">Storage Usage</span>
-                    </div>
-                    <span className="text-xs font-bold text-slate-500 uppercase">12.4 GB / 100 GB</span>
-                </div>
-                
-                <div className="pt-4 text-center">
-                    <p className="text-[10px] text-slate-400 font-bold capitalize">All systems are performing normally</p>
-                </div>
-            </div>
-            <div className="p-6 bg-slate-50/50 border-t border-slate-100">
-                <button 
-                  onClick={() => setShowStatusModal(false)}
-                  className="w-full py-2.5 bg-slate-900 text-white font-bold rounded-lg text-sm hover:bg-slate-800 transition-colors"
-                >
-                    Close Status
-                </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* System Status Modal Removed (was fake placeholder data) */}
     </div>
         </div>
 
@@ -182,14 +130,8 @@ const AdminDashboard = () => {
             </div>
             <h3 className="text-lg font-bold text-slate-900 mb-2">Platform Performance</h3>
             <p className="text-slate-500 text-sm max-w-xs mb-6">
-                Real-time message volume and system health monitoring will be available in the next update.
+                Real-time message volume and system health monitoring will be available in a future update.
             </p>
-            <button 
-                onClick={() => setShowStatusModal(true)}
-                className="text-blue-600 font-bold text-sm hover:underline"
-            >
-                View System Status
-            </button>
         </div>
       </div>
     </div>
