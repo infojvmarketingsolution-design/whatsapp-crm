@@ -1404,9 +1404,9 @@ export default function Tasks() {
                                            <p className="text-[11px] text-slate-500 font-bold mt-1 bg-slate-50 p-2 rounded-lg border border-slate-100 italic leading-relaxed">
                                               {event.description.split(' - ').slice(1).join(' - ')}
                                            </p>
-                                        )}</div>
-                                       <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(event.timestamp)}</p>
-                                    </div>
+                                        )}
+                                        <p className="text-[10px] text-slate-400 mt-0.5">{formatDateTime(event.timestamp)}</p>
+                                     </div>
                                  </div>
                               ))}
                           </div>
