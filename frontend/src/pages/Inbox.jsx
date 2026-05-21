@@ -2,7 +2,20 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2, Megaphone, Video, Home, School, MapPin, Phone, Users, UserCircle, Bot } from 'lucide-react';
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { State, City } from 'country-state-city';
 
+const indiaStates = State.getStatesOfCountry('IN');
+
+const popularCityAreas = {
+  'Ahmedabad': ['Shahibaug', 'Sabarmati', 'Danilimda', 'Navrangpura', 'Vastrapur', 'Bopal', 'Maninagar', 'Satellite', 'Thaltej', 'Gota', 'Naroda', 'Bapunagar', 'Paldi', 'Ellisbridge', 'Bodakdev', 'Vastral', 'Chandkheda', 'Motera', 'Iscon', 'SG Highway', 'C.G. Road', 'Ashram Road', 'Naranpura', 'Ghatlodia', 'Ranip', 'Vejalpur', 'Jodhpur', 'Prahlad Nagar', 'Makarba', 'Sarkhej', 'Ambawadi', 'Gulbai Tekra', 'Law Garden', 'Memnagar', 'Gurukul', 'Drive-in Road', 'Science City', 'Sola', 'Chandlodia', 'Nirnay Nagar', 'New Ranip', 'Kali', 'Zundal', 'Sughad', 'Bhat', 'Koteshwar', 'Hansol', 'Airport', 'Sardarnagar', 'Noblenagar', 'Krishnanagar', 'Nikol', 'Odhav', 'Ramol', 'Hathijan', 'Vatva', 'Isanpur', 'Kankaria', 'Ghodasar', 'Behrampura', 'Jamalpur', 'Khadia', 'Kalupur', 'Dariapur', 'Shahpur', 'Asarwa', 'Meghaninagar', 'Rakhial', 'Gomtipur', 'Amraiwadi', 'CTM', 'Hatkeshwar', 'Gita Mandir'],
+  'Surat': ['Adajan', 'Vesu', 'Varachha', 'Piplod', 'Athwa', 'Katargam', 'Udhna', 'Sachin', 'Palsana', 'Bhatar', 'City Light', 'Althan', 'Pandesara', 'Nanpura', 'Rander', 'Amroli', 'Sayan', 'Olpad', 'Kamrej', 'Kadodara', 'Navsari', 'Bardoli', 'Mahuva', 'Mandvi', 'Mangrol', 'Umarpada', 'Choryasi'],
+  'Vadodara': ['Alkapuri', 'Akota', 'Sayajigunj', 'Fatehgunj', 'Manjalpur', 'Makarpura', 'Gotri', 'Gorwa', 'Subhanpura', 'Karelibaug', 'Sama', 'Nizampura', 'Chhani', 'Bhayli', 'Vasna', 'Tandalja', 'Atladara', 'Kalali', 'Vadsar', 'Maneja', 'Jetalpur', 'Waghodia', 'Ajwa', 'Khanderao Market', 'Mandvi', 'Nyay Mandir', 'Raopura', 'Dandia Bazar', 'Kothi', 'Panigate', 'Wadi', 'Gajrawadi', 'Pratapnagar', 'Dabhoi', 'Padra', 'Karjan', 'Sinor', 'Savli', 'Desar', 'Vaghodia'],
+  'Rajkot': ['Kalawad Road', 'University Road', 'Amin Marg', 'Yagnik Road', 'Race Course', 'Nana Mava', 'Mavdi', '150 Feet Ring Road', 'Gondal Road', 'Kuvadava Road', 'Morbi Road', 'Jamnagar Road', 'Bhavnagar Road', 'Dhebar Road', 'Sorathiyawadi', 'Kothariya', 'Aji GIDC', 'Metoda GIDC', 'Shapar Veraval', 'Gondal', 'Jasdan', 'Jetpur', 'Dhoraji', 'Upleta', 'Paddhari', 'Lodhika', 'Kotda Sangani', 'Vinchhiya'],
+  'Delhi': ['Connaught Place', 'Karol Bagh', 'Chandni Chowk', 'Paharganj', 'Dwarka', 'Rohini', 'Pitampura', 'Janakpuri', 'Vasant Kunj', 'Saket', 'Hauz Khas', 'Green Park', 'Greater Kailash', 'Lajpat Nagar', 'South Extension', 'Defence Colony', 'Vasant Vihar', 'Chanakyapuri', 'RK Puram', 'Munirka', 'Sarojini Nagar', 'Laxmi Nagar', 'Preet Vihar', 'Mayur Vihar', 'Patparganj', 'Shahdara', 'Seelampur', 'Yamuna Vihar', 'Dilshad Garden', 'Narela', 'Bawana', 'Alipur', 'Najafgarh', 'Kapashera', 'Mehrauli', 'Chattarpur', 'Okhla', 'Badarpur', 'Tughlakabad', 'Sangam Vihar', 'Deoli'],
+  'Mumbai': ['Andheri', 'Bandra', 'Borivali', 'Dadar', 'Goregaon', 'Juhu', 'Kandivali', 'Malad', 'Powai', 'Worli', 'Colaba', 'Churchgate', 'Fort', 'Nariman Point', 'Malabar Hill', 'Marine Drive', 'Tardeo', 'Mahalaxmi', 'Byculla', 'Parel', 'Dharavi', 'Matunga', 'Sion', 'Kurla', 'Ghatkopar', 'Vidyavihar', 'Vikhroli', 'Bhandup', 'Mulund', 'Chembur', 'Govandi', 'Mankhurd', 'Bhayandar', 'Mira Road', 'Dahisar', 'Jogeshwari', 'Vile Parle', 'Santacruz', 'Khar', 'Vasai', 'Virar', 'Nalasopara', 'Palghar', 'Boisar', 'Dahanu', 'Thane', 'Kalyan', 'Dombivli', 'Ulhasnagar', 'Ambernath', 'Badlapur', 'Bhiwandi', 'Shahapur', 'Murbad', 'Navi Mumbai', 'Vashi', 'Nerul', 'Belapur', 'Kharghar', 'Panvel', 'Uran', 'Pen', 'Alibag', 'Karjat', 'Khopoli', 'Lonavala'],
+  'Pune': ['Kothrud', 'Hinjewadi', 'Viman Nagar', 'Koregaon Park', 'Baner', 'Wakad', 'Hadapsar', 'Magarpatta', 'Kalyani Nagar', 'Aundh', 'Shivajinagar', 'Camp', 'Deccan Gymkhana', 'Swargate', 'Katraj', 'Dhankawadi', 'Bibwewadi', 'Market Yard', 'Gultekdi', 'Bhavani Peth', 'Nana Peth', 'Rasta Peth', 'Somwar Peth', 'Mangalwar Peth', 'Budhwar Peth', 'Shukrawar Peth', 'Raviwar Peth', 'Sadashiv Peth', 'Narayan Peth', 'Shaniwar Peth', 'Erandwane', 'Karve Nagar', 'Bavdhan', 'Pashan', 'Balewadi', 'Pimple Saudagar', 'Pimple Nilakh', 'Pimple Gurav', 'Sangvi', 'Dapodi', 'Bhosari', 'Nigdi', 'Akurdi', 'Chinchwad', 'Pimpri', 'Thergaon', 'Kalewadi', 'Rahatani', 'Wadgaon Sheri', 'Chandan Nagar', 'Kharadi', 'Mundhwa', 'Keshav Nagar', 'Manjri', 'Phursungi', 'Uruli Devachi', 'Kondhwa', 'NIBM', 'Wanowrie', 'Fatima Nagar', 'Lulla Nagar', 'Salunke Vihar', 'Undri', 'Pisoli', 'Mohammed Wadi'],
+  'Bangalore': ['Koramangala', 'Indiranagar', 'Jayanagar', 'Whitefield', 'HSR Layout', 'BTM Layout', 'Malleswaram', 'Rajajinagar', 'Basavanagudi', 'Marathahalli', 'Electronic City', 'Bellandur', 'Hebbal', 'Yelahanka', 'RT Nagar', 'Banashankari', 'JP Nagar', 'Bannerghatta Road', 'Sarjapur Road', 'Outer Ring Road', 'Old Airport Road', 'MG Road', 'Brigade Road', 'Commercial Street', 'Shivajinagar', 'Frazer Town', 'Cox Town', 'Cooke Town', 'Benson Town', 'Richards Town', 'Vasanth Nagar', 'Seshadripuram', 'Sadashivanagar', 'Yeshwanthpur', 'Peenya', 'Dasarahalli', 'Jalahalli', 'Mathikere', 'Sanjaynagar', 'Sahakarnagar', 'Vidyaranyapura', 'Kammanahalli', 'Kalyan Nagar', 'HBR Layout', 'HRBR Layout', 'Banaswadi', 'Ramamurthy Nagar', 'KR Puram', 'Mahadevapura', 'Brookefield', 'Kadugodi', 'ITPL', 'Hoodi', 'CV Raman Nagar', 'Domlur', 'Ulsoor', 'Victoria Layout', 'Richmond Town', 'Langford Town', 'Shanti Nagar', 'Wilson Garden', 'Adugodi', 'Sg Palya', 'Tavarekere', 'Madiwala', 'Bommanahalli', 'Hongasandra', 'Mangammanapalya', 'Singasandra', 'Kudlu', 'Haralur', 'Kasavanahalli', 'Carmelaram', 'Doddanekundi'],
+};
 export default function Inbox({ roleAccess }) {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
@@ -1382,13 +1395,46 @@ export default function Inbox({ roleAccess }) {
                       onBlur={(e) => handleAction('update_contact', { streetAddress: e.target.value })}
                       className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm mb-2"
                    />
+                   <div className="flex space-x-2 mb-2">
+                      <div className="relative w-1/2 group">
+                         <select value={activeChat?.state || ''} onChange={e=>{
+                            handleAction('update_contact', { state: e.target.value, city: '', area: '' });
+                         }} className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm appearance-none pr-8 cursor-pointer">
+                            <option value="">Choose State</option>
+                            {indiaStates.map(s => <option key={s.isoCode} value={s.name}>{s.name}</option>)}
+                         </select>
+                         <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                      </div>
+                      <div className="relative w-1/2 group">
+                         <select value={activeChat?.city || ''} onChange={e=>{
+                            handleAction('update_contact', { city: e.target.value, area: '' });
+                         }} className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm appearance-none pr-8 cursor-pointer">
+                            <option value="">Choose City</option>
+                            {activeChat?.state && indiaStates.find(s => s.name === activeChat.state) 
+                               ? City.getCitiesOfState('IN', indiaStates.find(s => s.name === activeChat.state).isoCode).map(c => <option key={c.name} value={c.name}>{c.name}</option>)
+                               : <option disabled value="">Select state first</option>
+                            }
+                         </select>
+                         <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                      </div>
+                   </div>
                    <div className="flex space-x-2">
-                      <input 
-                         placeholder="City"
-                         defaultValue={activeChat?.city || ''} 
-                         onBlur={(e) => handleAction('update_contact', { city: e.target.value })}
-                         className="w-1/2 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm"
-                      />
+                      {activeChat?.city && popularCityAreas[activeChat.city] ? (
+                         <div className="relative w-1/2 group">
+                            <select value={activeChat?.area || ''} onChange={e=>handleAction('update_contact', { area: e.target.value })} className="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm appearance-none pr-8 cursor-pointer">
+                               <option value="">Choose Area</option>
+                               {popularCityAreas[activeChat.city].slice().sort((a, b) => a.localeCompare(b)).map(a => <option key={a} value={a}>{a}</option>)}
+                            </select>
+                            <ChevronDown size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 pointer-events-none" />
+                         </div>
+                      ) : (
+                         <input 
+                            placeholder="Area (Locality)"
+                            defaultValue={activeChat?.area || ''} 
+                            onBlur={(e) => handleAction('update_contact', { area: e.target.value })}
+                            className="w-1/2 bg-white border border-slate-100 rounded-xl px-3 py-2 text-[11px] font-bold outline-none shadow-sm"
+                         />
+                      )}
                       <input 
                          placeholder="Pincode"
                          defaultValue={activeChat?.pincode || ''} 
