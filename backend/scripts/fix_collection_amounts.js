@@ -4,7 +4,7 @@ require('dotenv').config({ path: __dirname + '/../.env' }); // Adjust path if ne
 async function run() {
     try {
         console.log("Connecting to database...");
-        await mongoose.connect(process.env.MONGO_URI);
+        await mongoose.connect(process.env.CORE_DB_URI || process.env.MONGO_URI);
         console.log("Connected to MongoDB.");
 
         const admin = mongoose.connection.db.admin();
