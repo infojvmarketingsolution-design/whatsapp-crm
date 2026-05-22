@@ -91,11 +91,31 @@ class PRDFlowService {
       log(`[PRD] parsed service="${service}", searchRole="${searchRole}"`);
 
       if (searchRole) {
-        const matchedAgents = await User.find({ 
+        let matchedAgents = await User.find({ 
           tenantId, 
           role: { $regex: new RegExp(searchRole, 'i') }, 
           status: 'ACTIVE' 
         });
+        
+        if (!matchedAgents || matchedAgents.length === 0) {
+          let fallbackName = '';
+          if (searchRole === 'ONLINE PROGRAM') fallbackName = 'Darshil';
+          else if (searchRole === 'INTERNATIONAL COACHING') fallbackName = 'Jayashree';
+          else if (searchRole === 'VISA') fallbackName = 'Ajita';
+          else if (searchRole === 'MBBS') fallbackName = 'akash';
+          else if (searchRole === 'TOUR PACKAGE') fallbackName = 'Mihir';
+          else if (searchRole === 'COACHING') fallbackName = 'Kinjal';
+
+          if (fallbackName) {
+            log(`[PRD] Role match failed for ${searchRole}. Falling back to name match for "${fallbackName}"`);
+            matchedAgents = await User.find({
+              tenantId,
+              name: { $regex: new RegExp(fallbackName, 'i') },
+              status: 'ACTIVE'
+            });
+          }
+        }
+
         log(`[PRD] matchedAgents count: ${matchedAgents ? matchedAgents.length : 0}`);
         
         if (matchedAgents && matchedAgents.length > 0) {
@@ -114,7 +134,7 @@ class PRDFlowService {
           log(`[PRD] Immediate Fivestep assignment: Lead (${phone}) assigned to ${selectedAgent.name} (${searchRole}). Contact modified: ${contactUpdate.modifiedCount}, Lead modified: ${leadUpdate.modifiedCount}`);
           return agentId;
         } else {
-          log('[PRD] No active matched agents found for role!');
+          log('[PRD] No active matched agents found for role or name!');
         }
       }
     } catch (err) {
