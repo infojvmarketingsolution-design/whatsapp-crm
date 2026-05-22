@@ -91,7 +91,11 @@ class PRDFlowService {
       log(`[PRD] parsed service="${service}", roleToMatch="${roleToMatch}"`);
 
       if (roleToMatch) {
-        const matchedAgents = await User.find({ tenantId, role: roleToMatch, status: 'ACTIVE' });
+        const matchedAgents = await User.find({ 
+          tenantId, 
+          role: { $regex: new RegExp(`^${roleToMatch}$`, 'i') }, 
+          status: 'ACTIVE' 
+        });
         log(`[PRD] matchedAgents count: ${matchedAgents ? matchedAgents.length : 0}`);
         
         if (matchedAgents && matchedAgents.length > 0) {
