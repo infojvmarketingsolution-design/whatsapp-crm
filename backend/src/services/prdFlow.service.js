@@ -65,7 +65,17 @@ class PRDFlowService {
   }
 
   async assignFivestepAgentImmediately(tenantId, selectedService, phone, ContactModel, LeadModel) {
-    if (tenantId !== 'fivestep_599984' || !selectedService) return null;
+    const fs = require('fs');
+    const logFile = require('path').join(__dirname, '../../fivestep_debug.log');
+    const log = (msg) => {
+      try { fs.appendFileSync(logFile, new Date().toISOString() + ' - ' + msg + '\n'); } catch(e){}
+    };
+    log(`[PRD] assignFivestepAgentImmediately called: tenantId=${tenantId}, selectedService="${selectedService}", phone=${phone}`);
+
+    if (tenantId !== 'fivestep_599984' || !selectedService) {
+      log('[PRD] Exiting: Not fivestep tenant or no selectedService');
+      return null;
+    }
     try {
       const User = require('../models/core/User');
       const service = selectedService.toUpperCase().trim();
@@ -78,8 +88,12 @@ class PRDFlowService {
       else if (service.includes('TOUR PACKAGES')) roleToMatch = 'TOUR PACKAGES';
       else if (service.includes('COACHING')) roleToMatch = 'COACHING';
 
+      log(`[PRD] parsed service="${service}", roleToMatch="${roleToMatch}"`);
+
       if (roleToMatch) {
         const matchedAgents = await User.find({ tenantId, role: roleToMatch, status: 'ACTIVE' });
+        log(`[PRD] matchedAgents count: ${matchedAgents ? matchedAgents.length : 0}`);
+        
         if (matchedAgents && matchedAgents.length > 0) {
           matchedAgents.sort((a, b) => (a.lastLeadAssignedAt || 0) - (b.lastLeadAssignedAt || 0));
           const selectedAgent = matchedAgents[0];
@@ -90,14 +104,17 @@ class PRDFlowService {
           
           const agentId = selectedAgent._id;
           
-          await ContactModel.updateOne({ phone }, { $set: { assignedAgent: agentId } });
-          await LeadModel.updateOne({ phone, tenantId }, { $set: { assignedAgent: agentId } });
+          const contactUpdate = await ContactModel.updateOne({ phone }, { $set: { assignedAgent: agentId } });
+          const leadUpdate = await LeadModel.updateOne({ phone, tenantId }, { $set: { assignedAgent: agentId } });
           
-          console.log(`[PRD] Immediate Fivestep assignment: Lead (${phone}) assigned to ${selectedAgent.name} (${roleToMatch})`);
+          log(`[PRD] Immediate Fivestep assignment: Lead (${phone}) assigned to ${selectedAgent.name} (${roleToMatch}). Contact modified: ${contactUpdate.modifiedCount}, Lead modified: ${leadUpdate.modifiedCount}`);
           return agentId;
+        } else {
+          log('[PRD] No active matched agents found for role!');
         }
       }
     } catch (err) {
+      log(`[PRD] Fivestep immediate assignment error: ${err.message} \n ${err.stack}`);
       console.error('[PRD] Fivestep immediate assignment error:', err);
     }
     return null;
