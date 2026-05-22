@@ -579,9 +579,16 @@ class PRDFlowService {
       if (currentState === 'ask_qualification') {
         const Settings = require('../models/core/Settings');
         const settings = await Settings.findOne({ tenantId });
+        
+        let programMap = this.getCleanProgramMap(settings);
         let options = settings?.automation?.aiPrompts?.qualificationOptions || ['12th Pass', 'Graduation', 'Other'];
-        if (!options || options.length === 0 || (options.length === 1 && !options[0])) {
-          options = ['12th Pass', 'Graduation', 'Other'];
+        
+        if (tenantId === 'fivestep_599984') {
+          options = Object.keys(programMap).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
+        } else {
+          if (!options || options.length === 0 || (options.length === 1 && !options[0])) {
+            options = ['12th Pass', 'Graduation', 'Other'];
+          }
         }
 
         let selectedOption = '';
@@ -646,8 +653,6 @@ class PRDFlowService {
           this.activeProcesses.delete(lockKey);
           return;
         }
-
-        let programMap = this.getCleanProgramMap(settings);
 
         const matchedQualKey = this.getMatchedQualificationKey(programMap, selectedOption);
 
