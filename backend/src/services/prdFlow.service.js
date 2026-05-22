@@ -64,7 +64,7 @@ class PRDFlowService {
     return pMap;
   }
 
-  async assignFivestepAgentImmediately(tenantId, selectedService, phone) {
+  async assignFivestepAgentImmediately(tenantId, selectedService, phone, ContactModel, LeadModel) {
     if (tenantId !== 'fivestep_599984' || !selectedService) return null;
     try {
       const User = require('../models/core/User');
@@ -90,8 +90,6 @@ class PRDFlowService {
           
           const agentId = selectedAgent._id;
           
-          const ContactModel = require('../models/core/Contact');
-          const LeadModel = require('../models/core/Lead');
           await ContactModel.updateOne({ phone }, { $set: { assignedAgent: agentId } });
           await LeadModel.updateOne({ phone, tenantId }, { $set: { assignedAgent: agentId } });
           
@@ -637,7 +635,7 @@ class PRDFlowService {
         const matchedQualKey = this.getMatchedQualificationKey(programMap, selectedOption);
 
         if (tenantId === 'fivestep_599984' && selectedOption) {
-          await this.assignFivestepAgentImmediately(tenantId, selectedOption, contact.phone);
+          await this.assignFivestepAgentImmediately(tenantId, selectedOption, contact.phone, ContactModel, LeadModel);
         }
 
         if (matchedQualKey && programMap[matchedQualKey]) {
