@@ -81,11 +81,11 @@ class PRDFlowService {
       const service = selectedService.toUpperCase().trim();
       let searchRole = '';
       
-      if (service.includes('ONLINE PROGRAM')) searchRole = 'ONLINE PROGRAM';
-      else if (service.includes('INTERNATIONAL COACHING')) searchRole = 'INTERNATIONAL COACHING';
+      if (service.includes('ONLINE PROGRAM')) searchRole = 'ONLINE_PROGRAM';
+      else if (service.includes('INTERNATIONAL COACHING')) searchRole = 'INTERNATIONAL_COACHING';
       else if (service.includes('VISA')) searchRole = 'VISA';
       else if (service.includes('MBBS')) searchRole = 'MBBS';
-      else if (service.includes('TOUR PACKAGE')) searchRole = 'TOUR PACKAGE';
+      else if (service.includes('TOUR PACKAGE')) searchRole = 'TOUR_PACKAGE';
       else if (service.includes('COACHING')) searchRole = 'COACHING';
 
       log(`[PRD] parsed service="${service}", searchRole="${searchRole}"`);
@@ -99,11 +99,11 @@ class PRDFlowService {
         
         if (!matchedAgents || matchedAgents.length === 0) {
           let fallbackName = '';
-          if (searchRole === 'ONLINE PROGRAM') fallbackName = 'Darshil';
-          else if (searchRole === 'INTERNATIONAL COACHING') fallbackName = 'Jayashree';
+          if (searchRole === 'ONLINE_PROGRAM') fallbackName = 'Darshil';
+          else if (searchRole === 'INTERNATIONAL_COACHING') fallbackName = 'Jayashree';
           else if (searchRole === 'VISA') fallbackName = 'Ajita';
-          else if (searchRole === 'MBBS') fallbackName = 'akash';
-          else if (searchRole === 'TOUR PACKAGE') fallbackName = 'Mihir';
+          else if (searchRole === 'MBBS') fallbackName = 'Akash';
+          else if (searchRole === 'TOUR_PACKAGE') fallbackName = 'Mihir';
           else if (searchRole === 'COACHING') fallbackName = 'Kinjal';
 
           if (fallbackName) {
