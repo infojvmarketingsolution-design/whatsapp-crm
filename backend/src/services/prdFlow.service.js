@@ -661,23 +661,37 @@ class PRDFlowService {
         }
 
         if (matchedQualKey && programMap[matchedQualKey]) {
-          const categories = Object.keys(programMap[matchedQualKey]).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
-          if (categories.length === 1) {
-            // Skip category selection if only 1 category
-            const streamName = categories[0];
+          const qualData = programMap[matchedQualKey];
+          if (Array.isArray(qualData)) {
             await ContactModel.updateOne({ phone: contact.phone }, {
               $set: {
                 qualification: selectedOption,
                 'flowVariables.qualification': selectedOption,
-                selectedStream: streamName,
-                'flowVariables.selectedStream': streamName,
+                selectedStream: 'General',
+                'flowVariables.selectedStream': 'General',
                 currentFlowStep: 'ask_program'
               }
             });
-            const val = programMap[matchedQualKey][streamName];
-            const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || val.Programs || val.Courses || val.Modes || val.modes || Object.values(val).find(Array.isArray) || []) : (val || []);
             const progMsg = "Please select your preferred program.";
-            await sendInteractiveOptions(progMsg, programs);
+            await sendInteractiveOptions(progMsg, qualData);
+          } else {
+            const categories = Object.keys(qualData).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
+            if (categories.length === 1) {
+              // Skip category selection if only 1 category
+              const streamName = categories[0];
+              await ContactModel.updateOne({ phone: contact.phone }, {
+                $set: {
+                  qualification: selectedOption,
+                  'flowVariables.qualification': selectedOption,
+                  selectedStream: streamName,
+                  'flowVariables.selectedStream': streamName,
+                  currentFlowStep: 'ask_program'
+                }
+              });
+              const val = qualData[streamName];
+              const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || val.Programs || val.Courses || val.Modes || val.modes || Object.values(val).find(Array.isArray) || []) : (val || []);
+              const progMsg = "Please select your preferred program.";
+              await sendInteractiveOptions(progMsg, programs);
           } else if (categories.length > 1) {
             await ContactModel.updateOne({ phone: contact.phone }, {
               $set: {
@@ -715,6 +729,7 @@ class PRDFlowService {
             const res = await waService.sendTextMessage(contact.phone, customMsg);
             await saveAndEmit('text', customMsg, res);
           }
+        }
         } else {
           // Qualification not found in map, ask custom
           await ContactModel.updateOne({ phone: contact.phone }, {
@@ -763,9 +778,8 @@ class PRDFlowService {
         const contactQual = contact.qualification || '';
         const matchedQualKey = this.getMatchedQualificationKey(programMap, contactQual);
 
-        const categories = matchedQualKey && programMap[matchedQualKey] 
-          ? Object.keys(programMap[matchedQualKey]).filter(k => !k.startsWith('_') && k !== 'categoryMessage') 
-          : [];
+        const qualData = matchedQualKey && programMap[matchedQualKey] ? programMap[matchedQualKey] : {};
+        const categories = Array.isArray(qualData) ? [] : Object.keys(qualData).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
 
         let selectedCategory = '';
         if (replyValue) {
@@ -1650,22 +1664,35 @@ class PRDFlowService {
       const matchedQualKey = this.getMatchedQualificationKey(programMap, contactQual);
 
       if (matchedQualKey && programMap[matchedQualKey]) {
-        const categories = Object.keys(programMap[matchedQualKey]).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
-        if (categories.length === 1) {
-          const streamName = categories[0];
+        const qualData = programMap[matchedQualKey];
+        if (Array.isArray(qualData)) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
-              selectedStream: streamName,
-              'flowVariables.selectedStream': streamName,
+              selectedStream: 'General',
+              'flowVariables.selectedStream': 'General',
               currentFlowStep: 'ask_program'
             }
           });
           let progMsg = nextStep.message || nextStep.text || "Please select your preferred program.";
           progMsg = this.populatePlaceholders(progMsg, fresh, nameVal);
-          
-          const val = programMap[matchedQualKey][streamName];
-          const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || val.Programs || val.Courses || val.Modes || val.modes || Object.values(val).find(Array.isArray) || []) : (val || []);
-          await this.sendInteractiveOptionsHelper(contact, waService, progMsg, programs, settings, io);
+          await this.sendInteractiveOptionsHelper(contact, waService, progMsg, qualData, settings, io);
+        } else {
+          const categories = Object.keys(qualData).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
+          if (categories.length === 1) {
+            const streamName = categories[0];
+            await ContactModel.updateOne({ phone: contact.phone }, {
+              $set: {
+                selectedStream: streamName,
+                'flowVariables.selectedStream': streamName,
+                currentFlowStep: 'ask_program'
+              }
+            });
+            let progMsg = nextStep.message || nextStep.text || "Please select your preferred program.";
+            progMsg = this.populatePlaceholders(progMsg, fresh, nameVal);
+            
+            const val = qualData[streamName];
+            const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || val.Programs || val.Courses || val.Modes || val.modes || Object.values(val).find(Array.isArray) || []) : (val || []);
+            await this.sendInteractiveOptionsHelper(contact, waService, progMsg, programs, settings, io);
         } else if (categories.length > 1) {
           await ContactModel.updateOne({ phone: contact.phone }, {
             $set: {
@@ -1697,6 +1724,7 @@ class PRDFlowService {
           // Wait, saveAndEmit is not defined in this scope, let's use sendInteractiveOptionsHelper for tracking
           await this.sendInteractiveOptionsHelper(contact, waService, customMsg, ["Skip"], settings, io);
         }
+      }
       } else {
         await ContactModel.updateOne({ phone: contact.phone }, {
           $set: { currentFlowStep: 'ask_custom_program' }
