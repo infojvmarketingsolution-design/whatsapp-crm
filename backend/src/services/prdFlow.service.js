@@ -1567,7 +1567,8 @@ class PRDFlowService {
 
     if (nextStepType === 'CALL_TIME') {
       await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_call_date' } });
-      const callTimeMsg = nextStep.message || nextStep.text || "When should our counselor contact you?";
+      let callTimeMsg = nextStep.message || nextStep.text || "When should our counselor contact you?";
+      callTimeMsg = this.populatePlaceholders(callTimeMsg, contact, nameVal);
       const dateButtons = [
         'TODAY',
         'TOMORROW',
