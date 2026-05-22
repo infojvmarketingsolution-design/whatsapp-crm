@@ -64,6 +64,47 @@ class PRDFlowService {
     return pMap;
   }
 
+  async assignFivestepAgentImmediately(tenantId, selectedService, phone) {
+    if (tenantId !== 'fivestep_599984' || !selectedService) return null;
+    try {
+      const User = require('../models/core/User');
+      const service = selectedService.toUpperCase().trim();
+      let roleToMatch = '';
+      
+      if (service.includes('ONLINE PROGRAM')) roleToMatch = 'ONLINE PROGRAMS';
+      else if (service.includes('INTERNATIONAL COACHING')) roleToMatch = 'INTERNATIONAL COACHING';
+      else if (service.includes('VISA')) roleToMatch = 'VISA';
+      else if (service.includes('MBBS')) roleToMatch = 'MBBS';
+      else if (service.includes('TOUR PACKAGES')) roleToMatch = 'TOUR PACKAGES';
+      else if (service.includes('COACHING')) roleToMatch = 'COACHING';
+
+      if (roleToMatch) {
+        const matchedAgents = await User.find({ tenantId, role: roleToMatch, status: 'ACTIVE' });
+        if (matchedAgents && matchedAgents.length > 0) {
+          matchedAgents.sort((a, b) => (a.lastLeadAssignedAt || 0) - (b.lastLeadAssignedAt || 0));
+          const selectedAgent = matchedAgents[0];
+          
+          selectedAgent.lastLeadAssignedAt = new Date();
+          selectedAgent.dailyLeadCount = (selectedAgent.dailyLeadCount || 0) + 1;
+          await selectedAgent.save();
+          
+          const agentId = selectedAgent._id;
+          
+          const ContactModel = require('../models/core/Contact');
+          const LeadModel = require('../models/core/Lead');
+          await ContactModel.updateOne({ phone }, { $set: { assignedAgent: agentId } });
+          await LeadModel.updateOne({ phone, tenantId }, { $set: { assignedAgent: agentId } });
+          
+          console.log(`[PRD] Immediate Fivestep assignment: Lead (${phone}) assigned to ${selectedAgent.name} (${roleToMatch})`);
+          return agentId;
+        }
+      }
+    } catch (err) {
+      console.error('[PRD] Fivestep immediate assignment error:', err);
+    }
+    return null;
+  }
+
   getMatchedQualificationKey(programMap, qualification) {
     if (!programMap || !qualification) return null;
     const qualLower = qualification.toLowerCase().trim();
@@ -594,6 +635,10 @@ class PRDFlowService {
         let programMap = this.getCleanProgramMap(settings);
 
         const matchedQualKey = this.getMatchedQualificationKey(programMap, selectedOption);
+
+        if (tenantId === 'fivestep_599984' && selectedOption) {
+          await this.assignFivestepAgentImmediately(tenantId, selectedOption, contact.phone);
+        }
 
         if (matchedQualKey && programMap[matchedQualKey]) {
           const categories = Object.keys(programMap[matchedQualKey]).filter(k => !k.startsWith('_') && k !== 'categoryMessage');
@@ -1195,11 +1240,11 @@ class PRDFlowService {
           const time = fresh.flowVariables?.time || fresh.preferredCallTime;
 
           // 1. Assign Counsellor / Telecaller automatically if configured
-          let assignedAgentId = null;
+          let assignedAgentId = fresh.assignedAgent || null;
           
           try {
             // Fivestep Specific Service-based Assignment
-            if (tenantId === 'fivestep_599984' && qual) {
+            if (tenantId === 'fivestep_599984' && qual && !assignedAgentId) {
               const User = require('../models/core/User');
               const selectedService = qual.toUpperCase().trim();
               let roleToMatch = '';
