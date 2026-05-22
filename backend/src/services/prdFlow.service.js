@@ -1187,7 +1187,42 @@ class PRDFlowService {
 
           // 1. Assign Counsellor / Telecaller automatically if configured
           let assignedAgentId = null;
-          if (settings?.crm?.autoAssignment) {
+          
+          try {
+            // Fivestep Specific Service-based Assignment
+            if (tenantId === 'fivestep_599984' && qual) {
+              const User = require('../models/core/User');
+              const selectedService = qual.toUpperCase().trim();
+              let roleToMatch = '';
+              
+              if (selectedService.includes('ONLINE PROGRAM')) roleToMatch = 'ONLINE PROGRAMS';
+              else if (selectedService.includes('INTERNATIONAL COACHING')) roleToMatch = 'INTERNATIONAL COACHING';
+              else if (selectedService.includes('VISA')) roleToMatch = 'VISA';
+              else if (selectedService.includes('MBBS')) roleToMatch = 'MBBS';
+              else if (selectedService.includes('TOUR PACKAGES')) roleToMatch = 'TOUR PACKAGES';
+              else if (selectedService.includes('COACHING')) roleToMatch = 'COACHING';
+
+              if (roleToMatch) {
+                const matchedAgents = await User.find({ tenantId, role: roleToMatch, status: 'ACTIVE' });
+                if (matchedAgents && matchedAgents.length > 0) {
+                  // Round-robin among agents with the same role
+                  matchedAgents.sort((a, b) => (a.lastLeadAssignedAt || 0) - (b.lastLeadAssignedAt || 0));
+                  const selectedAgent = matchedAgents[0];
+                  
+                  selectedAgent.lastLeadAssignedAt = new Date();
+                  selectedAgent.dailyLeadCount = (selectedAgent.dailyLeadCount || 0) + 1;
+                  await selectedAgent.save();
+                  
+                  assignedAgentId = selectedAgent._id;
+                  console.log(`[PRD] Fivestep assignment: Lead assigned to ${selectedAgent.name} (${roleToMatch})`);
+                }
+              }
+            }
+          } catch (err) {
+            console.error('[PRD] Fivestep assignment error:', err);
+          }
+
+          if (!assignedAgentId && settings?.crm?.autoAssignment) {
             try {
               assignedAgentId = await assignmentService.getNextAgentForTenant(tenantId);
             } catch (err) {
