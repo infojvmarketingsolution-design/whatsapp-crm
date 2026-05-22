@@ -610,7 +610,7 @@ class PRDFlowService {
               }
             });
             const val = programMap[matchedQualKey][streamName];
-            const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || []) : (val || []);
+            const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || val.Programs || val.Courses || val.Modes || val.modes || Object.values(val).find(Array.isArray) || []) : (val || []);
             const progMsg = "Please select your preferred program.";
             await sendInteractiveOptions(progMsg, programs);
           } else if (categories.length > 1) {
@@ -738,7 +738,7 @@ class PRDFlowService {
           });
 
           const val = programMap[matchedQualKey][selectedCategory];
-          const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || []) : (val || []);
+          const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || val.Programs || val.Courses || val.Modes || val.modes || Object.values(val).find(Array.isArray) || []) : (val || []);
           const progMsg = "Please select your preferred program.";
           await sendInteractiveOptions(progMsg, programs);
         } else {
@@ -775,7 +775,7 @@ class PRDFlowService {
 
         const streamName = contact.selectedStream || '';
         const val = (matchedQualKey && streamName && programMap[matchedQualKey]) ? programMap[matchedQualKey][streamName] : [];
-        let programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || []) : (val || []);
+        let programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || val.Programs || val.Courses || val.Modes || val.modes || Object.values(val).find(Array.isArray) || []) : (val || []);
 
         let selectedProg = messageText.trim();
 
@@ -1599,7 +1599,7 @@ class PRDFlowService {
           progMsg = this.populatePlaceholders(progMsg, fresh, nameVal);
           
           const val = programMap[matchedQualKey][streamName];
-          const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || []) : (val || []);
+          const programs = (val && typeof val === 'object' && !Array.isArray(val)) ? (val.programs || val.courses || val.Programs || val.Courses || val.Modes || val.modes || Object.values(val).find(Array.isArray) || []) : (val || []);
           await this.sendInteractiveOptionsHelper(contact, waService, progMsg, programs, settings, io);
         } else if (categories.length > 1) {
           await ContactModel.updateOne({ phone: contact.phone }, {
