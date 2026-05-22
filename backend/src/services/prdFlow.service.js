@@ -52,6 +52,18 @@ class PRDFlowService {
 
   sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
+  getCleanProgramMap(settings) {
+    let pMap = settings?.automation?.aiPrompts?.programMap;
+    if (typeof pMap === 'string') {
+      try { pMap = JSON.parse(pMap); } catch(e) {}
+    }
+    if (pMap && pMap.Services && Object.keys(pMap).length === 1) {
+      pMap = pMap.Services;
+    }
+    if (!pMap || Object.keys(pMap).length === 0) return DEFAULT_PROGRAM_MAP;
+    return pMap;
+  }
+
   getMatchedQualificationKey(programMap, qualification) {
     if (!programMap || !qualification) return null;
     const qualLower = qualification.toLowerCase().trim();
@@ -579,8 +591,7 @@ class PRDFlowService {
           return;
         }
 
-        let programMap = settings?.automation?.aiPrompts?.programMap;
-        if (!programMap || Object.keys(programMap).length === 0) programMap = DEFAULT_PROGRAM_MAP;
+        let programMap = this.getCleanProgramMap(settings);
 
         const matchedQualKey = this.getMatchedQualificationKey(programMap, selectedOption);
 
@@ -682,8 +693,7 @@ class PRDFlowService {
       // STATE: ASK_PROGRAM_CATEGORY
       // ==========================================
       if (currentState === 'ask_program_category') {
-        let programMap = settings?.automation?.aiPrompts?.programMap;
-        if (!programMap || Object.keys(programMap).length === 0) programMap = DEFAULT_PROGRAM_MAP;
+        let programMap = this.getCleanProgramMap(settings);
 
         const contactQual = contact.qualification || '';
         const matchedQualKey = this.getMatchedQualificationKey(programMap, contactQual);
@@ -758,8 +768,7 @@ class PRDFlowService {
       // STATE: ASK_PROGRAM
       // ==========================================
       if (currentState === 'ask_program') {
-        let programMap = settings?.automation?.aiPrompts?.programMap;
-        if (!programMap || Object.keys(programMap).length === 0) programMap = DEFAULT_PROGRAM_MAP;
+        let programMap = this.getCleanProgramMap(settings);
 
         const contactQual = contact.qualification || '';
         const matchedQualKey = this.getMatchedQualificationKey(programMap, contactQual);
@@ -1571,8 +1580,7 @@ class PRDFlowService {
       const fresh = await ContactModel.findOne({ phone: contact.phone });
       const contactQual = fresh.qualification || '';
       
-      let programMap = settings?.automation?.aiPrompts?.programMap;
-      if (!programMap || Object.keys(programMap).length === 0) programMap = DEFAULT_PROGRAM_MAP;
+      let programMap = this.getCleanProgramMap(settings);
 
       const matchedQualKey = this.getMatchedQualificationKey(programMap, contactQual);
 
