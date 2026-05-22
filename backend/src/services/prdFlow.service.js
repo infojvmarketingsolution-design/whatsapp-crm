@@ -79,21 +79,21 @@ class PRDFlowService {
     try {
       const User = require('../models/core/User');
       const service = selectedService.toUpperCase().trim();
-      let roleToMatch = '';
+      let searchRole = '';
       
-      if (service.includes('ONLINE PROGRAM')) roleToMatch = 'ONLINE PROGRAMS';
-      else if (service.includes('INTERNATIONAL COACHING')) roleToMatch = 'INTERNATIONAL COACHING';
-      else if (service.includes('VISA')) roleToMatch = 'VISA';
-      else if (service.includes('MBBS')) roleToMatch = 'MBBS';
-      else if (service.includes('TOUR PACKAGES')) roleToMatch = 'TOUR PACKAGES';
-      else if (service.includes('COACHING')) roleToMatch = 'COACHING';
+      if (service.includes('ONLINE PROGRAM')) searchRole = 'ONLINE PROGRAM';
+      else if (service.includes('INTERNATIONAL COACHING')) searchRole = 'INTERNATIONAL COACHING';
+      else if (service.includes('VISA')) searchRole = 'VISA';
+      else if (service.includes('MBBS')) searchRole = 'MBBS';
+      else if (service.includes('TOUR PACKAGE')) searchRole = 'TOUR PACKAGE';
+      else if (service.includes('COACHING')) searchRole = 'COACHING';
 
-      log(`[PRD] parsed service="${service}", roleToMatch="${roleToMatch}"`);
+      log(`[PRD] parsed service="${service}", searchRole="${searchRole}"`);
 
-      if (roleToMatch) {
+      if (searchRole) {
         const matchedAgents = await User.find({ 
           tenantId, 
-          role: { $regex: new RegExp(`^${roleToMatch}$`, 'i') }, 
+          role: { $regex: new RegExp(searchRole, 'i') }, 
           status: 'ACTIVE' 
         });
         log(`[PRD] matchedAgents count: ${matchedAgents ? matchedAgents.length : 0}`);
@@ -111,7 +111,7 @@ class PRDFlowService {
           const contactUpdate = await ContactModel.updateOne({ phone }, { $set: { assignedAgent: agentId } });
           const leadUpdate = await LeadModel.updateOne({ phone, tenantId }, { $set: { assignedAgent: agentId } });
           
-          log(`[PRD] Immediate Fivestep assignment: Lead (${phone}) assigned to ${selectedAgent.name} (${roleToMatch}). Contact modified: ${contactUpdate.modifiedCount}, Lead modified: ${leadUpdate.modifiedCount}`);
+          log(`[PRD] Immediate Fivestep assignment: Lead (${phone}) assigned to ${selectedAgent.name} (${searchRole}). Contact modified: ${contactUpdate.modifiedCount}, Lead modified: ${leadUpdate.modifiedCount}`);
           return agentId;
         } else {
           log('[PRD] No active matched agents found for role!');
