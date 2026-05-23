@@ -220,7 +220,11 @@ function CreateCampaign() {
              }
              return { type: 'URL', text: b.text, url: finalUrl };
           }
-          if (b.type === 'PHONE_NUMBER' && b.phoneNumber) return { type: 'PHONE_NUMBER', text: b.text, phone_number: b.phoneNumber };
+          if (b.type === 'PHONE_NUMBER' && b.phoneNumber) {
+             let cleanedPhone = b.phoneNumber.replace(/[^\d+]/g, '');
+             if (!cleanedPhone.startsWith('+')) cleanedPhone = '+' + cleanedPhone;
+             return { type: 'PHONE_NUMBER', text: b.text, phone_number: cleanedPhone };
+          }
           if (b.type === 'QUICK_REPLY') return { type: 'QUICK_REPLY', text: b.text };
           return null;
        }).filter(Boolean);
@@ -255,8 +259,12 @@ function CreateCampaign() {
         let errorMsg = err.error || err.message || 'Error occurred';
         
         // If the backend provided more details (Meta API error), include them
-        const details = err.metaDetails?.fbtrace_id ? ` (Trace ID: ${err.metaDetails.fbtrace_id})` : '';
-        alert('Failed: ' + errorMsg + details);
+        let metaDetailedMsg = '';
+        if (err.metaDetails) {
+            metaDetailedMsg = err.metaDetails.error_user_title ? `\n[Meta API: ${err.metaDetails.error_user_title} - ${err.metaDetails.error_user_msg}]` : `\n[Meta API: ${err.metaDetails.message}]`;
+        }
+        const details = err.metaDetails?.fbtrace_id ? `\n(Trace ID: ${err.metaDetails.fbtrace_id})` : '';
+        alert('Failed to create template: ' + errorMsg + metaDetailedMsg + details);
       }
     } catch (e) {
       console.error(e);
