@@ -148,8 +148,17 @@ function CreateCampaign() {
                 const uploadData = await uploadRes.json();
                 finalUrl = window.location.origin + '/api' + uploadData.url;
               } else {
-                const errorData = await uploadRes.json();
-                alert('Media upload failed: ' + (errorData.message || uploadRes.statusText));
+                let errorMsg = uploadRes.statusText;
+                const contentType = uploadRes.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                  const errorData = await uploadRes.json();
+                  errorMsg = errorData.message || errorData.error || uploadRes.statusText;
+                } else {
+                  if (uploadRes.status === 413) errorMsg = "File is too large (exceeds server limit). Please upload a smaller file.";
+                  else if (uploadRes.status === 502) errorMsg = "Bad Gateway (Server might be restarting).";
+                  else errorMsg = `Server returned HTTP ${uploadRes.status}: ${uploadRes.statusText}`;
+                }
+                alert('Media upload failed: ' + errorMsg);
                 setLoading(false);
                 return;
               }
@@ -735,6 +744,18 @@ const TemplateConfigModal = ({ isOpen, onClose, selectedTemplate, formData, setF
                                            }
                                         }
                                      }));
+                                  } else {
+                                     let errorMsg = uploadRes.statusText;
+                                     const contentType = uploadRes.headers.get("content-type");
+                                     if (contentType && contentType.includes("application/json")) {
+                                       const errorData = await uploadRes.json();
+                                       errorMsg = errorData.message || errorData.error || uploadRes.statusText;
+                                     } else {
+                                       if (uploadRes.status === 413) errorMsg = "File is too large (exceeds server limit). Please upload a smaller file.";
+                                       else if (uploadRes.status === 502) errorMsg = "Bad Gateway (Server might be restarting).";
+                                       else errorMsg = `Server returned HTTP ${uploadRes.status}: ${uploadRes.statusText}`;
+                                     }
+                                     alert('Media upload failed: ' + errorMsg);
                                   }
                                } catch (err) {
                                    console.error(err);
