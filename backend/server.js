@@ -202,7 +202,6 @@ app.use('/api/success-stories', successStoryRoutes);
 
 // Main Media Route (Matches generated URLs /uploads/...)
 const uploadPath = path.join(__dirname, 'public', 'uploads');
-const fs = require('fs');
 if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
 }
