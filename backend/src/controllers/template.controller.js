@@ -223,6 +223,7 @@ const uploadTemplateMedia = async (req, res) => {
 
     // --- Meta Resumable Upload API Integration ---
     let metaHandle = null;
+    let metaErrorLog = null;
     try {
        const client = await Client.findOne({ tenantId });
        const appId = process.env.FACEBOOK_APP_ID;
@@ -234,10 +235,13 @@ const uploadTemplateMedia = async (req, res) => {
 
        if (appId && accessToken) {
           // Step 1: Create Upload Session
-          const sessionUrl = `https://graph.facebook.com/v20.0/${appId}/uploads?file_length=${req.file.size}&file_type=${req.file.mimetype}`;
-          const sessionRes = await axios.post(sessionUrl, {}, {
-             headers: { 'Authorization': `Bearer ${accessToken}` }
-          });
+          const sessionUrl = `https://graph.facebook.com/v20.0/${appId}/uploads`;
+          const sessionPayload = {
+             file_length: req.file.size,
+             file_type: req.file.mimetype,
+             access_token: accessToken
+          };
+          const sessionRes = await axios.post(sessionUrl, sessionPayload);
           const uploadId = sessionRes.data.id;
 
           // Step 2: Upload File Binary
@@ -254,13 +258,15 @@ const uploadTemplateMedia = async (req, res) => {
        }
     } catch (metaErr) {
        console.error('Meta Resumable Upload Error:', metaErr.response?.data || metaErr.message);
+       metaErrorLog = metaErr.response?.data || metaErr.message;
        // Continue anyway, so we can fallback to the public URL if needed
     }
 
     res.json({ 
       url: publicUrl,
       mediaId: req.file.filename,
-      metaHandle: metaHandle
+      metaHandle: metaHandle,
+      metaError: metaErrorLog
     });
   } catch (error) {
     console.error('Upload Template Media Error:', error);

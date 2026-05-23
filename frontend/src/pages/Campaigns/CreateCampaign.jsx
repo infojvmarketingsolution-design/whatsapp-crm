@@ -82,6 +82,12 @@ function CreateCampaign() {
       });
       if (uploadRes.ok) {
         const uploadData = await uploadRes.json();
+        
+        if (uploadData.metaError) {
+          console.error("Meta Upload Error:", uploadData.metaError);
+          alert("Meta Resumable Upload failed. Please check your App ID and Access Token permissions. Error: " + JSON.stringify(uploadData.metaError));
+        }
+
         const finalUrl = window.location.origin + uploadData.url;
         setNewTemplate(prev => ({...prev, headerMediaUrl: finalUrl, headerMetaHandle: uploadData.metaHandle || ''}));
       } else {
