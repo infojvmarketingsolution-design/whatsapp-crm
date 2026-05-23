@@ -400,7 +400,7 @@ class PRDFlowService {
                 body: welcomeMsg,
                 buttons: replyLabels
               });
-              await saveAndEmit('interactive', welcomeMsg, resGreeting);
+              await saveAndEmit('interactive', media ? `[Media] ${media}\n${welcomeMsg}` : welcomeMsg, resGreeting);
               singleInteractiveSent = true;
             } catch (mediaErr) {
               console.error('[PRD] Failed to send unified interactive media greeting:', mediaErr.message);
@@ -424,7 +424,7 @@ class PRDFlowService {
           if (media) {
             try {
               resGreeting = await waService.sendMedia(contact.phone, 'image', null, welcomeMsg, media);
-              await saveAndEmit('image', welcomeMsg, resGreeting);
+              await saveAndEmit('image', media ? `[Media] ${media}\n${welcomeMsg}` : welcomeMsg, resGreeting);
             } catch (mediaErr) {
               console.error('[PRD] Media send failed, falling back to text greeting:', mediaErr.message);
               resGreeting = await waService.sendTextMessage(contact.phone, welcomeMsg);
@@ -1612,7 +1612,7 @@ class PRDFlowService {
             body: msg || "Please select an option:",
             buttons: buttonLabels
           });
-          await saveAndEmit('interactive', msg, resMsg);
+          await saveAndEmit('interactive', media ? `[Media] ${media}\n${msg}` : msg, resMsg);
           singleInteractiveSent = true;
         } catch (mediaErr) {
           console.error('[PRD] Failed to send single interactive media message, falling back to split sending:', mediaErr.message);
@@ -1623,7 +1623,7 @@ class PRDFlowService {
         if (media) {
           try {
             resMsg = await waService.sendMedia(contact.phone, 'image', null, msg, media);
-            await saveAndEmit('image', msg, resMsg);
+            await saveAndEmit('image', media ? `[Media] ${media}\n${msg}` : msg, resMsg);
           } catch (mediaErr) {
             resMsg = await waService.sendTextMessage(contact.phone, msg);
             await saveAndEmit('text', msg, resMsg);
