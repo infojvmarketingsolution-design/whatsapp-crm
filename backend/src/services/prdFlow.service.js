@@ -1341,12 +1341,12 @@ class PRDFlowService {
               selectedStream: fresh.selectedStream,
               selectedProgram: prog,
               preferredCallTime: time,
-              currentFlowStep: 'ask_additional_help'
+              currentFlowStep: null
             }
           });
 
           // 4. Send Thank You Message (Dynamic from builder steps)
-          const thankYouStep = steps.find(s => s.id === 'thank_you' || (s.type || '').toUpperCase() === 'CUSTOM_MESSAGE');
+          const thankYouStep = steps.find(s => s.id === 'thank_you');
           let thankYouMsg = thankYouStep?.message || thankYouStep?.text || `Thank you ${name} 😊\n\nYour counselling request has been submitted successfully.\nOur counsellor will contact you at your preferred time.`;
           thankYouMsg = this.populatePlaceholders(thankYouMsg, fresh, name, qual, prog, time);
 
@@ -1365,12 +1365,6 @@ class PRDFlowService {
             await saveAndEmit('text', thankYouMsg, resTY);
           }
 
-          // 5. Sequence preservation sleep
-          await this.sleep(1500);
-
-          // 6. Ask Additional Help question
-          const helpMsg = "Do you need any other help?";
-          await sendInteractiveOptions(helpMsg, ['Yes', 'No']);
         }
         else if (isEdit) {
           await ContactModel.updateOne({ phone: contact.phone }, {
