@@ -426,7 +426,14 @@ class PRDFlowService {
             
             if (fs.existsSync(localPath)) {
               console.log(`[PRD] Direct uploading local media to avoid Meta URL fetch issues: ${localPath}`);
-              const uploadRes = await waService.uploadMedia(localPath, 'image/jpeg');
+              const ext = path.extname(localPath).toLowerCase();
+              let mimeType = 'image/jpeg';
+              if (ext === '.png') mimeType = 'image/png';
+              else if (ext === '.webp') mimeType = 'image/webp';
+              else if (ext === '.mp4') mimeType = 'video/mp4';
+              else if (ext === '.pdf') mimeType = 'application/pdf';
+              
+              const uploadRes = await waService.uploadMedia(localPath, mimeType);
               if (uploadRes && uploadRes.id) {
                 mediaId = uploadRes.id;
                 mediaLink = null;
