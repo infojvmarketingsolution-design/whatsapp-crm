@@ -210,7 +210,7 @@ const uploadTemplateMedia = async (req, res) => {
     console.log('Template Media Uploaded:', req.file.path);
 
     const tenantId = req.tenantId;
-    const finalDir = path.join(process.cwd(), 'backend', 'public', 'uploads', 'templates', tenantId);
+    const finalDir = path.join(__dirname, '../../public/uploads/templates', tenantId);
     
     if (!fs.existsSync(finalDir)) {
       fs.mkdirSync(finalDir, { recursive: true });
@@ -219,7 +219,7 @@ const uploadTemplateMedia = async (req, res) => {
     const targetPath = path.join(finalDir, req.file.filename);
     fs.renameSync(req.file.path, targetPath);
 
-    const publicUrl = `/uploads/templates/${tenantId}/${req.file.filename}`;
+    const publicUrl = `/api/uploads/templates/${tenantId}/${req.file.filename}`;
 
     // --- Meta Resumable Upload API Integration ---
     let metaHandle = null;

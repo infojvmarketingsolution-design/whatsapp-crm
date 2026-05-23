@@ -216,6 +216,13 @@ app.use('/uploads', express.static(uploadPath, {
   }
 }));
 
+app.use('/api/uploads', express.static(uploadPath, {
+  setHeaders: (res, path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cache-Control', 'public, max-age=31536000');
+  }
+}));
+
 // Last resort: If still not caught, let the general static handler try /public
 app.use(express.static(path.join(__dirname, 'public')));
 
