@@ -665,10 +665,10 @@ function CreateCampaign() {
                                    const btns = [...newTemplate.buttons]; btns[idx].type = newType; btns[idx].url = ''; btns[idx].phoneNumber = ''; btns[idx].example = ''; btns[idx].flow_id = ''; btns[idx].navigate_screen = ''; setNewTemplate({...newTemplate, buttons: btns});
                                 }}>
                                    <option value="URL">Visit website</option>
-                                   <option value="PHONE_NUMBER">Call Phone Number</option>
-                                   <option value="VOICE_CALL">Call on WhatsApp</option>
-                                   <option value="FLOW">Complete flow</option>
-                                   <option value="COPY_CODE">Copy offer code</option>
+                                   <option value="PHONE_NUMBER">Call Phone Number (1 button maximum)</option>
+                                   <option value="VOICE_CALL">Call on WhatsApp (1 button maximum)</option>
+                                   <option value="FLOW">Complete flow (1 button maximum)</option>
+                                   <option value="COPY_CODE">Copy offer code (1 button maximum)</option>
                                    <option value="QUICK_REPLY">Custom</option>
                                 </select>
                                 {btn.type !== 'COPY_CODE' ? (
