@@ -134,39 +134,65 @@ const handleIncomingMessage = async (req, res) => {
     const Contact = tenantDb.model('Contact', ContactSchema);
     const Message = tenantDb.model('Message', MessageSchema);
 
-    // 2. ⚡ New Feature: Handle Message Status Updates (Delivered, Read)
+    // 2. Handle Message Status Updates (Delivered, Read, Failed)
     if (value.statuses && value.statuses.length > 0) {
       console.log(`[Webhook Status] Found ${value.statuses.length} status updates for tenant ${client.tenantId}`);
-      for (const statusObj of value.statuses) {
-        const { id: messageId, status, recipient_id: phone } = statusObj;
-        console.log(`[Webhook Status] Msg ${messageId} -> ${status} for ${phone}`);
+      
+      const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
+      const Campaign = tenantDb.model('Campaign', CampaignSchema);
+      const io = req.app.get('io');
+
+      for (const statusEvent of value.statuses) {
+        const { id: messageId, status, recipient_id: phone } = statusEvent;
+        const metaError = statusEvent.errors?.[0];
+        console.log(`📊 [Webhook Status] Msg ${messageId} -> ${status} for ${phone}`, metaError || '');
         
-        // Update database (Meta status: delivered, read, failed, sent)
+        // Update Message DB
         const updatedMsg = await Message.findOneAndUpdate(
           { messageId: messageId },
           { status: status.toUpperCase() },
           { new: true }
         );
 
-        if (updatedMsg) {
-          // Emit socket event for real-time tick updates
-          const io = req.app.get('io');
-          if (io) {
-            io.to(client.tenantId).emit('message_status_update', {
-              messageId,
-              status: status.toUpperCase(),
-              contactId: updatedMsg.contactId
-            });
-          }
+        if (updatedMsg && io) {
+          io.to(client.tenantId).emit('message_status_update', {
+            messageId,
+            status: status.toUpperCase(),
+            contactId: updatedMsg.contactId
+          });
+        }
+
+        // Update Campaign Log
+        const logUpdate = { 
+          status: status.toUpperCase(),
+          ...(status === 'delivered' ? { deliveredAt: new Date() } : {}),
+          ...(status === 'read' ? { readAt: new Date() } : {})
+        };
+        
+        if (metaError && status === 'failed') {
+            const friendlyMessage = mapMetaError(metaError.code, metaError.message);
+            logUpdate.errorReason = `${friendlyMessage} (Code: ${metaError.code})`;
+            if (metaError.error_data?.details) {
+                logUpdate.errorReason += ` - ${metaError.error_data.details}`;
+            }
+        }
+
+        const log = await CampaignLog.findOneAndUpdate(
+           { messageId: messageId },
+           logUpdate
+        );
+
+        if (log && log.campaignId) {
+           const incQuery = {};
+           if (status === 'delivered') incQuery['metrics.delivered'] = 1;
+           if (status === 'read') incQuery['metrics.read'] = 1;
+           if (status === 'failed') incQuery['metrics.failed'] = 1;
+           
+           if (Object.keys(incQuery).length > 0) {
+             await Campaign.findByIdAndUpdate(log.campaignId, { $inc: incQuery });
+           }
         }
       }
-      return res.status(200).send('EVENT_RECEIVED');
-    }
-
-    // 3. Handle Incoming Messages (Text, Image, etc.)
-    const messages = value.messages;
-    if (!messages || messages.length === 0) {
-      return res.status(200).send('EVENT_RECEIVED');
     }
     
     // 2. Handle Messages
@@ -350,51 +376,7 @@ const handleIncomingMessage = async (req, res) => {
     }
   }
 
-  // 3. Handle Status Updates
-    if (value.statuses && value.statuses[0]) {
-      const statusEvent = value.statuses[0];
-      const metaError = statusEvent.errors?.[0]; // Get the first error if present
-      console.log(`📊 [Tenant: ${client.tenantId}] Status Update:`, statusEvent.id, statusEvent.status, metaError || '');
-
-      await Message.findOneAndUpdate(
-         { messageId: statusEvent.id },
-         { status: statusEvent.status.toUpperCase() }
-      );
-      
-      const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
-      const Campaign = tenantDb.model('Campaign', CampaignSchema);
-      
-      const logUpdate = { 
-        status: statusEvent.status.toUpperCase(),
-        ...(statusEvent.status === 'delivered' ? { deliveredAt: new Date() } : {}),
-        ...(statusEvent.status === 'read' ? { readAt: new Date() } : {})
-      };
-      
-      // If failure details are present in the webhook, capture them
-      if (metaError && statusEvent.status === 'failed') {
-          const friendlyMessage = mapMetaError(metaError.code, metaError.message);
-          logUpdate.errorReason = `${friendlyMessage} (Code: ${metaError.code})`;
-          if (metaError.error_data?.details) {
-              logUpdate.errorReason += ` - ${metaError.error_data.details}`;
-          }
-      }
-
-      const log = await CampaignLog.findOneAndUpdate(
-         { messageId: statusEvent.id },
-         logUpdate
-      );
-
-      if (log && log.campaignId) {
-         const incQuery = {};
-         if (statusEvent.status === 'delivered') incQuery['metrics.delivered'] = 1;
-         if (statusEvent.status === 'read') incQuery['metrics.read'] = 1;
-         if (statusEvent.status === 'failed') incQuery['metrics.failed'] = 1;
-         
-         if (Object.keys(incQuery).length > 0) {
-           await Campaign.findByIdAndUpdate(log.campaignId, { $inc: incQuery });
-         }
-      }
-    }
+    // Status updates are handled above
 
     // 4. Handle Template Status Updates
     if (value.message_template_status_update) {
