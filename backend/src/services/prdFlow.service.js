@@ -204,27 +204,27 @@ class PRDFlowService {
 
   makeAbsolute(url) {
     if (!url || typeof url !== 'string' || url.trim() === '') return '';
-    if (url.toLowerCase().endsWith('.webp') || url.toLowerCase().includes('.webp')) {
-      // Meta Cloud API doesn't support WebP. Proxy and convert to standard JPG on the fly!
-      if (url.startsWith('http')) {
-        return `https://wsrv.nl/?url=${encodeURIComponent(url)}&output=jpg&q=90`;
-      }
-    }
-    
-    // Ensure uploads go through the /api route for Nginx proxying
-    if (url.includes('/uploads/')) {
-        url = url.replace(/.*\/uploads\//, '/api/uploads/');
-    }
-
-    if (url.startsWith('http') || /^\d+$/.test(url)) {
-      if (url.includes('localhost') || url.includes('127.0.0.1')) return '';
-      return url;
-    }
     const baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').replace(/\/$/, '');
     if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
       return '';
     }
-    return `${baseUrl}${url.startsWith('/') ? url : `/${url}`}`;
+    
+    if (url.toLowerCase().endsWith('.webp') || url.toLowerCase().includes('.webp')) {
+      // Meta Cloud API doesn't support WebP. Proxy and convert to standard JPEG
+      if (url.startsWith('/uploads/')) {
+        return `${baseUrl}/api/proxy-image?url=${encodeURIComponent(url)}`;
+      }
+      return `${baseUrl}/api/proxy-image?url=${encodeURIComponent(url)}`;
+    }
+    
+    // Explicitly route through API proxy path so Nginx handles it
+    if (url.startsWith('/uploads/')) {
+      return `${baseUrl}/api${url}`;
+    }
+    
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/')) return `${baseUrl}${url}`;
+    return `${baseUrl}/${url}`;
   }
 
   async clearPRDFlowSession(tenantId, phone, Contact) {
