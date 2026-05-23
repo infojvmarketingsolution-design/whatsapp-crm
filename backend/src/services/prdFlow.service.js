@@ -57,9 +57,29 @@ class PRDFlowService {
     if (typeof pMap === 'string') {
       try { pMap = JSON.parse(pMap); } catch(e) {}
     }
+
+    if (pMap && pMap.dynamicProgramMapping) {
+      pMap = pMap.dynamicProgramMapping;
+    }
+
     if (pMap && pMap.Services && Object.keys(pMap).length === 1) {
       pMap = pMap.Services;
     }
+
+    if (pMap) {
+      let normalized = false;
+      let newPMap = {};
+      for (const [key, value] of Object.entries(pMap)) {
+        if (value && typeof value === 'object' && !Array.isArray(value) && Array.isArray(value.services)) {
+          newPMap[key] = value.services;
+          normalized = true;
+        } else {
+          newPMap[key] = value;
+        }
+      }
+      if (normalized) pMap = newPMap;
+    }
+
     if (!pMap || Object.keys(pMap).length === 0) return DEFAULT_PROGRAM_MAP;
     return pMap;
   }
