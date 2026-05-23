@@ -50,7 +50,7 @@ function CreateCampaign() {
   const selectedTemplate = templates.find(t => t._id === formData.templateId);
   const [newTemplate, setNewTemplate] = useState({ 
     name: '', category: 'MARKETING', language: 'en', 
-    headerType: 'NONE', headerText: '', headerMediaUrl: '', headerFile: null, headerSample: '',
+    headerType: 'NONE', headerText: '', headerMediaUrl: '', headerFile: null, headerSample: '', headerMetaHandle: '',
     latitude: '', longitude: '',
     bodyText: '', bodySamples: [], footerText: '', buttons: [],
     useCustomTtl: false, messageSendTtl: ''
@@ -67,7 +67,7 @@ function CreateCampaign() {
     if (newTemplate.headerType === 'DOCUMENT' && sizeMB > 100) return alert("Document must be under 100 MB.");
 
     setIsUploadingMedia(true);
-    setNewTemplate(prev => ({...prev, headerFile: file, headerMediaUrl: ''})); 
+    setNewTemplate(prev => ({...prev, headerFile: file, headerMediaUrl: '', headerMetaHandle: ''})); 
 
     const formDataMedia = new FormData();
     formDataMedia.append('file', file);
@@ -83,15 +83,15 @@ function CreateCampaign() {
       if (uploadRes.ok) {
         const uploadData = await uploadRes.json();
         const finalUrl = window.location.origin + uploadData.url;
-        setNewTemplate(prev => ({...prev, headerMediaUrl: finalUrl}));
+        setNewTemplate(prev => ({...prev, headerMediaUrl: finalUrl, headerMetaHandle: uploadData.metaHandle || ''}));
       } else {
         alert('Media upload failed: ' + uploadRes.statusText);
-        setNewTemplate(prev => ({...prev, headerFile: null}));
+        setNewTemplate(prev => ({...prev, headerFile: null, headerMetaHandle: ''}));
       }
     } catch (err) {
       console.error(err);
       alert('Media upload error: ' + err.message);
-      setNewTemplate(prev => ({...prev, headerFile: null}));
+      setNewTemplate(prev => ({...prev, headerFile: null, headerMetaHandle: ''}));
     } finally {
       setIsUploadingMedia(false);
     }
@@ -219,8 +219,9 @@ function CreateCampaign() {
       } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(newTemplate.headerType)) {
          let finalUrl = newTemplate.headerMediaUrl;
 
-
-         if (finalUrl) {
+         if (newTemplate.headerMetaHandle) {
+            components.push({ type: 'HEADER', format: newTemplate.headerType, example: { header_handle: [newTemplate.headerMetaHandle] } });
+         } else if (finalUrl) {
             components.push({ type: 'HEADER', format: newTemplate.headerType, example: { header_url: [finalUrl] } });
          } else {
             alert('Please provide a URL or upload a file for the ' + newTemplate.headerType.toLowerCase());
@@ -621,7 +622,7 @@ function CreateCampaign() {
                                className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500" 
                                placeholder={`Enter Public ${newTemplate.headerType.toLowerCase()} URL`} 
                                value={newTemplate.headerMediaUrl} 
-                               onChange={e => setNewTemplate({...newTemplate, headerMediaUrl: e.target.value, headerFile: null})} 
+                               onChange={e => setNewTemplate({...newTemplate, headerMediaUrl: e.target.value, headerFile: null, headerMetaHandle: ''})} 
                              />
                            </div>
                         )}

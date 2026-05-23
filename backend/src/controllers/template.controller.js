@@ -220,9 +220,47 @@ const uploadTemplateMedia = async (req, res) => {
     fs.renameSync(req.file.path, targetPath);
 
     const publicUrl = `/uploads/templates/${tenantId}/${req.file.filename}`;
+
+    // --- Meta Resumable Upload API Integration ---
+    let metaHandle = null;
+    try {
+       const client = await Client.findOne({ tenantId });
+       const appId = process.env.FACEBOOK_APP_ID;
+       let accessToken = process.env.META_ACCESS_TOKEN;
+       
+       if (client && client.whatsappConfig && client.whatsappConfig.accessToken) {
+          accessToken = client.whatsappConfig.accessToken;
+       }
+
+       if (appId && accessToken) {
+          // Step 1: Create Upload Session
+          const sessionUrl = `https://graph.facebook.com/v20.0/${appId}/uploads?file_length=${req.file.size}&file_type=${req.file.mimetype}`;
+          const sessionRes = await axios.post(sessionUrl, {}, {
+             headers: { 'Authorization': `Bearer ${accessToken}` }
+          });
+          const uploadId = sessionRes.data.id;
+
+          // Step 2: Upload File Binary
+          const fileBuffer = fs.readFileSync(targetPath);
+          const uploadRes = await axios.post(`https://graph.facebook.com/v20.0/${uploadId}`, fileBuffer, {
+             headers: {
+                'Authorization': `OAuth ${accessToken}`,
+                'file_offset': 0,
+                'Content-Type': req.file.mimetype
+             }
+          });
+          metaHandle = uploadRes.data.h;
+          console.log('Meta Resumable Upload Success Handle:', metaHandle);
+       }
+    } catch (metaErr) {
+       console.error('Meta Resumable Upload Error:', metaErr.response?.data || metaErr.message);
+       // Continue anyway, so we can fallback to the public URL if needed
+    }
+
     res.json({ 
       url: publicUrl,
-      mediaId: req.file.filename 
+      mediaId: req.file.filename,
+      metaHandle: metaHandle
     });
   } catch (error) {
     console.error('Upload Template Media Error:', error);
