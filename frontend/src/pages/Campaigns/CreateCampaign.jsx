@@ -44,6 +44,7 @@ function CreateCampaign() {
 
   const [templates, setTemplates] = useState([]);
   const [isCreatingTemplate, setIsCreatingTemplate] = useState(false);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [showMediaGuide, setShowMediaGuide] = useState(false);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const selectedTemplate = templates.find(t => t._id === formData.templateId);
@@ -58,6 +59,44 @@ function CreateCampaign() {
 
   const fileInputRef = React.useRef(null);
   
+  const handleDirectFileUpload = async (file) => {
+    if (!file) return;
+    const sizeMB = file.size / (1024 * 1024);
+    if (newTemplate.headerType === 'IMAGE' && sizeMB > 5) return alert("Image must be under 5 MB.");
+    if (newTemplate.headerType === 'VIDEO' && sizeMB > 16) return alert("Video must be under 16 MB.");
+    if (newTemplate.headerType === 'DOCUMENT' && sizeMB > 100) return alert("Document must be under 100 MB.");
+
+    setIsUploadingMedia(true);
+    setNewTemplate(prev => ({...prev, headerFile: file, headerMediaUrl: ''})); 
+
+    const formDataMedia = new FormData();
+    formDataMedia.append('file', file);
+    const token = localStorage.getItem('token');
+    const tenantId = localStorage.getItem('tenantId');
+    
+    try {
+      const uploadRes = await fetch('/api/templates/upload', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId },
+        body: formDataMedia
+      });
+      if (uploadRes.ok) {
+        const uploadData = await uploadRes.json();
+        const finalUrl = window.location.origin + uploadData.url;
+        setNewTemplate(prev => ({...prev, headerMediaUrl: finalUrl}));
+      } else {
+        alert('Media upload failed: ' + uploadRes.statusText);
+        setNewTemplate(prev => ({...prev, headerFile: null}));
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Media upload error: ' + err.message);
+      setNewTemplate(prev => ({...prev, headerFile: null}));
+    } finally {
+      setIsUploadingMedia(false);
+    }
+  };
+
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -179,45 +218,7 @@ function CreateCampaign() {
          components.push(headerComp);
       } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(newTemplate.headerType)) {
          let finalUrl = newTemplate.headerMediaUrl;
-         
-         // If a file is selected, upload it first
-         if (newTemplate.headerFile) {
-            const formDataMedia = new FormData();
-            formDataMedia.append('file', newTemplate.headerFile);
-            const token = localStorage.getItem('token');
-            const tenantId = localStorage.getItem('tenantId');
-            
-            try {
-              const uploadRes = await fetch('/api/templates/upload', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId },
-                body: formDataMedia
-              });
-              if (uploadRes.ok) {
-                const uploadData = await uploadRes.json();
-                finalUrl = window.location.origin + uploadData.url;
-              } else {
-                let errorMsg = uploadRes.statusText;
-                const contentType = uploadRes.headers.get("content-type");
-                if (contentType && contentType.includes("application/json")) {
-                  const errorData = await uploadRes.json();
-                  errorMsg = errorData.message || errorData.error || uploadRes.statusText;
-                } else {
-                  if (uploadRes.status === 413) errorMsg = "File is too large (exceeds server limit). Please upload a smaller file.";
-                  else if (uploadRes.status === 502) errorMsg = "Bad Gateway (Server might be restarting).";
-                  else errorMsg = `Server returned HTTP ${uploadRes.status}: ${uploadRes.statusText}`;
-                }
-                alert('Media upload failed: ' + errorMsg);
-                setLoading(false);
-                return;
-              }
-            } catch (err) {
-              console.error(err);
-              alert('Media upload error: ' + err.message);
-              setLoading(false);
-              return;
-            }
-         }
+
 
          if (finalUrl) {
             components.push({ type: 'HEADER', format: newTemplate.headerType, example: { header_url: [finalUrl] } });
@@ -590,17 +591,15 @@ function CreateCampaign() {
                                   ref={headerFileRef} 
                                   className="hidden" 
                                   accept={newTemplate.headerType === 'IMAGE' ? "image/*" : newTemplate.headerType === 'VIDEO' ? "video/*" : ".pdf,.doc,.docx"} 
-                                  onChange={(e) => {
-                                     const file = e.target.files[0];
-                                     if (!file) return;
-                                     const sizeMB = file.size / (1024 * 1024);
-                                     if (newTemplate.headerType === 'IMAGE' && sizeMB > 5) return alert("Image must be under 5 MB.");
-                                     if (newTemplate.headerType === 'VIDEO' && sizeMB > 16) return alert("Video must be under 16 MB.");
-                                     if (newTemplate.headerType === 'DOCUMENT' && sizeMB > 100) return alert("Document must be under 100 MB.");
-                                     setNewTemplate({...newTemplate, headerFile: file, headerMediaUrl: ''});
-                                  }} 
+                                  onChange={(e) => handleDirectFileUpload(e.target.files[0])} 
                                 />
-                                {newTemplate.headerFile ? (
+                                {isUploadingMedia ? (
+                                  <div className="text-center">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                                    <p className="text-xs font-bold text-blue-600">Uploading...</p>
+                                    <p className="text-[10px] text-gray-400">Please wait</p>
+                                  </div>
+                                ) : newTemplate.headerFile ? (
                                   <div className="text-center">
                                     <p className="text-xs font-bold text-green-600">Selected: {newTemplate.headerFile.name}</p>
                                     <p className="text-[10px] text-gray-400">Click to change</p>
