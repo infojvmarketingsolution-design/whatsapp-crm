@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2, Megaphone, Video, Home, School, MapPin, Phone, Users, UserCircle, Bot } from 'lucide-react';
+import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2, Megaphone, Video, Home, School, MapPin, Phone, Users, UserCircle, Bot, Download } from 'lucide-react';
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { State, City } from 'country-state-city';
@@ -90,6 +90,7 @@ export default function Inbox({ roleAccess }) {
   const [newMessage, setNewMessage] = useState('');
   const [attachment, setAttachment] = useState(null);
   const [isPrivateNote, setIsPrivateNote] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState(null);
   const [aiSummary, setAiSummary] = useState(null);
   const [loadingSummary, setLoadingSummary] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -771,7 +772,7 @@ export default function Inbox({ roleAccess }) {
                                 <img 
                                   src={imgUrl} 
                                   className="w-full h-auto max-h-[300px] object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                  onClick={() => window.open(imgUrl)}
+                                  onClick={() => setSelectedMedia({ url: imgUrl, type: 'image' })}
                                   onError={(e) => { e.target.style.display='none'; }}
                                   alt="Media content" 
                                 />
@@ -787,11 +788,27 @@ export default function Inbox({ roleAccess }) {
                      )}
 
                      {/* Video/Doc Placeholders (Refined) */}
-                     {m.type === 'video' && <div className={`mb-2 flex items-center space-x-2 p-2.5 rounded-xl text-xs ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}><ImageIcon size={14}/> <span>Video Attachment</span></div>}
-                     {m.type === 'document' && <div className={`mb-2 flex items-center space-x-2 p-2.5 rounded-xl text-xs ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}><FileText size={14}/> <span>Document Attachment</span></div>}
+                     {m.type === 'video' && (
+                       <div 
+                         className={`mb-2 flex items-center space-x-2 p-2.5 rounded-xl text-xs cursor-pointer hover:opacity-80 transition-opacity ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}
+                         onClick={() => setSelectedMedia({ url: m.content?.startsWith('/') ? `/api${m.content}` : m.content, type: 'video' })}
+                       >
+                         <Video size={14}/> <span>Video Attachment - Click to View</span>
+                       </div>
+                     )}
+                     {m.type === 'document' && (
+                       <a 
+                         href={m.content?.startsWith('/') ? `/api${m.content}` : m.content} 
+                         target="_blank" 
+                         download
+                         className={`mb-2 flex items-center space-x-2 p-2.5 rounded-xl text-xs cursor-pointer hover:opacity-80 transition-opacity ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}
+                       >
+                         <FileText size={14}/> <span>Document Attachment - Click to Download</span>
+                       </a>
+                     )}
                      
                      {/* Message Text Content (Excluding the [Media] string if already rendered as image) */}
-                     {(!m.content?.includes('[Media]') || m.type === 'text') && (
+                     {(!m.content?.includes('[Media]') && m.type === 'text') && (
                         <p 
                           className={`leading-relaxed ${isEmojiOnly(m.content) ? 'text-5xl py-2 mb-1' : 'text-[13.5px] font-medium whitespace-pre-wrap break-words'}`}
                           style={isEmojiOnly(m.content) ? { fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif' } : {}}
@@ -1877,6 +1894,37 @@ export default function Inbox({ roleAccess }) {
       </div>
       )}
       
+      {/* Media Popup Modal */}
+      {selectedMedia && (
+        <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setSelectedMedia(null)}>
+          <div className="relative max-w-4xl max-h-[90vh] w-full flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setSelectedMedia(null)}
+              className="absolute -top-12 right-0 text-white hover:text-red-400 p-2 transition-colors bg-white/10 rounded-full"
+            >
+              <X size={24} />
+            </button>
+            
+            {selectedMedia.type === 'video' ? (
+              <video src={selectedMedia.url} controls className="max-w-full max-h-[80vh] rounded-lg shadow-2xl border border-white/20" autoPlay />
+            ) : (
+              <img src={selectedMedia.url} className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-white/20" alt="Media Preview" />
+            )}
+            
+            <div className="mt-6 flex gap-4">
+              <a 
+                href={selectedMedia.url}
+                target="_blank"
+                download
+                className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-full transition-colors text-sm font-semibold shadow-lg hover:shadow-teal-600/30"
+              >
+                <Download size={18} />
+                Download
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
