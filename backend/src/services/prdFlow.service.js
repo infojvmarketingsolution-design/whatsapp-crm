@@ -80,32 +80,28 @@ class PRDFlowService {
       const User = require('../models/core/User');
       const service = selectedService.toUpperCase().trim();
       let searchRole = '';
+      let fallbackName = '';
       
-      if (service.includes('ONLINE PROGRAM')) searchRole = 'ONLINE_PROGRAM';
-      else if (service.includes('INTERNATIONAL COACHING')) searchRole = 'INTERNATIONAL_COACHING';
-      else if (service.includes('VISA')) searchRole = 'VISA';
-      else if (service.includes('MBBS')) searchRole = 'MBBS';
-      else if (service.includes('TOUR PACKAGE')) searchRole = 'TOUR_PACKAGE';
-      else if (service.includes('COACHING')) searchRole = 'COACHING';
+      if (service.includes('ONLINE PROGRAM')) { searchRole = 'ONLINE_PROGRAM'; fallbackName = 'Darshil'; }
+      else if (service.includes('INTERNATIONAL COACHING') || service.includes('STUDY ABROAD')) { searchRole = 'STUDY_ABROAD'; fallbackName = 'Jayashree'; }
+      else if (service.includes('VISA')) { searchRole = 'VISA'; fallbackName = 'Ajita'; }
+      else if (service.includes('MBBS')) { searchRole = 'MBBS'; fallbackName = 'Akash'; }
+      else if (service.includes('TOUR')) { searchRole = 'TOUR_PACKAGE'; fallbackName = 'Mihir'; }
+      else if (service.includes('COACHING')) { searchRole = 'COACHING'; fallbackName = 'Kinjal'; }
 
       log(`[PRD] parsed service="${service}", searchRole="${searchRole}"`);
 
       if (searchRole) {
         let matchedAgents = await User.find({ 
           tenantId, 
-          role: { $regex: new RegExp(searchRole, 'i') }, 
+          $or: [
+            { role: { $regex: new RegExp(searchRole, 'i') } },
+            { role: { $regex: new RegExp('INTERNATIONAL_COACHING', 'i') } } // Fallback for Study Abroad
+          ],
           status: 'ACTIVE' 
         });
         
         if (!matchedAgents || matchedAgents.length === 0) {
-          let fallbackName = '';
-          if (searchRole === 'ONLINE_PROGRAM') fallbackName = 'Darshil';
-          else if (searchRole === 'INTERNATIONAL_COACHING') fallbackName = 'Jayashree';
-          else if (searchRole === 'VISA') fallbackName = 'Ajita';
-          else if (searchRole === 'MBBS') fallbackName = 'Akash';
-          else if (searchRole === 'TOUR_PACKAGE') fallbackName = 'Mihir';
-          else if (searchRole === 'COACHING') fallbackName = 'Kinjal';
-
           if (fallbackName) {
             log(`[PRD] Role match failed for ${searchRole}. Falling back to name match for "${fallbackName}"`);
             matchedAgents = await User.find({

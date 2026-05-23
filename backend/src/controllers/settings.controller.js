@@ -256,7 +256,7 @@ exports.uploadImage = async (req, res) => {
     }
 
     const tenantId = req.tenantId;
-    const targetDir = path.join(__dirname, '../../uploads/prompts', tenantId);
+    const targetDir = path.join(__dirname, '../../public/uploads/prompts', tenantId);
     
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
@@ -285,7 +285,7 @@ exports.uploadBranding = async (req, res) => {
     }
 
     const tenantId = req.tenantId;
-    const targetDir = path.join(__dirname, '../../uploads/branding', tenantId);
+    const targetDir = path.join(__dirname, '../../public/uploads/branding', tenantId);
     
     if (!fs.existsSync(targetDir)) {
       fs.mkdirSync(targetDir, { recursive: true });
