@@ -1340,8 +1340,7 @@ class PRDFlowService {
               qualification: qual,
               selectedStream: fresh.selectedStream,
               selectedProgram: prog,
-              preferredCallTime: time,
-              currentFlowStep: 'ask_additional_help'
+              preferredCallTime: time
             }
           });
 
@@ -1365,12 +1364,8 @@ class PRDFlowService {
             await saveAndEmit('text', thankYouMsg, resTY);
           }
 
-          // 5. Sequence preservation sleep
-          await this.sleep(1500);
-
-          // 6. Ask Additional Help question
-          const helpMsg = "Do you need any other help?";
-          await sendInteractiveOptions(helpMsg, ['Yes', 'No']);
+          // 5. Flow Completed - Reset flow session
+          await this.clearPRDFlowSession(tenantId, contact.phone, ContactModel);
         }
         else if (isEdit) {
           await ContactModel.updateOne({ phone: contact.phone }, {
