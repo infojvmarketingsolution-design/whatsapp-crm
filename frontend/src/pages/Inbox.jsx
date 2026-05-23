@@ -642,9 +642,17 @@ export default function Inbox({ roleAccess }) {
 
                     </div>
                   </div>
-                  <p className="text-[12px] text-gray-500 truncate mt-0.5">
-                    {c.lastMessage || c.role}
-                  </p>
+                  <div className="text-[12px] text-gray-500 truncate mt-0.5">
+                    {c.lastMessage?.startsWith('[Template: ') ? (
+                       <span className="inline-flex items-center">
+                          <span className="text-[9px] font-bold bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 uppercase tracking-wide">
+                             Campaign: {c.lastMessage.replace('[Template: ', '').replace(']', '')}
+                          </span>
+                       </span>
+                    ) : (
+                       c.lastMessage || c.role
+                    )}
+                  </div>
                 </div>
               </div>
               )
