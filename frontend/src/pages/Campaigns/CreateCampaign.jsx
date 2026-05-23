@@ -124,6 +124,18 @@ function CreateCampaign() {
   const handleCreateTemplate = async () => {
     setLoading(true);
 
+    if (!newTemplate.name || newTemplate.name.trim() === '') {
+       alert("Template name is required. Please provide a unique lowercase name.");
+       setLoading(false);
+       return;
+    }
+    
+    if (!newTemplate.bodyText || newTemplate.bodyText.trim() === '') {
+       alert("Body text is required.");
+       setLoading(false);
+       return;
+    }
+
     const components = [];
     
     if (newTemplate.headerType !== 'NONE') {
