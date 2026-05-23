@@ -228,6 +228,11 @@ function CreateCampaign() {
          if (newTemplate.headerMetaHandle) {
             components.push({ type: 'HEADER', format: newTemplate.headerType, example: { header_handle: [newTemplate.headerMetaHandle] } });
          } else if (finalUrl) {
+            if (finalUrl.includes('localhost') || finalUrl.includes('127.0.0.1')) {
+                alert('Cannot use local media URL for Meta API. Please ensure your app is accessible publicly, or check your App ID configuration to allow Resumable Upload.');
+                setLoading(false);
+                return;
+            }
             components.push({ type: 'HEADER', format: newTemplate.headerType, example: { header_url: [finalUrl] } });
          } else {
             alert('Please provide a URL or upload a file for the ' + newTemplate.headerType.toLowerCase());
@@ -262,7 +267,7 @@ function CreateCampaign() {
     }
     
     if (newTemplate.buttons.length > 0) {
-        const hasCTA = newTemplate.buttons.some(b => ['URL', 'PHONE_NUMBER', 'COPY_CODE', 'VOICE_CALL', 'FLOW'].includes(b.type));
+        const hasCTA = newTemplate.buttons.some(b => ['URL', 'PHONE_NUMBER', 'COPY_CODE', 'FLOW'].includes(b.type));
         const hasQuickReply = newTemplate.buttons.some(b => b.type === 'QUICK_REPLY');
 
         if (hasCTA && hasQuickReply) {
@@ -294,19 +299,28 @@ function CreateCampaign() {
              throw new Error('Button text too long');
           }
 
-          if (b.type === 'URL' && b.url) {
+          if (b.type === 'URL') {
+             if (!b.url || b.url.trim() === '') {
+                alert("URL is required for the Visit Website button.");
+                setLoading(false);
+                throw new Error('Missing URL');
+             }
              let finalUrl = b.url.trim();
              if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
                 finalUrl = 'https://' + finalUrl;
              }
              return { type: 'URL', text: b.text.trim(), url: finalUrl };
           }
-          if (b.type === 'PHONE_NUMBER' && b.phoneNumber) {
+          if (b.type === 'PHONE_NUMBER') {
+             if (!b.phoneNumber || b.phoneNumber.trim() === '') {
+                alert("Phone Number is required for the Call Phone button.");
+                setLoading(false);
+                throw new Error('Missing Phone Number');
+             }
              let cleanedPhone = b.phoneNumber.replace(/[^\d+]/g, '');
              if (!cleanedPhone.startsWith('+')) cleanedPhone = '+' + cleanedPhone;
              return { type: 'PHONE_NUMBER', text: b.text.trim(), phone_number: cleanedPhone };
           }
-          if (b.type === 'VOICE_CALL') return { type: 'VOICE_CALL', text: b.text.trim() };
           if (b.type === 'QUICK_REPLY') return { type: 'QUICK_REPLY', text: b.text.trim() };
           if (b.type === 'FLOW') {
              if (!b.flow_id || b.flow_id.trim() === '') {
@@ -712,21 +726,18 @@ function CreateCampaign() {
                                    const phoneCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'PHONE_NUMBER').length;
                                    const replyCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'QUICK_REPLY').length;
                                    const copyCodeCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'COPY_CODE').length;
-                                   const voiceCallCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'VOICE_CALL').length;
                                    const flowCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'FLOW').length;
                                    
                                    if (newType === 'URL' && urlCount >= 2) return alert("Maximum 2 Visit Website buttons allowed.");
                                    if (newType === 'PHONE_NUMBER' && phoneCount >= 1) return alert("Maximum 1 Call Phone button allowed.");
                                    if (newType === 'QUICK_REPLY' && replyCount >= 3) return alert("Maximum 3 Quick Reply buttons allowed.");
                                    if (newType === 'COPY_CODE' && copyCodeCount >= 1) return alert("Maximum 1 Copy Offer Code button allowed.");
-                                   if (newType === 'VOICE_CALL' && voiceCallCount >= 1) return alert("Maximum 1 Call on WhatsApp button allowed.");
                                    if (newType === 'FLOW' && flowCount >= 1) return alert("Maximum 1 Complete flow button allowed.");
                                    
                                    const btns = [...newTemplate.buttons]; btns[idx].type = newType; btns[idx].url = ''; btns[idx].phoneNumber = ''; btns[idx].example = ''; btns[idx].flow_id = ''; btns[idx].navigate_screen = ''; setNewTemplate({...newTemplate, buttons: btns});
                                 }}>
                                    <option value="URL">Visit website</option>
                                    <option value="PHONE_NUMBER">Call Phone Number (1 button maximum)</option>
-                                   <option value="VOICE_CALL">Call on WhatsApp (1 button maximum)</option>
                                    <option value="FLOW">Complete flow (1 button maximum)</option>
                                    <option value="COPY_CODE">Copy offer code (1 button maximum)</option>
                                    <option value="QUICK_REPLY">Custom</option>
