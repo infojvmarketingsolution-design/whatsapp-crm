@@ -41,8 +41,11 @@ const maintenanceMiddleware = require('./src/middleware/maintenance');
 // Initialize Queue Workers
 require('./src/workers/campaign.worker');
 const { startTaskSuspensionWorker, startInactivityFollowupWorker } = require('./src/workers/task.worker');
+const { startCampaignScheduler } = require('./src/services/campaignScheduler.service');
+
 startTaskSuspensionWorker();
 startInactivityFollowupWorker();
+startCampaignScheduler();
 
 app.use(maintenanceMiddleware);
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, ChevronRight, Send, UploadCloud, Download, AlertCircle, Info, Trash2, X, Image as ImageIcon, Video, FileText as FileIcon } from 'lucide-react';
+import { ArrowLeft, CheckCircle, ChevronRight, Send, UploadCloud, Download, AlertCircle, Info, Trash2, X, Image as ImageIcon, Video, FileText as FileIcon, Calendar } from 'lucide-react';
 import Papa from 'papaparse';
 
 function CreateCampaign() {
@@ -12,7 +12,8 @@ function CreateCampaign() {
     templateId: '',
     templateComponents: { header: null, body: { variables: [] } },
     audienceTags: [],
-    uploadedContacts: []
+    uploadedContacts: [],
+    scheduledAt: ''
   });
 
   const [templates, setTemplates] = useState([]);
@@ -308,7 +309,8 @@ function CreateCampaign() {
           templateId: formData.templateId,
           templateComponents: formData.templateComponents,
           audienceTags: formData.audienceTags,
-          uploadedContacts: formData.uploadedContacts
+          uploadedContacts: formData.uploadedContacts,
+          scheduledAt: formData.scheduledAt || null
         })
       });
       
@@ -627,11 +629,45 @@ function CreateCampaign() {
                      <span className="text-gray-500">Template</span>
                      <span className="font-bold text-gray-800">{templates.find(t => t._id === formData.templateId)?.name || 'None selected'}</span>
                    </div>
-                   <div className="flex justify-between pb-1">
+                   <div className="flex justify-between pb-1 border-b border-gray-200">
                      <span className="text-gray-500">Target Audience</span>
                      <span className="font-bold text-gray-800">
                         {formData.uploadedContacts.length > 0 ? `${formData.uploadedContacts.length} CSV Contacts` : (formData.audienceTags.join(', ') || 'All Contacts')}
                      </span>
+                   </div>
+                   
+                   <div className="pt-2">
+                     <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Scheduling Options</label>
+                     <div className="grid grid-cols-2 gap-4">
+                        <button 
+                          onClick={() => setFormData({...formData, scheduledAt: ''})}
+                          className={`p-3 rounded-xl border-2 text-sm font-bold transition-all flex flex-col items-center justify-center ${!formData.scheduledAt ? 'border-brand-dark bg-brand-light/10 text-brand-dark' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                        >
+                           <Send size={18} className="mb-1" />
+                           Send Immediately
+                        </button>
+                        <div className="relative">
+                           <button 
+                             onClick={() => setFormData({...formData, scheduledAt: new Date(Date.now() + 3600000).toISOString().slice(0,16)})}
+                             className={`w-full p-3 rounded-xl border-2 text-sm font-bold transition-all flex flex-col items-center justify-center ${formData.scheduledAt ? 'border-brand-dark bg-brand-light/10 text-brand-dark' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
+                           >
+                              <Calendar size={18} className="mb-1" />
+                              Schedule for Later
+                           </button>
+                           {formData.scheduledAt && (
+                             <div className="absolute top-full mt-2 w-full z-10 bg-white p-3 rounded-xl shadow-lg border border-gray-100 animate-fade-in-up">
+                                <label className="block text-[10px] font-bold text-gray-500 uppercase mb-1">Select Date & Time</label>
+                                <input 
+                                  type="datetime-local" 
+                                  className="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-brand-dark text-sm font-bold text-gray-800"
+                                  value={formData.scheduledAt}
+                                  onChange={e => setFormData({...formData, scheduledAt: e.target.value})}
+                                  min={new Date().toISOString().slice(0,16)}
+                                />
+                             </div>
+                           )}
+                        </div>
+                     </div>
                    </div>
                 </div>
               </div>

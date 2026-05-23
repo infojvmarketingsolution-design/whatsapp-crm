@@ -261,5 +261,6 @@ module.exports = {
   createCampaign,
   getCampaigns,
   getCampaignReport,
-  deleteCampaign
+  deleteCampaign,
+  processCampaignSync
 };
