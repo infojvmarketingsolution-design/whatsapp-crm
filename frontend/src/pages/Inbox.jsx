@@ -807,31 +807,33 @@ export default function Inbox({ roleAccess }) {
                             }
 
                             return (
-                              <div className="rounded-xl overflow-hidden bg-black/5 border border-white/10 max-w-full relative group/media">
-                                <img 
-                                  src={imgUrl} 
-                                  className="w-full h-auto max-h-[300px] object-cover cursor-pointer hover:opacity-90 transition-opacity"
-                                  onClick={() => setSelectedMedia({ url: imgUrl, type: 'image' })}
-                                  onError={(e) => { e.target.style.display='none'; }}
-                                  alt="Media content" 
-                                />
-                                <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover/media:opacity-100 transition-opacity">
-                                   <a href={imgUrl} download target="_blank" className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-md backdrop-blur-sm" title="Download">
-                                      <Download size={14} />
-                                   </a>
-                                   <button onClick={() => handleForward(imgUrl)} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-md backdrop-blur-sm" title="Forward">
-                                      <Forward size={14} />
-                                   </button>
-                                </div>
-                                <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] px-2 py-0.5 rounded backdrop-blur-sm font-semibold tracking-wide">
-                                   {getExpiryText(m.timestamp)}
-                                </div>
-                                {caption && (
-                                  <p className="px-3 py-2 text-xs leading-relaxed opacity-95 whitespace-pre-wrap border-t border-white/5 bg-black/10">
-                                    {caption}
-                                  </p>
-                                )}
-                              </div>
+                               <div className="rounded-xl overflow-hidden bg-black/5 border border-white/10 max-w-full">
+                                 <div className="relative group/media">
+                                   <img 
+                                     src={imgUrl} 
+                                     className="w-full h-auto max-h-[300px] object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                                     onClick={() => setSelectedMedia({ url: imgUrl, type: 'image' })}
+                                     onError={(e) => { e.target.parentElement.style.display='none'; }}
+                                     alt="Media content" 
+                                   />
+                                   <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover/media:opacity-100 transition-opacity">
+                                      <a href={imgUrl} download target="_blank" className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-md backdrop-blur-sm" title="Download">
+                                         <Download size={14} />
+                                      </a>
+                                      <button onClick={() => handleForward(imgUrl)} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-md backdrop-blur-sm" title="Forward">
+                                         <Forward size={14} />
+                                      </button>
+                                   </div>
+                                   <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] px-2 py-0.5 rounded backdrop-blur-sm font-semibold tracking-wide">
+                                      {getExpiryText(m.timestamp)}
+                                   </div>
+                                 </div>
+                                 {caption && (
+                                   <p className="px-3 py-2 text-[13.5px] font-medium leading-relaxed opacity-95 whitespace-pre-wrap border-t border-white/5 bg-black/10">
+                                     {caption}
+                                   </p>
+                                 )}
+                               </div>
                             );
                          })()}
                        </div>
