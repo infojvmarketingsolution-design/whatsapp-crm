@@ -1,7 +1,7 @@
 const express = require('express');
 const path = require('path');
 const router = express.Router();
-const { syncTemplates, getTemplates, createTemplate, deleteTemplate, uploadTemplateMedia } = require('../controllers/template.controller');
+const { syncTemplates, getTemplates, createTemplate, deleteTemplate, uploadTemplateMedia, viewTemplateMedia } = require('../controllers/template.controller');
 const { protect } = require('../middleware/auth');
 const tenantMiddleware = require('../middleware/tenant');
 const multer = require('multer');
@@ -22,6 +22,8 @@ const upload = multer({
     }
   })
 });
+// Public route to view media (bypasses Nginx static file intercepts)
+router.get('/media/:tenantId/:filename/view', viewTemplateMedia);
 
 router.use(protect, tenantMiddleware);
 

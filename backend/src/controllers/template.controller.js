@@ -219,7 +219,7 @@ const uploadTemplateMedia = async (req, res) => {
     const targetPath = path.join(finalDir, req.file.filename);
     fs.renameSync(req.file.path, targetPath);
 
-    const publicUrl = `/api/uploads/templates/${tenantId}/${req.file.filename}`;
+    const publicUrl = `/api/templates/media/${tenantId}/${req.file.filename}/view`;
 
     // --- Meta Resumable Upload API Integration ---
     let metaHandle = null;
@@ -268,10 +268,22 @@ const uploadTemplateMedia = async (req, res) => {
   }
 };
 
+const viewTemplateMedia = (req, res) => {
+  const { tenantId, filename } = req.params;
+  const filePath = path.join(__dirname, '../../public/uploads/templates', tenantId, filename);
+  
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    res.status(404).send('Media not found');
+  }
+};
+
 module.exports = {
   syncTemplates,
   getTemplates,
   createTemplate,
   deleteTemplate,
-  uploadTemplateMedia
+  uploadTemplateMedia,
+  viewTemplateMedia
 };
