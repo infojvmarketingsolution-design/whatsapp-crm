@@ -808,7 +808,7 @@ export default function Inbox({ roleAccess }) {
                      )}
                      
                      {/* Message Text Content (Excluding the [Media] string if already rendered as image) */}
-                     {(!m.content?.includes('[Media]') && m.type === 'text') && (
+                     {(!m.content?.includes('[Media]') && !['image', 'video', 'document'].includes(m.type)) && (
                         <p 
                           className={`leading-relaxed ${isEmojiOnly(m.content) ? 'text-5xl py-2 mb-1' : 'text-[13.5px] font-medium whitespace-pre-wrap break-words'}`}
                           style={isEmojiOnly(m.content) ? { fontFamily: '"Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif' } : {}}
