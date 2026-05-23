@@ -79,37 +79,32 @@ class PRDFlowService {
     try {
       const User = require('../models/core/User');
       const service = selectedService.toUpperCase().trim();
-      let searchRole = '';
-      let fallbackName = '';
+      let targetAgentName = '';
       
-      if (service.includes('ONLINE PROGRAM')) { searchRole = 'ONLINE_PROGRAM'; fallbackName = 'Darshil'; }
-      else if (service.includes('INTERNATIONAL COACHING') || service.includes('STUDY ABROAD')) { searchRole = 'STUDY_ABROAD'; fallbackName = 'Jayashree'; }
-      else if (service.includes('VISA')) { searchRole = 'VISA'; fallbackName = 'Ajita'; }
-      else if (service.includes('MBBS')) { searchRole = 'MBBS'; fallbackName = 'Akash'; }
-      else if (service.includes('TOUR')) { searchRole = 'TOUR_PACKAGE'; fallbackName = 'Mihir'; }
-      else if (service.includes('COACHING')) { searchRole = 'COACHING'; fallbackName = 'Kinjal'; }
+      if (service.includes('ONLINE PROGRAM')) { targetAgentName = 'Darshil'; }
+      else if (service.includes('INTERNATIONAL COACHING')) { targetAgentName = 'Jayashree Kaushik Dave'; }
+      else if (service.includes('VISA')) { targetAgentName = 'Ajita Shukla'; }
+      else if (service.includes('MBBS')) { targetAgentName = 'Akash'; }
+      else if (service.includes('TOUR')) { targetAgentName = 'Mihir'; }
+      else if (service.includes('COACHING')) { targetAgentName = 'Kinjal Yogeshbhai Sadhu'; }
 
-      log(`[PRD] parsed service="${service}", searchRole="${searchRole}"`);
+      log(`[PRD] parsed service="${service}", targetAgentName="${targetAgentName}"`);
 
-      if (searchRole) {
+      if (targetAgentName) {
         let matchedAgents = await User.find({ 
           tenantId, 
-          $or: [
-            { role: { $regex: new RegExp(searchRole, 'i') } },
-            { role: { $regex: new RegExp('INTERNATIONAL_COACHING', 'i') } } // Fallback for Study Abroad
-          ],
+          name: { $regex: new RegExp(targetAgentName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i') },
           status: 'ACTIVE' 
         });
         
         if (!matchedAgents || matchedAgents.length === 0) {
-          if (fallbackName) {
-            log(`[PRD] Role match failed for ${searchRole}. Falling back to name match for "${fallbackName}"`);
-            matchedAgents = await User.find({
-              tenantId,
-              name: { $regex: new RegExp(fallbackName, 'i') },
-              status: 'ACTIVE'
-            });
-          }
+          const firstName = targetAgentName.split(' ')[0];
+          log(`[PRD] Exact match failed for ${targetAgentName}. Falling back to first name "${firstName}"`);
+          matchedAgents = await User.find({
+            tenantId,
+            name: { $regex: new RegExp(firstName, 'i') },
+            status: 'ACTIVE'
+          });
         }
 
         log(`[PRD] matchedAgents count: ${matchedAgents ? matchedAgents.length : 0}`);
