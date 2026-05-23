@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2, Megaphone, Video, Home, School, MapPin, Phone, Users, UserCircle, Bot, Download } from 'lucide-react';
+import { Search, Filter, Circle, X, Headphones, ShieldCheck, ChevronDown, Paperclip, Send, Image as ImageIcon, FileText, PhoneCall, UserPlus, StickyNote, CheckCircle2, MoreVertical, Calendar, Clock, Smile, Flame, Sparkles, Lock, Check, CheckCheck, AlertCircle, Trash2, Megaphone, Video, Home, School, MapPin, Phone, Users, UserCircle, Bot, Download, Forward, Share2 } from 'lucide-react';
 import io from 'socket.io-client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { State, City } from 'country-state-city';
@@ -1896,31 +1896,51 @@ export default function Inbox({ roleAccess }) {
       
       {/* Media Popup Modal */}
       {selectedMedia && (
-        <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setSelectedMedia(null)}>
-          <div className="relative max-w-4xl max-h-[90vh] w-full flex flex-col items-center justify-center" onClick={e => e.stopPropagation()}>
-            <button 
-              onClick={() => setSelectedMedia(null)}
-              className="absolute -top-12 right-0 text-white hover:text-red-400 p-2 transition-colors bg-white/10 rounded-full"
-            >
-              <X size={24} />
-            </button>
-            
-            {selectedMedia.type === 'video' ? (
-              <video src={selectedMedia.url} controls className="max-w-full max-h-[80vh] rounded-lg shadow-2xl border border-white/20" autoPlay />
-            ) : (
-              <img src={selectedMedia.url} className="max-w-full max-h-[80vh] object-contain rounded-lg shadow-2xl border border-white/20" alt="Media Preview" />
-            )}
-            
-            <div className="mt-6 flex gap-4">
-              <a 
-                href={selectedMedia.url}
-                target="_blank"
-                download
-                className="flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-500 text-white rounded-full transition-colors text-sm font-semibold shadow-lg hover:shadow-teal-600/30"
-              >
-                <Download size={18} />
-                Download
-              </a>
+        <div className="fixed inset-0 z-[99999] bg-black/95 flex flex-col items-center justify-center backdrop-blur-md">
+          {/* Top Navbar for Modal */}
+          <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-center bg-gradient-to-b from-black/80 to-transparent z-50">
+             <div className="text-white/80 font-medium text-sm flex items-center gap-2">
+                {selectedMedia.type === 'video' ? <Video size={18}/> : <ImageIcon size={18}/>}
+                Media Viewer
+             </div>
+             <div className="flex items-center gap-3">
+               {/* Forward/Share Option */}
+               <button 
+                 onClick={() => {
+                   navigator.clipboard.writeText(window.location.origin + selectedMedia.url);
+                   alert('Media Link Copied to Clipboard!');
+                 }}
+                 className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors text-sm font-medium"
+               >
+                 <Forward size={16} />
+                 Forward / Share
+               </button>
+
+               <a 
+                 href={selectedMedia.url}
+                 target="_blank"
+                 download
+                 className="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-500 text-white rounded-lg transition-colors text-sm font-medium shadow-lg"
+               >
+                 <Download size={16} />
+                 Download
+               </a>
+               <button 
+                 onClick={() => setSelectedMedia(null)}
+                 className="p-2 bg-white/10 hover:bg-red-500 text-white rounded-full transition-colors ml-2"
+               >
+                 <X size={20} />
+               </button>
+             </div>
+          </div>
+
+          <div className="relative w-full h-full flex items-center justify-center p-8 mt-12" onClick={() => setSelectedMedia(null)}>
+            <div className="relative max-w-5xl max-h-full flex items-center justify-center" onClick={e => e.stopPropagation()}>
+              {selectedMedia.type === 'video' ? (
+                <video src={selectedMedia.url} controls className="max-w-full max-h-[85vh] rounded-lg shadow-2xl ring-1 ring-white/20" autoPlay />
+              ) : (
+                <img src={selectedMedia.url} className="max-w-full max-h-[85vh] object-contain rounded-lg shadow-2xl ring-1 ring-white/20" alt="Media Preview" />
+              )}
             </div>
           </div>
         </div>
