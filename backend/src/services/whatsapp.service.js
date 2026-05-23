@@ -99,7 +99,22 @@ class WhatsAppService {
       });
       const downloadUrl = infoRes.data.url;
       const mimeType = infoRes.data.mime_type;
-      const extension = mimeType.split('/')[1]?.split(';')[0] || 'bin';
+      
+      const extensionMap = {
+         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+         'application/vnd.ms-excel': 'xls',
+         'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
+         'application/msword': 'doc',
+         'application/pdf': 'pdf',
+         'image/jpeg': 'jpg',
+         'image/png': 'png',
+         'image/webp': 'webp',
+         'video/mp4': 'mp4',
+         'audio/ogg': 'ogg',
+         'audio/mpeg': 'mp3'
+      };
+      
+      const extension = extensionMap[mimeType] || mimeType.split('/')[1]?.split(';')[0] || 'bin';
 
       // 2. Download the actual file buffer
       const fileRes = await axios.get(downloadUrl, {
