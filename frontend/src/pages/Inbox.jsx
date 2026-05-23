@@ -787,13 +787,29 @@ export default function Inbox({ roleAccess }) {
                        </div>
                      )}
 
-                     {/* Video/Doc Placeholders (Refined) */}
+                     {/* Video/Doc Placeholders (Refined Previews) */}
                      {m.type === 'video' && (
                        <div 
-                         className={`mb-2 flex items-center space-x-2 p-2.5 rounded-xl text-xs cursor-pointer hover:opacity-80 transition-opacity ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}
+                         className="relative w-56 h-36 mb-2 rounded-xl overflow-hidden cursor-pointer group shadow-sm bg-black/5"
                          onClick={() => setSelectedMedia({ url: m.content?.startsWith('/') ? `/api${m.content}` : m.content, type: 'video' })}
                        >
-                         <Video size={14}/> <span>Video Attachment - Click to View</span>
+                         <video 
+                           src={m.content?.startsWith('/') ? `/api${m.content}` : m.content} 
+                           className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" 
+                         />
+                         <div className="absolute inset-0 flex items-center justify-center">
+                           <div className="w-12 h-12 bg-black/60 rounded-full flex items-center justify-center text-white backdrop-blur-md group-hover:bg-teal-500 transition-colors group-hover:scale-110 duration-300 shadow-lg">
+                             <Video size={20} className="ml-0.5" />
+                           </div>
+                         </div>
+                         <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center opacity-90">
+                           <div className="px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold rounded-md uppercase tracking-wider">
+                             Video
+                           </div>
+                           <div className="text-[10px] text-white/80 font-medium px-2 py-1 bg-black/40 rounded-md backdrop-blur-sm">
+                             Click to play
+                           </div>
+                         </div>
                        </div>
                      )}
                      {m.type === 'document' && (
@@ -801,9 +817,20 @@ export default function Inbox({ roleAccess }) {
                          href={m.content?.startsWith('/') ? `/api${m.content}` : m.content} 
                          target="_blank" 
                          download
-                         className={`mb-2 flex items-center space-x-2 p-2.5 rounded-xl text-xs cursor-pointer hover:opacity-80 transition-opacity ${m.isInternal ? 'text-amber-800 bg-amber-200/50' : 'text-white/90 bg-black/20'}`}
+                         className={`mb-2 w-64 flex items-center space-x-3 p-3 rounded-xl cursor-pointer group transition-all duration-300 shadow-sm border ${m.isInternal ? 'bg-amber-100/80 border-amber-200 hover:bg-amber-200' : 'bg-black/10 hover:bg-black/20 border-white/10'}`}
                        >
-                         <FileText size={14}/> <span>Document Attachment - Click to Download</span>
+                         <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 shadow-inner ${m.isInternal ? 'bg-amber-500/20 text-amber-700' : 'bg-white/10 text-white/90 group-hover:bg-teal-500/20 group-hover:text-teal-400'} transition-colors`}>
+                           <FileText size={22}/>
+                         </div>
+                         <div className="flex-1 min-w-0">
+                           <p className={`text-sm font-semibold truncate ${m.isInternal ? 'text-amber-900' : 'text-white'}`}>Document</p>
+                           <p className={`text-[10px] uppercase font-bold tracking-wider truncate mt-0.5 ${m.isInternal ? 'text-amber-700/70' : 'text-white/50 group-hover:text-teal-300'} transition-colors`}>
+                             Click to Download
+                           </p>
+                         </div>
+                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${m.isInternal ? 'bg-amber-500/10 text-amber-600' : 'bg-white/5 text-white/40 group-hover:bg-teal-500/20 group-hover:text-teal-400'} transition-all`}>
+                           <Download size={14} />
+                         </div>
                        </a>
                      )}
                      
