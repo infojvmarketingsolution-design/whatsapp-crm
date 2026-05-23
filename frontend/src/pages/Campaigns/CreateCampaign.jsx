@@ -291,22 +291,22 @@ function CreateCampaign() {
              if (!finalUrl.startsWith('http://') && !finalUrl.startsWith('https://')) {
                 finalUrl = 'https://' + finalUrl;
              }
-             return { type: 'URL', text: b.text, url: finalUrl };
+             return { type: 'URL', text: b.text.trim(), url: finalUrl };
           }
           if (b.type === 'PHONE_NUMBER' && b.phoneNumber) {
              let cleanedPhone = b.phoneNumber.replace(/[^\d+]/g, '');
              if (!cleanedPhone.startsWith('+')) cleanedPhone = '+' + cleanedPhone;
-             return { type: 'PHONE_NUMBER', text: b.text, phone_number: cleanedPhone };
+             return { type: 'PHONE_NUMBER', text: b.text.trim(), phone_number: cleanedPhone };
           }
-          if (b.type === 'VOICE_CALL') return { type: 'VOICE_CALL', text: b.text };
-          if (b.type === 'QUICK_REPLY') return { type: 'QUICK_REPLY', text: b.text };
+          if (b.type === 'VOICE_CALL') return { type: 'VOICE_CALL', text: b.text.trim() };
+          if (b.type === 'QUICK_REPLY') return { type: 'QUICK_REPLY', text: b.text.trim() };
           if (b.type === 'FLOW') {
              if (!b.flow_id || b.flow_id.trim() === '') {
                 alert("Flow ID is required for the Complete flow button.");
                 setLoading(false);
                 throw new Error('Missing Flow ID');
              }
-             return { type: 'FLOW', text: b.text, flow_id: b.flow_id.trim(), flow_action: 'navigate', navigate_screen: b.navigate_screen?.trim() || 'HOME' };
+             return { type: 'FLOW', text: b.text.trim(), flow_id: b.flow_id.trim(), flow_action: 'navigate', navigate_screen: b.navigate_screen?.trim() || 'HOME' };
           }
           return null;
        }).filter(Boolean);
@@ -729,7 +729,7 @@ function CreateCampaign() {
                                   <div className="flex-1 relative">
                                     <input type="text" className={`w-full px-3 py-2 border rounded-xl text-xs font-bold ${btn.text.length > 25 ? 'border-red-500 bg-red-50' : 'border-slate-200'} outline-none focus:ring-4 focus:ring-blue-100`} placeholder="Button Label" value={btn.text || ''} onChange={e => {
                                        const btns = [...newTemplate.buttons]; btns[idx].text = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
-                                    }} maxLength={50} />
+                                    }} maxLength={25} />
                                     <span className={`absolute right-3 -bottom-4 text-[8px] font-black uppercase tracking-tighter ${btn.text?.length > 25 ? 'text-red-500' : 'text-slate-400'}`}>{btn.text?.length || 0}/25</span>
                                   </div>
                                 ) : (
