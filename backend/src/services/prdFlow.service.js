@@ -205,21 +205,18 @@ class PRDFlowService {
   makeAbsolute(url) {
     if (!url || typeof url !== 'string' || url.trim() === '') return '';
     const baseUrl = (process.env.BASE_URL || 'https://wapipulse.com').replace(/\/$/, '');
-    if (!baseUrl || baseUrl.includes('localhost') || baseUrl.includes('127.0.0.1')) {
-      return '';
-    }
     
+    // Explicitly force all /uploads/ to go through /api/uploads/
+    if (url.includes('/uploads/') && !url.includes('/api/uploads/')) {
+      url = url.replace(/\/uploads\//, '/api/uploads/');
+    }
+
     if (url.toLowerCase().endsWith('.webp') || url.toLowerCase().includes('.webp')) {
       // Meta Cloud API doesn't support WebP. Proxy and convert to standard JPEG
-      if (url.startsWith('/uploads/')) {
+      if (url.startsWith('/api/uploads/')) {
         return `${baseUrl}/api/proxy-image?url=${encodeURIComponent(url)}`;
       }
       return `${baseUrl}/api/proxy-image?url=${encodeURIComponent(url)}`;
-    }
-    
-    // Explicitly route through API proxy path so Nginx handles it
-    if (url.startsWith('/uploads/')) {
-      return `${baseUrl}/api${url}`;
     }
     
     if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -415,6 +412,32 @@ class PRDFlowService {
         const media = this.makeAbsolute(greetingImage);
         let resGreeting;
         let singleInteractiveSent = false;
+        
+        let mediaId = null;
+        let mediaLink = media;
+
+        // Bypass URL reachability issues by uploading the file directly if it exists locally
+        if (media && (media.includes('/uploads/prompts/') || media.includes('/uploads/media/'))) {
+          try {
+            const urlObj = new URL(media);
+            const fs = require('fs');
+            const path = require('path');
+            const localPath = path.join(__dirname, '../../public', urlObj.pathname.replace('/api', ''));
+            
+            if (fs.existsSync(localPath)) {
+              console.log(`[PRD] Direct uploading local media to avoid Meta URL fetch issues: ${localPath}`);
+              const uploadRes = await waService.uploadMedia(localPath, 'image/jpeg');
+              if (uploadRes && uploadRes.id) {
+                mediaId = uploadRes.id;
+                mediaLink = null;
+              }
+            } else {
+              console.warn(`[PRD] Local media file not found at ${localPath}, falling back to URL.`);
+            }
+          } catch (pathErr) {
+            console.warn('[PRD] Could not parse media URL for direct upload:', pathErr.message);
+          }
+        }
 
         const replyLabels = replyButtons.map(b => (b.label || '').trim()).filter(l => l.length > 0);
 
@@ -422,7 +445,7 @@ class PRDFlowService {
           if (media) {
             try {
               resGreeting = await waService.sendInteractiveButtonMessage(contact.phone, {
-                header: { type: 'image', link: media },
+                header: { type: 'image', image: mediaId, link: mediaLink },
                 body: welcomeMsg,
                 buttons: replyLabels
               });
@@ -449,7 +472,7 @@ class PRDFlowService {
         if (!singleInteractiveSent) {
           if (media) {
             try {
-              resGreeting = await waService.sendMedia(contact.phone, 'image', null, welcomeMsg, media);
+              resGreeting = await waService.sendMedia(contact.phone, 'image', mediaId, welcomeMsg, mediaLink);
               await saveAndEmit('image', media ? `[Media] ${media}\n${welcomeMsg}` : welcomeMsg, resGreeting);
             } catch (mediaErr) {
               console.error('[PRD] Media send failed, falling back to text greeting:', mediaErr.message);
