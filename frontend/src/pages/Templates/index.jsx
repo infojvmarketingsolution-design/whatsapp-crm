@@ -154,26 +154,43 @@ function Templates() {
                   {/* Header */}
                   {selectedTemplate.components?.find(c => c.type === 'HEADER') && (
                     <div className="mb-2 border-b border-gray-100 pb-2">
-                      {selectedTemplate.components.find(c => c.type === 'HEADER').format === 'VIDEO' ? (
-                        <div className="bg-gray-100 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 border border-dashed border-gray-300">
-                           <Video size={32} className="mb-2 text-teal-500" />
-                           <span className="text-xs font-bold uppercase tracking-widest text-teal-600">Video Header (Reel)</span>
-                        </div>
-                      ) : selectedTemplate.components.find(c => c.type === 'HEADER').format === 'IMAGE' ? (
-                        <div className="bg-gray-100 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 border border-dashed border-gray-300">
-                           <ImageIcon size={32} className="mb-2 text-blue-500" />
-                           <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Image Header</span>
-                        </div>
-                      ) : selectedTemplate.components.find(c => c.type === 'HEADER').format === 'DOCUMENT' ? (
-                        <div className="bg-gray-100 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 border border-dashed border-gray-300">
-                           <FileText size={32} className="mb-2 text-amber-500" />
-                           <span className="text-xs font-bold uppercase tracking-widest text-amber-600">Document Header</span>
-                        </div>
-                      ) : (
-                        <div className="font-bold text-gray-900 py-1">
-                          {selectedTemplate.components.find(c => c.type === 'HEADER').text}
-                        </div>
-                      )}
+                      {(() => {
+                        const headerComp = selectedTemplate.components.find(c => c.type === 'HEADER');
+                        const mediaUrl = headerComp.example?.header_url?.[0] || headerComp.example?.header_handle?.[0]; // Usually header_url contains the direct link if created locally
+                        
+                        if (headerComp.format === 'VIDEO') {
+                          return mediaUrl && mediaUrl.startsWith('http') ? (
+                             <video src={mediaUrl} controls className="w-full rounded-lg max-h-48 object-cover mb-2" />
+                          ) : (
+                            <div className="bg-gray-100 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 border border-dashed border-gray-300">
+                               <Video size={32} className="mb-2 text-teal-500" />
+                               <span className="text-xs font-bold uppercase tracking-widest text-teal-600">Video Header (Reel)</span>
+                            </div>
+                          );
+                        } else if (headerComp.format === 'IMAGE') {
+                          return mediaUrl && mediaUrl.startsWith('http') ? (
+                             <img src={mediaUrl} alt="Template Header" className="w-full rounded-lg object-contain max-h-48 mb-2" />
+                          ) : (
+                            <div className="bg-gray-100 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 border border-dashed border-gray-300">
+                               <ImageIcon size={32} className="mb-2 text-blue-500" />
+                               <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Image Header</span>
+                            </div>
+                          );
+                        } else if (headerComp.format === 'DOCUMENT') {
+                          return (
+                            <div className="bg-gray-100 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 border border-dashed border-gray-300">
+                               <FileText size={32} className="mb-2 text-amber-500" />
+                               <span className="text-xs font-bold uppercase tracking-widest text-amber-600">Document Header</span>
+                            </div>
+                          );
+                        } else {
+                          return (
+                            <div className="font-bold text-gray-900 py-1">
+                              {headerComp.text}
+                            </div>
+                          );
+                        }
+                      })()}
                     </div>
                   )}
                   {/* Body */}
