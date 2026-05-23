@@ -519,7 +519,7 @@ class PRDFlowService {
           if (nameMedia) {
             try {
               resName = await waService.sendMedia(contact.phone, 'image', null, nameMsg, nameMedia);
-              await saveAndEmit('image', nameMsg, resName);
+              await saveAndEmit('image', nameMedia ? `[Media] ${nameMedia}\n${nameMsg}` : nameMsg, resName);
             } catch (mediaErr) {
               resName = await waService.sendTextMessage(contact.phone, nameMsg);
               await saveAndEmit('text', nameMsg, resName);
@@ -1340,7 +1340,8 @@ class PRDFlowService {
               qualification: qual,
               selectedStream: fresh.selectedStream,
               selectedProgram: prog,
-              preferredCallTime: time
+              preferredCallTime: time,
+              currentFlowStep: 'ask_additional_help'
             }
           });
 
@@ -1354,7 +1355,7 @@ class PRDFlowService {
           if (thankYouMedia) {
             try {
               resTY = await waService.sendMedia(contact.phone, 'image', null, thankYouMsg, thankYouMedia);
-              await saveAndEmit('image', thankYouMsg, resTY);
+              await saveAndEmit('image', thankYouMedia ? `[Media] ${thankYouMedia}\n${thankYouMsg}` : thankYouMsg, resTY);
             } catch (tyErr) {
               resTY = await waService.sendTextMessage(contact.phone, thankYouMsg);
               await saveAndEmit('text', thankYouMsg, resTY);
@@ -1364,8 +1365,12 @@ class PRDFlowService {
             await saveAndEmit('text', thankYouMsg, resTY);
           }
 
-          // 5. Flow Completed - Reset flow session
-          await this.clearPRDFlowSession(tenantId, contact.phone, ContactModel);
+          // 5. Sequence preservation sleep
+          await this.sleep(1500);
+
+          // 6. Ask Additional Help question
+          const helpMsg = "Do you need any other help?";
+          await sendInteractiveOptions(helpMsg, ['Yes', 'No']);
         }
         else if (isEdit) {
           await ContactModel.updateOne({ phone: contact.phone }, {
