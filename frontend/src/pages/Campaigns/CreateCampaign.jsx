@@ -146,7 +146,7 @@ function CreateCampaign() {
               });
               if (uploadRes.ok) {
                 const uploadData = await uploadRes.json();
-                finalUrl = window.location.origin + '/api' + uploadData.url;
+                finalUrl = window.location.origin + uploadData.url;
               } else {
                 let errorMsg = uploadRes.statusText;
                 const contentType = uploadRes.headers.get("content-type");
@@ -732,7 +732,7 @@ const TemplateConfigModal = ({ isOpen, onClose, selectedTemplate, formData, setF
                                   });
                                   if (uploadRes.ok) {
                                      const uploadData = await uploadRes.json();
-                                      const finalUrl = (window.location.origin.replace('http:', 'https:')) + '/api' + uploadData.url;
+                                      const finalUrl = (window.location.origin.replace('http:', 'https:')) + uploadData.url;
                                      setFormData(prev => ({
                                         ...prev,
                                         templateComponents: {
