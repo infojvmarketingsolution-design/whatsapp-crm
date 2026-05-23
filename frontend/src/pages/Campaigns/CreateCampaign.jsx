@@ -51,7 +51,8 @@ function CreateCampaign() {
     name: '', category: 'MARKETING', language: 'en', 
     headerType: 'NONE', headerText: '', headerMediaUrl: '', headerFile: null, headerSample: '',
     latitude: '', longitude: '',
-    bodyText: '', bodySamples: [], footerText: '', buttons: [] 
+    bodyText: '', bodySamples: [], footerText: '', buttons: [],
+    useCustomTtl: false, messageSendTtl: ''
   });
   const headerFileRef = React.useRef(null);
 
@@ -326,7 +327,8 @@ function CreateCampaign() {
            name: newTemplate.name,
            category: newTemplate.category,
            language: newTemplate.language,
-           components
+           components,
+           message_send_ttl_seconds: newTemplate.useCustomTtl && newTemplate.messageSendTtl ? parseInt(newTemplate.messageSendTtl) : undefined
         })
       });
       if (res.ok) {
@@ -334,7 +336,7 @@ function CreateCampaign() {
         setTemplates([created, ...templates]);
         setFormData({ ...formData, templateId: created._id });
         setIsCreatingTemplate(false);
-        setNewTemplate({ name: '', category: 'MARKETING', language: 'en', headerType: 'NONE', headerText: '', headerMediaUrl: '', bodyText: '', footerText: '', buttons: [] });
+        setNewTemplate({ name: '', category: 'MARKETING', language: 'en', headerType: 'NONE', headerText: '', headerMediaUrl: '', headerFile: null, headerSample: '', latitude: '', longitude: '', bodyText: '', bodySamples: [], footerText: '', buttons: [], useCustomTtl: false, messageSendTtl: '' });
       } else {
         const err = await res.json();
         let errorMsg = err.error || err.message || 'Error occurred';
@@ -475,23 +477,75 @@ function CreateCampaign() {
                              <span className="text-[9px] font-bold text-slate-400">{newTemplate.name.length}/512</span>
                           </div>
                         </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
-                          <select className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none bg-white focus:ring-2 focus:ring-blue-500" value={newTemplate.category} onChange={e => setNewTemplate({...newTemplate, category: e.target.value})}>
-                             <option value="MARKETING">Marketing</option>
-                             <option value="UTILITY">Utility</option>
-                             <option value="AUTHENTICATION">Authentication</option>
-                          </select>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Category</label>
+                          <div className="flex bg-slate-100 p-1 rounded-xl">
+                            {['MARKETING', 'UTILITY', 'AUTHENTICATION'].map(cat => (
+                               <button 
+                                 key={cat}
+                                 type="button"
+                                 onClick={() => {
+                                    // Reset TTL when category changes
+                                    setNewTemplate({...newTemplate, category: cat, useCustomTtl: false, messageSendTtl: ''});
+                                 }}
+                                 className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${newTemplate.category === cat ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+                               >
+                                 {cat === 'AUTHENTICATION' ? 'AUTH' : cat}
+                               </button>
+                            ))}
+                          </div>
                         </div>
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">Language</label>
-                          <select className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none bg-white focus:ring-2 focus:ring-blue-500" value={newTemplate.language} onChange={e => setNewTemplate({...newTemplate, language: e.target.value})}>
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Language</label>
+                          <select className="w-full px-3 py-2.5 border border-slate-200 rounded-xl outline-none bg-white focus:ring-4 focus:ring-blue-100 text-xs font-bold" value={newTemplate.language} onChange={e => setNewTemplate({...newTemplate, language: e.target.value})}>
                              {META_LANGUAGES.map(lang => (
                                <option key={lang.code} value={lang.code}>{lang.name} ({lang.code})</option>
                              ))}
                           </select>
                         </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-gray-100">
+                        <div className="flex items-center justify-between mb-2">
+                           <div>
+                             <label className="block text-sm font-semibold text-gray-700">Message validity period</label>
+                             <p className="text-[10px] text-gray-500 mt-0.5">Set a custom expiration time for this message.</p>
+                           </div>
+                           <label className="relative inline-flex items-center cursor-pointer">
+                             <input type="checkbox" className="sr-only peer" checked={newTemplate.useCustomTtl} onChange={e => setNewTemplate({...newTemplate, useCustomTtl: e.target.checked, messageSendTtl: ''})} />
+                             <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                           </label>
+                        </div>
+                        {newTemplate.useCustomTtl && (
+                           <div className="mt-3 animate-fade-in-up">
+                              <select className="w-full px-3 py-2.5 border border-slate-200 rounded-xl outline-none bg-white focus:ring-4 focus:ring-blue-100 text-xs font-bold" value={newTemplate.messageSendTtl} onChange={e => setNewTemplate({...newTemplate, messageSendTtl: e.target.value})}>
+                                 <option value="">Select Custom Period</option>
+                                 {newTemplate.category === 'MARKETING' && (
+                                   <>
+                                     <option value="86400">1 Day</option>
+                                     <option value="604800">7 Days</option>
+                                     <option value="1209600">14 Days</option>
+                                     <option value="2592000">30 Days</option>
+                                   </>
+                                 )}
+                                 {newTemplate.category === 'UTILITY' && (
+                                   <>
+                                     <option value="3600">1 Hour</option>
+                                     <option value="21600">6 Hours</option>
+                                     <option value="43200">12 Hours</option>
+                                   </>
+                                 )}
+                                 {newTemplate.category === 'AUTHENTICATION' && (
+                                   <>
+                                     <option value="300">5 Minutes</option>
+                                     <option value="600">10 Minutes</option>
+                                     <option value="900">15 Minutes</option>
+                                   </>
+                                 )}
+                              </select>
+                           </div>
+                        )}
                       </div>
                       
                       <div className="pt-4 border-t border-gray-100">
