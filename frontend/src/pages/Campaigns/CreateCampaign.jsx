@@ -263,6 +263,20 @@ function CreateCampaign() {
         }
 
        const metaBtns = newTemplate.buttons.map(b => {
+          if (b.type === 'COPY_CODE') {
+             if (!b.example || b.example.trim() === '') {
+                alert("Offer Code is required for the Copy Offer Code button.");
+                setLoading(false);
+                throw new Error('Missing offer code');
+             }
+             if (b.example.length > 15) {
+                alert(`Offer code "${b.example}" is too long. Maximum 15 characters allowed. Current: ${b.example.length}`);
+                setLoading(false);
+                throw new Error('Offer code too long');
+             }
+             return { type: 'COPY_CODE', example: b.example.trim() };
+          }
+          
           if (!b.text) return null;
           
           if (b.text.length > 25) {
@@ -616,7 +630,7 @@ function CreateCampaign() {
                                   alert("You have reached the maximum number of Quick Reply buttons (3).");
                                   return;
                                }
-                               setNewTemplate({...newTemplate, buttons: [...newTemplate.buttons, {type: newType, text: '', url: '', phoneNumber: ''}]});
+                               setNewTemplate({...newTemplate, buttons: [...newTemplate.buttons, {type: newType, text: '', url: '', phoneNumber: '', example: ''}]});
                              }} className="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl hover:bg-blue-100 uppercase tracking-widest border border-blue-100">+ Add Button</button>
                            )}
                         </div>
@@ -628,23 +642,35 @@ function CreateCampaign() {
                                    const urlCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'URL').length;
                                    const phoneCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'PHONE_NUMBER').length;
                                    const replyCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'QUICK_REPLY').length;
+                                   const copyCodeCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'COPY_CODE').length;
                                    
                                    if (newType === 'URL' && urlCount >= 2) return alert("Maximum 2 Visit Website buttons allowed.");
                                    if (newType === 'PHONE_NUMBER' && phoneCount >= 1) return alert("Maximum 1 Call Phone button allowed.");
                                    if (newType === 'QUICK_REPLY' && replyCount >= 3) return alert("Maximum 3 Quick Reply buttons allowed.");
+                                   if (newType === 'COPY_CODE' && copyCodeCount >= 1) return alert("Maximum 1 Copy Offer Code button allowed.");
                                    
-                                   const btns = [...newTemplate.buttons]; btns[idx].type = newType; btns[idx].url = ''; btns[idx].phoneNumber = ''; setNewTemplate({...newTemplate, buttons: btns});
+                                   const btns = [...newTemplate.buttons]; btns[idx].type = newType; btns[idx].url = ''; btns[idx].phoneNumber = ''; btns[idx].example = ''; setNewTemplate({...newTemplate, buttons: btns});
                                 }}>
                                    <option value="URL">Visit Website</option>
                                    <option value="PHONE_NUMBER">Call Phone</option>
                                    <option value="QUICK_REPLY">Quick Reply</option>
+                                   <option value="COPY_CODE">Copy Offer Code</option>
                                 </select>
-                                <div className="flex-1 relative">
-                                  <input type="text" className={`w-full px-3 py-2 border rounded-xl text-xs font-bold ${btn.text.length > 25 ? 'border-red-500 bg-red-50' : 'border-slate-200'} outline-none focus:ring-4 focus:ring-blue-100`} placeholder="Button Label" value={btn.text} onChange={e => {
-                                     const btns = [...newTemplate.buttons]; btns[idx].text = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
-                                  }} maxLength={50} />
-                                  <span className={`absolute right-3 -bottom-4 text-[8px] font-black uppercase tracking-tighter ${btn.text.length > 25 ? 'text-red-500' : 'text-slate-400'}`}>{btn.text.length}/25</span>
-                                </div>
+                                {btn.type !== 'COPY_CODE' ? (
+                                  <div className="flex-1 relative">
+                                    <input type="text" className={`w-full px-3 py-2 border rounded-xl text-xs font-bold ${btn.text.length > 25 ? 'border-red-500 bg-red-50' : 'border-slate-200'} outline-none focus:ring-4 focus:ring-blue-100`} placeholder="Button Label" value={btn.text || ''} onChange={e => {
+                                       const btns = [...newTemplate.buttons]; btns[idx].text = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
+                                    }} maxLength={50} />
+                                    <span className={`absolute right-3 -bottom-4 text-[8px] font-black uppercase tracking-tighter ${btn.text?.length > 25 ? 'text-red-500' : 'text-slate-400'}`}>{btn.text?.length || 0}/25</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex-1 relative">
+                                    <input type="text" className={`w-full px-3 py-2 border rounded-xl text-xs font-bold ${btn.example?.length > 15 ? 'border-red-500 bg-red-50' : 'border-slate-200'} outline-none focus:ring-4 focus:ring-blue-100`} placeholder="Offer Code (e.g. 25OFF)" value={btn.example || ''} onChange={e => {
+                                       const btns = [...newTemplate.buttons]; btns[idx].example = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
+                                    }} maxLength={15} />
+                                    <span className={`absolute right-3 -bottom-4 text-[8px] font-black uppercase tracking-tighter ${btn.example?.length > 15 ? 'text-red-500' : 'text-slate-400'}`}>{btn.example?.length || 0}/15</span>
+                                  </div>
+                                )}
                                 
                                 {btn.type === 'URL' && <input type="text" className="w-full sm:flex-[1.5] px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-4 focus:ring-blue-100 bg-white" placeholder="https://..." value={btn.url} onChange={e => {
                                    const btns = [...newTemplate.buttons]; btns[idx].url = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
