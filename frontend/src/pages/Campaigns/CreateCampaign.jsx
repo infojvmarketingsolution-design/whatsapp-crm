@@ -49,9 +49,9 @@ function CreateCampaign() {
   const selectedTemplate = templates.find(t => t._id === formData.templateId);
   const [newTemplate, setNewTemplate] = useState({ 
     name: '', category: 'MARKETING', language: 'en', 
-    headerType: 'NONE', headerText: '', headerMediaUrl: '', headerFile: null,
+    headerType: 'NONE', headerText: '', headerMediaUrl: '', headerFile: null, headerSample: '',
     latitude: '', longitude: '',
-    bodyText: '', footerText: '', buttons: [] 
+    bodyText: '', bodySamples: [], footerText: '', buttons: [] 
   });
   const headerFileRef = React.useRef(null);
 
@@ -166,7 +166,16 @@ function CreateCampaign() {
     
     if (newTemplate.headerType !== 'NONE') {
       if (newTemplate.headerType === 'TEXT' && newTemplate.headerText) {
-         components.push({ type: 'HEADER', format: 'TEXT', text: newTemplate.headerText });
+         let headerComp = { type: 'HEADER', format: 'TEXT', text: newTemplate.headerText };
+         if (newTemplate.headerText.includes('{{1}}')) {
+            if (!newTemplate.headerSample) {
+               alert("Please provide a sample for the Header variable {{1}}.");
+               setLoading(false);
+               return;
+            }
+            headerComp.example = { header_text: [newTemplate.headerSample] };
+         }
+         components.push(headerComp);
       } else if (['IMAGE', 'VIDEO', 'DOCUMENT'].includes(newTemplate.headerType)) {
          let finalUrl = newTemplate.headerMediaUrl;
          
@@ -226,7 +235,18 @@ function CreateCampaign() {
       }
     }
     
-    components.push({ type: 'BODY', text: newTemplate.bodyText });
+    let bodyComp = { type: 'BODY', text: newTemplate.bodyText };
+    const bodyVarMatches = newTemplate.bodyText.match(/{{(\d+)}}/g);
+    if (bodyVarMatches && bodyVarMatches.length > 0) {
+       const numVars = new Set(bodyVarMatches).size;
+       if (newTemplate.bodySamples.length < numVars || newTemplate.bodySamples.some((s, i) => i < numVars && !s)) {
+          alert("Please provide sample values for all Body variables.");
+          setLoading(false);
+          return;
+       }
+       bodyComp.example = { body_text: [newTemplate.bodySamples.slice(0, numVars)] };
+    }
+    components.push(bodyComp);
     
     if (newTemplate.footerText) {
        components.push({ type: 'FOOTER', text: newTemplate.footerText });
@@ -465,6 +485,13 @@ function CreateCampaign() {
                            <div className="relative">
                              <input type="text" className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500" placeholder="Header Text" value={newTemplate.headerText} onChange={e => setNewTemplate({...newTemplate, headerText: e.target.value})} maxLength={60} />
                              <span className="absolute right-3 top-2.5 text-xs text-gray-400 font-bold">{newTemplate.headerText.length}/60</span>
+                             {newTemplate.headerText.includes('{{1}}') && (
+                                <div className="mt-2 bg-yellow-50 p-3 rounded-lg border border-yellow-200">
+                                   <label className="block text-[10px] font-black text-yellow-800 uppercase tracking-widest mb-1">Header Sample {"{{1}}"}</label>
+                                   <input type="text" className="w-full px-3 py-2 border border-yellow-300 rounded-md outline-none focus:ring-2 focus:ring-yellow-500 text-sm" placeholder="e.g. John" value={newTemplate.headerSample} onChange={e => setNewTemplate({...newTemplate, headerSample: e.target.value})} />
+                                   <p className="text-[9px] text-yellow-600 mt-1">Meta requires a sample value for any variable used.</p>
+                                </div>
+                             )}
                            </div>
                         )}
                         {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(newTemplate.headerType) && (
@@ -542,6 +569,22 @@ function CreateCampaign() {
                           <textarea className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none min-h-[100px] focus:ring-2 focus:ring-blue-500" maxLength={1024} placeholder="Hello {{1}}, your order {{2}} is ready." value={newTemplate.bodyText} onChange={e => setNewTemplate({...newTemplate, bodyText: e.target.value})}></textarea>
                           <span className="absolute right-3 bottom-3 text-xs text-gray-400 font-bold bg-white px-1">{newTemplate.bodyText.length}/1024</span>
                         </div>
+                        {newTemplate.bodyText.match(/{{(\d+)}}/g) && (
+                           <div className="mt-3 bg-yellow-50 p-3 rounded-lg border border-yellow-200 space-y-2">
+                             <h4 className="text-[10px] font-black text-yellow-800 uppercase tracking-widest">Body Variable Samples</h4>
+                             <p className="text-[10px] text-yellow-600 mb-2">Meta requires a sample value for every variable in your body text.</p>
+                             {Array.from(new Set(newTemplate.bodyText.match(/{{(\d+)}}/g))).map((match, idx) => (
+                                <div key={idx} className="flex items-center gap-2">
+                                   <span className="text-xs font-bold text-yellow-800 w-8">{match}</span>
+                                   <input type="text" className="flex-1 px-3 py-1.5 border border-yellow-300 rounded-md outline-none focus:ring-2 focus:ring-yellow-500 text-sm" placeholder={`Sample for ${match}`} value={newTemplate.bodySamples[idx] || ''} onChange={e => {
+                                      const newSamples = [...newTemplate.bodySamples];
+                                      newSamples[idx] = e.target.value;
+                                      setNewTemplate({...newTemplate, bodySamples: newSamples});
+                                   }} />
+                                </div>
+                             ))}
+                           </div>
+                        )}
                       </div>
 
                       <div className="pt-4 border-t border-gray-100">
