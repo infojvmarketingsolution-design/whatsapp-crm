@@ -830,18 +830,48 @@ export default function Inbox({ roleAccess }) {
                          href={formatMediaUrl(m.content)} 
                          target="_blank" 
                          download
-                         className={`mb-2 w-64 flex items-center space-x-3 p-3 rounded-xl cursor-pointer group transition-all duration-300 shadow-sm border ${m.isInternal ? 'bg-amber-100/80 border-amber-200 hover:bg-amber-200' : 'bg-black/10 hover:bg-black/20 border-white/10'}`}
+                         className={`mb-2 w-64 flex items-center space-x-3 p-3 rounded-xl cursor-pointer group transition-all duration-300 shadow-sm border ${
+                           m.isInternal 
+                             ? 'bg-amber-100/80 border-amber-200 hover:bg-amber-200' 
+                             : m.direction === 'OUTBOUND' 
+                               ? 'bg-black/10 hover:bg-black/20 border-white/10' 
+                               : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                         }`}
                        >
-                         <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 shadow-inner ${m.isInternal ? 'bg-amber-500/20 text-amber-700' : 'bg-white/10 text-white/90 group-hover:bg-teal-500/20 group-hover:text-teal-400'} transition-colors`}>
+                         <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 shadow-inner transition-colors ${
+                           m.isInternal 
+                             ? 'bg-amber-500/20 text-amber-700' 
+                             : m.direction === 'OUTBOUND' 
+                               ? 'bg-white/10 text-white/90 group-hover:bg-white/20' 
+                               : 'bg-teal-500/10 text-teal-600 group-hover:bg-teal-500/20'
+                         }`}>
                            <FileText size={22}/>
                          </div>
                          <div className="flex-1 min-w-0">
-                           <p className={`text-sm font-semibold truncate ${m.isInternal ? 'text-amber-900' : 'text-white'}`}>Document</p>
-                           <p className={`text-[10px] uppercase font-bold tracking-wider truncate mt-0.5 ${m.isInternal ? 'text-amber-700/70' : 'text-white/50 group-hover:text-teal-300'} transition-colors`}>
+                           <p className={`text-sm font-semibold truncate ${
+                             m.isInternal 
+                               ? 'text-amber-900' 
+                               : m.direction === 'OUTBOUND' 
+                                 ? 'text-white' 
+                                 : 'text-gray-800'
+                           }`}>Document</p>
+                           <p className={`text-[10px] uppercase font-bold tracking-wider truncate mt-0.5 transition-colors ${
+                             m.isInternal 
+                               ? 'text-amber-700/70' 
+                               : m.direction === 'OUTBOUND' 
+                                 ? 'text-white/60 group-hover:text-white/90' 
+                                 : 'text-gray-500 group-hover:text-teal-600'
+                           }`}>
                              Click to Download
                            </p>
                          </div>
-                         <div className={`w-8 h-8 rounded-full flex items-center justify-center ${m.isInternal ? 'bg-amber-500/10 text-amber-600' : 'bg-white/5 text-white/40 group-hover:bg-teal-500/20 group-hover:text-teal-400'} transition-all`}>
+                         <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                           m.isInternal 
+                             ? 'bg-amber-500/10 text-amber-600' 
+                             : m.direction === 'OUTBOUND' 
+                               ? 'bg-white/10 text-white/50 group-hover:bg-white/20 group-hover:text-white' 
+                               : 'bg-gray-200/50 text-gray-400 group-hover:bg-teal-500/10 group-hover:text-teal-600'
+                         }`}>
                            <Download size={14} />
                          </div>
                        </a>
