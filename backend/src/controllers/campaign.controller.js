@@ -152,11 +152,14 @@ const processCampaignSync = async (tenantId, campaignId) => {
                     }
                 }
 
+                const sanitizedPhone = String(log.phone).replace(/\D/g, '');
+                const finalPhone = sanitizedPhone.length === 10 ? `91${sanitizedPhone}` : sanitizedPhone;
+
                 const response = await axios.post(
                     `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
                     {
                         messaging_product: 'whatsapp',
-                        to: log.phone,
+                        to: finalPhone,
                         type: 'template',
                         template: {
                             name: template.name,
