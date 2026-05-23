@@ -201,26 +201,18 @@ app.use('/api/stats', statsRoutes);
 app.use('/api/success-stories', successStoryRoutes);
 
 // Main Media Route (Matches generated URLs /uploads/...)
-// Try multiple paths to find the uploads folder on various server environments
-const possibleUploadPaths = [
-  path.join(__dirname, 'public/uploads'),
-  path.join(__dirname, 'uploads'),
-  path.join(__dirname, '../public/uploads'),
-  path.join(process.cwd(), 'public/uploads'),
-  path.join(process.cwd(), 'uploads')
-];
-
-possibleUploadPaths.forEach(uPath => {
-  if (fs.existsSync(uPath)) {
-    console.log(`[Server] ✅ Serving static files from: ${uPath} via /uploads`);
-    app.use('/uploads', express.static(uPath, {
-      setHeaders: (res, path) => {
-        res.set('Access-Control-Allow-Origin', '*');
-        res.set('Cache-Control', 'public, max-age=31536000');
-      }
-    }));
+const uploadPath = path.join(__dirname, 'public', 'uploads');
+const fs = require('fs');
+if (!fs.existsSync(uploadPath)) {
+  fs.mkdirSync(uploadPath, { recursive: true });
+}
+console.log(`[Server] ✅ Serving static files from: ${uploadPath} via /uploads`);
+app.use('/uploads', express.static(uploadPath, {
+  setHeaders: (res, path) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Cache-Control', 'public, max-age=31536000');
   }
-});
+}));
 
 // Last resort: If still not caught, let the general static handler try /public
 app.use(express.static(path.join(__dirname, 'public')));
