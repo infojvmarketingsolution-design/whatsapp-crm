@@ -210,6 +210,12 @@ class PRDFlowService {
         return `https://wsrv.nl/?url=${encodeURIComponent(url)}&output=jpg&q=90`;
       }
     }
+    
+    // Ensure uploads go through the /api route for Nginx proxying
+    if (url.includes('/uploads/')) {
+        url = url.replace(/.*\/uploads\//, '/api/uploads/');
+    }
+
     if (url.startsWith('http') || /^\d+$/.test(url)) {
       if (url.includes('localhost') || url.includes('127.0.0.1')) return '';
       return url;
