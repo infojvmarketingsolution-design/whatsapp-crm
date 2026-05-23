@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, FileText, CheckCircle, Clock, XCircle, Trash2 } from 'lucide-react';
+import { RefreshCw, FileText, CheckCircle, Clock, XCircle, Trash2, Video, Image as ImageIcon } from 'lucide-react';
 
 function Templates() {
   const [templates, setTemplates] = useState([]);
@@ -153,8 +153,27 @@ function Templates() {
                 <div className="bg-white rounded-lg p-3 shadow-sm relative z-10 max-w-[90%] float-left">
                   {/* Header */}
                   {selectedTemplate.components?.find(c => c.type === 'HEADER') && (
-                    <div className="font-bold text-gray-900 mb-1 py-1 border-b border-gray-100">
-                      {selectedTemplate.components.find(c => c.type === 'HEADER').text}
+                    <div className="mb-2 border-b border-gray-100 pb-2">
+                      {selectedTemplate.components.find(c => c.type === 'HEADER').format === 'VIDEO' ? (
+                        <div className="bg-gray-100 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 border border-dashed border-gray-300">
+                           <Video size={32} className="mb-2 text-teal-500" />
+                           <span className="text-xs font-bold uppercase tracking-widest text-teal-600">Video Header (Reel)</span>
+                        </div>
+                      ) : selectedTemplate.components.find(c => c.type === 'HEADER').format === 'IMAGE' ? (
+                        <div className="bg-gray-100 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 border border-dashed border-gray-300">
+                           <ImageIcon size={32} className="mb-2 text-blue-500" />
+                           <span className="text-xs font-bold uppercase tracking-widest text-blue-600">Image Header</span>
+                        </div>
+                      ) : selectedTemplate.components.find(c => c.type === 'HEADER').format === 'DOCUMENT' ? (
+                        <div className="bg-gray-100 rounded-lg p-6 flex flex-col items-center justify-center text-gray-400 border border-dashed border-gray-300">
+                           <FileText size={32} className="mb-2 text-amber-500" />
+                           <span className="text-xs font-bold uppercase tracking-widest text-amber-600">Document Header</span>
+                        </div>
+                      ) : (
+                        <div className="font-bold text-gray-900 py-1">
+                          {selectedTemplate.components.find(c => c.type === 'HEADER').text}
+                        </div>
+                      )}
                     </div>
                   )}
                   {/* Body */}
