@@ -16,6 +16,21 @@ const popularCityAreas = {
   'Pune': ['Kothrud', 'Hinjewadi', 'Viman Nagar', 'Koregaon Park', 'Baner', 'Wakad', 'Hadapsar', 'Magarpatta', 'Kalyani Nagar', 'Aundh', 'Shivajinagar', 'Camp', 'Deccan Gymkhana', 'Swargate', 'Katraj', 'Dhankawadi', 'Bibwewadi', 'Market Yard', 'Gultekdi', 'Bhavani Peth', 'Nana Peth', 'Rasta Peth', 'Somwar Peth', 'Mangalwar Peth', 'Budhwar Peth', 'Shukrawar Peth', 'Raviwar Peth', 'Sadashiv Peth', 'Narayan Peth', 'Shaniwar Peth', 'Erandwane', 'Karve Nagar', 'Bavdhan', 'Pashan', 'Balewadi', 'Pimple Saudagar', 'Pimple Nilakh', 'Pimple Gurav', 'Sangvi', 'Dapodi', 'Bhosari', 'Nigdi', 'Akurdi', 'Chinchwad', 'Pimpri', 'Thergaon', 'Kalewadi', 'Rahatani', 'Wadgaon Sheri', 'Chandan Nagar', 'Kharadi', 'Mundhwa', 'Keshav Nagar', 'Manjri', 'Phursungi', 'Uruli Devachi', 'Kondhwa', 'NIBM', 'Wanowrie', 'Fatima Nagar', 'Lulla Nagar', 'Salunke Vihar', 'Undri', 'Pisoli', 'Mohammed Wadi'],
   'Bangalore': ['Koramangala', 'Indiranagar', 'Jayanagar', 'Whitefield', 'HSR Layout', 'BTM Layout', 'Malleswaram', 'Rajajinagar', 'Basavanagudi', 'Marathahalli', 'Electronic City', 'Bellandur', 'Hebbal', 'Yelahanka', 'RT Nagar', 'Banashankari', 'JP Nagar', 'Bannerghatta Road', 'Sarjapur Road', 'Outer Ring Road', 'Old Airport Road', 'MG Road', 'Brigade Road', 'Commercial Street', 'Shivajinagar', 'Frazer Town', 'Cox Town', 'Cooke Town', 'Benson Town', 'Richards Town', 'Vasanth Nagar', 'Seshadripuram', 'Sadashivanagar', 'Yeshwanthpur', 'Peenya', 'Dasarahalli', 'Jalahalli', 'Mathikere', 'Sanjaynagar', 'Sahakarnagar', 'Vidyaranyapura', 'Kammanahalli', 'Kalyan Nagar', 'HBR Layout', 'HRBR Layout', 'Banaswadi', 'Ramamurthy Nagar', 'KR Puram', 'Mahadevapura', 'Brookefield', 'Kadugodi', 'ITPL', 'Hoodi', 'CV Raman Nagar', 'Domlur', 'Ulsoor', 'Victoria Layout', 'Richmond Town', 'Langford Town', 'Shanti Nagar', 'Wilson Garden', 'Adugodi', 'Sg Palya', 'Tavarekere', 'Madiwala', 'Bommanahalli', 'Hongasandra', 'Mangammanapalya', 'Singasandra', 'Kudlu', 'Haralur', 'Kasavanahalli', 'Carmelaram', 'Doddanekundi'],
 };
+
+const formatMediaUrl = (url) => {
+  if (!url) return '';
+  if (url.includes('wapipulse.com/uploads/')) {
+    return url.replace('wapipulse.com/uploads/', 'wapipulse.com/api/uploads/');
+  }
+  if (url.startsWith('/uploads')) {
+    return `/api${url}`;
+  }
+  if (url.startsWith('/')) {
+    return `/api${url}`;
+  }
+  return url;
+};
+
 export default function Inbox({ roleAccess }) {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userRole = (user?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
@@ -759,12 +774,10 @@ export default function Inbox({ roleAccess }) {
                             
                             if (m.content?.includes('[Media]')) {
                                const parts = m.content.split('\n');
-                               imgUrl = parts[0].replace('[Media] ', '').trim();
+                               imgUrl = formatMediaUrl(parts[0].replace('[Media] ', '').trim());
                                caption = parts.slice(1).join('\n');
-                            } else if (m.content?.startsWith('/')) {
-                               imgUrl = '/api' + m.content;
                             } else {
-                               imgUrl = m.content;
+                               imgUrl = formatMediaUrl(m.content);
                             }
 
                             return (
@@ -791,10 +804,10 @@ export default function Inbox({ roleAccess }) {
                      {m.type === 'video' && (
                        <div 
                          className="relative w-56 h-36 mb-2 rounded-xl overflow-hidden cursor-pointer group shadow-sm bg-black/5"
-                         onClick={() => setSelectedMedia({ url: m.content?.startsWith('/') ? `/api${m.content}` : m.content, type: 'video' })}
+                         onClick={() => setSelectedMedia({ url: formatMediaUrl(m.content), type: 'video' })}
                        >
                          <video 
-                           src={m.content?.startsWith('/') ? `/api${m.content}` : m.content} 
+                           src={formatMediaUrl(m.content)} 
                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" 
                          />
                          <div className="absolute inset-0 flex items-center justify-center">
@@ -814,7 +827,7 @@ export default function Inbox({ roleAccess }) {
                      )}
                      {m.type === 'document' && (
                        <a 
-                         href={m.content?.startsWith('/') ? `/api${m.content}` : m.content} 
+                         href={formatMediaUrl(m.content)} 
                          target="_blank" 
                          download
                          className={`mb-2 w-64 flex items-center space-x-3 p-3 rounded-xl cursor-pointer group transition-all duration-300 shadow-sm border ${m.isInternal ? 'bg-amber-100/80 border-amber-200 hover:bg-amber-200' : 'bg-black/10 hover:bg-black/20 border-white/10'}`}
