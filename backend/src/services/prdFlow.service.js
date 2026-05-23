@@ -1346,7 +1346,10 @@ class PRDFlowService {
           });
 
           // 4. Send Thank You Message (Dynamic from builder steps)
-          const thankYouStep = steps.find(s => s.id === 'thank_you');
+          let thankYouStep = steps.find(s => s.id === 'thank_you');
+          if (!thankYouStep) {
+            thankYouStep = steps.find(s => (s.message || s.text || '').toLowerCase().includes('thank you'));
+          }
           let thankYouMsg = thankYouStep?.message || thankYouStep?.text || `Thank you ${name} 😊\n\nYour counselling request has been submitted successfully.\nOur counsellor will contact you at your preferred time.`;
           thankYouMsg = this.populatePlaceholders(thankYouMsg, fresh, name, qual, prog, time);
 
@@ -1365,6 +1368,22 @@ class PRDFlowService {
             await saveAndEmit('text', thankYouMsg, resTY);
           }
 
+          // 5. Send Additional Help Message (if defined in builder)
+          let helpStep = steps.find(s => (s.message || s.text || '').toLowerCase().includes('help you with anything else') || (s.message || s.text || '').toLowerCase().includes('any other help'));
+          
+          if (helpStep) {
+            await this.sleep(1500);
+            let helpMsg = helpStep.message || helpStep.text || "May I help you with anything else?";
+            let helpButtons = ['Yes', 'No'];
+            if (helpStep.buttons && helpStep.buttons.length > 0) {
+               helpButtons = helpStep.buttons.map(b => typeof b === 'string' ? b : b.label);
+               if (helpButtons.length === 0 || (helpButtons.length === 1 && !helpButtons[0])) {
+                 helpButtons = ['Yes', 'No'];
+               }
+            }
+            await ContactModel.updateOne({ phone: contact.phone }, { $set: { currentFlowStep: 'ask_additional_help' } });
+            await this.sendInteractiveOptionsHelper(contact, waService, helpMsg, helpButtons, settings, io);
+          }
         }
         else if (isEdit) {
           await ContactModel.updateOne({ phone: contact.phone }, {
