@@ -122,7 +122,7 @@ class PRDFlowService {
           const contactUpdate = await ContactModel.updateOne({ phone }, { $set: { assignedAgent: agentId } });
           const leadUpdate = await LeadModel.updateOne({ phone, tenantId }, { $set: { assignedAgent: agentId } });
           
-          log(`[PRD] Immediate Fivestep assignment: Lead (${phone}) assigned to ${selectedAgent.name} (${searchRole}). Contact modified: ${contactUpdate.modifiedCount}, Lead modified: ${leadUpdate.modifiedCount}`);
+          log(`[PRD] Immediate Fivestep assignment: Lead (${phone}) assigned to ${selectedAgent.name} (${targetAgentName}). Contact modified: ${contactUpdate.modifiedCount}, Lead modified: ${leadUpdate.modifiedCount}`);
           return agentId;
         } else {
           log('[PRD] No active matched agents found for role or name!');
@@ -1302,7 +1302,8 @@ class PRDFlowService {
             console.error('[PRD] Fivestep assignment error:', err);
           }
 
-          if (!assignedAgentId && settings?.crm?.autoAssignment) {
+          // Strictly prevent Fivestep from transferring leads to other users if not mapped
+          if (!assignedAgentId && settings?.crm?.autoAssignment && tenantId !== 'fivestep_599984') {
             try {
               assignedAgentId = await assignmentService.getNextAgentForTenant(tenantId);
             } catch (err) {
