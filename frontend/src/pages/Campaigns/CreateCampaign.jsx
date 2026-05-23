@@ -253,7 +253,7 @@ function CreateCampaign() {
     }
     
     if (newTemplate.buttons.length > 0) {
-        const hasCTA = newTemplate.buttons.some(b => b.type === 'URL' || b.type === 'PHONE_NUMBER');
+        const hasCTA = newTemplate.buttons.some(b => ['URL', 'PHONE_NUMBER', 'COPY_CODE', 'VOICE_CALL', 'FLOW'].includes(b.type));
         const hasQuickReply = newTemplate.buttons.some(b => b.type === 'QUICK_REPLY');
 
         if (hasCTA && hasQuickReply) {
@@ -297,7 +297,16 @@ function CreateCampaign() {
              if (!cleanedPhone.startsWith('+')) cleanedPhone = '+' + cleanedPhone;
              return { type: 'PHONE_NUMBER', text: b.text, phone_number: cleanedPhone };
           }
+          if (b.type === 'VOICE_CALL') return { type: 'VOICE_CALL', text: b.text };
           if (b.type === 'QUICK_REPLY') return { type: 'QUICK_REPLY', text: b.text };
+          if (b.type === 'FLOW') {
+             if (!b.flow_id || b.flow_id.trim() === '') {
+                alert("Flow ID is required for the Complete flow button.");
+                setLoading(false);
+                throw new Error('Missing Flow ID');
+             }
+             return { type: 'FLOW', text: b.text, flow_id: b.flow_id.trim(), flow_action: 'navigate', navigate_screen: b.navigate_screen?.trim() || 'HOME' };
+          }
           return null;
        }).filter(Boolean);
        if (metaBtns.length > 0) components.push({ type: 'BUTTONS', buttons: metaBtns });
@@ -643,18 +652,24 @@ function CreateCampaign() {
                                    const phoneCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'PHONE_NUMBER').length;
                                    const replyCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'QUICK_REPLY').length;
                                    const copyCodeCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'COPY_CODE').length;
+                                   const voiceCallCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'VOICE_CALL').length;
+                                   const flowCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'FLOW').length;
                                    
                                    if (newType === 'URL' && urlCount >= 2) return alert("Maximum 2 Visit Website buttons allowed.");
                                    if (newType === 'PHONE_NUMBER' && phoneCount >= 1) return alert("Maximum 1 Call Phone button allowed.");
                                    if (newType === 'QUICK_REPLY' && replyCount >= 3) return alert("Maximum 3 Quick Reply buttons allowed.");
                                    if (newType === 'COPY_CODE' && copyCodeCount >= 1) return alert("Maximum 1 Copy Offer Code button allowed.");
+                                   if (newType === 'VOICE_CALL' && voiceCallCount >= 1) return alert("Maximum 1 Call on WhatsApp button allowed.");
+                                   if (newType === 'FLOW' && flowCount >= 1) return alert("Maximum 1 Complete flow button allowed.");
                                    
-                                   const btns = [...newTemplate.buttons]; btns[idx].type = newType; btns[idx].url = ''; btns[idx].phoneNumber = ''; btns[idx].example = ''; setNewTemplate({...newTemplate, buttons: btns});
+                                   const btns = [...newTemplate.buttons]; btns[idx].type = newType; btns[idx].url = ''; btns[idx].phoneNumber = ''; btns[idx].example = ''; btns[idx].flow_id = ''; btns[idx].navigate_screen = ''; setNewTemplate({...newTemplate, buttons: btns});
                                 }}>
-                                   <option value="URL">Visit Website</option>
-                                   <option value="PHONE_NUMBER">Call Phone</option>
-                                   <option value="QUICK_REPLY">Quick Reply</option>
-                                   <option value="COPY_CODE">Copy Offer Code</option>
+                                   <option value="URL">Visit website</option>
+                                   <option value="PHONE_NUMBER">Call Phone Number</option>
+                                   <option value="VOICE_CALL">Call on WhatsApp</option>
+                                   <option value="FLOW">Complete flow</option>
+                                   <option value="COPY_CODE">Copy offer code</option>
+                                   <option value="QUICK_REPLY">Custom</option>
                                 </select>
                                 {btn.type !== 'COPY_CODE' ? (
                                   <div className="flex-1 relative">
@@ -678,6 +693,16 @@ function CreateCampaign() {
                                 {btn.type === 'PHONE_NUMBER' && <input type="text" className="w-full sm:flex-[1.5] px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-4 focus:ring-blue-100 bg-white" placeholder="+12345678" value={btn.phoneNumber} onChange={e => {
                                    const btns = [...newTemplate.buttons]; btns[idx].phoneNumber = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
                                 }} />}
+                                {btn.type === 'FLOW' && (
+                                   <>
+                                     <input type="text" className="w-full sm:w-[120px] px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-4 focus:ring-blue-100 bg-white" placeholder="Flow ID" value={btn.flow_id || ''} onChange={e => {
+                                        const btns = [...newTemplate.buttons]; btns[idx].flow_id = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
+                                     }} />
+                                     <input type="text" className="w-full sm:w-[120px] px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-4 focus:ring-blue-100 bg-white" placeholder="Navigate Screen (optional)" value={btn.navigate_screen || ''} onChange={e => {
+                                        const btns = [...newTemplate.buttons]; btns[idx].navigate_screen = e.target.value; setNewTemplate({...newTemplate, buttons: btns});
+                                     }} />
+                                   </>
+                                 )}
                                 
                                 <button type="button" onClick={() => {
                                    const btns = newTemplate.buttons.filter((_, i) => i !== idx); setNewTemplate({...newTemplate, buttons: btns});
