@@ -3,6 +3,32 @@ import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, ChevronRight, Send, UploadCloud, Download, AlertCircle, Info, Trash2, X, Image as ImageIcon, Video, FileText as FileIcon, Calendar } from 'lucide-react';
 import Papa from 'papaparse';
 
+const META_LANGUAGES = [
+  { code: 'af', name: 'Afrikaans' }, { code: 'sq', name: 'Albanian' }, { code: 'ar', name: 'Arabic' },
+  { code: 'az', name: 'Azerbaijani' }, { code: 'bn', name: 'Bengali' }, { code: 'bg', name: 'Bulgarian' },
+  { code: 'ca', name: 'Catalan' }, { code: 'zh_CN', name: 'Chinese (CHN)' }, { code: 'zh_HK', name: 'Chinese (HKG)' },
+  { code: 'zh_TW', name: 'Chinese (TAI)' }, { code: 'hr', name: 'Croatian' }, { code: 'cs', name: 'Czech' },
+  { code: 'da', name: 'Danish' }, { code: 'nl', name: 'Dutch' }, { code: 'en', name: 'English' },
+  { code: 'en_GB', name: 'English (UK)' }, { code: 'en_US', name: 'English (US)' }, { code: 'et', name: 'Estonian' },
+  { code: 'fil', name: 'Filipino' }, { code: 'fi', name: 'Finnish' }, { code: 'fr', name: 'French' },
+  { code: 'de', name: 'German' }, { code: 'el', name: 'Greek' }, { code: 'gu', name: 'Gujarati' },
+  { code: 'ha', name: 'Hausa' }, { code: 'he', name: 'Hebrew' }, { code: 'hi', name: 'Hindi' },
+  { code: 'hu', name: 'Hungarian' }, { code: 'id', name: 'Indonesian' }, { code: 'ga', name: 'Irish' },
+  { code: 'it', name: 'Italian' }, { code: 'ja', name: 'Japanese' }, { code: 'kn', name: 'Kannada' },
+  { code: 'kk', name: 'Kazakh' }, { code: 'ko', name: 'Korean' }, { code: 'lo', name: 'Lao' },
+  { code: 'lv', name: 'Latvian' }, { code: 'lt', name: 'Lithuanian' }, { code: 'mk', name: 'Macedonian' },
+  { code: 'ms', name: 'Malay' }, { code: 'ml', name: 'Malayalam' }, { code: 'mr', name: 'Marathi' },
+  { code: 'nb', name: 'Norwegian' }, { code: 'fa', name: 'Persian' }, { code: 'pl', name: 'Polish' },
+  { code: 'pt_BR', name: 'Portuguese (BR)' }, { code: 'pt_PT', name: 'Portuguese (POR)' }, { code: 'pa', name: 'Punjabi' },
+  { code: 'ro', name: 'Romanian' }, { code: 'ru', name: 'Russian' }, { code: 'sr', name: 'Serbian' },
+  { code: 'sk', name: 'Slovak' }, { code: 'sl', name: 'Slovenian' }, { code: 'es', name: 'Spanish' },
+  { code: 'es_AR', name: 'Spanish (ARG)' }, { code: 'es_ES', name: 'Spanish (SPA)' }, { code: 'es_MX', name: 'Spanish (MEX)' },
+  { code: 'sw', name: 'Swahili' }, { code: 'sv', name: 'Swedish' }, { code: 'ta', name: 'Tamil' },
+  { code: 'te', name: 'Telugu' }, { code: 'th', name: 'Thai' }, { code: 'tr', name: 'Turkish' },
+  { code: 'uk', name: 'Ukrainian' }, { code: 'ur', name: 'Urdu' }, { code: 'uz', name: 'Uzbek' },
+  { code: 'vi', name: 'Vietnamese' }, { code: 'zu', name: 'Zulu' }
+];
+
 function CreateCampaign() {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -398,11 +424,14 @@ function CreateCampaign() {
 
                 {isCreatingTemplate ? (
                    <div className="bg-white p-4 sm:p-6 rounded-2xl border border-slate-100 shadow-sm space-y-5 animate-fade-in">
-                      <div>
-                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Template Name</label>
-                        <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-100 text-sm font-bold placeholder-slate-300" placeholder="e.g. spring_promo_v1" value={newTemplate.name} onChange={e => setNewTemplate({...newTemplate, name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_')})} />
-                        <p className="text-[9px] font-bold text-slate-400 mt-2 uppercase tracking-tighter">Lowercase alphanumeric & underscores only.</p>
-                      </div>
+                        <div className="relative">
+                          <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Template Name</label>
+                          <input type="text" className="w-full px-4 py-3 border border-slate-200 rounded-xl outline-none focus:ring-4 focus:ring-blue-100 text-sm font-bold placeholder-slate-300" placeholder="e.g. spring_promo_v1" value={newTemplate.name} maxLength={512} onChange={e => setNewTemplate({...newTemplate, name: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '_')})} />
+                          <div className="flex justify-between mt-2">
+                             <p className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">Lowercase alphanumeric & underscores only.</p>
+                             <span className="text-[9px] font-bold text-slate-400">{newTemplate.name.length}/512</span>
+                          </div>
+                        </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
@@ -415,9 +444,9 @@ function CreateCampaign() {
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-1">Language</label>
                           <select className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none bg-white focus:ring-2 focus:ring-blue-500" value={newTemplate.language} onChange={e => setNewTemplate({...newTemplate, language: e.target.value})}>
-                             <option value="en">English (en)</option>
-                             <option value="en_US">English (US)</option>
-                             <option value="es">Spanish (es)</option>
+                             {META_LANGUAGES.map(lang => (
+                               <option key={lang.code} value={lang.code}>{lang.name} ({lang.code})</option>
+                             ))}
                           </select>
                         </div>
                       </div>
@@ -433,10 +462,21 @@ function CreateCampaign() {
                            <option value="LOCATION">Location</option>
                         </select>
                         {newTemplate.headerType === 'TEXT' && (
-                           <input type="text" className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500" placeholder="Header Text" value={newTemplate.headerText} onChange={e => setNewTemplate({...newTemplate, headerText: e.target.value})} maxLength={60} />
+                           <div className="relative">
+                             <input type="text" className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500" placeholder="Header Text" value={newTemplate.headerText} onChange={e => setNewTemplate({...newTemplate, headerText: e.target.value})} maxLength={60} />
+                             <span className="absolute right-3 top-2.5 text-xs text-gray-400 font-bold">{newTemplate.headerText.length}/60</span>
+                           </div>
                         )}
                         {['IMAGE', 'VIDEO', 'DOCUMENT'].includes(newTemplate.headerType) && (
                            <div className="space-y-3">
+                             <div className="bg-blue-50/50 p-3 rounded-lg border border-blue-100 mb-3">
+                                <h4 className="text-[10px] font-black text-blue-800 uppercase tracking-widest mb-1">Meta Upload Limits:</h4>
+                                <ul className="text-[10px] text-blue-600 font-medium space-y-1">
+                                  <li>• Image (JPEG/PNG): Max 5 MB</li>
+                                  <li>• Video (MP4): Max 16 MB</li>
+                                  <li>• Document (PDF): Max 100 MB</li>
+                                </ul>
+                             </div>
                              <div 
                                className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center hover:bg-gray-50 cursor-pointer transition-colors"
                                onClick={() => headerFileRef.current?.click()}
@@ -446,7 +486,15 @@ function CreateCampaign() {
                                   ref={headerFileRef} 
                                   className="hidden" 
                                   accept={newTemplate.headerType === 'IMAGE' ? "image/*" : newTemplate.headerType === 'VIDEO' ? "video/*" : ".pdf,.doc,.docx"} 
-                                  onChange={(e) => setNewTemplate({...newTemplate, headerFile: e.target.files[0], headerMediaUrl: ''})} 
+                                  onChange={(e) => {
+                                     const file = e.target.files[0];
+                                     if (!file) return;
+                                     const sizeMB = file.size / (1024 * 1024);
+                                     if (newTemplate.headerType === 'IMAGE' && sizeMB > 5) return alert("Image must be under 5 MB.");
+                                     if (newTemplate.headerType === 'VIDEO' && sizeMB > 16) return alert("Video must be under 16 MB.");
+                                     if (newTemplate.headerType === 'DOCUMENT' && sizeMB > 100) return alert("Document must be under 100 MB.");
+                                     setNewTemplate({...newTemplate, headerFile: file, headerMediaUrl: ''});
+                                  }} 
                                 />
                                 {newTemplate.headerFile ? (
                                   <div className="text-center">
@@ -490,20 +538,42 @@ function CreateCampaign() {
 
                       <div className="pt-4 border-t border-gray-100">
                         <label className="block text-sm font-semibold text-gray-700 mb-1">Message Body</label>
-                        <textarea className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none min-h-[100px] focus:ring-2 focus:ring-blue-500" placeholder="Hello {{1}}, your order {{2}} is ready." value={newTemplate.bodyText} onChange={e => setNewTemplate({...newTemplate, bodyText: e.target.value})}></textarea>
+                        <div className="relative">
+                          <textarea className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none min-h-[100px] focus:ring-2 focus:ring-blue-500" maxLength={1024} placeholder="Hello {{1}}, your order {{2}} is ready." value={newTemplate.bodyText} onChange={e => setNewTemplate({...newTemplate, bodyText: e.target.value})}></textarea>
+                          <span className="absolute right-3 bottom-3 text-xs text-gray-400 font-bold bg-white px-1">{newTemplate.bodyText.length}/1024</span>
+                        </div>
                       </div>
 
                       <div className="pt-4 border-t border-gray-100">
                         <label className="block text-sm font-semibold text-gray-700 mb-1">Footer (Optional)</label>
-                        <input type="text" className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500 text-sm italic" placeholder="Short footer text (e.g. Reply STOP to unsubscribe)" value={newTemplate.footerText} onChange={e => setNewTemplate({...newTemplate, footerText: e.target.value})} maxLength={60} />
+                        <div className="relative">
+                          <input type="text" className="w-full px-3 py-2 border border-gray-200 rounded-md outline-none focus:ring-2 focus:ring-blue-500 text-sm italic pr-16" placeholder="Short footer text (e.g. Reply STOP to unsubscribe)" value={newTemplate.footerText} onChange={e => setNewTemplate({...newTemplate, footerText: e.target.value})} maxLength={60} />
+                          <span className="absolute right-3 top-2.5 text-xs text-gray-400 font-bold">{newTemplate.footerText.length}/60</span>
+                        </div>
                       </div>
 
                       <div className="pt-4 border-t border-gray-100">
                         <div className="flex justify-between items-center mb-3">
-                           <label className="block text-sm font-black text-slate-800 uppercase tracking-widest">Interactive Buttons</label>
-                           {newTemplate.buttons.length < 3 && (
+                           <div>
+                             <label className="block text-sm font-black text-slate-800 uppercase tracking-widest">Interactive Buttons</label>
+                             <p className="text-[10px] text-gray-500 mt-0.5">Max: 2 URLs, 1 Phone Number, 3 Quick Replies (Max 10 total).</p>
+                           </div>
+                           {newTemplate.buttons.length < 10 && (
                              <button type="button" onClick={() => {
-                               setNewTemplate({...newTemplate, buttons: [...newTemplate.buttons, {type: 'URL', text: '', url: ''}]});
+                               const urlCount = newTemplate.buttons.filter(b => b.type === 'URL').length;
+                               const phoneCount = newTemplate.buttons.filter(b => b.type === 'PHONE_NUMBER').length;
+                               const replyCount = newTemplate.buttons.filter(b => b.type === 'QUICK_REPLY').length;
+                               
+                               // Auto-select type based on what's available
+                               let newType = 'URL';
+                               if (urlCount >= 2 && phoneCount === 0) newType = 'PHONE_NUMBER';
+                               else if (urlCount >= 2 && phoneCount >= 1) newType = 'QUICK_REPLY';
+
+                               if (newType === 'QUICK_REPLY' && replyCount >= 3) {
+                                  alert("You have reached the maximum number of Quick Reply buttons (3).");
+                                  return;
+                               }
+                               setNewTemplate({...newTemplate, buttons: [...newTemplate.buttons, {type: newType, text: '', url: '', phoneNumber: ''}]});
                              }} className="text-[10px] font-black text-blue-600 bg-blue-50 px-3 py-1.5 rounded-xl hover:bg-blue-100 uppercase tracking-widest border border-blue-100">+ Add Button</button>
                            )}
                         </div>
@@ -511,7 +581,16 @@ function CreateCampaign() {
                           {newTemplate.buttons.map((btn, idx) => (
                              <div key={idx} className="flex flex-col sm:flex-row gap-2 bg-slate-50 p-3 rounded-2xl border border-slate-100 relative group animate-fade-in-up">
                                 <select className="w-full sm:w-auto px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold bg-white outline-none focus:ring-4 focus:ring-blue-100" value={btn.type} onChange={e => {
-                                   const btns = [...newTemplate.buttons]; btns[idx].type = e.target.value; btns[idx].url = ''; btns[idx].phoneNumber = ''; setNewTemplate({...newTemplate, buttons: btns});
+                                   const newType = e.target.value;
+                                   const urlCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'URL').length;
+                                   const phoneCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'PHONE_NUMBER').length;
+                                   const replyCount = newTemplate.buttons.filter((b, i) => i !== idx && b.type === 'QUICK_REPLY').length;
+                                   
+                                   if (newType === 'URL' && urlCount >= 2) return alert("Maximum 2 Visit Website buttons allowed.");
+                                   if (newType === 'PHONE_NUMBER' && phoneCount >= 1) return alert("Maximum 1 Call Phone button allowed.");
+                                   if (newType === 'QUICK_REPLY' && replyCount >= 3) return alert("Maximum 3 Quick Reply buttons allowed.");
+                                   
+                                   const btns = [...newTemplate.buttons]; btns[idx].type = newType; btns[idx].url = ''; btns[idx].phoneNumber = ''; setNewTemplate({...newTemplate, buttons: btns});
                                 }}>
                                    <option value="URL">Visit Website</option>
                                    <option value="PHONE_NUMBER">Call Phone</option>
