@@ -748,6 +748,23 @@ export default function Inbox({ roleAccess }) {
                     );
                  }
 
+                 const getExpiryText = (timestamp) => {
+                    const diffMs = Date.now() - new Date(timestamp || Date.now()).getTime();
+                    const daysOld = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                    const daysLeft = 15 - daysOld;
+                    if (daysLeft <= 0) return 'Expired';
+                    return `Expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
+                 };
+                 
+                 const handleForward = (url) => {
+                    if (navigator.share) {
+                       navigator.share({ title: 'Forward Media', url: url }).catch(()=>{});
+                    } else {
+                       navigator.clipboard.writeText(url);
+                       alert('Link copied to clipboard for forwarding!');
+                    }
+                 };
+
                  return (
                   <div key={m._id || idx} className={`relative group max-w-[85%] sm:max-w-[70%] w-fit animate-msg-enter ${m.direction === 'OUTBOUND' ? 'self-end' : 'self-start'}`} style={{ animationDelay: `${idx * 0.1}s` }}>
                    
@@ -765,6 +782,15 @@ export default function Inbox({ roleAccess }) {
                        : (m.direction === 'OUTBOUND' ? 'bg-[var(--theme-bg)] text-white rounded-2xl rounded-tr-sm shadow-md' : 'bg-white text-gray-800 rounded-2xl rounded-tl-sm shadow-sm border border-gray-100')
                    } p-3.5 relative overflow-hidden min-w-[60px]`}>
                      
+                     {/* Unsupported File Warning */}
+                     {m.content === 'UNSUPPORTED_FILE' && (
+                       <div className="flex flex-col items-center justify-center p-4 bg-red-50/50 rounded-xl border border-red-100">
+                         <AlertCircle size={24} className="text-red-500 mb-2" />
+                         <span className="text-xs font-bold text-red-700">Not Supported File</span>
+                         <span className="text-[10px] text-red-600/80 text-center mt-1">This file type is not allowed.</span>
+                       </div>
+                     )}
+                     
                      {/* Image/Media Message Handling */}
                      {(m.type === 'image' || (typeof m.content === 'string' && m.content.includes('[Media]'))) && (
                        <div className="mb-2 -mx-1 -mt-1">
@@ -781,7 +807,7 @@ export default function Inbox({ roleAccess }) {
                             }
 
                             return (
-                              <div className="rounded-xl overflow-hidden bg-black/5 border border-white/10 max-w-full">
+                              <div className="rounded-xl overflow-hidden bg-black/5 border border-white/10 max-w-full relative group/media">
                                 <img 
                                   src={imgUrl} 
                                   className="w-full h-auto max-h-[300px] object-cover cursor-pointer hover:opacity-90 transition-opacity"
@@ -789,6 +815,17 @@ export default function Inbox({ roleAccess }) {
                                   onError={(e) => { e.target.style.display='none'; }}
                                   alt="Media content" 
                                 />
+                                <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover/media:opacity-100 transition-opacity">
+                                   <a href={imgUrl} download target="_blank" className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-md backdrop-blur-sm" title="Download">
+                                      <Download size={14} />
+                                   </a>
+                                   <button onClick={() => handleForward(imgUrl)} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-md backdrop-blur-sm" title="Forward">
+                                      <Forward size={14} />
+                                   </button>
+                                </div>
+                                <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] px-2 py-0.5 rounded backdrop-blur-sm font-semibold tracking-wide">
+                                   {getExpiryText(m.timestamp)}
+                                </div>
                                 {caption && (
                                   <p className="px-3 py-2 text-xs leading-relaxed opacity-95 whitespace-pre-wrap border-t border-white/5 bg-black/10">
                                     {caption}
@@ -803,7 +840,7 @@ export default function Inbox({ roleAccess }) {
                      {/* Video/Doc Placeholders (Refined Previews) */}
                      {m.type === 'video' && (
                        <div 
-                         className="relative w-56 h-36 mb-2 rounded-xl overflow-hidden cursor-pointer group shadow-sm bg-black/5"
+                         className="relative w-56 h-36 mb-2 rounded-xl overflow-hidden cursor-pointer group shadow-sm bg-black/5 group/media"
                          onClick={() => setSelectedMedia({ url: formatMediaUrl(m.content), type: 'video' })}
                        >
                          <video 
@@ -815,7 +852,18 @@ export default function Inbox({ roleAccess }) {
                              <Video size={20} className="ml-0.5" />
                            </div>
                          </div>
-                         <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center opacity-90">
+                         <div className="absolute top-2 right-2 flex space-x-1 opacity-0 group-hover/media:opacity-100 transition-opacity z-10" onClick={(e) => e.stopPropagation()}>
+                            <a href={formatMediaUrl(m.content)} download target="_blank" className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-md backdrop-blur-sm" title="Download">
+                               <Download size={14} />
+                            </a>
+                            <button onClick={(e) => { e.stopPropagation(); handleForward(formatMediaUrl(m.content)); }} className="bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-md backdrop-blur-sm" title="Forward">
+                               <Forward size={14} />
+                            </button>
+                         </div>
+                         <div className="absolute top-2 left-2 bg-black/60 text-white text-[9px] px-2 py-0.5 rounded backdrop-blur-sm font-semibold tracking-wide z-10">
+                            {getExpiryText(m.timestamp)}
+                         </div>
+                         <div className="absolute bottom-2 left-2 right-2 flex justify-between items-center opacity-90 pointer-events-none">
                            <div className="px-2 py-1 bg-black/60 backdrop-blur-sm text-white text-[10px] font-bold rounded-md uppercase tracking-wider">
                              Video
                            </div>
@@ -826,55 +874,56 @@ export default function Inbox({ roleAccess }) {
                        </div>
                      )}
                      {m.type === 'document' && (
-                       <a 
-                         href={formatMediaUrl(m.content)} 
-                         target="_blank" 
-                         download
-                         className={`mb-2 w-64 flex items-center space-x-3 p-3 rounded-xl cursor-pointer group transition-all duration-300 shadow-sm border ${
-                           m.isInternal 
-                             ? 'bg-amber-100/80 border-amber-200 hover:bg-amber-200' 
-                             : m.direction === 'OUTBOUND' 
-                               ? 'bg-black/10 hover:bg-black/20 border-white/10' 
-                               : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
-                         }`}
-                       >
-                         <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 shadow-inner transition-colors ${
-                           m.isInternal 
-                             ? 'bg-amber-500/20 text-amber-700' 
-                             : m.direction === 'OUTBOUND' 
-                               ? 'bg-white/10 text-white/90 group-hover:bg-white/20' 
-                               : 'bg-teal-500/10 text-teal-600 group-hover:bg-teal-500/20'
-                         }`}>
-                           <FileText size={22}/>
-                         </div>
-                         <div className="flex-1 min-w-0">
-                           <p className={`text-sm font-semibold truncate ${
+                       <div className="relative group/media w-64 mb-2">
+                         <a 
+                           href={formatMediaUrl(m.content)} 
+                           target="_blank" 
+                           download
+                           className={`w-full flex items-center space-x-3 p-3 rounded-xl cursor-pointer group transition-all duration-300 shadow-sm border ${
                              m.isInternal 
-                               ? 'text-amber-900' 
+                               ? 'bg-amber-100/80 border-amber-200 hover:bg-amber-200' 
                                : m.direction === 'OUTBOUND' 
-                                 ? 'text-white' 
-                                 : 'text-gray-800'
-                           }`}>Document</p>
-                           <p className={`text-[10px] uppercase font-bold tracking-wider truncate mt-0.5 transition-colors ${
+                                 ? 'bg-black/10 hover:bg-black/20 border-white/10' 
+                                 : 'bg-gray-50 hover:bg-gray-100 border-gray-200'
+                           }`}
+                         >
+                           <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 shadow-inner transition-colors ${
                              m.isInternal 
-                               ? 'text-amber-700/70' 
+                               ? 'bg-amber-500/20 text-amber-700' 
                                : m.direction === 'OUTBOUND' 
-                                 ? 'text-white/60 group-hover:text-white/90' 
-                                 : 'text-gray-500 group-hover:text-teal-600'
+                                 ? 'bg-white/10 text-white/90 group-hover:bg-white/20' 
+                                 : 'bg-teal-500/10 text-teal-600 group-hover:bg-teal-500/20'
                            }`}>
-                             Click to Download
-                           </p>
+                             <FileText size={22}/>
+                           </div>
+                           <div className="flex-1 min-w-0 pr-8">
+                             <p className={`text-sm font-semibold truncate ${
+                               m.isInternal 
+                                 ? 'text-amber-900' 
+                                 : m.direction === 'OUTBOUND' 
+                                   ? 'text-white' 
+                                   : 'text-gray-800'
+                             }`}>Document</p>
+                             <p className={`text-[10px] uppercase font-bold tracking-wider truncate mt-0.5 transition-colors ${
+                               m.isInternal 
+                                 ? 'text-amber-700/70' 
+                                 : m.direction === 'OUTBOUND' 
+                                   ? 'text-white/60 group-hover:text-white/90' 
+                                   : 'text-gray-500 group-hover:text-teal-600'
+                             }`}>
+                               {getExpiryText(m.timestamp)}
+                             </p>
+                           </div>
+                         </a>
+                         <div className="absolute top-3 right-3 flex flex-col space-y-1 opacity-0 group-hover/media:opacity-100 transition-opacity">
+                            <a href={formatMediaUrl(m.content)} download target="_blank" className={`p-1.5 rounded-md backdrop-blur-sm ${m.direction === 'OUTBOUND' ? 'bg-black/20 hover:bg-black/40 text-white' : 'bg-gray-200/80 hover:bg-gray-300 text-gray-700'}`} title="Download">
+                               <Download size={14} />
+                            </a>
+                            <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleForward(formatMediaUrl(m.content)); }} className={`p-1.5 rounded-md backdrop-blur-sm ${m.direction === 'OUTBOUND' ? 'bg-black/20 hover:bg-black/40 text-white' : 'bg-gray-200/80 hover:bg-gray-300 text-gray-700'}`} title="Forward">
+                               <Forward size={14} />
+                            </button>
                          </div>
-                         <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                           m.isInternal 
-                             ? 'bg-amber-500/10 text-amber-600' 
-                             : m.direction === 'OUTBOUND' 
-                               ? 'bg-white/10 text-white/50 group-hover:bg-white/20 group-hover:text-white' 
-                               : 'bg-gray-200/50 text-gray-400 group-hover:bg-teal-500/10 group-hover:text-teal-600'
-                         }`}>
-                           <Download size={14} />
-                         </div>
-                       </a>
+                       </div>
                      )}
                      
                      {/* Message Text Content (Excluding the [Media] string if already rendered as image) */}

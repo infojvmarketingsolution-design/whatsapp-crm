@@ -42,10 +42,12 @@ const maintenanceMiddleware = require('./src/middleware/maintenance');
 require('./src/workers/campaign.worker');
 const { startTaskSuspensionWorker, startInactivityFollowupWorker } = require('./src/workers/task.worker');
 const { startCampaignScheduler } = require('./src/services/campaignScheduler.service');
+const { startMediaCleanupJob } = require('./src/services/mediaCleanup.service');
 
 startTaskSuspensionWorker();
 startInactivityFollowupWorker();
 startCampaignScheduler();
+startMediaCleanupJob();
 
 app.use(maintenanceMiddleware);
 

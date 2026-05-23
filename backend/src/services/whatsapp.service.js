@@ -116,6 +116,13 @@ class WhatsAppService {
       
       const extension = extensionMap[mimeType] || mimeType.split('/')[1]?.split(';')[0] || 'bin';
 
+      // Security Protocol: Only allow specific safe extensions to be downloaded
+      const allowedExtensions = ['jpg', 'jpeg', 'png', 'pdf', 'mp4', 'doc', 'docx', 'xls', 'xlsx'];
+      if (!allowedExtensions.includes(extension.toLowerCase())) {
+         console.warn(`[Security] Blocked download of unsupported media type: ${extension}`);
+         return 'UNSUPPORTED_FILE';
+      }
+
       // 2. Download the actual file buffer
       const fileRes = await axios.get(downloadUrl, {
         headers: { 'Authorization': `Bearer ${this.accessToken}` },
