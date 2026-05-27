@@ -14,7 +14,7 @@ const mapMetaError = (code, defaultMessage = 'Unknown delivery error') => {
         '131042': 'Media file is unreachable or unsupported (check link/format)',
         '131045': 'Incorrect parameter type (e.g. text instead of image)',
         '131048': 'Spam protection (message blocked by Meta)',
-        '131049': 'Recipient unreachable (user has blocked you or invalid number)',
+        '131049': 'Blocked by Meta (User reached daily marketing limit or is unreachable)',
         '131051': 'File size is too large for WhatsApp',
         '131052': 'File type not supported',
         '131053': 'Media download failed (Meta could not fetch the file)',
