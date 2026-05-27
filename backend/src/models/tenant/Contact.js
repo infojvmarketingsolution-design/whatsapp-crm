@@ -62,6 +62,8 @@ const ContactSchema = new mongoose.Schema({
   estimatedValue: { type: Number, default: 0 },
   leadSource: { type: String, default: 'Manual Entry' },
   nextFollowUp: { type: Date },
+  followUpCount: { type: Number, default: 0 },
+  nextFollowUpTime: { type: String },
   // Lead Source Granular Details
   leadSourceType: { type: String, enum: ['Social media', 'Reference', 'B2B agents', 'Manual Entry', 'Direct', 'Other'], default: 'Manual Entry' },
   socialMediaSource: { type: String }, // Instagram, Snapchat, etc.

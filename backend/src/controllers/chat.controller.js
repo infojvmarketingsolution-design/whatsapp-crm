@@ -137,6 +137,8 @@ const getContacts = async (req, res) => {
           secondaryPhone: 1,
           altMobile: 1,
           nextFollowUp: 1,
+          followUpCount: 1,
+          nextFollowUpTime: 1,
           lastMessageAt: { $ifNull: ['$lastMsgDoc.timestamp', '$updatedAt'] },
           lastMessage: { $ifNull: ['$lastMsgDoc.content', ''] },
           lastMessageType: { $ifNull: ['$lastMsgDoc.type', 'text'] },
@@ -441,13 +443,18 @@ const performContactAction = async (req, res) => {
 
        if (payload.nextDate && payload.nextTime) {
            if (!contact.tasks) contact.tasks = [];
+           if (!contact.followUpCount) contact.followUpCount = 0;
+           contact.followUpCount = 1;
+           contact.nextFollowUp = new Date(`${payload.nextDate}T${payload.nextTime}`);
+           contact.nextFollowUpTime = payload.nextTime;
            contact.tasks.push({
              type: 'FOLLOW_UP', 
-             title: `Follow-up after ${payload.outcome} call`, 
+             title: `Follow-up #${contact.followUpCount}`, 
              dueDate: new Date(`${payload.nextDate}T${payload.nextTime}`), 
              status: 'PENDING',
              description: payload.notes || `Scheduled from call log`
            });
+           contact.timeline.push({ eventType: 'FOLLOWUP_SET', description: `1st Follow-Up Scheduled for ${payload.nextDate} ${payload.nextTime}`, timestamp: new Date() });
        }
     } else if (action === 'schedule_meeting') {
        if (!contact.tasks) contact.tasks = [];
@@ -457,17 +464,41 @@ const performContactAction = async (req, res) => {
        contact.timeline.push({ eventType: 'MEETING_SCHEDULED', description: `Scheduled ${payload.mode} Meeting for ${new Date(payload.dateTime).toLocaleString()}${payload.description ? ` - ${payload.description}` : ''}`, timestamp: new Date() });
     } else if (action === 'add_followup') {
        if (!contact.tasks) contact.tasks = [];
+       
+       // Complete previous pending followup
+       const pendingIdx = contact.tasks.findIndex(t => t.type === 'FOLLOW_UP' && t.status === 'PENDING');
+       if (pendingIdx > -1) {
+           contact.tasks[pendingIdx].status = 'COMPLETED';
+           const count = contact.followUpCount || 1;
+           let ord = 'th';
+           if (count % 10 === 1 && count % 100 !== 11) ord = 'st';
+           else if (count % 10 === 2 && count % 100 !== 12) ord = 'nd';
+           else if (count % 10 === 3 && count % 100 !== 13) ord = 'rd';
+           contact.timeline.push({ eventType: 'TASK_COMPLETED', description: `${count}${ord} Follow-Up Completed`, timestamp: new Date() });
+       }
+       
+       contact.followUpCount = (contact.followUpCount || 0) + 1;
+       contact.nextFollowUp = new Date(payload.dateTime);
+       if (payload.time) contact.nextFollowUpTime = payload.time;
+
        contact.tasks.push({
          type: 'FOLLOW_UP', 
-         title: payload.title || 'Follow-up Reminder', 
+         title: `Follow-up #${contact.followUpCount}`, 
          dueDate: new Date(payload.dateTime), 
          status: 'PENDING',
          description: payload.description || '',
          metadata: payload.metadata || {} // Store visit types here
        });
+       
+       const count = contact.followUpCount;
+       let ord = 'th';
+       if (count % 10 === 1 && count % 100 !== 11) ord = 'st';
+       else if (count % 10 === 2 && count % 100 !== 12) ord = 'nd';
+       else if (count % 10 === 3 && count % 100 !== 13) ord = 'rd';
+
        contact.timeline.push({ 
          eventType: 'FOLLOWUP_SET', 
-         description: `Follow-up: ${payload.title || 'Reminder'} set for ${new Date(payload.dateTime).toLocaleString()}${payload.description ? ` - ${payload.description}` : ''}`, 
+         description: `${count}${ord} Follow-up scheduled for ${new Date(payload.dateTime).toLocaleString()}${payload.description ? ` - ${payload.description}` : ''}`, 
          timestamp: new Date() 
        });
     } else if (action === 'archive_lead') {

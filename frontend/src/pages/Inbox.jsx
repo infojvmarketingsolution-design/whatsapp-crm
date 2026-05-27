@@ -1331,7 +1331,7 @@ export default function Inbox({ roleAccess }) {
                      <Clock size={12} className="text-indigo-600" />
                   </div>
                   <h4 className="text-[10px] font-bold text-indigo-800 mb-3 tracking-widest uppercase">
-                    Set Follow-Up
+                    {activeChat?.followUpCount ? `${activeChat.followUpCount + 1}${['st', 'nd', 'rd'][(activeChat.followUpCount + 1) % 10 - 1] || 'th'} Follow-Up` : '1st Follow-Up'}
                   </h4>
                   
                   <div className="space-y-3">
@@ -1460,6 +1460,7 @@ export default function Inbox({ roleAccess }) {
                            await handleAction('add_followup', { 
                              title: `[${followupType}${followupType === 'Meeting' ? `: ${followupVisitType}` : ''}] ${followupHeading}`, 
                              dateTime: new Date(`${followupDate}T${followupTime || '09:00'}`).toISOString(),
+                             time: followupTime || '09:00',
                              description: followupDescription,
                              metadata: { visitType: followupType === 'Meeting' ? followupVisitType : null }
                            });
@@ -1915,6 +1916,15 @@ export default function Inbox({ roleAccess }) {
                      <div className="flex flex-col">
                         <div className="flex justify-between items-start mb-1.5">
                             <h4 className={`text-xs font-bold leading-tight ${textColor} pr-2`}>
+                               {event.eventType === 'CALL_LOGGED' ? (
+                                   <span className="bg-green-100 text-green-800 border border-green-200 px-2 py-0.5 rounded text-[10px] uppercase font-black mr-2">CALL</span>
+                               ) : event.eventType === 'MEETING_SCHEDULED' ? (
+                                   <span className="bg-purple-100 text-purple-800 border border-purple-200 px-2 py-0.5 rounded text-[10px] uppercase font-black mr-2">MEETING</span>
+                               ) : event.eventType === 'FOLLOWUP_SET' ? (
+                                   <span className="bg-orange-100 text-orange-800 border border-orange-200 px-2 py-0.5 rounded text-[10px] uppercase font-black mr-2">FOLLOW-UP</span>
+                               ) : event.eventType === 'NOTE_ADDED' ? (
+                                   <span className="bg-yellow-100 text-yellow-800 border border-yellow-200 px-2 py-0.5 rounded text-[10px] uppercase font-black mr-2">NOTE</span>
+                               ) : null}
                                {event.description?.startsWith('Profile Sync') ? 'Profile Updated' : event.description?.split(' - ')[0]}
                             </h4>
                             <span className="text-[9px] font-bold text-slate-400 whitespace-nowrap bg-slate-50 px-2 py-0.5 rounded border border-slate-100/50">
