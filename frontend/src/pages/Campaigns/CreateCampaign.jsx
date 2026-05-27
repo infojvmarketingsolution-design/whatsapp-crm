@@ -1019,6 +1019,12 @@ const TemplateConfigModal = ({ isOpen, onClose, selectedTemplate, formData, setF
                          input.onchange = async (e) => {
                             const file = e.target.files[0];
                             if (file) {
+                               const format = selectedTemplate.components.find(c => c.type === 'HEADER').format;
+                               const sizeMB = file.size / (1024 * 1024);
+                               if (format === 'IMAGE' && sizeMB > 5) return alert("Image must be under 5 MB to comply with Meta limits.");
+                               if (format === 'VIDEO' && sizeMB > 16) return alert("Video must be under 16 MB to comply with Meta limits.");
+                               if (format === 'DOCUMENT' && sizeMB > 100) return alert("Document must be under 100 MB to comply with Meta limits.");
+                               
                                setLoading(true);
                                const formDataMedia = new FormData();
                                formDataMedia.append('file', file);
