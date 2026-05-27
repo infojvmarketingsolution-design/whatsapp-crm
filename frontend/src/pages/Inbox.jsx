@@ -1403,7 +1403,6 @@ export default function Inbox({ roleAccess }) {
                            </select>
                         </div>
                      )}
-                     </div>
 
                      <div className="flex flex-col">
                         <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Follow-up Type</span>
