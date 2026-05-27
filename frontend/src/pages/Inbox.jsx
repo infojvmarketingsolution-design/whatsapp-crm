@@ -1436,7 +1436,7 @@ export default function Inbox({ roleAccess }) {
                   
                   <div className="space-y-3">
                      <div className="flex flex-col">
-                        <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Follow-up Category</span>
+                        <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Follow-up Title</span>
                         <SearchableSelect 
                            options={Object.keys(followUpCategories)}
                            value={followupCategory} 
@@ -1444,18 +1444,18 @@ export default function Inbox({ roleAccess }) {
                                setFollowupCategory(val);
                                setFollowupHeading('');
                            }} 
-                           placeholder="Select Category..."
+                           placeholder="Select Title..."
                         />
                      </div>
 
                      {followupCategory && (
                         <div className="flex flex-col">
-                           <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Follow-up Title</span>
+                           <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Follow-up Sub Title</span>
                            <SearchableSelect 
                               options={followUpCategories[followupCategory] || []}
                               value={followupHeading} 
                               onChange={val => setFollowupHeading(val)} 
-                              placeholder="Select Title..."
+                              placeholder="Select Sub Title..."
                            />
                         </div>
                      )}
