@@ -34,14 +34,14 @@ const formatMediaUrl = (url) => {
 const followUpCategories = {
   "1. CNR": ["Voice Mail Connect", "Call Not Receive"],
   "2. Call Back": [
-    "Driving ma chu",
-    "Office ma chu",
-    "Lunch Time ma Call Karvo",
-    "Hospital ma chu",
-    "Student will connect after discussing with parents",
-    "Marriage ma chu",
-    "Out of Town chu",
-    "Exams che pachi Call Karjo"
+    "On Drive",
+    "In Office",
+    "Call During Lunch Time",
+    "In Hospital",
+    "Student Will Connect After Discussing with Parents",
+    "At a Marriage Function",
+    "Out of Town",
+    "Exams Ongoing, Please Call Later"
   ],
   "3. Call Cut": [
     "Call Upadiya pachi Call Cut kariyo",
