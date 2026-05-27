@@ -31,6 +31,68 @@ const formatMediaUrl = (url) => {
   return url;
 };
 
+const SearchableSelect = ({ options, value, onChange, placeholder }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredOptions = options.filter(opt => opt.toLowerCase().includes(search.toLowerCase()));
+
+  return (
+    <div className="relative w-full" ref={wrapperRef}>
+      <div 
+        className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold text-slate-700 w-full cursor-pointer flex justify-between items-center"
+        onClick={() => { setIsOpen(!isOpen); setSearch(''); }}
+      >
+        <span>{value || placeholder}</span>
+        <ChevronDown size={12} className="text-slate-400" />
+      </div>
+      
+      {isOpen && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-indigo-100 rounded shadow-lg max-h-48 flex flex-col">
+          <div className="sticky top-0 bg-white p-1 border-b border-indigo-50 z-10">
+            <input 
+              type="text" 
+              className="w-full px-2 py-1 text-[10px] bg-slate-50 border border-indigo-100 rounded outline-none focus:border-indigo-300 text-slate-700"
+              placeholder="Search..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              onClick={e => e.stopPropagation()}
+              autoFocus
+            />
+          </div>
+          <div className="overflow-y-auto">
+            {filteredOptions.length > 0 ? filteredOptions.map(opt => (
+              <div 
+                key={opt} 
+                className="px-2 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-indigo-50 cursor-pointer"
+                onClick={() => {
+                  onChange(opt);
+                  setIsOpen(false);
+                }}
+              >
+                {opt}
+              </div>
+            )) : (
+              <div className="px-2 py-1.5 text-[10px] text-slate-400 text-center">No results found</div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const followUpCategories = {
   "CNR": ["Voice Mail Connect", "Call Not Receive"],
   "Call Back": [
@@ -1379,34 +1441,26 @@ export default function Inbox({ roleAccess }) {
                   <div className="space-y-3">
                      <div className="flex flex-col">
                         <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Follow-up Category</span>
-                        <select 
+                        <SearchableSelect 
+                           options={Object.keys(followUpCategories)}
                            value={followupCategory} 
-                           onChange={e => {
-                               setFollowupCategory(e.target.value);
+                           onChange={val => {
+                               setFollowupCategory(val);
                                setFollowupHeading('');
                            }} 
-                           className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold outline-none text-slate-700 w-full focus:border-indigo-300" 
-                        >
-                           <option value="">Select Category...</option>
-                           {Object.keys(followUpCategories).map(cat => (
-                               <option key={cat} value={cat}>{cat}</option>
-                           ))}
-                        </select>
+                           placeholder="Select Category..."
+                        />
                      </div>
 
                      {followupCategory && (
                         <div className="flex flex-col">
                            <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Follow-up Title</span>
-                           <select 
+                           <SearchableSelect 
+                              options={followUpCategories[followupCategory]}
                               value={followupHeading} 
-                              onChange={e => setFollowupHeading(e.target.value)} 
-                              className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold outline-none text-slate-700 w-full focus:border-indigo-300" 
-                           >
-                              <option value="">Select Title...</option>
-                              {followUpCategories[followupCategory].map(opt => (
-                                  <option key={opt} value={opt}>{opt}</option>
-                              ))}
-                           </select>
+                              onChange={val => setFollowupHeading(val)} 
+                              placeholder="Select Title..."
+                           />
                         </div>
                      )}
 
