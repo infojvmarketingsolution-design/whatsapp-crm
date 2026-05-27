@@ -32,8 +32,8 @@ const formatMediaUrl = (url) => {
 };
 
 const followUpCategories = {
-  "1. CNR": ["Voice Mail Connect", "Call Not Receive"],
-  "2. Call Back": [
+  "CNR": ["Voice Mail Connect", "Call Not Receive"],
+  "Call Back": [
     "On Drive",
     "In Office",
     "Call During Lunch Time",
@@ -43,21 +43,21 @@ const followUpCategories = {
     "Out of Town",
     "Exams Ongoing, Please Call Later"
   ],
-  "3. Call Cut": [
+  "Call Cut": [
     "Call Upadiya pachi Call Cut kariyo",
     "Half Ring Thai ane Ej Call Cut Kari Didho Che",
     "Blocked / Spam Call"
   ],
-  "4. Call Busy": ["Busy Calls"],
-  "5. Long Distance": ["Long distance na karane University / Office Visit possible nathi"],
-  "6. By Mistake Touch": ["By Mistake Touch", "Wrong Details"],
-  "7. Not Connected Yet": [
+  "Call Busy": ["Busy Calls"],
+  "Long Distance": ["Long distance na karane University / Office Visit possible nathi"],
+  "By Mistake Touch": ["By Mistake Touch", "Wrong Details"],
+  "Not Connected Yet": [
     "Switch Off",
     "Incoming / Outgoing Not Reachable",
     "Ring but No Answer (Blue Tick)",
     "Out of Service"
   ],
-  "8. Not Available": [
+  "Not Available": [
     "State Available Nathi",
     "Program Available Nathi",
     "University Seat Available Nathi",
