@@ -1337,13 +1337,55 @@ export default function Inbox({ roleAccess }) {
                   <div className="space-y-3">
                      <div className="flex flex-col">
                         <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Subject</span>
-                        <input 
-                           type="text" 
+                        <select 
                            value={followupHeading} 
                            onChange={e => setFollowupHeading(e.target.value)} 
-                           placeholder="Follow Up heading..." 
                            className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold outline-none text-slate-700 w-full focus:border-indigo-300" 
-                        />
+                        >
+                           <option value="">Select Follow-up Title...</option>
+                           <optgroup label="1. Not Connected Yet">
+                              <option value="Switch Off">Switch Off</option>
+                              <option value="Incoming / Outgoing Not Reachable">Incoming / Outgoing Not Reachable</option>
+                              <option value="Ringing but No Answer">Ringing but No Answer</option>
+                              <option value="Out of Service">Out of Service</option>
+                           </optgroup>
+                           <optgroup label="2. CNR (Call Not Received)">
+                              <option value="Voice Mail">Voice Mail</option>
+                              <option value="Call Not Answered">Call Not Answered</option>
+                           </optgroup>
+                           <optgroup label="3. Call Cut">
+                              <option value="Call Disconnected After Answering">Call Disconnected After Answering</option>
+                              <option value="Half Ring and Call Disconnected">Half Ring and Call Disconnected</option>
+                              <option value="Blocked / Spam Call">Blocked / Spam Call</option>
+                           </optgroup>
+                           <optgroup label="4. Call Back">
+                              <option value="I am Driving">I am Driving</option>
+                              <option value="I am in Office">I am in Office</option>
+                              <option value="Call During Lunch Time">Call During Lunch Time</option>
+                              <option value="I am in Hospital">I am in Hospital</option>
+                              <option value="Student Will Connect After Discussing with Parents">Student Will Connect After Discussing with Parents</option>
+                              <option value="I am at a Marriage Function">I am at a Marriage Function</option>
+                              <option value="I am Out of Town">I am Out of Town</option>
+                              <option value="Exams are Going On, Please Call Later">Exams are Going On, Please Call Later</option>
+                           </optgroup>
+                           <optgroup label="5. Long Distance">
+                              <option value="University / Office Visit Not Possible Due to Long Distance">University / Office Visit Not Possible Due to Long Distance</option>
+                           </optgroup>
+                           <optgroup label="6. Call Busy">
+                              <option value="Busy on Another Call">Busy on Another Call</option>
+                           </optgroup>
+                           <optgroup label="7. By Mistake Touch">
+                              <option value="Called by Mistake">Called by Mistake</option>
+                              <option value="Wrong Details">Wrong Details</option>
+                           </optgroup>
+                           <optgroup label="8. Not Available">
+                              <option value="State Not Available">State Not Available</option>
+                              <option value="Program Not Available">Program Not Available</option>
+                              <option value="University Seat Not Available">University Seat Not Available</option>
+                              <option value="Country Not Available">Country Not Available</option>
+                              <option value="Course Not Available">Course Not Available</option>
+                           </optgroup>
+                        </select>
                      </div>
 
                      <div className="flex flex-col">
@@ -1418,6 +1460,10 @@ export default function Inbox({ roleAccess }) {
                   <div className="flex justify-end mt-2">
                      <button 
                        onClick={async () => {
+                           if (!followupHeading) {
+                               alert("Please select a Follow-Up Title / Option");
+                               return;
+                           }
                            if (!followupDescription.trim()) {
                                alert("Please add a description - This is required");
                                return;
