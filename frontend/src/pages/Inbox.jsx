@@ -44,25 +44,31 @@ const followUpCategories = {
     "Exams Ongoing, Please Call Later"
   ],
   "Call Cut": [
-    "Call Upadiya pachi Call Cut kariyo",
-    "Half Ring Thai ane Ej Call Cut Kari Didho Che",
-    "Blocked / Spam Call"
+    "Call Disconnected After Answering",
+    "Call Disconnected After Half Ring",
+    "Blocked",
+    "Spam Call"
   ],
   "Call Busy": ["Busy Calls"],
-  "Long Distance": ["Long distance na karane University / Office Visit possible nathi"],
-  "By Mistake Touch": ["By Mistake Touch", "Wrong Details"],
+  "Long Distance": [
+    "University Visit Not Possible Due to Long Distance",
+    "Office Visit Not Possible Due to Long Distance"
+  ],
+  "By Mistake Touch": [
+    "by Mistake Touch",
+    "Wrong Details Provided"
+  ],
   "Not Connected Yet": [
-    "Switch Off",
-    "Incoming / Outgoing Not Reachable",
-    "Ring but No Answer (Blue Tick)",
+    "Phone Switched Off",
+    "Incoming / Outgoing Calls Not Reachable",
+    "Ringing but No Answer",
     "Out of Service"
   ],
   "Not Available": [
-    "State Available Nathi",
-    "Program Available Nathi",
-    "University Seat Available Nathi",
-    "Country Available Nathi",
-    "Course Available Nathi"
+    "Program/Course Not Available",
+    "University Not Available",
+    "Country Not Available",
+    "University Seat Not Available"
   ]
 };
 
