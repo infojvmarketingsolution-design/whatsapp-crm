@@ -31,9 +31,8 @@ const formatMediaUrl = (url) => {
   return url;
 };
 
-const SearchableSelect = ({ options, value, onChange, placeholder }) => {
+const SearchableSelect = ({ options = [], value, onChange, placeholder }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState('');
   const wrapperRef = useRef(null);
 
   useEffect(() => {
@@ -46,47 +45,44 @@ const SearchableSelect = ({ options, value, onChange, placeholder }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const filteredOptions = options.filter(opt => opt.toLowerCase().includes(search.toLowerCase()));
+  const filteredOptions = options ? options.filter(opt => 
+    opt.toLowerCase().includes((value || '').toLowerCase())
+  ) : [];
 
   return (
     <div className="relative w-full" ref={wrapperRef}>
-      <div 
-        className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold text-slate-700 w-full cursor-pointer flex justify-between items-center"
-        onClick={() => { setIsOpen(!isOpen); setSearch(''); }}
-      >
-        <span>{value || placeholder}</span>
-        <ChevronDown size={12} className="text-slate-400" />
+      <div className="relative w-full">
+        <input
+          type="text"
+          className="bg-white border border-indigo-100 rounded px-2 py-1.5 text-[10px] font-bold text-slate-700 w-full outline-none focus:border-indigo-300 pr-6"
+          placeholder={placeholder}
+          value={value}
+          onClick={() => setIsOpen(true)}
+          onChange={(e) => {
+            onChange(e.target.value);
+            setIsOpen(true);
+          }}
+        />
+        <ChevronDown 
+          size={12} 
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" 
+        />
       </div>
       
-      {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-indigo-100 rounded shadow-lg max-h-48 flex flex-col">
-          <div className="sticky top-0 bg-white p-1 border-b border-indigo-50 z-10">
-            <input 
-              type="text" 
-              className="w-full px-2 py-1 text-[10px] bg-slate-50 border border-indigo-100 rounded outline-none focus:border-indigo-300 text-slate-700"
-              placeholder="Search..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              onClick={e => e.stopPropagation()}
-              autoFocus
-            />
-          </div>
-          <div className="overflow-y-auto">
-            {filteredOptions.length > 0 ? filteredOptions.map(opt => (
-              <div 
-                key={opt} 
-                className="px-2 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-indigo-50 cursor-pointer"
-                onClick={() => {
-                  onChange(opt);
-                  setIsOpen(false);
-                }}
-              >
-                {opt}
-              </div>
-            )) : (
-              <div className="px-2 py-1.5 text-[10px] text-slate-400 text-center">No results found</div>
-            )}
-          </div>
+      {isOpen && filteredOptions.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-indigo-100 rounded shadow-lg max-h-48 overflow-y-auto">
+          {filteredOptions.map(opt => (
+            <div 
+              key={opt} 
+              className="px-2 py-1.5 text-[10px] font-bold text-slate-700 hover:bg-indigo-50 cursor-pointer"
+              onClick={() => {
+                onChange(opt);
+                setIsOpen(false);
+              }}
+            >
+              {opt}
+            </div>
+          ))}
         </div>
       )}
     </div>
@@ -1456,7 +1452,7 @@ export default function Inbox({ roleAccess }) {
                         <div className="flex flex-col">
                            <span className="text-indigo-600 font-bold uppercase text-[10px] mb-1">Follow-up Title</span>
                            <SearchableSelect 
-                              options={followUpCategories[followupCategory]}
+                              options={followUpCategories[followupCategory] || []}
                               value={followupHeading} 
                               onChange={val => setFollowupHeading(val)} 
                               placeholder="Select Title..."
