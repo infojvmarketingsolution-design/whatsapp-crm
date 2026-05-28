@@ -109,6 +109,22 @@ const worker = new Worker('campaign-dispatch', async job => {
                   });
               }
 
+              let mediaPrefix = '';
+              let hasVideoOrDoc = false;
+              let mediaUrl = '';
+              let mediaType = '';
+
+              if (campaign.templateComponents?.header) {
+                  const h = campaign.templateComponents.header;
+                  if (h.type === 'image') {
+                      mediaPrefix = `[Media] ${h.link}\n`;
+                  } else if (h.type === 'video' || h.type === 'document') {
+                      hasVideoOrDoc = true;
+                      mediaUrl = h.link;
+                      mediaType = h.type;
+                  }
+              }
+
               let messageContent = `[Template: ${template.name}]`;
               const bodyComp = template.components?.find(c => c.type === 'BODY' || c.type === 'body');
               if (bodyComp && bodyComp.text) {
@@ -119,6 +135,19 @@ const worker = new Worker('campaign-dispatch', async job => {
                           messageContent = messageContent.replace(`{{${idx + 1}}}`, val);
                       });
                   }
+              }
+
+              messageContent = mediaPrefix + messageContent;
+
+              if (hasVideoOrDoc) {
+                  await Message.create({
+                      contactId: contact._id,
+                      messageId: log.messageId + '_media',
+                      direction: 'OUTBOUND',
+                      type: mediaType,
+                      content: mediaUrl,
+                      status: 'SENT'
+                  });
               }
 
               const savedMsg = await Message.create({
