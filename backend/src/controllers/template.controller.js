@@ -17,7 +17,7 @@ const syncTemplates = async (req, res) => {
     const { wabaId, accessToken } = client.whatsappConfig;
     
     // Fetch from Meta API
-    const response = await axios.get(`https://graph.facebook.com/v19.0/${wabaId}/message_templates`, {
+    const response = await axios.get(`https://graph.facebook.com/v22.0/${wabaId}/message_templates`, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
 
@@ -106,7 +106,7 @@ const createTemplate = async (req, res) => {
 
     const payload = {
       name: cleanName,
-      language,
+      language: language === 'en' ? 'en_US' : language,
       category,
       allow_category_change: true,
       components
@@ -116,8 +116,8 @@ const createTemplate = async (req, res) => {
       payload.message_send_ttl_seconds = message_send_ttl_seconds;
     }
 
-    // Use v20.0 to ensure latest API compliance
-    const response = await axios.post(`https://graph.facebook.com/v20.0/${wabaId}/message_templates`, payload, {
+    // Use v22.0 to ensure latest API compliance
+    const response = await axios.post(`https://graph.facebook.com/v22.0/${wabaId}/message_templates`, payload, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
 
@@ -185,7 +185,7 @@ const deleteTemplate = async (req, res) => {
 
     if (wabaId && accessToken) {
         try {
-            await axios.delete(`https://graph.facebook.com/v19.0/${wabaId}/message_templates?name=${template.name}`, {
+            await axios.delete(`https://graph.facebook.com/v22.0/${wabaId}/message_templates?name=${template.name}`, {
                 headers: { 'Authorization': `Bearer ${accessToken}` }
             });
         } catch (metaErr) {
@@ -244,7 +244,7 @@ const uploadTemplateMedia = async (req, res) => {
 
        if (appId && accessToken) {
           // Step 1: Create Upload Session
-          const sessionUrl = `https://graph.facebook.com/v20.0/${appId}/uploads`;
+          const sessionUrl = `https://graph.facebook.com/v22.0/${appId}/uploads`;
           const sessionPayload = {
              file_length: req.file.size,
              file_type: req.file.mimetype,
@@ -255,7 +255,7 @@ const uploadTemplateMedia = async (req, res) => {
 
           // Step 2: Upload File Binary
           const fileBuffer = fs.readFileSync(targetPath);
-          const uploadRes = await axios.post(`https://graph.facebook.com/v20.0/${uploadId}`, fileBuffer, {
+          const uploadRes = await axios.post(`https://graph.facebook.com/v22.0/${uploadId}`, fileBuffer, {
              headers: {
                 'Authorization': `OAuth ${accessToken}`,
                 'file_offset': 0,
