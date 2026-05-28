@@ -759,12 +759,19 @@ export default function Inbox({ roleAccess }) {
                     </div>
                   </div>
                   <div className="text-[12px] text-gray-500 truncate mt-0.5">
-                    {c.lastMessage?.startsWith('[Template: ') ? (
+                    {c.lastMessage?.includes('[Template: ') ? (
                        <span className="inline-flex items-center">
-                          <span className="text-[9px] font-bold bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 uppercase tracking-wide">
-                             Campaign: {c.lastMessage.replace('[Template: ', '').replace(']', '')}
+                          <span className="text-[9px] font-bold bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 uppercase tracking-wide flex items-center space-x-1">
+                             <Megaphone size={10} />
+                             <span>Bulk Campaign</span>
                           </span>
                        </span>
+                    ) : c.lastMessage?.startsWith('[Media]') ? (
+                       <span className="italic flex items-center text-gray-400"><ImageIcon size={12} className="mr-1"/> Image</span>
+                    ) : c.lastMessage?.startsWith('[Video]') ? (
+                       <span className="italic flex items-center text-gray-400"><Video size={12} className="mr-1"/> Video</span>
+                    ) : c.lastMessage?.startsWith('[Document]') ? (
+                       <span className="italic flex items-center text-gray-400"><FileText size={12} className="mr-1"/> Document</span>
                     ) : (
                        c.lastMessage || c.role
                     )}
