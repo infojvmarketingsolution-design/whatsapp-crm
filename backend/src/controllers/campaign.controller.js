@@ -156,7 +156,7 @@ const processCampaignSync = async (tenantId, campaignId) => {
                 const finalPhone = sanitizedPhone.length === 10 ? `91${sanitizedPhone}` : sanitizedPhone;
 
                 const response = await axios.post(
-                    `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
+                    `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
                     {
                         messaging_product: 'whatsapp',
                         to: finalPhone,
@@ -174,6 +174,45 @@ const processCampaignSync = async (tenantId, campaignId) => {
                 log.sentAt = new Date();
                 log.messageId = response.data.messages[0].id;
                 await log.save();
+                
+                // Save to Message History for Inbox visibility
+                try {
+                    const Contact = tenantDb.model('Contact', ContactSchema);
+                    const Message = tenantDb.model('Message', MessageSchema);
+                    
+                    let contact = await Contact.findOne({ phone: log.phone });
+                    if (!contact) {
+                        contact = await Contact.create({ 
+                            phone: log.phone, 
+                            name: log.name || 'Campaign Lead',
+                            source: 'CAMPAIGN'
+                        });
+                    }
+
+                    let messageContent = `[Template: ${template.name}]`;
+                    const bodyComp = template.components?.find(c => c.type === 'BODY' || c.type === 'body');
+                    if (bodyComp && bodyComp.text) {
+                        messageContent = bodyComp.text;
+                        // Inject variables
+                        if (campaign.templateComponents?.body?.variables) {
+                            campaign.templateComponents.body.variables.forEach((val, idx) => {
+                                messageContent = messageContent.replace(`{{${idx + 1}}}`, val);
+                            });
+                        }
+                    }
+
+                    await Message.create({
+                        contactId: contact._id,
+                        messageId: log.messageId,
+                        direction: 'OUTBOUND',
+                        type: 'template',
+                        content: messageContent,
+                        status: 'SENT'
+                    });
+                } catch (msgErr) {
+                    console.error(`[Campaign Controller] Failed to save message history for ${log.phone}:`, msgErr.message);
+                }
+
                 sentCount++;
             } catch (err) {
                 console.error(`[Campaign Controller] Failed to send to ${log.phone}:`, err.response?.data || err.message);

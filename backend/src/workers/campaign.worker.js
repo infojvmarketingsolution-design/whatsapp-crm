@@ -76,7 +76,7 @@ const worker = new Worker('campaign-dispatch', async job => {
           const finalPhone = sanitizedPhone.length === 10 ? `91${sanitizedPhone}` : sanitizedPhone;
 
           const response = await axios.post(
-            `https://graph.facebook.com/v19.0/${phoneNumberId}/messages`,
+            `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`,
             {
                 messaging_product: 'whatsapp',
                 to: finalPhone,
@@ -109,12 +109,24 @@ const worker = new Worker('campaign-dispatch', async job => {
                   });
               }
 
+              let messageContent = `[Template: ${template.name}]`;
+              const bodyComp = template.components?.find(c => c.type === 'BODY' || c.type === 'body');
+              if (bodyComp && bodyComp.text) {
+                  messageContent = bodyComp.text;
+                  // Inject variables
+                  if (campaign.templateComponents?.body?.variables) {
+                      campaign.templateComponents.body.variables.forEach((val, idx) => {
+                          messageContent = messageContent.replace(`{{${idx + 1}}}`, val);
+                      });
+                  }
+              }
+
               const savedMsg = await Message.create({
                   contactId: contact._id,
                   messageId: log.messageId,
                   direction: 'OUTBOUND',
                   type: 'template',
-                  content: `[Template: ${template.name}]`,
+                  content: messageContent,
                   status: 'SENT'
               });
           } catch (msgErr) {
