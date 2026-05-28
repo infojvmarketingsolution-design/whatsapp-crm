@@ -101,11 +101,11 @@ class PRDFlowService {
       const service = selectedService.toUpperCase().trim();
       let targetAgentName = '';
       
-      if (service.includes('ONLINE PROGRAM')) { targetAgentName = 'Darshil'; }
-      else if (service.includes('INTERNATIONAL COACHING')) { targetAgentName = 'Jayashree Kaushik Dave'; }
-      else if (service.includes('VISA')) { targetAgentName = 'Ajita Shukla'; }
-      else if (service.includes('MBBS')) { targetAgentName = 'Akash'; }
-      else if (service.includes('TOUR')) { targetAgentName = 'Mihir'; }
+      if (service.includes('ONLINE PROGRAM')) { targetAgentName = 'Darshil kanani'; }
+      else if (service.includes('INTERNATIONAL COACHING')) { targetAgentName = 'Nikunj'; }
+      else if (service.includes('VISA')) { targetAgentName = 'Hitesh Patel'; }
+      else if (service.includes('MBBS')) { targetAgentName = 'Jayashree Kaushik Dave'; }
+      else if (service.includes('TOUR')) { targetAgentName = 'Ishika'; }
       else if (service.includes('COACHING')) { targetAgentName = 'Kinjal Yogeshbhai Sadhu'; }
 
       log(`[PRD] parsed service="${service}", targetAgentName="${targetAgentName}"`);
