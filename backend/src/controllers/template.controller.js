@@ -83,7 +83,10 @@ const getTemplates = async (req, res) => {
 
 const createTemplate = async (req, res) => {
   try {
-    const { name, category, language, components } = req.body;
+    const { name, category, language, components, message_send_ttl_seconds } = req.body;
+    
+    // Meta API requires template names to be lowercase and alphanumeric with underscores only
+    const cleanName = name.trim().toLowerCase().replace(/[^a-z0-9_]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
     
     let wabaId = process.env.META_WABA_ID;
     let accessToken = process.env.META_ACCESS_TOKEN;
@@ -102,13 +105,19 @@ const createTemplate = async (req, res) => {
     }
 
     const payload = {
-      name,
+      name: cleanName,
       language,
       category,
+      allow_category_change: true,
       components
     };
+    
+    if (message_send_ttl_seconds) {
+      payload.message_send_ttl_seconds = message_send_ttl_seconds;
+    }
 
-    const response = await axios.post(`https://graph.facebook.com/v19.0/${wabaId}/message_templates`, payload, {
+    // Use v20.0 to ensure latest API compliance
+    const response = await axios.post(`https://graph.facebook.com/v20.0/${wabaId}/message_templates`, payload, {
       headers: { 'Authorization': `Bearer ${accessToken}` }
     });
 
@@ -126,7 +135,7 @@ const createTemplate = async (req, res) => {
     const Template = tenantDb.model('Template', TemplateSchema);
     
     const newTemplate = await Template.create({
-      name,
+      name: cleanName,
       externalId: response.data.id,
       category,
       language,
