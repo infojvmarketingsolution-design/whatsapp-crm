@@ -207,6 +207,9 @@ export default function Contacts({ roleAccess }) {
       sessionStorage.removeItem('audit_target_agent');
       toast.success("Monitoring Teammate Leads", { icon: '🔍' });
     }
+    
+    const interval = setInterval(() => fetchContacts(), 10000);
+    return () => clearInterval(interval);
   }, []);
 
   // Intelligence Filter Engine (V3) - Simplified for Maximum Visibility

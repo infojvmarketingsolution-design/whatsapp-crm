@@ -91,6 +91,8 @@ export default function Tasks() {
   useEffect(() => {
     fetchTasks();
     fetchAgents();
+    const interval = setInterval(() => fetchTasks(), 10000);
+    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {

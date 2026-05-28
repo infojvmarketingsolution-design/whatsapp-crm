@@ -92,9 +92,9 @@ export default function LeadReport() {
   ];
 
   // --- Fetch Report Data ---
-  const fetchReportData = async () => {
+  const fetchReportData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
       
@@ -135,6 +135,11 @@ export default function LeadReport() {
   useEffect(() => {
     fetchReportData();
     setCurrentPage(1); // Reset page on filter change
+    
+    const interval = setInterval(() => {
+       fetchReportData(true);
+    }, 10000);
+    return () => clearInterval(interval);
   }, [presetDate, startDate, endDate, selectedMonth, selectedYear, selectedStatus, selectedSource, selectedAgent, sortBy]);
 
   // Handle Search submit/debounce

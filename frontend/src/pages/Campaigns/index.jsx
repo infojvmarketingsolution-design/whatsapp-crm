@@ -11,10 +11,12 @@ function Campaigns() {
 
   useEffect(() => {
     fetchCampaigns();
+    const interval = setInterval(() => fetchCampaigns(true), 10000);
+    return () => clearInterval(interval);
   }, []);
 
-  const fetchCampaigns = async () => {
-    setLoading(true);
+  const fetchCampaigns = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
       const token = localStorage.getItem('token');
       const tenantId = localStorage.getItem('tenantId');
