@@ -423,7 +423,7 @@ function CreateCampaign() {
           templateComponents: formData.templateComponents,
           audienceTags: formData.audienceTags,
           uploadedContacts: formData.uploadedContacts,
-          scheduledAt: formData.scheduledAt || null
+          scheduledAt: formData.scheduledAt ? new Date(formData.scheduledAt).toISOString() : null
         })
       });
       
