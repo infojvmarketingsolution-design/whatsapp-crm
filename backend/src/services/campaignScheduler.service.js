@@ -17,7 +17,7 @@ const startCampaignScheduler = () => {
     setInterval(async () => {
         try {
             // Find all active clients (tenants)
-            const activeClients = await Client.find({ status: 'active', 'whatsappConfig.accessToken': { $exists: true } });
+            const activeClients = await Client.find({ status: 'ACTIVE', 'whatsappConfig.accessToken': { $exists: true } });
             
             for (const client of activeClients) {
                 const tenantId = client.tenantId;
