@@ -7,8 +7,8 @@ class WhatsAppService {
   constructor(config) {
     this.phoneNumberId = config.phoneNumberId;
     this.accessToken = config.accessToken;
-    this.baseUrl = `https://graph.facebook.com/v19.0/${this.phoneNumberId}/messages`;
-    this.mediaUrl = `https://graph.facebook.com/v19.0/${this.phoneNumberId}/media`;
+    this.baseUrl = `https://graph.facebook.com/v22.0/${this.phoneNumberId}/messages`;
+    this.mediaUrl = `https://graph.facebook.com/v22.0/${this.phoneNumberId}/media`;
   }
 
   get headers() {
@@ -94,7 +94,7 @@ class WhatsAppService {
   async downloadMedia(mediaId, tenantId) {
     try {
       // 1. Get temporary URL from Meta
-      const infoRes = await axios.get(`https://graph.facebook.com/v19.0/${mediaId}`, {
+      const infoRes = await axios.get(`https://graph.facebook.com/v22.0/${mediaId}`, {
         headers: { 'Authorization': `Bearer ${this.accessToken}` }
       });
       const downloadUrl = infoRes.data.url;

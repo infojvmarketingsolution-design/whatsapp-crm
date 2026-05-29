@@ -612,9 +612,17 @@ export default function Inbox({ roleAccess }) {
       }
       
       // 2. Sidebar Quick Filter
-      if (sidebarFilter !== 'ALL') {
-         const mappedStatus = STATUS_MAPPING[c.status?.toUpperCase()] || c.status?.toUpperCase();
-         if (mappedStatus !== sidebarFilter) return false;
+      const isCampaign = c.lastMessageType === 'template' || c.lastMessage?.includes('[Template: ');
+      
+      if (sidebarFilter === 'CAMPAIGN') {
+         if (!isCampaign) return false;
+      } else {
+         if (isCampaign) return false;
+         
+         if (sidebarFilter !== 'ALL') {
+            const mappedStatus = STATUS_MAPPING[c.status?.toUpperCase()] || c.status?.toUpperCase();
+            if (mappedStatus !== sidebarFilter) return false;
+         }
       }
 
       return true;
@@ -647,7 +655,8 @@ export default function Inbox({ roleAccess }) {
               { id: 'OPEN', label: 'Open' },
               { id: 'CLOSE', label: 'Closed' },
               { id: 'VISITED', label: 'Visited' },
-              { id: 'ADMISSION', label: 'Admission' }
+              { id: 'ADMISSION', label: 'Admission' },
+              { id: 'CAMPAIGN', label: 'Campaign' }
             ].map(btn => (
                <button 
                   key={btn.id} 
@@ -667,14 +676,14 @@ export default function Inbox({ roleAccess }) {
         {/* Global header tab */}
         <div className="bg-[var(--theme-bg)] text-white flex items-center px-4 py-3 text-[10px] font-bold tracking-normal justify-between capitalize">
            <div className="flex space-x-4">
-             <span className="border-b-2 border-white/30 pb-1">Active ({contacts.length})</span>
+             <span className="border-b-2 border-white/30 pb-1">Active ({filteredContacts.length})</span>
            </div>
            <ChevronDown size={14} className="cursor-pointer opacity-50 hover:opacity-100 transition-opacity" />
         </div>
 
         {/* Top small avatars representing active queues */}
         <div className="bg-[var(--theme-bg)] px-4 py-2 flex items-center space-x-2.5 overflow-x-auto custom-scrollbar">
-           {contacts.slice(0,6).map((c, i) => (
+           {filteredContacts.slice(0,6).map((c, i) => (
               <div key={i} className="relative shrink-0 cursor-pointer hover:-translate-y-0.5 transition-transform" onClick={() => setActiveChat(c)}>
                 <img src={getAvatarUrl(c.name)} className="w-7 h-7 rounded-full border border-teal-700/50" />
                 {i === 0 && <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-brand-light border-2 border-brand-dark rounded-full shadow-sm"></span>}
