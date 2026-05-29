@@ -1130,6 +1130,7 @@ export default function Contacts({ roleAccess }) {
                                <option value="CLOSED">Close</option>
                                <option value="VISITED">Visit</option>
                                <option value="ADMISSION">Admission</option>
+                               <option value="CAMPAIGN">Campaign</option>
                             </select>
                             <ChevronDown size={14} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none group-hover:text-slate-600 transition-colors" />
                          </div>

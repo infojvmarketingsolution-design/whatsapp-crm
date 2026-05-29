@@ -1255,9 +1255,12 @@ function Dashboard() {
                                        onChange={e=>handleLeadFieldChange('status', e.target.value)} 
                                        className="bg-slate-50 border-2 border-slate-50 rounded-xl py-2.5 px-4 text-xs font-black text-slate-700 outline-none focus:bg-white focus:border-teal-500/20 transition-all appearance-none pr-8 relative"
                                     >
-                                       {['NEW LEAD', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP', 'CLOSED_WON', 'CLOSED_LOST'].map(s => (
-                                          <option key={s} value={s}>{s}</option>
-                                       ))}
+                                       <option value="NEW LEAD">NEW</option>
+                                       <option value="OPEN">OPEN</option>
+                                       <option value="CLOSED">CLOSE</option>
+                                       <option value="VISITED">VISITED</option>
+                                       <option value="ADMISSION">ADMISSION</option>
+                                       <option value="CAMPAIGN">CAMPAIGN</option>
                                     </select>
                                  </div>
 
