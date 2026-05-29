@@ -1840,6 +1840,29 @@ const getLeadReport = async (req, res) => {
   }
 };
 
+const fixCampaignStatus = async (req, res) => {
+  try {
+    const Contact = req.tenantDb.model('Contact', ContactSchema);
+    const Message = req.tenantDb.model('Message', MessageSchema);
+    
+    const contacts = await Contact.find({ status: { $in: ['NEW LEAD', 'NEW'] } });
+    let count = 0;
+    
+    for (const c of contacts) {
+        const lastMsg = await Message.findOne({ contactId: c._id }).sort({ timestamp: -1 });
+        if (lastMsg && (lastMsg.type === 'template' || (lastMsg.content && lastMsg.content.includes('[Template:')))) {
+            c.status = 'CAMPAIGN';
+            await c.save();
+            count++;
+        }
+    }
+    
+    res.json({ success: true, message: `Fixed ${count} contacts to CAMPAIGN status` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getContacts,
   getMessages,
@@ -1857,6 +1880,6 @@ module.exports = {
   getUserBreakdownStats,
   getPendingTasksTeam,
   getPersonalActivity,
-  getLeadReport
+  getLeadReport,
+  fixCampaignStatus
 };
-

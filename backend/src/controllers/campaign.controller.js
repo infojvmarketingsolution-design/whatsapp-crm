@@ -30,7 +30,8 @@ const createCampaign = async (req, res) => {
           { phone },
           { 
             $set: { name: c.name || '', optInStatus: true },
-            $addToSet: { tags: 'csv_import' } 
+            $addToSet: { tags: 'csv_import' },
+            $setOnInsert: { status: 'CAMPAIGN' }
           },
           { upsert: true, new: true, setDefaultsOnInsert: true }
         );

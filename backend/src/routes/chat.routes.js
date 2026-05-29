@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { getContacts, getMessages, sendMessage, performContactAction, performBulkContactAction, createContact, getDashboardStats, getContactStats, getAgents, updateFcmToken, summarizeLead, getLeadAnalysis, getUserBreakdownStats, getPendingTasksTeam, getLeadDetailsStats, getPersonalActivity, getLeadReport } = require('../controllers/chat.controller');
+const { getContacts, getMessages, sendMessage, performContactAction, performBulkContactAction, createContact, getDashboardStats, getContactStats, getAgents, updateFcmToken, summarizeLead, getLeadAnalysis, getUserBreakdownStats, getPendingTasksTeam, getLeadDetailsStats, getPersonalActivity, getLeadReport, fixCampaignStatus } = require('../controllers/chat.controller');
 const tenantMiddleware = require('../middleware/tenant');
 const { protect } = require('../middleware/auth');
 const multer = require('multer');
@@ -26,5 +26,6 @@ router.get('/agents', getAgents);
 router.post('/fcm-token', updateFcmToken);
 router.get('/summarize/:contactId', summarizeLead);
 router.get('/personal-activity', getPersonalActivity);
+router.get('/fix-campaigns', fixCampaignStatus);
 
 module.exports = router;
