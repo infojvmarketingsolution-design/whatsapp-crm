@@ -181,7 +181,7 @@ export default function Inbox({ roleAccess }) {
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const PREDEFINED_TAGS = ['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'];
-  const STATUSES = ['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION'];
+  const STATUSES = ['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION', 'CAMPAIGN'];
   const STATUS_MAPPING = {
     'NEW LEAD': 'NEW',
     'NEW': 'NEW',
@@ -197,7 +197,8 @@ export default function Inbox({ roleAccess }) {
     'CLOSE': 'CLOSE',
     'VISITED': 'VISITED',
     'PENDING VISIT': 'PENDING VISIT',
-    'PENDING_VISIT': 'PENDING VISIT'
+    'PENDING_VISIT': 'PENDING VISIT',
+    'CAMPAIGN': 'CAMPAIGN'
   };
   const [sidebarFilter, setSidebarFilter] = useState('ALL');
   const [activeChat, setActiveChat] = useState(null);
@@ -1817,7 +1818,11 @@ export default function Inbox({ roleAccess }) {
                     <span className="text-teal-800/70 font-bold tracking-wide">PIPELINE STATUS</span>
                     <div className="relative">
                       <button onClick={() => setShowStatusDropdown(!showStatusDropdown)} className="flex items-center space-x-1.5 bg-white px-2.5 py-1 rounded shadow-sm border border-teal-100 text-[var(--theme-text)] font-bold tracking-wide uppercase text-[10px] hover:bg-teal-50 transition">
-                         <span>{STATUS_MAPPING[activeChat?.status?.toUpperCase()] || activeChat?.status?.replace('_', ' ') || 'NEW LEAD'}</span>
+                         <span>
+                           { (activeChat?.lastMessageType === 'template' || activeChat?.lastMessage?.includes('[Template: ')) 
+                              ? 'CAMPAIGN' 
+                              : (STATUS_MAPPING[activeChat?.status?.toUpperCase()] || activeChat?.status?.replace('_', ' ') || 'NEW LEAD') }
+                         </span>
                          <ChevronDown size={12} />
                       </button>
                       {showStatusDropdown && (
