@@ -648,7 +648,7 @@ export default function Inbox({ roleAccess }) {
           </div>
 
           {/* Sidebar Quick Filters - Proper Button Grid */}
-          <div className="grid grid-cols-3 gap-2 p-4 pt-0 border-b border-gray-50 bg-white">
+          <div className="grid grid-cols-4 gap-2 p-4 pt-0 border-b border-gray-50 bg-white">
             {[
               { id: 'ALL', label: 'All' },
               { id: 'NEW', label: 'New' },
