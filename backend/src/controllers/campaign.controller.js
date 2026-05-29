@@ -250,6 +250,7 @@ const processCampaignSync = async (tenantId, campaignId) => {
                 if (metaError) {
                     const friendlyMessage = mapMetaError(metaError.code, metaError.message);
                     log.errorReason = `${friendlyMessage} (Code: ${metaError.code})`;
+                    log.errorCode = metaError.code;
                     if (metaError.error_data?.details) {
                         log.errorReason += ` - ${metaError.error_data.details}`;
                     }
@@ -325,10 +326,80 @@ const deleteCampaign = async (req, res) => {
   }
 };
 
+const getErrorDashboard = async (req, res) => {
+  try {
+    const tenantDb = getTenantConnection(req.tenantId);
+    const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
+
+    const [totalMessages, deliveredMessages, failedMessages, errorBreakdown] = await Promise.all([
+      CampaignLog.countDocuments({ status: { $ne: 'PENDING' } }),
+      CampaignLog.countDocuments({ status: 'DELIVERED' }),
+      CampaignLog.countDocuments({ status: 'FAILED' }),
+      CampaignLog.aggregate([
+        { $match: { status: 'FAILED', errorCode: { $exists: true } } },
+        { $group: { _id: "$errorCode", count: { $sum: 1 }, description: { $first: "$errorReason" } } },
+        { $sort: { count: -1 } }
+      ])
+    ]);
+
+    const deliveryRate = totalMessages > 0 ? ((deliveredMessages / totalMessages) * 100).toFixed(2) : 0;
+
+    res.json({
+      totalMessages,
+      deliveredMessages,
+      failedMessages,
+      deliveryRate,
+      errorBreakdown: errorBreakdown.map(e => ({
+        errorCode: e._id,
+        count: e.count,
+        description: e.description ? e.description.split(' (Code:')[0] : 'Unknown Error'
+      }))
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getErrorReports = async (req, res) => {
+  try {
+    const tenantDb = getTenantConnection(req.tenantId);
+    const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
+
+    const { startDate, endDate, campaignId, errorCode, phone } = req.query;
+    
+    let query = { status: 'FAILED' };
+    
+    if (startDate && endDate) {
+      query.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+    if (campaignId) query.campaignId = campaignId;
+    if (errorCode) query.errorCode = Number(errorCode);
+    if (phone) query.phone = new RegExp(phone, 'i');
+
+    const logs = await CampaignLog.find(query).populate('campaignId', 'name').sort({ createdAt: -1 });
+
+    const formattedLogs = logs.map(log => ({
+      _id: log._id,
+      phone: log.phone,
+      campaignName: log.campaignId?.name || 'Unknown Campaign',
+      errorCode: log.errorCode,
+      errorReason: log.errorReason,
+      sentAt: log.sentAt,
+      status: log.status
+    }));
+
+    res.json(formattedLogs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   createCampaign,
   getCampaigns,
   getCampaignReport,
   deleteCampaign,
-  processCampaignSync
+  processCampaignSync,
+  getErrorDashboard,
+  getErrorReports
 };

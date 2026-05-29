@@ -7,6 +7,9 @@ const CampaignLogSchema = new mongoose.Schema({
   messageId: { type: String, sparse: true },
   status: { type: String, enum: ['PENDING', 'SENT', 'DELIVERED', 'READ', 'FAILED'], default: 'PENDING' },
   errorReason: { type: String },
+  errorCode: { type: Number },
+  retryCount: { type: Number, default: 0 },
+  lastRetryAt: { type: Date },
   sentAt: { type: Date },
   deliveredAt: { type: Date },
   readAt: { type: Date }

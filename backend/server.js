@@ -43,11 +43,13 @@ require('./src/workers/campaign.worker');
 const { startTaskSuspensionWorker, startInactivityFollowupWorker } = require('./src/workers/task.worker');
 const { startCampaignScheduler } = require('./src/services/campaignScheduler.service');
 const { startMediaCleanupJob } = require('./src/services/mediaCleanup.service');
+const { startRetryEngine } = require('./src/workers/retryEngine');
 
 startTaskSuspensionWorker();
 startInactivityFollowupWorker();
 startCampaignScheduler();
 startMediaCleanupJob();
+startRetryEngine();
 
 app.use(maintenanceMiddleware);
 

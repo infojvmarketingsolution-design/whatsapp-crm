@@ -62,9 +62,20 @@ function CreateCampaign() {
   const handleDirectFileUpload = async (file) => {
     if (!file) return;
     const sizeMB = file.size / (1024 * 1024);
-    if (newTemplate.headerType === 'IMAGE' && sizeMB > 5) return alert("Image must be under 5 MB.");
-    if (newTemplate.headerType === 'VIDEO' && sizeMB > 16) return alert("Video must be under 16 MB.");
-    if (newTemplate.headerType === 'DOCUMENT' && sizeMB > 100) return alert("Document must be under 100 MB.");
+    const fileExtension = file.name.split('.').pop().toLowerCase();
+    
+    if (newTemplate.headerType === 'IMAGE') {
+       if (sizeMB > 5) return alert("Image must be under 5 MB.");
+       if (!['jpg', 'jpeg', 'png'].includes(fileExtension)) return alert("Only JPG, JPEG, and PNG images are supported.");
+    }
+    if (newTemplate.headerType === 'VIDEO') {
+       if (sizeMB > 16) return alert("Video must be under 16 MB.");
+       if (fileExtension !== 'mp4') return alert("Only MP4 videos are supported.");
+    }
+    if (newTemplate.headerType === 'DOCUMENT') {
+       if (sizeMB > 100) return alert("Document must be under 100 MB.");
+       if (fileExtension !== 'pdf') return alert("Only PDF documents are supported.");
+    }
 
     setIsUploadingMedia(true);
     setNewTemplate(prev => ({...prev, headerFile: file, headerMediaUrl: '', headerMetaHandle: ''})); 

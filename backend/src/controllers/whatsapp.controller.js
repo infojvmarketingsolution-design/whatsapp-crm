@@ -172,6 +172,7 @@ const handleIncomingMessage = async (req, res) => {
         if (metaError && status === 'failed') {
             const friendlyMessage = mapMetaError(metaError.code, metaError.message);
             logUpdate.errorReason = `${friendlyMessage} (Code: ${metaError.code})`;
+            logUpdate.errorCode = metaError.code;
             if (metaError.error_data?.details) {
                 logUpdate.errorReason += ` - ${metaError.error_data.details}`;
             }
@@ -190,6 +191,26 @@ const handleIncomingMessage = async (req, res) => {
            
            if (Object.keys(incQuery).length > 0) {
              await Campaign.findByIdAndUpdate(log.campaignId, { $inc: incQuery });
+           }
+        }
+
+        // 🚀 Lead Follow-Up Integration on Failure
+        if (status === 'failed' && metaError) {
+           try {
+              const code = String(metaError.code);
+              // Target specific errors that require follow-up
+              if (['131049', '131053', '131026'].includes(code)) {
+                 await Contact.findOneAndUpdate(
+                    { phone: phone },
+                    { 
+                       $addToSet: { tags: 'Action Required: Delivery Failed' },
+                       $set: { status: 'NEEDS FOLLOW-UP' } 
+                    }
+                 );
+                 console.log(`[Follow-Up] Tagged contact ${phone} for follow-up due to error ${code}`);
+              }
+           } catch (err) {
+              console.error(`[Follow-Up Error] Failed to update contact for ${phone}:`, err.message);
            }
         }
       }
@@ -449,7 +470,7 @@ const getApiConfig = async (req, res) => {
     // Attempt to fetch live verified name and phone from Meta Graph API
     if (configData.accessToken && configData.phoneNumberId) {
       try {
-        const metaRes = await fetch(`https://graph.facebook.com/v19.0/${configData.phoneNumberId}`, {
+        const metaRes = await fetch(`https://graph.facebook.com/v22.0/${configData.phoneNumberId}`, {
           method: 'GET',
           headers: { 'Authorization': `Bearer ${configData.accessToken}` }
         });
@@ -462,7 +483,7 @@ const getApiConfig = async (req, res) => {
 
         // Fetch WABA Specific Limits
         if (configData.wabaId) {
-            const wabaRes = await fetch(`https://graph.facebook.com/v19.0/${configData.wabaId}?fields=id,name,messaging_limit_tier`, {
+            const wabaRes = await fetch(`https://graph.facebook.com/v22.0/${configData.wabaId}?fields=id,name,messaging_limit_tier`, {
                 headers: { 'Authorization': `Bearer ${configData.accessToken}` }
             });
             if (wabaRes.ok) {
@@ -544,7 +565,7 @@ const testApiConnection = async (req, res) => {
     accessToken = client.whatsappConfig.accessToken;
     
     // Call Meta Graph API to test token validity
-    const response = await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}`, {
+    const response = await fetch(`https://graph.facebook.com/v22.0/${phoneNumberId}`, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${accessToken}`
@@ -580,7 +601,7 @@ const exchangeFacebookToken = async (req, res) => {
     }
 
     // 1. Exchange Code for Access Token
-    const tokenRes = await fetch(`https://graph.facebook.com/v19.0/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&code=${code}`);
+    const tokenRes = await fetch(`https://graph.facebook.com/v22.0/oauth/access_token?client_id=${appId}&client_secret=${appSecret}&code=${code}`);
     const tokenData = await tokenRes.json();
 
     if (!tokenRes.ok) {
