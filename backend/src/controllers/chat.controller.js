@@ -1863,6 +1863,34 @@ const fixCampaignStatus = async (req, res) => {
   }
 };
 
+const fixCampaignStatusTemp = async (req, res) => {
+  try {
+    const { getTenantConnection } = require('../config/db');
+    const tenantId = req.params.tenantId;
+    if (!tenantId) return res.status(400).json({ error: "No tenant ID provided" });
+    
+    const tenantDb = getTenantConnection(tenantId);
+    const Contact = tenantDb.model('Contact', ContactSchema);
+    const Message = tenantDb.model('Message', MessageSchema);
+    
+    const contacts = await Contact.find({ status: { $in: ['NEW LEAD', 'NEW'] } });
+    let count = 0;
+    
+    for (const c of contacts) {
+        const lastMsg = await Message.findOne({ contactId: c._id }).sort({ timestamp: -1 });
+        if (lastMsg && (lastMsg.type === 'template' || (lastMsg.content && lastMsg.content.includes('[Template:')))) {
+            c.status = 'CAMPAIGN';
+            await c.save();
+            count++;
+        }
+    }
+    
+    res.json({ success: true, message: `Fixed ${count} contacts to CAMPAIGN status` });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getContacts,
   getMessages,
@@ -1881,5 +1909,6 @@ module.exports = {
   getPendingTasksTeam,
   getPersonalActivity,
   getLeadReport,
-  fixCampaignStatus
+  fixCampaignStatus,
+  fixCampaignStatusTemp
 };
