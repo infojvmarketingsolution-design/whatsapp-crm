@@ -1836,6 +1836,201 @@ const getLeadReport = async (req, res) => {
 
   } catch (error) {
     console.error(`[getLeadReport Error]:`, error);
+        delete matchQuery.$or;
+        matchQuery.$and = [
+          { $or: existingOr },
+          { $or: orConditions }
+        ];
+      } else {
+        matchQuery.$or = orConditions;
+      }
+    }
+
+    // 4. Fetch and sort leads
+    let sortConfig = { createdAt: -1 };
+    if (sortBy === 'oldest') sortConfig = { createdAt: 1 };
+    else if (sortBy === 'status') sortConfig = { status: 1 };
+    else if (sortBy === 'score_desc') sortConfig = { score: -1 };
+    else if (sortBy === 'activity_desc') sortConfig = { lastActivity: -1 };
+
+    console.log(`[LeadReport Debug] User ID: ${req.user?._id}, Role: ${req.user?.role}, mustRestrict: ${mustRestrict}`);
+    console.log(`[LeadReport Debug] matchQuery:`, JSON.stringify(matchQuery, null, 2));
+
+    let leads = await Contact.find(matchQuery).sort(sortConfig).lean();
+    console.log(`[LeadReport Debug] Leads fetched: ${leads.length}`);
+
+    // In-memory sorting for priority
+    if (sortBy === 'priority') {
+      const priorityWeight = { 'Hot': 3, 'Warm': 2, 'Cold': 1 };
+      leads.sort((a, b) => {
+        const wA = priorityWeight[a.heatLevel] || 0;
+        const wB = priorityWeight[b.heatLevel] || 0;
+        return wB - wA; // Hot first
+      });
+    }
+
+    // Enrich with names of assigned agents and counsellors
+    const userIds = new Set();
+    leads.forEach(c => {
+      if (c.assignedAgent) userIds.add(c.assignedAgent.toString());
+      if (c.assignedCounsellor) userIds.add(c.assignedCounsellor.toString());
+    });
+
+    let userMap = {};
+    if (userIds.size > 0) {
+      const users = await User.find({ _id: { $in: Array.from(userIds) } }).select('name role email');
+      userMap = users.reduce((acc, u) => {
+        acc[u._id.toString()] = { name: u.name, role: u.role, email: u.email };
+        return acc;
+      }, {});
+    }
+
+    leads = leads.map(c => ({
+      ...c,
+      assignedAgentName: c.assignedAgent ? (userMap[c.assignedAgent.toString()]?.name || 'Unknown Agent') : 'Unassigned',
+      assignedCounsellorName: c.assignedCounsellor ? (userMap[c.assignedCounsellor.toString()]?.name || 'Unknown Counsellor') : 'Unassigned'
+    }));
+
+    // 5. Generate Overview Cover Stats & KPI Metrics
+    let totalLeads = leads.length;
+    let convertedLeads = 0;
+    let pendingLeads = 0;
+    let lostLeads = 0;
+    let newLeads = 0;
+    let followupsPending = 0;
+    let completedFollowups = 0;
+    let totalFollowups = 0;
+
+    leads.forEach(lead => {
+      const st = lead.status;
+      if (st === 'CLOSED_WON' || st === 'ADMISSION') {
+        convertedLeads++;
+      } else if (st === 'CLOSED_LOST' || st === 'CLOSED' || st === 'CLOSE') {
+        lostLeads++;
+      } else {
+        pendingLeads++;
+      }
+
+      if (st === 'NEW' || st === 'NEW LEAD') {
+        newLeads++;
+      }
+
+      if (lead.tasks && lead.tasks.length > 0) {
+        lead.tasks.forEach(task => {
+          if (task.type === 'FOLLOW_UP') {
+            totalFollowups++;
+            if (task.status === 'PENDING' || task.status === 'IN_PROGRESS') {
+              followupsPending++;
+            } else if (task.status === 'COMPLETED') {
+              completedFollowups++;
+            }
+          }
+        });
+      }
+    });
+
+    const conversionRatio = totalLeads > 0 ? parseFloat(((convertedLeads / totalLeads) * 100).toFixed(1)) : 0;
+    const followupCompletionRate = totalFollowups > 0 ? Math.round((completedFollowups / totalFollowups) * 100) : 0;
+
+    // 6. Leads by Source Distribution (Chart data)
+    const sourceMap = {};
+    leads.forEach(lead => {
+      const src = lead.leadSourceType || 'Manual Entry';
+      sourceMap[src] = (sourceMap[src] || 0) + 1;
+    });
+    const leadsBySource = Object.keys(sourceMap).map(key => ({
+      label: key,
+      value: sourceMap[key]
+    })).sort((a,b) => b.value - a.value);
+
+    // 7. Monthly Lead Trend (Chart data)
+    const trendMap = {};
+    leads.forEach(lead => {
+      const date = new Date(lead.createdAt);
+      const key = date.toLocaleString('default', { month: 'short', year: '2-digit' });
+      trendMap[key] = (trendMap[key] || 0) + 1;
+    });
+    const monthlyLeadTrend = Object.keys(trendMap).map(key => ({
+      label: key,
+      value: trendMap[key]
+    }));
+
+    // 8. Team Performance Breakdown (Chart and Cover data)
+    const teamMembers = await User.find({
+      tenantId: req.tenantId,
+      status: 'ACTIVE'
+    }).select('name role email');
+
+    const teamPerformance = await Promise.all(teamMembers.map(async (member) => {
+      const mId = member._id.toString();
+      
+      const memberLeads = leads.filter(l => 
+        (l.assignedAgent && l.assignedAgent.toString() === mId) || 
+        (l.assignedCounsellor && l.assignedCounsellor.toString() === mId)
+      );
+      const mTotal = memberLeads.length;
+      
+      let mConverted = 0;
+      let mPendingFollowups = 0;
+      let mCompletedFollowups = 0;
+      let mTotalFollowups = 0;
+
+      memberLeads.forEach(lead => {
+        const st = lead.status;
+        if (st === 'CLOSED_WON' || st === 'ADMISSION') mConverted++;
+        
+        if (lead.tasks && lead.tasks.length > 0) {
+          lead.tasks.forEach(task => {
+            if (task.type === 'FOLLOW_UP') {
+              mTotalFollowups++;
+              if (task.status === 'PENDING' || task.status === 'IN_PROGRESS') {
+                mPendingFollowups++;
+              } else if (task.status === 'COMPLETED') {
+                mCompletedFollowups++;
+              }
+            }
+          });
+        }
+      });
+
+      return {
+        userId: member._id,
+        name: member.name,
+        role: member.role,
+        email: member.email,
+        totalLeads: mTotal,
+        convertedLeads: mConverted,
+        conversionRate: mTotal > 0 ? parseFloat(((mConverted / mTotal) * 100).toFixed(1)) : 0,
+        pendingFollowups: mPendingFollowups,
+        followupCompletionRate: mTotalFollowups > 0 ? Math.round((mCompletedFollowups / mTotalFollowups) * 100) : 0
+      };
+    }));
+
+    const activeTeamPerformance = teamPerformance.filter(t => t.totalLeads > 0).sort((a,b) => b.totalLeads - a.totalLeads);
+
+    res.json({
+      summary: {
+        totalLeads,
+        convertedLeads,
+        pendingLeads,
+        lostLeads,
+        newLeads,
+        followupsPending,
+        conversionRatio,
+        followupCompletionRate,
+        generatedAt: new Date(),
+        generatedBy: req.user?.name || 'Verified System User'
+      },
+      analytics: {
+        leadsBySource,
+        monthlyLeadTrend,
+        teamPerformance: activeTeamPerformance
+      },
+      leads
+    });
+
+  } catch (error) {
+    console.error(`[getLeadReport Error]:`, error);
     res.status(500).json({ message: error.message });
   }
 };
@@ -1849,8 +2044,13 @@ const fixCampaignStatus = async (req, res) => {
     let count = 0;
     
     for (const c of contacts) {
-        const lastMsg = await Message.findOne({ contactId: c._id }).sort({ timestamp: -1 });
-        if (lastMsg && (lastMsg.type === 'template' || (lastMsg.content && lastMsg.content.includes('[Template:')))) {
+        const hasTemplate = await Message.exists({ 
+            contactId: c._id, 
+            $or: [{ type: 'template' }, { content: { $regex: /\[Template:/ } }] 
+        });
+        const isCsvImport = c.tags && c.tags.includes('csv_import');
+        
+        if (hasTemplate || isCsvImport) {
             c.status = 'CAMPAIGN';
             await c.save();
             count++;
