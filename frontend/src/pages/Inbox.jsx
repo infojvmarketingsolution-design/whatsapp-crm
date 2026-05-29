@@ -703,7 +703,8 @@ export default function Inbox({ roleAccess }) {
                  const tracked = ['name', 'email', 'qualification', 'selectedStream', 'selectedProgram', 'preferredCallTime', 'budget', 'purchaseTimeline', 'decisionMakerStatus', 'profession', 'companyName', 'city', 'state'];
                  tracked.forEach(f => { if(c[f]) computedBotQuestions++; });
                  if (c.flowVariables) computedBotQuestions += Object.keys(c.flowVariables).length;
-              }
+               }
+               const isCampaignItem = c.lastMessageType === 'template' || c.lastMessage?.includes('[Template: ');
               
               return (
               <div 
@@ -750,6 +751,7 @@ export default function Inbox({ roleAccess }) {
                       )}
                       {/* Status Badge */}
                       <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded border capitalize flex-shrink-0 ${
+                        isCampaignItem ? 'bg-indigo-50 text-indigo-600 border-indigo-100' :
                         c.status === 'NEW' || c.status === 'NEW LEAD' ? 'bg-blue-50 text-blue-600 border-blue-100' :
                         ['OPEN', 'CONTACTED', 'INTERESTED', 'FOLLOW_UP'].includes(c.status) ? 'bg-teal-50 text-teal-600 border-teal-100' :
                         c.status === 'ADMISSION' || c.status === 'CLOSED_WON' || c.status === 'ADMITTED' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
@@ -758,7 +760,7 @@ export default function Inbox({ roleAccess }) {
                         c.status === 'PENDING VISIT' || c.status === 'PENDING_VISIT' ? 'bg-orange-50 text-orange-600 border-orange-100' :
                         'bg-slate-50 text-slate-600 border-slate-100'
                       }`}>
-                        {STATUS_MAPPING[c.status?.toUpperCase()] || c.status?.replace('_', ' ') || 'OPEN'}
+                        {isCampaignItem ? 'CAMPAIGN' : (STATUS_MAPPING[c.status?.toUpperCase()] || c.status?.replace('_', ' ') || 'OPEN')}
                       </span>
                       {c.heatLevel === 'Hot' && <Flame size={14} className="text-red-500 animate-pulse fill-red-500/20" />}
                       {c.heatLevel === 'Warm' && <Flame size={13} className="text-orange-400 fill-orange-400/10" />}
