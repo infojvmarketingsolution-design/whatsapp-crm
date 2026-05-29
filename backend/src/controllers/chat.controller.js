@@ -1878,7 +1878,10 @@ const fixCampaignStatusTemp = async (req, res) => {
     
     for (const c of contacts) {
         const lastMsg = await Message.findOne({ contactId: c._id }).sort({ timestamp: -1 });
-        if (lastMsg && (lastMsg.type === 'template' || (lastMsg.content && lastMsg.content.includes('[Template:')))) {
+        const isTemplate = lastMsg && (lastMsg.type === 'template' || (lastMsg.content && lastMsg.content.includes('[Template:')));
+        const isCsvImport = c.tags && c.tags.includes('csv_import');
+        
+        if (isTemplate || isCsvImport) {
             c.status = 'CAMPAIGN';
             await c.save();
             count++;
