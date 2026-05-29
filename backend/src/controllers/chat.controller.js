@@ -1849,12 +1849,17 @@ const fixCampaignStatus = async (req, res) => {
     let count = 0;
     
     for (const c of contacts) {
-        const lastMsg = await Message.findOne({ contactId: c._id }).sort({ timestamp: -1 });
-        if (lastMsg && (lastMsg.type === 'template' || (lastMsg.content && lastMsg.content.includes('[Template:')))) {
-            c.status = 'CAMPAIGN';
-            await c.save();
-            count++;
-        }
+      const hasTemplate = await Message.exists({ 
+          contactId: c._id, 
+          $or: [{ type: 'template' }, { content: { $regex: /\[Template:/ } }] 
+      });
+      const isCsvImport = c.tags && c.tags.includes('csv_import');
+      
+      if (hasTemplate || isCsvImport) {
+          c.status = 'CAMPAIGN';
+          await c.save();
+          count++;
+      }
     }
     
     res.json({ success: true, message: `Fixed ${count} contacts to CAMPAIGN status` });
