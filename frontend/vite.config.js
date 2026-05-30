@@ -3,9 +3,14 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 
+import legacy from '@vitejs/plugin-legacy'
+
 export default defineConfig({
   plugins: [
     react(),
+    legacy({
+      targets: ['defaults', 'not IE 11', 'iOS >= 12']
+    }),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'pwa-192x192.png', 'pwa-512x512.png'],
@@ -80,7 +85,6 @@ export default defineConfig({
     })
   ],
   build: {
-    target: 'es2018',
     outDir: '../backend/public',
     emptyOutDir: true,
   },
