@@ -8,6 +8,25 @@ const { Server } = require('socket.io');
 const app = express();
 const server = http.createServer(app);
 
+// Security Middlewares
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
+
+// Note: Helmet's CSP might block external resources if not configured carefully.
+// For now, we use default helmet but disable CSP if it interferes with the frontend,
+// or we keep it enabled if we want strict security (as requested by user).
+// We'll use standard helmet but allow images/media to load properly if needed.
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+
+// Sanitize data against NoSQL query injection
+app.use(mongoSanitize());
+
+// Sanitize data against XSS
+app.use(xss());
+
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
