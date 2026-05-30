@@ -3,19 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <script>
+      var isHandlingError = false;
       window.onerror = function(msg, url, line, col, error) {
-        var errDiv = document.createElement('div');
-        errDiv.style.position = 'fixed';
-        errDiv.style.top = '0';
-        errDiv.style.left = '0';
-        errDiv.style.width = '100%';
-        errDiv.style.backgroundColor = 'red';
-        errDiv.style.color = 'white';
-        errDiv.style.padding = '20px';
-        errDiv.style.zIndex = '999999';
-        errDiv.style.wordBreak = 'break-all';
-        errDiv.innerHTML = 'ERROR CAUGHT:<br>' + msg + '<br>Line: ' + line + '<br>URL: ' + url;
-        document.body.appendChild(errDiv);
+        if (isHandlingError) return;
+        isHandlingError = true;
+        try {
+          var errDiv = document.createElement('div');
+          errDiv.style.position = 'fixed';
+          errDiv.style.top = '0';
+          errDiv.style.left = '0';
+          errDiv.style.width = '100%';
+          errDiv.style.backgroundColor = 'red';
+          errDiv.style.color = 'white';
+          errDiv.style.padding = '20px';
+          errDiv.style.zIndex = '999999';
+          errDiv.style.wordBreak = 'break-all';
+          errDiv.innerHTML = 'ERROR CAUGHT:<br>' + msg + '<br>Line: ' + line + '<br>URL: ' + url + '<br>Stack: ' + (error ? error.stack : '');
+          if (document.body) {
+            document.body.appendChild(errDiv);
+          } else {
+            alert('ERROR: ' + msg + '\nLine: ' + line);
+          }
+        } catch (e) {
+          alert('Error in error handler: ' + e.message);
+        }
+        isHandlingError = false;
       };
       window.addEventListener('unhandledrejection', function(event) {
         var errDiv = document.createElement('div');
