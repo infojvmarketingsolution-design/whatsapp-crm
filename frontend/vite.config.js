@@ -80,7 +80,7 @@ export default defineConfig({
     })
   ],
   build: {
-    target: 'es2015',
+    target: 'es2018',
     outDir: '../backend/public',
     emptyOutDir: true,
   },
