@@ -597,9 +597,12 @@ export default function Inbox({ roleAccess }) {
     fetchMessages();
   }, [activeChat]);
 
-  // Utility to determine avatar numeric ID based on string length magic
+  // Utility to generate a robust SVG avatar data URI natively
   const getAvatarUrl = (name) => {
-     return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=114a43&color=fff&size=100&font-size=0.4&bold=true`;
+     const cleanName = (name || 'User').trim();
+     const initial = cleanName.charAt(0).toUpperCase() || 'U';
+     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#114a43"/><text x="50" y="50" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="central">${initial}</text></svg>`;
+     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   };
 
    const filteredContacts = contacts
