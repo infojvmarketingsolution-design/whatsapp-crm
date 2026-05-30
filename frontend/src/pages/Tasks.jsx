@@ -907,7 +907,7 @@ export default function Tasks() {
                                                 setEditingTask(t);
                                                  setEditTaskTitle(t.title);
                                                  setEditTaskDescription(t.description || '');
-                                                setEditTaskDate(new Date(t.dueDate).toISOString().slice(0, 16));
+                                                setEditTaskDate(new Date(new Date(t.dueDate).getTime() - (new Date()).getTimezoneOffset() * 60000).toISOString().slice(0, 16));
                                                 setEditTaskType(t.type);
                                                 setActiveDropdown(null);
                                              }}
@@ -921,7 +921,7 @@ export default function Tasks() {
                                           <button 
                                              onClick={() => { 
                                                 setReschedulingTask(t);
-                                                setRescheduleDate(new Date(t.dueDate).toISOString().slice(0, 16));
+                                                setRescheduleDate(new Date(new Date(t.dueDate).getTime() - (new Date()).getTimezoneOffset() * 60000).toISOString().slice(0, 16));
                                                 setActiveDropdown(null);
                                              }}
                                              className="w-full text-left px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 flex items-center transition-colors"

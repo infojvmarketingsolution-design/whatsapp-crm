@@ -923,7 +923,7 @@ function CreateCampaign() {
                         </button>
                         <div className="relative">
                            <button 
-                             onClick={() => setFormData({...formData, scheduledAt: new Date(Date.now() + 3600000).toISOString().slice(0,16)})}
+                             onClick={() => setFormData({...formData, scheduledAt: new Date(Date.now() + 3600000 - (new Date()).getTimezoneOffset() * 60000).toISOString().slice(0,16)})}
                              className={`w-full p-3 rounded-xl border-2 text-sm font-bold transition-all flex flex-col items-center justify-center ${formData.scheduledAt ? 'border-brand-dark bg-brand-light/10 text-brand-dark' : 'border-gray-200 text-gray-500 hover:bg-gray-50'}`}
                            >
                               <Calendar size={18} className="mb-1" />
@@ -937,7 +937,7 @@ function CreateCampaign() {
                                   className="w-full px-3 py-2 border border-gray-200 rounded-lg outline-none focus:border-brand-dark text-sm font-bold text-gray-800"
                                   value={formData.scheduledAt}
                                   onChange={e => setFormData({...formData, scheduledAt: e.target.value})}
-                                  min={new Date().toISOString().slice(0,16)}
+                                  min={new Date(Date.now() - (new Date()).getTimezoneOffset() * 60000).toISOString().slice(0,16)}
                                 />
                              </div>
                            )}
