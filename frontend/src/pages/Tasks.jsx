@@ -717,9 +717,9 @@ export default function Tasks() {
                  </div>
                  
                  <div className="flex -space-x-2 shrink-0">
-                    {['JD','AK','SM'].map((initial, i) => (
-                      <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-teal-100 flex items-center justify-center text-[10px] font-bold text-teal-700 overflow-hidden">
-                        {initial}
+                    {[32, 44, 68].map((id, i) => (
+                      <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden">
+                        <img src={`https://randomuser.me/api/portraits/men/${id}.jpg`} alt="avatar" className="w-full h-full object-cover" />
                       </div>
                     ))}
                  </div>
