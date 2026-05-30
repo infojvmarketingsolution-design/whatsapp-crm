@@ -409,7 +409,7 @@ class PRDFlowService {
         const replyButtons = greetButtons.filter(b => b.type === 'reply');
         const ctaButtons = greetButtons.filter(b => b.type === 'url' || b.type === 'call');
 
-        const media = this.makeAbsolute(greetingImage);
+        let media = this.makeAbsolute(greetingImage);
         let resGreeting;
         let singleInteractiveSent = false;
         
@@ -572,14 +572,47 @@ class PRDFlowService {
           await new Promise(resolve => setTimeout(resolve, 1500));
           const nameMsg = nameStep.message || nameStep.text || "May I know your name?";
           const nameImage = nameStep.image || '';
-          const nameMedia = this.makeAbsolute(nameImage);
+          let nameMedia = this.makeAbsolute(nameImage);
           let resName;
+          let nameMediaId = null;
+          let nameMediaLink = nameMedia;
+
+          if (nameMedia && (nameMedia.includes('/uploads/prompts/') || nameMedia.includes('/uploads/media/'))) {
+            try {
+              const urlObj = new URL(nameMedia);
+              const fs = require('fs');
+              const path = require('path');
+              const localPath = path.join(__dirname, '../../public', urlObj.pathname.replace('/api', ''));
+              
+              if (fs.existsSync(localPath)) {
+                const ext = path.extname(localPath).toLowerCase();
+                let mimeType = 'image/jpeg';
+                if (ext === '.png') mimeType = 'image/png';
+                else if (ext === '.webp') mimeType = 'image/webp';
+                else if (ext === '.mp4') mimeType = 'video/mp4';
+                else if (ext === '.pdf') mimeType = 'application/pdf';
+                
+                const uploadRes = await waService.uploadMedia(localPath, mimeType);
+                if (uploadRes && uploadRes.id) {
+                  nameMediaId = uploadRes.id;
+                  nameMediaLink = null;
+                }
+              } else {
+                nameMedia = '';
+                nameMediaLink = null;
+                nameMediaId = null;
+              }
+            } catch (pathErr) {
+              console.warn('[PRD] Could not parse nameMedia URL for direct upload:', pathErr.message);
+            }
+          }
           
           if (nameMedia) {
             try {
-              resName = await waService.sendMedia(contact.phone, 'image', null, nameMsg, nameMedia);
+              resName = await waService.sendMedia(contact.phone, 'image', nameMediaId, nameMsg, nameMediaLink);
               await saveAndEmit('image', nameMedia ? `[Media] ${nameMedia}\n${nameMsg}` : nameMsg, resName);
             } catch (mediaErr) {
+              console.error('[PRD] Name Media send failed, falling back to text:', mediaErr.message);
               resName = await waService.sendTextMessage(contact.phone, nameMsg);
               await saveAndEmit('text', nameMsg, resName);
             }
