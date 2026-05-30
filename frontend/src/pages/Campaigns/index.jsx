@@ -171,21 +171,25 @@ function Campaigns() {
                    </div>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-50">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 pt-4 border-t border-slate-50">
                    <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
-                      <span className="text-[8px] font-bold text-slate-400 capitalize block mb-1">Audience</span>
+                      <span className="text-[8px] font-bold text-slate-400 capitalize block mb-1">Total Audience</span>
                       <span className="text-sm font-bold text-slate-700">{c.metrics?.totalContacts || 0}</span>
                    </div>
-                   <div className="bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
-                      <span className="text-[8px] font-bold text-slate-400 capitalize block mb-1">Processed</span>
-                      <span className="text-sm font-bold text-slate-700">{c.metrics?.sent || 0}</span>
+                   <div className="bg-blue-50/50 p-3 rounded-2xl border border-blue-100/50">
+                      <span className="text-[8px] font-bold text-blue-500 capitalize block mb-1">Sent to API</span>
+                      <span className="text-sm font-bold text-blue-600">{c.metrics?.sent || 0}</span>
+                   </div>
+                   <div className="bg-amber-50/30 p-3 rounded-2xl border border-amber-100/50">
+                      <span className="text-[8px] font-bold text-amber-500 capitalize block mb-1">Unsent</span>
+                      <span className="text-sm font-bold text-amber-600">{Math.max(0, (c.metrics?.totalContacts || 0) - (c.metrics?.sent || 0))}</span>
                    </div>
                    <div className="bg-emerald-50/30 p-3 rounded-2xl border border-emerald-100/50">
-                      <span className="text-[8px] font-bold text-emerald-500 capitalize block mb-1">Success</span>
+                      <span className="text-[8px] font-bold text-emerald-500 capitalize block mb-1">Delivered</span>
                       <span className="text-sm font-bold text-emerald-600">{c.metrics?.delivered || 0}</span>
                    </div>
                    <div className="bg-rose-50/30 p-3 rounded-2xl border border-rose-100/50">
-                      <span className="text-[8px] font-bold text-rose-500 capitalize block mb-1">Failure</span>
+                      <span className="text-[8px] font-bold text-rose-500 capitalize block mb-1">Failed</span>
                       <span className="text-sm font-bold text-rose-600">{c.metrics?.failed || 0}</span>
                    </div>
                 </div>
@@ -216,11 +220,12 @@ function Campaigns() {
               <tr className="bg-gray-50/50 text-gray-400 text-[10px] font-bold capitalize">
                 <th className="p-5">Campaign Name</th>
                 <th className="p-5">Status</th>
-                <th className="p-5 text-center"><Users size={14} className="mx-auto" /></th>
-                <th className="p-5 text-center"><Send size={14} className="mx-auto" /></th>
-                <th className="p-5 text-center text-emerald-600">Delivered</th>
-                <th className="p-5 text-center text-blue-600">Read</th>
-                <th className="p-5 text-center text-red-500">Failed</th>
+                <th className="p-5 text-center whitespace-nowrap" title="Total Contacts">Total</th>
+                <th className="p-5 text-center whitespace-nowrap text-blue-500" title="Successfully sent to API">Sent</th>
+                <th className="p-5 text-center whitespace-nowrap text-amber-500" title="Failed to send or Unsent">Unsent</th>
+                <th className="p-5 text-center whitespace-nowrap text-emerald-600">Delivered</th>
+                <th className="p-5 text-center whitespace-nowrap text-blue-600">Read</th>
+                <th className="p-5 text-center whitespace-nowrap text-red-500" title="Meta Delivery Failures">Failed</th>
                 <th className="p-5 text-right">Actions</th>
               </tr>
             </thead>
@@ -230,7 +235,8 @@ function Campaigns() {
                   <td className="p-5 font-bold text-gray-800 tracking-tight">{c.name}</td>
                   <td className="p-5">{getStatusBadge(c.status)}</td>
                   <td className="p-5 text-center font-bold text-gray-600">{c.metrics?.totalContacts || 0}</td>
-                  <td className="p-5 text-center font-bold text-gray-600">{c.metrics?.sent || 0}</td>
+                  <td className="p-5 text-center font-bold text-blue-500">{c.metrics?.sent || 0}</td>
+                  <td className="p-5 text-center font-bold text-amber-500">{Math.max(0, (c.metrics?.totalContacts || 0) - (c.metrics?.sent || 0))}</td>
                   <td className="p-5 text-center text-emerald-600 font-bold">{c.metrics?.delivered || 0}</td>
                   <td className="p-5 text-center text-blue-600 font-bold">{c.metrics?.read || 0}</td>
                   <td className="p-5 text-center text-red-500 font-bold">{c.metrics?.failed || 0}</td>
