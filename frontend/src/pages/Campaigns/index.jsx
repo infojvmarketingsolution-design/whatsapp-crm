@@ -166,8 +166,13 @@ function Campaigns() {
                       <p className="text-[10px] font-bold text-slate-400 capitalize mb-1">Campaign Identity</p>
                       <p className="text-sm font-bold text-slate-800 tracking-tight group-hover:text-blue-600 transition-colors">{c.name}</p>
                    </div>
-                   <div className="transform scale-90 origin-right">
-                      {getStatusBadge(c.status)}
+                   <div className="flex flex-col items-end">
+                      <div className="transform scale-90 origin-right mb-1">
+                         {getStatusBadge(c.status)}
+                      </div>
+                      <span className="text-[9px] font-bold text-slate-400" title={c.scheduledAt ? 'Scheduled For' : 'Created At'}>
+                        🗓 {new Date(c.scheduledAt || c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      </span>
                    </div>
                 </div>
                 
@@ -220,6 +225,7 @@ function Campaigns() {
               <tr className="bg-gray-50/50 text-gray-400 text-[10px] font-bold capitalize">
                 <th className="p-5">Campaign Name</th>
                 <th className="p-5">Status</th>
+                <th className="p-5 whitespace-nowrap">Schedule Date</th>
                 <th className="p-5 text-center whitespace-nowrap" title="Total Contacts">Total</th>
                 <th className="p-5 text-center whitespace-nowrap text-blue-500" title="Successfully sent to API">Sent</th>
                 <th className="p-5 text-center whitespace-nowrap text-amber-500" title="Failed to send or Unsent">Unsent</th>
@@ -234,6 +240,9 @@ function Campaigns() {
                 <tr key={c._id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors group">
                   <td className="p-5 font-bold text-gray-800 tracking-tight">{c.name}</td>
                   <td className="p-5">{getStatusBadge(c.status)}</td>
+                  <td className="p-5 text-[11px] font-bold text-slate-500 whitespace-nowrap">
+                    {new Date(c.scheduledAt || c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </td>
                   <td className="p-5 text-center font-bold text-gray-600">{c.metrics?.totalContacts || 0}</td>
                   <td className="p-5 text-center font-bold text-blue-500">{c.metrics?.sent || 0}</td>
                   <td className="p-5 text-center font-bold text-amber-500">{Math.max(0, (c.metrics?.totalContacts || 0) - (c.metrics?.sent || 0))}</td>
