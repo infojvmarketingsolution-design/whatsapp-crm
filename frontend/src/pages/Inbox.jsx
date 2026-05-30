@@ -599,10 +599,15 @@ export default function Inbox({ roleAccess }) {
 
   // Utility to generate a robust SVG avatar data URI natively
   const getAvatarUrl = (name) => {
-     const cleanName = (name || 'User').trim();
-     const initial = cleanName.charAt(0).toUpperCase() || 'U';
-     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#114a43"/><text x="50" y="50" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="central">${initial}</text></svg>`;
-     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+     try {
+       const cleanName = (name || 'User').trim();
+       // Array.from safely handles emojis/surrogate pairs, unlike charAt(0)
+       const initial = Array.from(cleanName)[0]?.toUpperCase() || 'U';
+       const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#114a43"/><text x="50" y="50" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="#ffffff" text-anchor="middle" dominant-baseline="central">${initial}</text></svg>`;
+       return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
+     } catch (e) {
+       return `data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Crect%20width%3D%22100%22%20height%3D%22100%22%20fill%3D%22%23114a43%22%2F%3E%3Ctext%20x%3D%2250%22%20y%3D%2250%22%20font-family%3D%22Arial%2C%20sans-serif%22%20font-size%3D%2240%22%20font-weight%3D%22bold%22%20fill%3D%22%23ffffff%22%20text-anchor%3D%22middle%22%20dominant-baseline%3D%22central%22%3EU%3C%2Ftext%3E%3C%2Fsvg%3E`;
+     }
   };
 
    const filteredContacts = contacts
