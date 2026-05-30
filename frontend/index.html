@@ -2,48 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <script>
-      var isHandlingError = false;
-      window.onerror = function(msg, url, line, col, error) {
-        if (isHandlingError) return;
-        isHandlingError = true;
-        try {
-          var errDiv = document.createElement('div');
-          errDiv.style.position = 'fixed';
-          errDiv.style.top = '0';
-          errDiv.style.left = '0';
-          errDiv.style.width = '100%';
-          errDiv.style.backgroundColor = 'red';
-          errDiv.style.color = 'white';
-          errDiv.style.padding = '20px';
-          errDiv.style.zIndex = '999999';
-          errDiv.style.wordBreak = 'break-all';
-          errDiv.innerHTML = 'ERROR CAUGHT:<br>' + msg + '<br>Line: ' + line + '<br>URL: ' + url + '<br>Stack: ' + (error ? error.stack : '');
-          if (document.body) {
-            document.body.appendChild(errDiv);
-          } else {
-            alert('ERROR: ' + msg + '\nLine: ' + line);
-          }
-        } catch (e) {
-          alert('Error in error handler: ' + e.message);
-        }
-        isHandlingError = false;
-      };
-      window.addEventListener('unhandledrejection', function(event) {
-        var errDiv = document.createElement('div');
-        errDiv.style.position = 'fixed';
-        errDiv.style.bottom = '0';
-        errDiv.style.left = '0';
-        errDiv.style.width = '100%';
-        errDiv.style.backgroundColor = 'orange';
-        errDiv.style.color = 'black';
-        errDiv.style.padding = '20px';
-        errDiv.style.zIndex = '999999';
-        errDiv.style.wordBreak = 'break-all';
-        errDiv.innerHTML = 'PROMISE ERROR:<br>' + (event.reason ? event.reason.toString() : 'Unknown');
-        document.body.appendChild(errDiv);
-      });
-    </script>
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#ffffff" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
