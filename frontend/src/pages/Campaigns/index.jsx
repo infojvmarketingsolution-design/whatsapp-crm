@@ -201,7 +201,7 @@ function Campaigns() {
 
       {/* Rejected Payments Popups */}
       {rejectedPayments.map(payment => (
-         <div key={payment._id} className="fixed bottom-4 right-4 bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-2xl shadow-xl z-50 flex items-start gap-4 animate-slide-up">
+         <div key={payment._id} className="fixed top-6 right-6 bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-2xl shadow-xl z-50 flex items-start gap-4 animate-slide-up">
             <AlertCircle className="text-red-500 mt-1 shrink-0" size={24} />
             <div>
                <h4 className="font-black text-red-900 uppercase tracking-tight">Payment Failed</h4>
