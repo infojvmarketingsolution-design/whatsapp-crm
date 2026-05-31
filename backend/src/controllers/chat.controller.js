@@ -103,6 +103,32 @@ const getContacts = async (req, res) => {
         }
       },
       {
+        $lookup: {
+          from: 'campaignlogs',
+          localField: 'lastMsgDoc.messageId',
+          foreignField: 'messageId',
+          as: 'campaignLogInfo'
+        }
+      },
+      {
+        $addFields: {
+          lastCampaignLog: { $arrayElemAt: ['$campaignLogInfo', 0] }
+        }
+      },
+      {
+        $lookup: {
+          from: 'campaigns',
+          localField: 'lastCampaignLog.campaignId',
+          foreignField: '_id',
+          as: 'campaignInfo'
+        }
+      },
+      {
+        $addFields: {
+          resolvedCampaignName: { $arrayElemAt: ['$campaignInfo.name', 0] }
+        }
+      },
+      {
         $project: {
           _id: 1,
           name: 1,
@@ -142,6 +168,7 @@ const getContacts = async (req, res) => {
           lastMessageAt: { $ifNull: ['$lastMsgDoc.timestamp', '$updatedAt'] },
           lastMessage: { $ifNull: ['$lastMsgDoc.content', ''] },
           lastMessageType: { $ifNull: ['$lastMsgDoc.type', 'text'] },
+          lastCampaignName: { $ifNull: ['$resolvedCampaignName', ''] },
           visitStatus: 1,
           visitType: 1,
           admissionStatus: 1,

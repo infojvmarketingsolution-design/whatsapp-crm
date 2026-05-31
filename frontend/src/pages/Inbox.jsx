@@ -769,7 +769,7 @@ export default function Inbox({ roleAccess }) {
                         c.status === 'PENDING VISIT' || c.status === 'PENDING_VISIT' ? 'bg-orange-50 text-orange-600 border-orange-100' :
                         'bg-slate-50 text-slate-600 border-slate-100'
                       }`}>
-                        {isCampaignItem ? 'CAMPAIGN' : (STATUS_MAPPING[c.status?.toUpperCase()] || c.status?.replace('_', ' ') || 'OPEN')}
+                        {isCampaignItem ? 'BULK_CAMPAIGN' : (STATUS_MAPPING[c.status?.toUpperCase()] || c.status?.replace('_', ' ') || 'OPEN')}
                       </span>
                       {c.heatLevel === 'Hot' && <Flame size={14} className="text-red-500 animate-pulse fill-red-500/20" />}
                       {c.heatLevel === 'Warm' && <Flame size={13} className="text-orange-400 fill-orange-400/10" />}
@@ -783,7 +783,7 @@ export default function Inbox({ roleAccess }) {
                        <span className="inline-flex items-center">
                           <span className="text-[9px] font-bold bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 uppercase tracking-wide flex items-center space-x-1 max-w-[120px]">
                              <Megaphone size={10} className="shrink-0" />
-                             <span className="truncate">{c.lastMessage?.match(/\[Campaign: (.*?)\]/)?.[1] || c.lastMessage?.match(/\[Template: (.*?)\]/)?.[1] || 'Bulk_Campaign'}</span>
+                             <span className="truncate">{c.lastCampaignName || c.lastMessage?.match(/\[Campaign: (.*?)\]/)?.[1] || c.lastMessage?.match(/\[Template: (.*?)\]/)?.[1] || 'Bulk_Campaign'}</span>
                           </span>
                        </span>
                     ) : c.lastMessage?.startsWith('[Media]') ? (
