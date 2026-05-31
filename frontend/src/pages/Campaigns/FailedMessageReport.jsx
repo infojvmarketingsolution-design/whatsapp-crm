@@ -7,6 +7,7 @@ import 'jspdf-autotable';
 
 export default function FailedMessageReport() {
   const [logs, setLogs] = useState([]);
+  const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   
@@ -30,6 +31,7 @@ export default function FailedMessageReport() {
       if (filters.endDate) queryParams.append('endDate', filters.endDate);
       if (filters.errorCode) queryParams.append('errorCode', filters.errorCode);
       if (filters.phone) queryParams.append('phone', filters.phone);
+      if (filters.campaignId) queryParams.append('campaignId', filters.campaignId);
 
       const res = await fetch(`/api/campaigns/errors/report?${queryParams.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
@@ -46,7 +48,25 @@ export default function FailedMessageReport() {
 
   useEffect(() => {
     fetchReports();
-  }, [filters.startDate, filters.endDate, filters.errorCode]);
+  }, [filters.startDate, filters.endDate, filters.errorCode, filters.campaignId]);
+
+  useEffect(() => {
+    const fetchCampaigns = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const tenantId = localStorage.getItem('tenantId');
+        const res = await fetch('/api/campaigns', {
+          headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+        });
+        if (res.ok) {
+          setCampaigns(await res.json());
+        }
+      } catch (err) {
+        console.error('Failed to load campaigns', err);
+      }
+    };
+    fetchCampaigns();
+  }, []);
 
   const handleExportCSV = () => {
     const ws = XLSX.utils.json_to_sheet(logs.map(log => ({
@@ -139,6 +159,19 @@ export default function FailedMessageReport() {
               value={filters.errorCode}
               onChange={e => setFilters({...filters, errorCode: e.target.value})}
             />
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Campaign</label>
+            <select
+              className="px-3 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+              value={filters.campaignId}
+              onChange={e => setFilters({...filters, campaignId: e.target.value})}
+            >
+              <option value="">All Campaigns</option>
+              {campaigns.map(camp => (
+                <option key={camp._id} value={camp._id}>{camp.name}</option>
+              ))}
+            </select>
           </div>
           <div className="flex-1 min-w-[200px]">
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Phone Number</label>
