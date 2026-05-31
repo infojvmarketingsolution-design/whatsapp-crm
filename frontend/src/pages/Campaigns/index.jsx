@@ -140,20 +140,16 @@ function Campaigns() {
         <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
           
           {/* Ad Budget Credit Card */}
-          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between min-w-[220px] w-full sm:w-auto">
-             <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-slate-500">Ad Budget Credit</span>
-                <div className="flex gap-2">
-                   <button onClick={() => setShowRefillModal(true)} className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md text-[10px] font-bold hover:bg-blue-100 transition-colors flex items-center gap-1">
-                      <Plus size={10} /> Add
-                   </button>
-                   <div className="p-1.5 bg-blue-500 text-white rounded-md"><Wallet size={12} /></div>
-                </div>
+          <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between gap-4 w-full sm:w-auto h-[46px] box-border">
+             <div className="flex flex-col justify-center">
+                <span className="text-[10px] font-bold text-slate-500 leading-tight">Ad Budget Credit</span>
+                <span className="text-sm font-black text-slate-800 leading-tight">₹{metaStatus.walletBalance?.toFixed(2) || '0.00'}</span>
              </div>
-             <div>
-                <span className="text-xl font-black text-slate-800">₹{metaStatus.walletBalance?.toFixed(2) || '0.00'}</span>
-                <p className="text-[10px] font-bold text-slate-400 mt-0.5">Available Balance</p>
-             </div>
+             <div className="h-6 w-px bg-slate-200 mx-1"></div>
+             <button onClick={() => setShowRefillModal(true)} className="flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors h-full max-h-[30px]">
+                <Plus size={14} />
+                <span>Add</span>
+             </button>
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
