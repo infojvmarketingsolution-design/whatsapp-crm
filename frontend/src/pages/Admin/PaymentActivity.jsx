@@ -8,6 +8,9 @@ function PaymentActivity() {
    const [showEditModal, setShowEditModal] = useState(false);
    const [editingClient, setEditingClient] = useState(null);
    const [newWalletBalance, setNewWalletBalance] = useState('');
+   const [newBillingMode, setNewBillingMode] = useState('AUTO');
+   const [newTotalMessages, setNewTotalMessages] = useState('');
+   const [newTotalFundAdded, setNewTotalFundAdded] = useState('');
 
    useEffect(() => {
       fetchRequests();
@@ -73,6 +76,9 @@ function PaymentActivity() {
    const handleEditBudget = (client) => {
       setEditingClient(client);
       setNewWalletBalance(client.walletBalance?.toString() || '0');
+      setNewBillingMode(client.billingMode || 'AUTO');
+      setNewTotalMessages(client.totalMessages?.toString() || '0');
+      setNewTotalFundAdded(client.totalFundAdded?.toString() || '0');
       setShowEditModal(true);
    };
 
@@ -86,7 +92,12 @@ function PaymentActivity() {
                'Authorization': `Bearer ${token}`,
                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ walletBalance: parseFloat(newWalletBalance) || 0 })
+            body: JSON.stringify({ 
+               walletBalance: parseFloat(newWalletBalance) || 0,
+               billingMode: newBillingMode,
+               totalMessagesSent: parseInt(newTotalMessages, 10) || 0,
+               totalFundAdded: parseFloat(newTotalFundAdded) || 0
+            })
          });
          
          if (res.ok) {
@@ -308,18 +319,52 @@ function PaymentActivity() {
                            {editingClient.name}
                         </div>
                      </div>
-                     <div>
-                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Wallet Balance (₹)</label>
-                        <input 
-                           type="number" 
-                           step="0.01"
-                           value={newWalletBalance}
-                           onChange={(e) => setNewWalletBalance(e.target.value)}
-                           className="w-full p-3 bg-white border border-slate-200 rounded-xl text-lg font-black text-indigo-600 focus:ring-2 focus:ring-blue-500 outline-none"
-                           required
-                        />
-                        <p className="text-xs text-slate-400 mt-2 font-bold">You can forcefully set the wallet balance to 0 or any other number here.</p>
+                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Billing Mode</label>
+                           <select 
+                              value={newBillingMode}
+                              onChange={(e) => setNewBillingMode(e.target.value)}
+                              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                           >
+                              <option value="AUTO">AUTO</option>
+                              <option value="MANUAL">MANUAL</option>
+                           </select>
+                        </div>
+                        <div>
+                           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Wallet Balance (₹)</label>
+                           <input 
+                              type="number" 
+                              step="0.01"
+                              value={newWalletBalance}
+                              onChange={(e) => setNewWalletBalance(e.target.value)}
+                              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm font-black text-indigo-600 focus:ring-2 focus:ring-blue-500 outline-none"
+                              required
+                           />
+                        </div>
+                        <div>
+                           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Total Messages</label>
+                           <input 
+                              type="number" 
+                              value={newTotalMessages}
+                              onChange={(e) => setNewTotalMessages(e.target.value)}
+                              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none"
+                              required
+                           />
+                        </div>
+                        <div>
+                           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Total Fund Added (₹)</label>
+                           <input 
+                              type="number" 
+                              step="0.01"
+                              value={newTotalFundAdded}
+                              onChange={(e) => setNewTotalFundAdded(e.target.value)}
+                              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-emerald-600 focus:ring-2 focus:ring-blue-500 outline-none"
+                              required
+                           />
+                        </div>
                      </div>
+                     <p className="text-[10px] text-slate-400 font-bold mt-1 text-center bg-slate-50 p-2 rounded-lg border border-slate-100">You can forcefully overwrite any statistics here.</p>
                      <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
                         <button 
                            type="button"

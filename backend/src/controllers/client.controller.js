@@ -98,6 +98,8 @@ const updateClient = async (req, res) => {
     if (plan) updateFields.plan = plan;
     if (req.body.billingMode) updateFields.billingMode = req.body.billingMode;
     if (req.body.walletBalance !== undefined) updateFields.walletBalance = req.body.walletBalance;
+    if (req.body.totalFundAdded !== undefined) updateFields.totalFundAdded = req.body.totalFundAdded;
+    if (req.body.totalMessagesSent !== undefined) updateFields.totalMessagesSent = req.body.totalMessagesSent;
     
     if (whatsappConfig) {
       updateFields.whatsappConfig = whatsappConfig;
