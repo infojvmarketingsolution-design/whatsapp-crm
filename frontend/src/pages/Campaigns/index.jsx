@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle, Trash2, Megaphone, Users, Send, AlertCircle, FileText, Activity, ShieldAlert, IndianRupee } from 'lucide-react';
+import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle, Trash2, Megaphone, Users, Send, AlertCircle, FileText, Activity, ShieldAlert, IndianRupee, Wallet } from 'lucide-react';
 import CampaignReportModal from './CampaignReportModal';
+import RefillBudgetModal from './RefillBudgetModal';
 
 const META_BASE_PRICING = {
   MARKETING: 0.88, // Standard Meta India Rate
@@ -24,7 +25,8 @@ function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState({ isOpen: false, campaign: null, logs: [] });
-  const [metaStatus, setMetaStatus] = useState({ limitTier: 'Loading...', qualityRating: 'Loading...' });
+  const [metaStatus, setMetaStatus] = useState({ limitTier: 'Loading...', qualityRating: 'Loading...', walletBalance: 0 });
+  const [showRefillModal, setShowRefillModal] = useState(false);
 
   useEffect(() => {
     fetchCampaigns();
@@ -46,7 +48,7 @@ function Campaigns() {
       }
     } catch (err) {
       console.error(err);
-      setMetaStatus({ limitTier: 'Unknown', qualityRating: 'UNKNOWN' });
+      setMetaStatus({ limitTier: 'Unknown', qualityRating: 'UNKNOWN', walletBalance: 0 });
     }
   };
 
@@ -135,15 +137,35 @@ function Campaigns() {
           </h1>
           <p className="text-xs sm:text-sm font-bold text-gray-400 mt-1 capitalize">Manage and track bulk broadcasts.</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-          <button onClick={() => navigate('/campaigns/reports/all')} className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-2xl text-xs font-bold shadow-sm hover:bg-gray-50 transition-all active:scale-95 capitalize">
-            <FileText size={18} />
-            <span>Overall Report</span>
-          </button>
-          <button onClick={() => navigate('/campaigns/create')} className="w-full sm:w-auto flex items-center justify-center space-x-3 px-6 py-3 bg-blue-600 text-white rounded-2xl text-xs font-bold shadow-glow hover:bg-blue-700 transition-all active:scale-95 capitalize">
-            <Plus size={18} />
-            <span>Create Campaign</span>
-          </button>
+        <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto">
+          
+          {/* Ad Budget Credit Card */}
+          <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between min-w-[220px] w-full sm:w-auto">
+             <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-slate-500">Ad Budget Credit</span>
+                <div className="flex gap-2">
+                   <button onClick={() => setShowRefillModal(true)} className="px-2.5 py-1 bg-blue-50 text-blue-600 rounded-md text-[10px] font-bold hover:bg-blue-100 transition-colors flex items-center gap-1">
+                      <Plus size={10} /> Add
+                   </button>
+                   <div className="p-1.5 bg-blue-500 text-white rounded-md"><Wallet size={12} /></div>
+                </div>
+             </div>
+             <div>
+                <span className="text-xl font-black text-slate-800">₹{metaStatus.walletBalance?.toFixed(2) || '0.00'}</span>
+                <p className="text-[10px] font-bold text-slate-400 mt-0.5">Available Balance</p>
+             </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button onClick={() => navigate('/campaigns/reports/all')} className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-2xl text-xs font-bold shadow-sm hover:bg-gray-50 transition-all active:scale-95 capitalize">
+              <FileText size={18} />
+              <span>Overall Report</span>
+            </button>
+            <button onClick={() => navigate('/campaigns/create')} className="w-full sm:w-auto flex items-center justify-center space-x-3 px-6 py-3 bg-blue-600 text-white rounded-2xl text-xs font-bold shadow-glow hover:bg-blue-700 transition-all active:scale-95 capitalize">
+              <Plus size={18} />
+              <span>Create Campaign</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -335,9 +357,14 @@ function Campaigns() {
 
       <CampaignReportModal 
         isOpen={reportData.isOpen} 
-        onClose={() => setReportData({ ...reportData, isOpen: false })} 
-        campaign={reportData.campaign} 
-        logs={reportData.logs} 
+        onClose={() => setReportData({ isOpen: false, campaign: null, logs: [] })}
+        campaign={reportData.campaign}
+        logs={reportData.logs}
+      />
+        
+      <RefillBudgetModal 
+        isOpen={showRefillModal} 
+        onClose={() => setShowRefillModal(false)} 
       />
     </div>
   );

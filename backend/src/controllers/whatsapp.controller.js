@@ -517,6 +517,8 @@ const getApiConfig = async (req, res) => {
         configData.botEnabled = false;
     }
 
+    configData.walletBalance = client.walletBalance || 0;
+
     res.json(configData);
   } catch (error) {
     res.status(500).json({ message: error.message });

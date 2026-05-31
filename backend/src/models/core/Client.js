@@ -18,6 +18,7 @@ const ClientSchema = new mongoose.Schema({
     phoneNumber: String,
     wabaName: String
   },
+  walletBalance: { type: Number, default: 0 },
   subscriptionEndsAt: Date
 }, { timestamps: true });
 
