@@ -11,6 +11,7 @@ function PaymentActivity() {
    const [newBillingMode, setNewBillingMode] = useState('AUTO');
    const [newTotalMessages, setNewTotalMessages] = useState('');
    const [newTotalFundAdded, setNewTotalFundAdded] = useState('');
+   const [historyClient, setHistoryClient] = useState(null);
 
    useEffect(() => {
       fetchRequests();
@@ -204,12 +205,20 @@ function PaymentActivity() {
                                     <span className="text-sm font-black text-indigo-600">₹{client.walletBalance.toLocaleString()}</span>
                                  </td>
                                  <td className="px-6 py-4 text-right">
-                                    <button 
-                                       onClick={() => handleEditBudget(client)}
-                                       className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors"
-                                    >
-                                       <Edit2 size={14} /> Edit Budget
-                                    </button>
+                                    <div className="flex justify-end gap-2">
+                                       <button 
+                                          onClick={() => setHistoryClient(client)}
+                                          className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 text-xs font-bold rounded-lg transition-colors"
+                                       >
+                                          <Search size={14} /> View Requests
+                                       </button>
+                                       <button 
+                                          onClick={() => handleEditBudget(client)}
+                                          className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg transition-colors"
+                                       >
+                                          <Edit2 size={14} /> Edit Budget
+                                       </button>
+                                    </div>
                                  </td>
                               </tr>
                            ))
@@ -381,6 +390,91 @@ function PaymentActivity() {
                         </button>
                      </div>
                   </form>
+               </div>
+            </div>
+         )}
+         {/* View Requests History Modal */}
+         {historyClient && (
+            <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+               <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col max-h-[90vh]">
+                  <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50">
+                     <div>
+                        <h2 className="text-xl font-black text-slate-800">Payment History</h2>
+                        <p className="text-sm font-bold text-slate-500 mt-1">{historyClient.name}</p>
+                     </div>
+                     <button onClick={() => setHistoryClient(null)} className="text-slate-400 hover:text-slate-600 bg-white p-2 rounded-full shadow-sm">
+                        <X size={24} />
+                     </button>
+                  </div>
+                  <div className="overflow-y-auto p-6">
+                     <div className="border border-slate-200 rounded-2xl overflow-hidden">
+                        <table className="w-full text-left">
+                           <thead>
+                              <tr className="bg-slate-50 border-b border-slate-100">
+                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Messages Qty</th>
+                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Amount (₹)</th>
+                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">UTR / Reference</th>
+                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Date & Time</th>
+                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</th>
+                                 <th className="px-6 py-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Actions</th>
+                              </tr>
+                           </thead>
+                           <tbody className="divide-y divide-slate-100">
+                              {requests.filter(req => req.clientId?._id === historyClient._id).length === 0 ? (
+                                 <tr>
+                                    <td colSpan="6" className="text-center py-10 text-slate-500 font-bold">No payment history found for this client.</td>
+                                 </tr>
+                              ) : (
+                                 requests.filter(req => req.clientId?._id === historyClient._id).map((req) => (
+                                    <tr key={req._id} className="hover:bg-slate-50 transition-colors">
+                                       <td className="px-6 py-4">
+                                          <span className="text-sm font-bold text-slate-700 bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">
+                                             {req.messageQuantity.toLocaleString()}
+                                          </span>
+                                       </td>
+                                       <td className="px-6 py-4">
+                                          <span className="text-sm font-black text-emerald-600">₹{req.amount?.toFixed(2)}</span>
+                                       </td>
+                                       <td className="px-6 py-4">
+                                          <span className="text-xs font-mono font-bold text-slate-600">{req.utrNumber}</span>
+                                       </td>
+                                       <td className="px-6 py-4">
+                                          <span className="text-xs font-bold text-slate-500">
+                                             {new Date(req.createdAt).toLocaleString()}
+                                          </span>
+                                       </td>
+                                       <td className="px-6 py-4">
+                                          {req.status === 'PENDING' && <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-amber-600 bg-amber-50 px-2 py-1 rounded border border-amber-200"><Clock size={12} /> Pending</span>}
+                                          {req.status === 'APPROVED' && <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-1 rounded border border-emerald-200"><CheckCircle size={12} /> Approved</span>}
+                                          {req.status === 'REJECTED' && <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 px-2 py-1 rounded border border-rose-200"><XCircle size={12} /> Rejected</span>}
+                                       </td>
+                                       <td className="px-6 py-4 text-right">
+                                          {req.status === 'PENDING' ? (
+                                             <div className="flex justify-end gap-2">
+                                                <button 
+                                                   onClick={() => handleUpdateStatus(req._id, 'APPROVED')}
+                                                   className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded transition-colors shadow-sm"
+                                                >
+                                                   Approve
+                                                </button>
+                                                <button 
+                                                   onClick={() => handleUpdateStatus(req._id, 'REJECTED')}
+                                                   className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-widest rounded transition-colors"
+                                                >
+                                                   Reject
+                                                </button>
+                                             </div>
+                                          ) : (
+                                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resolved</span>
+                                          )}
+                                       </td>
+                                    </tr>
+                                 ))
+                              )}
+                           </tbody>
+                        </table>
+                     </div>
+                  </div>
                </div>
             </div>
          )}
