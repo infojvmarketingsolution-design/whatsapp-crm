@@ -128,9 +128,59 @@ const getClientRejectedPayments = async (req, res) => {
   }
 };
 
+const getAdminDashboardStats = async (req, res) => {
+  try {
+    const clients = await Client.find({ status: { $ne: 'DELETED' } }).lean();
+    const approvedRequests = await PaymentRequest.find({ status: 'APPROVED' }).lean();
+
+    let totalFundAdded = 0;
+    let totalMessagesSent = 0;
+    let totalUnusedFund = 0;
+
+    const clientMap = {};
+
+    clients.forEach(c => {
+       clientMap[c._id.toString()] = {
+          _id: c._id,
+          name: c.companyName || c.name,
+          billingMode: c.billingMode || 'AUTO',
+          walletBalance: c.walletBalance || 0,
+          totalMessages: 0,
+          totalFundAdded: 0
+       };
+       totalUnusedFund += (c.walletBalance || 0);
+    });
+
+    approvedRequests.forEach(req => {
+       totalFundAdded += req.amount;
+       totalMessagesSent += req.messageQuantity;
+       
+       if (req.clientId && clientMap[req.clientId.toString()]) {
+          clientMap[req.clientId.toString()].totalFundAdded += req.amount;
+          clientMap[req.clientId.toString()].totalMessages += req.messageQuantity;
+       }
+    });
+
+    const totalFundUtilized = totalFundAdded - totalUnusedFund;
+    const clientDetails = Object.values(clientMap);
+
+    res.json({
+      totalClients: clients.length,
+      totalFundAdded,
+      totalFundUtilized,
+      totalUnusedFund,
+      totalMessagesSent,
+      clientDetails
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   submitPaymentRequest,
   getAdminPaymentRequests,
   updatePaymentRequestStatus,
-  getClientRejectedPayments
+  getClientRejectedPayments,
+  getAdminDashboardStats
 };
