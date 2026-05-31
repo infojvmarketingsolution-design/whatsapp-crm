@@ -45,7 +45,7 @@ const getSecondaryNumber = (orgName) => {
   if (name.includes('vidhyadeep')) return '9924515760';
   if (name.includes('shreyarth')) return '9106763866';
   if (name.includes('progressive') || name.includes('rai')) return '9904015760';
-  if (name.includes('j.v')) return '6359700606';
+  if (name.includes('j.v')) return '6359400606';
   return '6354070709'; // Default fallback
 };
 

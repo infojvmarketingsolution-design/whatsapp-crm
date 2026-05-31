@@ -14,7 +14,7 @@ const mapping = [
   { match: 'shreyarth', number: '9106763866' },
   { match: 'progressive', number: '9904015760' },
   { match: 'rai', number: '9904015760' },
-  { match: 'j.v', number: '6359700606' }
+  { match: 'j.v', number: '6359400606' }
 ];
 
 async function migrate() {
