@@ -35,8 +35,8 @@ const adminSettingsRoutes = require('./src/routes/adminSettings.routes');
 const sessionRoutes = require('./src/routes/session.routes');
 const statsRoutes = require('./src/routes/stats.routes');
 const successStoryRoutes = require('./src/routes/successStory.routes');
+const paymentRoutes = require('./src/routes/payment.routes');
 const maintenanceMiddleware = require('./src/middleware/maintenance');
-
 
 // Initialize Queue Workers
 require('./src/workers/campaign.worker');
