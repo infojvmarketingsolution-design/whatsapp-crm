@@ -12,8 +12,8 @@ const ERROR_RECOMMENDATIONS = {
     recommendation: 'Re-upload media. Verify MIME type and validate media URL.'
   },
   '131026': {
-    status: 'Undeliverable Number',
-    recommendation: 'Verify WhatsApp registration. Ask user to update WhatsApp or confirm valid mobile number.'
+    status: 'Message Undeliverable',
+    recommendation: 'Check if number is blocked, registered on WhatsApp, or if template variables are too long.'
   }
 };
 

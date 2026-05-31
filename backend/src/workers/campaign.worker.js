@@ -73,6 +73,15 @@ const worker = new Worker('campaign-dispatch', async job => {
           }
 
           const sanitizedPhone = String(log.phone).replace(/\D/g, '');
+
+          if (sanitizedPhone.length !== 10) {
+              log.status = 'FAILED';
+              log.errorReason = 'Number wrong';
+              await log.save();
+              failCount++;
+              continue;
+          }
+
           const finalPhone = sanitizedPhone.length === 10 ? `91${sanitizedPhone}` : sanitizedPhone;
 
           const response = await axios.post(

@@ -10,7 +10,7 @@ const mapMetaError = (code, defaultMessage = 'Unknown delivery error') => {
         '131008': 'Template not found or not approved yet',
         '131009': 'Template parameter mismatch (check variables)',
         '131021': 'Receiver not in allowed list (Sandbox limitation)',
-        '131026': 'Message body is too long',
+        '131026': 'Message Undeliverable',
         '131042': 'Media file is unreachable or unsupported (check link/format)',
         '131045': 'Incorrect parameter type (e.g. text instead of image)',
         '131048': 'Spam protection (message blocked by Meta)',
