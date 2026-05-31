@@ -181,14 +181,15 @@ export default function Inbox({ roleAccess }) {
   const [showTagInput, setShowTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const PREDEFINED_TAGS = ['Hot Lead', 'Warm Lead', 'Cold Lead', 'Interested', 'Not Interested', 'Spam'];
-  const STATUSES = ['NEW', 'OPEN', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION', 'CAMPAIGN'];
+  const STATUSES = ['NEW', 'OPEN', 'NEEDS FOLLOW-UP', 'CLOSE', 'VISITED', 'PENDING VISIT', 'ADMISSION', 'CAMPAIGN'];
   const STATUS_MAPPING = {
     'NEW LEAD': 'NEW',
     'NEW': 'NEW',
     'CONTACTED': 'OPEN',
     'INTERESTED': 'OPEN',
-    'FOLLOW UP': 'OPEN',
-    'FOLLOW_UP': 'OPEN',
+    'FOLLOW UP': 'NEEDS FOLLOW-UP',
+    'FOLLOW_UP': 'NEEDS FOLLOW-UP',
+    'NEEDS FOLLOW-UP': 'NEEDS FOLLOW-UP',
     'OPEN': 'OPEN',
     'CLOSED_WON': 'ADMISSION',
     'ADMISSION': 'ADMISSION',
