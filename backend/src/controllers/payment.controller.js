@@ -48,6 +48,20 @@ const submitPaymentRequest = async (req, res) => {
        console.error('Failed to send admin notification:', waError.message);
     }
 
+    // Emit real-time socket event for Super Admin Dashboard
+    if (req.app) {
+       const io = req.app.get('io');
+       if (io) {
+          io.emit('new_payment_request', {
+             clientName: client.companyName || client.name,
+             amount,
+             category,
+             messageQuantity,
+             utrNumber
+          });
+       }
+    }
+
     res.status(201).json({ message: 'Payment request submitted successfully', paymentRequest });
   } catch (error) {
     console.error('Submit Payment Request Error:', error);

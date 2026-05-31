@@ -2175,13 +2175,36 @@ function AppLayout() {
 
     const establishConnection = () => {
        const tenantId = localStorage.getItem('tenantId');
-       if (!tenantId) {
+       const loggedInUser = JSON.parse(localStorage.getItem('user') || '{}');
+       const uRole = (loggedInUser?.role || localStorage.getItem('role') || 'AGENT').toUpperCase().replace(/\s/g, '_');
+
+       if (!tenantId && uRole !== 'SUPER_ADMIN') {
           console.log('[App.jsx Socket] Waiting for tenantId in localStorage...');
           return false;
        }
 
-       console.log('[App.jsx Socket] Initializing socket connection for tenantId:', tenantId);
-       socket = io('', { query: { tenantId } });
+       const connectionTenantId = tenantId || 'superadmin';
+       console.log('[App.jsx Socket] Initializing socket connection for tenantId:', connectionTenantId);
+       socket = io('', { query: { tenantId: connectionTenantId, isWidget: false } });
+
+       socket.on('new_payment_request', (data) => {
+           if (uRole === 'SUPER_ADMIN') {
+              playChime();
+              toast(`🚨 New Fund Request: ₹${(data.amount || 0).toFixed(2)} from ${data.clientName} (${data.category || 'Recharge'})`, { 
+                 duration: 15000, 
+                 icon: '💰',
+                 style: {
+                   borderRadius: '16px',
+                   background: '#f8fafc',
+                   color: '#0f172a',
+                   fontWeight: 'bold',
+                   border: '2px solid #38bdf8',
+                   padding: '16px',
+                   boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
+                 }
+              });
+           }
+       });
 
        socket.on('template_status_update', (data) => {
           console.log('🔔 Template Status Update:', data);
