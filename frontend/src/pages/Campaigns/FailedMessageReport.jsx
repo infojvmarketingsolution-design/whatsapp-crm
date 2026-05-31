@@ -115,7 +115,7 @@ export default function FailedMessageReport() {
       <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-4">
-             <button onClick={() => navigate('/campaigns/errors/dashboard')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+             <button onClick={() => navigate('/campaigns/reports/all')} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
                <ArrowLeft size={20} className="text-gray-600" />
              </button>
              <h1 className="text-2xl font-black text-gray-800 tracking-tight">Failed Message Report</h1>

@@ -12,7 +12,6 @@ import LandingPage from './pages/LandingPage';
 import ApiSetup from './pages/ApiSetup';
 import Campaigns from './pages/Campaigns';
 import CreateCampaign from './pages/Campaigns/CreateCampaign';
-import ErrorDashboard from './pages/Campaigns/ErrorDashboard';
 import FailedMessageReport from './pages/Campaigns/FailedMessageReport';
 import OverallMessageReport from './pages/Campaigns/OverallMessageReport';
 import Templates from './pages/Templates';
@@ -2333,7 +2332,6 @@ function AppLayout() {
             <Route path="/inbox" element={<Inbox roleAccess={roleAccess} />} />
             <Route path="/campaigns" element={<Campaigns />} />
             <Route path="/campaigns/create" element={<CreateCampaign />} />
-            <Route path="/campaigns/errors/dashboard" element={<ErrorDashboard />} />
             <Route path="/campaigns/errors/report" element={<FailedMessageReport />} />
             <Route path="/campaigns/reports/all" element={<OverallMessageReport />} />
             <Route path="/flows" element={<Flows />} />

@@ -105,10 +105,6 @@ function Campaigns() {
             <FileText size={18} />
             <span>Overall Report</span>
           </button>
-          <button onClick={() => navigate('/campaigns/errors/dashboard')} className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-white text-red-600 border border-red-200 rounded-2xl text-xs font-bold shadow-sm hover:bg-red-50 transition-all active:scale-95 capitalize">
-            <AlertCircle size={18} />
-            <span>Error Dashboard</span>
-          </button>
           <button onClick={() => navigate('/campaigns/create')} className="w-full sm:w-auto flex items-center justify-center space-x-3 px-6 py-3 bg-blue-600 text-white rounded-2xl text-xs font-bold shadow-glow hover:bg-blue-700 transition-all active:scale-95 capitalize">
             <Plus size={18} />
             <span>Create Campaign</span>

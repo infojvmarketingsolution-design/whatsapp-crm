@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Filter, Search, ArrowLeft, FileText, FileSpreadsheet, Send, CheckCircle2, XCircle, Eye } from 'lucide-react';
+import { Download, Filter, Search, ArrowLeft, FileText, FileSpreadsheet, Send, CheckCircle2, XCircle, Eye, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -142,6 +142,9 @@ export default function OverallMessageReport() {
              <h1 className="text-2xl font-black text-gray-800 tracking-tight">Overall Campaign Report</h1>
           </div>
           <div className="flex gap-2">
+            <button onClick={() => navigate('/campaigns/errors/report')} className="flex items-center gap-2 bg-orange-50 text-orange-700 border border-orange-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-orange-100 transition-colors">
+              <AlertCircle size={16} /> Failed Message Report
+            </button>
             <button onClick={handleExportCSV} className="flex items-center gap-2 bg-green-50 text-green-700 border border-green-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-green-100 transition-colors">
               <FileSpreadsheet size={16} /> Excel
             </button>
