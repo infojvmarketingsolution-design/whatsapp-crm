@@ -5,7 +5,8 @@ const {
   getAdminPaymentRequests, 
   updatePaymentRequestStatus,
   getClientRejectedPayments,
-  getAdminDashboardStats
+  getAdminDashboardStats,
+  editPaymentRequest
 } = require('../controllers/payment.controller');
 const { protect, superAdminOnly } = require('../middleware/auth');
 const tenantMiddleware = require('../middleware/tenant');
@@ -18,5 +19,6 @@ router.get('/rejected', protect, tenantMiddleware, getClientRejectedPayments);
 router.get('/admin/dashboard', protect, superAdminOnly, getAdminDashboardStats);
 router.get('/admin/requests', protect, superAdminOnly, getAdminPaymentRequests);
 router.put('/admin/requests/:id', protect, superAdminOnly, updatePaymentRequestStatus);
+router.put('/admin/requests/:id/edit', protect, superAdminOnly, editPaymentRequest);
 
 module.exports = router;

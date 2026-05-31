@@ -35,7 +35,15 @@ const PaymentRequestSchema = new mongoose.Schema({
   rejectedMessageNotifiedCount: {
     type: Number,
     default: 0
-  }
+  },
+  editHistory: [{
+    changedAt: { type: Date, default: Date.now },
+    changes: [{
+      field: String,
+      oldValue: mongoose.Schema.Types.Mixed,
+      newValue: mongoose.Schema.Types.Mixed
+    }]
+  }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('PaymentRequest', PaymentRequestSchema);

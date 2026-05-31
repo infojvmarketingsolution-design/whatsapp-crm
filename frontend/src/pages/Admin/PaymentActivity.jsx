@@ -12,6 +12,9 @@ function PaymentActivity() {
    const [newTotalMessages, setNewTotalMessages] = useState('');
    const [newTotalFundAdded, setNewTotalFundAdded] = useState('');
    const [historyClient, setHistoryClient] = useState(null);
+   const [editingRequest, setEditingRequest] = useState(null);
+   const [detailsRequest, setDetailsRequest] = useState(null);
+   const [editReqData, setEditReqData] = useState({ messageQuantity: '', amount: '', utrNumber: '', status: '' });
 
    useEffect(() => {
       fetchRequests();
@@ -111,7 +114,44 @@ function PaymentActivity() {
          console.error('Error updating budget', err);
       }
    };
+   const handleEditRequest = (req) => {
+      setEditingRequest(req);
+      setEditReqData({
+         messageQuantity: req.messageQuantity?.toString() || '',
+         amount: req.amount?.toString() || '',
+         utrNumber: req.utrNumber || '',
+         status: req.status || 'PENDING'
+      });
+   };
 
+   const submitEditRequest = async (e) => {
+      e.preventDefault();
+      try {
+         const token = localStorage.getItem('token');
+         const res = await fetch(`/api/payments/admin/requests/${editingRequest._id}/edit`, {
+            method: 'PUT',
+            headers: { 
+               'Authorization': `Bearer ${token}`,
+               'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+               messageQuantity: parseInt(editReqData.messageQuantity, 10),
+               amount: parseFloat(editReqData.amount),
+               utrNumber: editReqData.utrNumber,
+               status: editReqData.status
+            })
+         });
+         if (res.ok) {
+            setEditingRequest(null);
+            fetchRequests();
+            fetchStats();
+         } else {
+            alert('Failed to update request');
+         }
+      } catch (err) {
+         console.error('Error editing request', err);
+      }
+   };
    return (
       <div className="p-4 sm:p-8 min-h-full bg-slate-50">
          <div className="max-w-7xl mx-auto space-y-8">
@@ -231,7 +271,7 @@ function PaymentActivity() {
             {/* Payment Activity History */}
             <div className="bg-white rounded-[2rem] shadow-sm border border-slate-200 overflow-hidden">
                <div className="p-6 border-b border-slate-100 bg-slate-50/50">
-                  <h2 className="text-lg font-black text-slate-800">Pending & Historical Requests</h2>
+                  <h2 className="text-lg font-black text-slate-800">Payment Request History</h2>
                </div>
                <div className="overflow-x-auto">
                   <table className="w-full text-left">
@@ -283,24 +323,36 @@ function PaymentActivity() {
                                     {req.status === 'REJECTED' && <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-rose-600 bg-rose-50 px-2 py-1 rounded border border-rose-200"><XCircle size={12} /> Rejected</span>}
                                  </td>
                                  <td className="px-6 py-4 text-right">
-                                    {req.status === 'PENDING' ? (
-                                       <div className="flex justify-end gap-2">
-                                          <button 
-                                             onClick={() => handleUpdateStatus(req._id, 'APPROVED')}
-                                             className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded transition-colors shadow-sm"
-                                          >
-                                             Approve
-                                          </button>
-                                          <button 
-                                             onClick={() => handleUpdateStatus(req._id, 'REJECTED')}
-                                             className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-widest rounded transition-colors"
-                                          >
-                                             Reject
-                                          </button>
-                                       </div>
-                                    ) : (
-                                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Resolved</span>
-                                    )}
+                                    <div className="flex justify-end gap-2">
+                                       {req.status === 'PENDING' && (
+                                          <>
+                                             <button 
+                                                onClick={() => handleUpdateStatus(req._id, 'APPROVED')}
+                                                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded transition-colors shadow-sm"
+                                             >
+                                                Approve
+                                             </button>
+                                             <button 
+                                                onClick={() => handleUpdateStatus(req._id, 'REJECTED')}
+                                                className="px-3 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-[10px] font-black uppercase tracking-widest rounded transition-colors"
+                                             >
+                                                Reject
+                                             </button>
+                                          </>
+                                       )}
+                                       <button 
+                                          onClick={() => handleEditRequest(req)}
+                                          className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-black uppercase tracking-widest rounded transition-colors shadow-sm flex items-center gap-1"
+                                       >
+                                          <Edit2 size={12} /> Edit
+                                       </button>
+                                       <button 
+                                          onClick={() => setDetailsRequest(req)}
+                                          className="px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-100 text-[10px] font-black uppercase tracking-widest rounded transition-colors shadow-sm flex items-center gap-1"
+                                       >
+                                          <Search size={12} /> Details
+                                       </button>
+                                    </div>
                                  </td>
                               </tr>
                            ))
@@ -474,6 +526,156 @@ function PaymentActivity() {
                            </tbody>
                         </table>
                      </div>
+                  </div>
+               </div>
+            </div>
+         )}
+
+         {/* Edit Request Modal */}
+         {editingRequest && (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+               <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden">
+                  <div className="flex justify-between items-center p-6 border-b border-slate-100">
+                     <h2 className="text-xl font-black text-slate-800">Edit Request</h2>
+                     <button onClick={() => setEditingRequest(null)} className="text-slate-400 hover:text-slate-600">
+                        <X size={24} />
+                     </button>
+                  </div>
+                  <form onSubmit={submitEditRequest} className="p-6 space-y-4">
+                     <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Client Name</label>
+                        <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700">
+                           {editingRequest.clientId?.companyName || 'Unknown Client'}
+                        </div>
+                     </div>
+                     <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Date & Time</label>
+                        <div className="p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-700">
+                           {new Date(editingRequest.createdAt).toLocaleString()}
+                        </div>
+                     </div>
+                     <div className="grid grid-cols-2 gap-4">
+                        <div>
+                           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Messages Qty</label>
+                           <input 
+                              type="number" 
+                              value={editReqData.messageQuantity}
+                              onChange={(e) => setEditReqData({...editReqData, messageQuantity: e.target.value})}
+                              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                              required
+                           />
+                        </div>
+                        <div>
+                           <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Amount (₹)</label>
+                           <input 
+                              type="number" 
+                              step="0.01"
+                              value={editReqData.amount}
+                              onChange={(e) => setEditReqData({...editReqData, amount: e.target.value})}
+                              className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm font-black text-emerald-600 focus:ring-2 focus:ring-blue-500 outline-none"
+                              required
+                           />
+                        </div>
+                     </div>
+                     <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">UTR / Reference</label>
+                        <input 
+                           type="text" 
+                           value={editReqData.utrNumber}
+                           onChange={(e) => setEditReqData({...editReqData, utrNumber: e.target.value})}
+                           className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-600 focus:ring-2 focus:ring-blue-500 outline-none"
+                           required
+                        />
+                     </div>
+                     <div>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Status</label>
+                        <select 
+                           value={editReqData.status}
+                           onChange={(e) => setEditReqData({...editReqData, status: e.target.value})}
+                           className="w-full p-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 focus:ring-2 focus:ring-blue-500 outline-none"
+                        >
+                           <option value="PENDING">PENDING</option>
+                           <option value="APPROVED">APPROVED</option>
+                           <option value="REJECTED">REJECTED</option>
+                        </select>
+                     </div>
+                     <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+                        <button 
+                           type="button"
+                           onClick={() => setEditingRequest(null)}
+                           className="px-5 py-2.5 text-sm font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+                        >
+                           Cancel
+                        </button>
+                        <button 
+                           type="submit"
+                           className="px-5 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-lg shadow-blue-200 transition-all"
+                        >
+                           Save Changes
+                        </button>
+                     </div>
+                  </form>
+               </div>
+            </div>
+         )}
+
+         {/* Request Details (Audit History) Modal */}
+         {detailsRequest && (
+            <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4">
+               <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
+                  <div className="flex justify-between items-center p-6 border-b border-slate-100 bg-slate-50">
+                     <div>
+                        <h2 className="text-xl font-black text-slate-800">Request Audit Details</h2>
+                        <p className="text-sm font-bold text-slate-500 mt-1">{detailsRequest.clientId?.companyName}</p>
+                     </div>
+                     <button onClick={() => setDetailsRequest(null)} className="text-slate-400 hover:text-slate-600 bg-white p-2 rounded-full shadow-sm">
+                        <X size={24} />
+                     </button>
+                  </div>
+                  <div className="overflow-y-auto p-6 space-y-6">
+                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Messages</p>
+                           <p className="text-sm font-bold text-slate-700">{detailsRequest.messageQuantity}</p>
+                        </div>
+                        <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                           <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Amount</p>
+                           <p className="text-sm font-black text-emerald-600">₹{detailsRequest.amount}</p>
+                        </div>
+                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">UTR</p>
+                           <p className="text-xs font-mono font-bold text-slate-600">{detailsRequest.utrNumber}</p>
+                        </div>
+                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                           <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Status</p>
+                           <p className="text-sm font-bold text-slate-700">{detailsRequest.status}</p>
+                        </div>
+                     </div>
+                     
+                     <h3 className="text-sm font-black text-slate-700 uppercase tracking-widest border-b border-slate-100 pb-2">Edit History</h3>
+                     {(!detailsRequest.editHistory || detailsRequest.editHistory.length === 0) ? (
+                        <p className="text-sm text-slate-400 italic">No edits have been made to this request.</p>
+                     ) : (
+                        <div className="space-y-4">
+                           {detailsRequest.editHistory.map((history, i) => (
+                              <div key={i} className="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+                                 <p className="text-xs font-bold text-slate-500 mb-3 flex items-center gap-2">
+                                    <Clock size={12} /> {new Date(history.changedAt).toLocaleString()}
+                                 </p>
+                                 <div className="space-y-2">
+                                    {history.changes.map((change, j) => (
+                                       <div key={j} className="flex flex-wrap items-center gap-2 text-sm bg-slate-50 p-2 rounded-lg">
+                                          <span className="font-black text-slate-600 uppercase text-[10px] w-20">{change.field}</span>
+                                          <span className="line-through text-rose-500 font-bold bg-rose-50 px-2 py-0.5 rounded">{String(change.oldValue)}</span>
+                                          <span className="text-slate-400">→</span>
+                                          <span className="text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded">{String(change.newValue)}</span>
+                                       </div>
+                                    ))}
+                                 </div>
+                              </div>
+                           ))}
+                        </div>
+                     )}
                   </div>
                </div>
             </div>

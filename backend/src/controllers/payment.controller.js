@@ -172,10 +172,79 @@ const getAdminDashboardStats = async (req, res) => {
   }
 };
 
+const editPaymentRequest = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { messageQuantity, amount, utrNumber, status } = req.body;
+
+    const request = await PaymentRequest.findById(id).populate('clientId');
+    if (!request) {
+      return res.status(404).json({ message: 'Payment request not found' });
+    }
+
+    const changes = [];
+    const addChange = (field, oldVal, newVal) => {
+      if (oldVal !== newVal) {
+        changes.push({ field, oldValue: oldVal, newValue: newVal });
+      }
+    };
+
+    if (messageQuantity !== undefined) addChange('messageQuantity', request.messageQuantity, Number(messageQuantity));
+    if (amount !== undefined) addChange('amount', request.amount, Number(amount));
+    if (utrNumber !== undefined) addChange('utrNumber', request.utrNumber, utrNumber);
+    if (status !== undefined) addChange('status', request.status, status);
+
+    if (changes.length > 0) {
+      const oldStatus = request.status;
+      const client = request.clientId;
+
+      // Handle wallet/stats adjustment if status or amount changes
+      if (oldStatus === 'APPROVED' && status !== 'APPROVED') {
+        // Reverting an approved request
+        client.walletBalance = (client.walletBalance || 0) - request.amount;
+        client.totalFundAdded = (client.totalFundAdded || 0) - request.amount;
+        client.totalMessagesSent = (client.totalMessagesSent || 0) - request.messageQuantity;
+      } else if (oldStatus !== 'APPROVED' && status === 'APPROVED') {
+        // Approving a request
+        client.walletBalance = (client.walletBalance || 0) + (amount !== undefined ? Number(amount) : request.amount);
+        client.totalFundAdded = (client.totalFundAdded || 0) + (amount !== undefined ? Number(amount) : request.amount);
+        client.totalMessagesSent = (client.totalMessagesSent || 0) + (messageQuantity !== undefined ? Number(messageQuantity) : request.messageQuantity);
+      } else if (oldStatus === 'APPROVED' && status === 'APPROVED') {
+        // Modifying an already approved request
+        if (amount !== undefined && amount !== request.amount) {
+          const diffAmount = Number(amount) - request.amount;
+          client.walletBalance = (client.walletBalance || 0) + diffAmount;
+          client.totalFundAdded = (client.totalFundAdded || 0) + diffAmount;
+        }
+        if (messageQuantity !== undefined && messageQuantity !== request.messageQuantity) {
+          const diffQty = Number(messageQuantity) - request.messageQuantity;
+          client.totalMessagesSent = (client.totalMessagesSent || 0) + diffQty;
+        }
+      }
+
+      if (messageQuantity !== undefined) request.messageQuantity = Number(messageQuantity);
+      if (amount !== undefined) request.amount = Number(amount);
+      if (utrNumber !== undefined) request.utrNumber = utrNumber;
+      if (status !== undefined) request.status = status;
+
+      request.editHistory = request.editHistory || [];
+      request.editHistory.push({ changedAt: new Date(), changes });
+
+      await client.save();
+      await request.save();
+    }
+
+    res.json({ message: 'Payment request updated successfully', request });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   submitPaymentRequest,
   getAdminPaymentRequests,
   updatePaymentRequestStatus,
   getClientRejectedPayments,
-  getAdminDashboardStats
+  getAdminDashboardStats,
+  editPaymentRequest
 };
