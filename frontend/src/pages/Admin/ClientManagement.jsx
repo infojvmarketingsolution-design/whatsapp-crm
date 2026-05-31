@@ -248,6 +248,7 @@ const ClientManagement = () => {
                 <th className="px-6 py-4">Organization</th>
                 <th className="px-6 py-4">Admin Email</th>
                 <th className="px-6 py-4">Plan</th>
+                <th className="px-6 py-4">Billing Mode</th>
                 <th className="px-6 py-4">WhatsApp API</th>
                 <th className="px-6 py-4">Status</th>
                 <th className="px-6 py-4 text-right">Actions</th>
@@ -272,6 +273,13 @@ const ClientManagement = () => {
                       'bg-slate-100 text-slate-700'
                     }`}>
                       {client.plan}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase ${
+                      client.billingMode === 'MANUAL' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'
+                    }`}>
+                      {client.billingMode || 'AUTO'}
                     </span>
                   </td>
                   <td className="px-6 py-4">
