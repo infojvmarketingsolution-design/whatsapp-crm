@@ -3,11 +3,20 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle, Trash2, Megaphone, Users, Send, AlertCircle, FileText, Activity, ShieldAlert, IndianRupee } from 'lucide-react';
 import CampaignReportModal from './CampaignReportModal';
 
-const META_PRICING = {
-  MARKETING: 0.88,
+const META_BASE_PRICING = {
+  MARKETING: 0.88, // Standard Meta India Rate
   UTILITY: 0.11,
   AUTHENTICATION: 0.11,
   SERVICE: 0.29
+};
+
+const PLATFORM_MARGIN = 0.05; // Platform Commission
+
+const META_PRICING = {
+  MARKETING: META_BASE_PRICING.MARKETING + PLATFORM_MARGIN,
+  UTILITY: META_BASE_PRICING.UTILITY + PLATFORM_MARGIN,
+  AUTHENTICATION: META_BASE_PRICING.AUTHENTICATION + PLATFORM_MARGIN,
+  SERVICE: META_BASE_PRICING.SERVICE + PLATFORM_MARGIN
 };
 
 function Campaigns() {
