@@ -3,7 +3,7 @@ import { Download, Filter, Search, ArrowLeft, FileText, FileSpreadsheet } from '
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 export default function FailedMessageReport() {
   const [logs, setLogs] = useState([]);
@@ -99,7 +99,7 @@ export default function FailedMessageReport() {
       tableRows.push(logData);
     });
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
       startY: 20,
