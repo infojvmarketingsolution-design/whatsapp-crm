@@ -47,11 +47,13 @@ function RefillBudgetModal({ isOpen, onClose }) {
      
      try {
        const token = localStorage.getItem('token');
+       const tenantId = localStorage.getItem('tenantId');
        const res = await fetch('/api/payments/refill', {
          method: 'POST',
          headers: {
            'Content-Type': 'application/json',
-           'Authorization': `Bearer ${token}`
+           'Authorization': `Bearer ${token}`,
+           'x-tenant-id': tenantId
          },
          body: JSON.stringify({
            category,
