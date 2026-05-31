@@ -206,6 +206,7 @@ app.use('/api/admin/settings', adminSettingsRoutes);
 app.use('/api/sessions', sessionRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/success-stories', successStoryRoutes);
+app.use('/api/payments', paymentRoutes);
 
 // Main Media Route (Matches generated URLs /uploads/...)
 const uploadPath = path.join(__dirname, 'public', 'uploads');

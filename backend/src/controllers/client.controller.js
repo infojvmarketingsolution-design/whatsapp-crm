@@ -96,6 +96,7 @@ const updateClient = async (req, res) => {
     if (mobileNumber) updateFields.mobileNumber = mobileNumber;
     if (status) updateFields.status = status;
     if (plan) updateFields.plan = plan;
+    if (req.body.billingMode) updateFields.billingMode = req.body.billingMode;
     
     if (whatsappConfig) {
       updateFields.whatsappConfig = whatsappConfig;

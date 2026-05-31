@@ -1,14 +1,25 @@
 import React, { useState } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
-import { X, ExternalLink, ShieldCheck } from 'lucide-react';
+import { X, ExternalLink, ShieldCheck, CheckCircle2 } from 'lucide-react';
+
+const PRICING = {
+  MARKETING: 0.93,
+  UTILITY: 0.16,
+  AUTHENTICATION: 0.18
+};
 
 function RefillBudgetModal({ isOpen, onClose }) {
   const [quantity, setQuantity] = useState(1000);
+  const [category, setCategory] = useState('MARKETING');
+  const [utrNumber, setUtrNumber] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [error, setError] = useState(null);
   
   if (!isOpen) return null;
 
   // Rate constants
-  const ratePerMessage = 0.90;
+  const ratePerMessage = PRICING[category] || 0.93;
   const gstRate = 0.18;
   
   // Calculations
@@ -25,11 +36,45 @@ function RefillBudgetModal({ isOpen, onClose }) {
   // Format: upi://pay?pa=UPI_ID&pn=PAYEE_NAME&am=AMOUNT&cu=INR
   const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(payeeName)}&am=${totalAmount.toFixed(2)}&cu=INR`;
 
-  const handleSupportRedirect = () => {
-     // Redirect to WhatsApp with pre-filled message
-     const supportNumber = '916354070709'; 
-     const message = `Hello, I have just made a payment of ₹${totalAmount.toFixed(2)} for ${qtyNum} Meta Ad Budget Credits. Please verify and update my wallet.`;
-     window.open(`https://wa.me/${supportNumber}?text=${encodeURIComponent(message)}`, '_blank');
+  const handleSubmitVerification = async () => {
+     if (!utrNumber || utrNumber.length < 6) {
+        setError("Please enter a valid UTR / Reference Number.");
+        return;
+     }
+     
+     setIsSubmitting(true);
+     setError(null);
+     
+     try {
+       const token = localStorage.getItem('token');
+       const res = await fetch('/api/payments/refill', {
+         method: 'POST',
+         headers: {
+           'Content-Type': 'application/json',
+           'Authorization': `Bearer ${token}`
+         },
+         body: JSON.stringify({
+           category,
+           messageQuantity: qtyNum,
+           utrNumber
+         })
+       });
+       
+       if (!res.ok) {
+         const data = await res.json();
+         throw new Error(data.message || 'Failed to submit payment request');
+       }
+       
+       setShowSuccess(true);
+       setTimeout(() => {
+          setShowSuccess(false);
+          onClose();
+       }, 3000);
+     } catch (err) {
+       setError(err.message);
+     } finally {
+       setIsSubmitting(false);
+     }
   };
 
   return (
@@ -40,7 +85,7 @@ function RefillBudgetModal({ isOpen, onClose }) {
         <div className="flex items-center justify-between px-6 py-5 border-b border-slate-100">
           <div>
             <h2 className="text-lg font-black text-slate-800 tracking-tight uppercase">Refill Meta Ad Budget</h2>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Select Quantity and Complete Payment</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">Select Category and Complete Payment</p>
           </div>
           <button 
             onClick={onClose}
@@ -51,8 +96,35 @@ function RefillBudgetModal({ isOpen, onClose }) {
         </div>
 
         {/* Content - Scrollable */}
-        <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+        <div className="p-6 overflow-y-auto custom-scrollbar flex-1 space-y-6 relative">
           
+          {showSuccess && (
+            <div className="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 flex flex-col items-center justify-center p-6 text-center animate-fade-in">
+               <div className="h-16 w-16 bg-green-100 rounded-full flex items-center justify-center text-green-600 mb-4">
+                  <CheckCircle2 size={32} />
+               </div>
+               <h3 className="text-xl font-black text-slate-800 uppercase tracking-tight mb-2">Request Submitted</h3>
+               <p className="text-sm font-bold text-slate-500">
+                  Payment clarification received. <br/>
+                  <span className="text-blue-600">Amount will reflect within 2 hours.</span>
+               </p>
+            </div>
+          )}
+
+          {/* Category Input */}
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Message Category</label>
+            <select 
+               value={category}
+               onChange={(e) => setCategory(e.target.value)}
+               className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all appearance-none"
+            >
+               <option value="MARKETING">Marketing (₹0.93)</option>
+               <option value="UTILITY">Utility (₹0.16)</option>
+               <option value="AUTHENTICATION">Authentication (₹0.18)</option>
+            </select>
+          </div>
+
           {/* Quantity Input */}
           <div>
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Message Quantity</label>
@@ -128,13 +200,19 @@ function RefillBudgetModal({ isOpen, onClose }) {
                <p className="text-sm font-black text-slate-800">{payeeName}</p>
                <p className="text-xs font-bold text-blue-600 mt-0.5">{upiId}</p>
             </div>
-            
-            <div className="flex justify-center gap-4 mt-6 opacity-50 grayscale">
-               {/* Placeholder logos for UPI apps */}
-               <div className="h-6 w-16 bg-slate-200 rounded animate-pulse"></div>
-               <div className="h-6 w-16 bg-slate-200 rounded animate-pulse"></div>
-               <div className="h-6 w-16 bg-slate-200 rounded animate-pulse"></div>
-            </div>
+          </div>
+
+          {/* UTR Verification Section */}
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Payment Verification</label>
+            <input 
+               type="text" 
+               placeholder="Enter UTR or Reference Number after payment"
+               value={utrNumber}
+               onChange={(e) => setUtrNumber(e.target.value)}
+               className="w-full bg-slate-50 border border-slate-200 text-slate-800 text-sm font-bold rounded-2xl px-5 py-4 focus:outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all"
+            />
+            {error && <p className="text-[10px] font-bold text-red-500 mt-2">{error}</p>}
           </div>
 
         </div>
@@ -142,11 +220,12 @@ function RefillBudgetModal({ isOpen, onClose }) {
         {/* Footer Action */}
         <div className="p-4 border-t border-slate-100 bg-slate-50">
           <button 
-             onClick={handleSupportRedirect}
-             className="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-glow active:scale-[0.98] flex items-center justify-center gap-2"
+             onClick={handleSubmitVerification}
+             disabled={isSubmitting}
+             className="w-full py-4 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-glow active:scale-[0.98] flex items-center justify-center gap-2"
           >
-             <span>Send Payment Receipt for Verification</span>
-             <ExternalLink size={14} />
+             <span>{isSubmitting ? 'Submitting...' : 'Submit Payment for Verification'}</span>
+             {!isSubmitting && <ExternalLink size={14} />}
           </button>
         </div>
 

@@ -501,7 +501,7 @@ const ClientManagement = () => {
                     />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-3 gap-4">
                   <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Status</label>
                       <select 
@@ -523,6 +523,17 @@ const ClientManagement = () => {
                           <option value="BASIC">BASIC</option>
                           <option value="PRO">PRO</option>
                           <option value="PREMIUM">PREMIUM</option>
+                      </select>
+                  </div>
+                  <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5 uppercase">Billing Mode</label>
+                      <select 
+                          value={selectedClient.billingMode || 'AUTO'}
+                          onChange={(e) => setSelectedClient({...selectedClient, billingMode: e.target.value})}
+                          className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                          <option value="AUTO">AUTO (Prepaid)</option>
+                          <option value="MANUAL">MANUAL (Postpaid)</option>
                       </select>
                   </div>
                 </div>

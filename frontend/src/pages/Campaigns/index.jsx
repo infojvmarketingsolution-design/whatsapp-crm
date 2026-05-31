@@ -26,14 +26,37 @@ function Campaigns() {
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState({ isOpen: false, campaign: null, logs: [] });
   const [metaStatus, setMetaStatus] = useState({ limitTier: 'Loading...', qualityRating: 'Loading...', walletBalance: 0 });
+  const [rejectedPayments, setRejectedPayments] = useState([]);
   const [showRefillModal, setShowRefillModal] = useState(false);
 
   useEffect(() => {
     fetchCampaigns();
     fetchMetaStatus();
-    const interval = setInterval(() => fetchCampaigns(true), 10000);
+    checkRejectedPayments();
+    const interval = setInterval(() => {
+       fetchCampaigns(true);
+       fetchMetaStatus(); // keep wallet updated
+    }, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const checkRejectedPayments = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch('/api/payments/rejected', {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.length > 0) {
+           setRejectedPayments(data);
+        }
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const fetchMetaStatus = async () => {
     try {
@@ -48,7 +71,7 @@ function Campaigns() {
       }
     } catch (err) {
       console.error(err);
-      setMetaStatus({ limitTier: 'Unknown', qualityRating: 'UNKNOWN', walletBalance: 0 });
+      setMetaStatus({ limitTier: 'Unknown', qualityRating: 'UNKNOWN', walletBalance: 0, billingMode: 'AUTO' });
     }
   };
 
@@ -142,14 +165,25 @@ function Campaigns() {
           {/* Ad Budget Credit Card */}
           <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-200 flex items-center justify-between gap-4 w-full sm:w-auto h-[46px] box-border">
              <div className="flex flex-col justify-center">
-                <span className="text-[10px] font-bold text-slate-500 leading-tight">Ad Budget Credit</span>
+                <div className="flex items-center gap-2">
+                   <span className="text-[10px] font-bold text-slate-500 leading-tight">Ad Budget Credit</span>
+                   {metaStatus.billingMode && (
+                      <span className={`text-[8px] px-1.5 py-0.5 rounded font-black tracking-widest ${metaStatus.billingMode === 'MANUAL' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'}`}>
+                         {metaStatus.billingMode}
+                      </span>
+                   )}
+                </div>
                 <span className="text-sm font-black text-slate-800 leading-tight">₹{metaStatus.walletBalance?.toFixed(2) || '0.00'}</span>
              </div>
-             <div className="h-6 w-px bg-slate-200 mx-1"></div>
-             <button onClick={() => setShowRefillModal(true)} className="flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors h-full max-h-[30px]">
-                <Plus size={14} />
-                <span>Add</span>
-             </button>
+             {metaStatus.billingMode !== 'MANUAL' && (
+               <>
+                 <div className="h-6 w-px bg-slate-200 mx-1"></div>
+                 <button onClick={() => setShowRefillModal(true)} className="flex items-center justify-center space-x-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors h-full max-h-[30px]">
+                    <Plus size={14} />
+                    <span>Add</span>
+                 </button>
+               </>
+             )}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
@@ -164,6 +198,23 @@ function Campaigns() {
           </div>
         </div>
       </div>
+
+      {/* Rejected Payments Popups */}
+      {rejectedPayments.map(payment => (
+         <div key={payment._id} className="fixed bottom-4 right-4 bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-2xl shadow-xl z-50 flex items-start gap-4 animate-slide-up">
+            <AlertCircle className="text-red-500 mt-1 shrink-0" size={24} />
+            <div>
+               <h4 className="font-black text-red-900 uppercase tracking-tight">Payment Failed</h4>
+               <p className="text-sm font-bold mt-1 text-red-700/80">Your payment request for ₹{payment.amount} (UTR: {payment.utrNumber}) was rejected by the admin.</p>
+               <button 
+                  onClick={() => setRejectedPayments(prev => prev.filter(p => p._id !== payment._id))} 
+                  className="mt-3 text-[10px] uppercase font-black tracking-widest text-red-500 hover:text-red-700 transition-colors"
+               >
+                  Dismiss
+               </button>
+            </div>
+         </div>
+      ))}
 
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-6 mb-10">
         <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 group hover:border-blue-200 transition-all col-span-2 lg:col-span-1">

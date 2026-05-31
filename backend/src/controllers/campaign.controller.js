@@ -47,6 +47,40 @@ const createCampaign = async (req, res) => {
       targetContacts = await Contact.find(contactQuery);
     }
 
+    if (targetContacts.length === 0) {
+      return res.status(400).json({ message: 'No contacts selected for this campaign' });
+    }
+
+    // Billing Logic
+    const client = await Client.findOne({ tenantId });
+    if (!client) {
+      return res.status(404).json({ message: 'Client not found' });
+    }
+
+    const Template = tenantDb.model('Template', TemplateSchema);
+    const templateDoc = await Template.findById(templateId);
+    if (!templateDoc) {
+      return res.status(404).json({ message: 'Template not found' });
+    }
+
+    const billingMode = client.billingMode || 'AUTO';
+    if (billingMode === 'AUTO') {
+      const PRICING = { MARKETING: 0.93, UTILITY: 0.16, AUTHENTICATION: 0.18, SERVICE: 0.34 };
+      const category = templateDoc.category || 'MARKETING';
+      const rate = PRICING[category] || 0.93;
+      const totalCost = rate * targetContacts.length;
+
+      if ((client.walletBalance || 0) < totalCost) {
+        return res.status(400).json({ 
+          message: `Insufficient Ad Budget. Need ₹${totalCost.toFixed(2)} for ${targetContacts.length} ${category.toLowerCase()} messages, but wallet has ₹${(client.walletBalance || 0).toFixed(2)}.` 
+        });
+      }
+
+      // Deduct budget
+      client.walletBalance -= totalCost;
+      await client.save();
+    }
+
     const newCampaign = await Campaign.create({
       name,
       whatsappNumber,

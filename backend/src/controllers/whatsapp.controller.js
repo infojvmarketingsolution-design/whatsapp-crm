@@ -681,7 +681,12 @@ const getMetaStatus = async (req, res) => {
       }
     }
 
-    res.json({ limitTier, qualityRating });
+    res.json({ 
+      limitTier, 
+      qualityRating, 
+      walletBalance: client.walletBalance || 0,
+      billingMode: client.billingMode || 'AUTO'
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

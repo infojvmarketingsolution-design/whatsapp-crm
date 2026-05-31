@@ -19,6 +19,7 @@ const ClientSchema = new mongoose.Schema({
     wabaName: String
   },
   walletBalance: { type: Number, default: 0 },
+  billingMode: { type: String, enum: ['AUTO', 'MANUAL'], default: 'AUTO' },
   subscriptionEndsAt: Date
 }, { timestamps: true });
 

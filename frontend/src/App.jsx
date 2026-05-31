@@ -30,6 +30,7 @@ import MobileHeader from './components/MobileHeader';
 import NotificationCenter from './components/NotificationCenter';
 import GlobalSearch from './components/GlobalSearch';
 import AdminDashboard from './pages/Admin/AdminDashboard';
+import PaymentActivity from './pages/Admin/PaymentActivity';
 import ClientManagement from './pages/Admin/ClientManagement';
 import PlanManagement from './pages/Admin/PlanManagement';
 import AdminSettings from './pages/Admin/AdminSettings';
@@ -2356,6 +2357,7 @@ function AppLayout() {
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/plans" element={<PlanManagement />} />
             <Route path="/admin/settings" element={<AdminSettings />} />
+            <Route path="/admin/payments" element={<PaymentActivity />} />
           </Routes>
         </div>
 

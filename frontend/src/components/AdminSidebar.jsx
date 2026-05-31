@@ -16,6 +16,7 @@ const AdminSidebar = ({ onLogout, isMobileOpen, onClose, isMobile }) => {
   const menuItems = [
     { icon: <LayoutDashboard size={20} />, label: 'Dashboard', path: '/admin/dashboard' },
     { icon: <Building2 size={20} />, label: 'Clients', path: '/admin/clients' },
+    { icon: <CreditCard size={20} />, label: 'Payments', path: '/admin/payments' },
     { icon: <History size={20} />, label: 'Access Logs', path: '/admin/user-sessions' },
     { icon: <CreditCard size={20} />, label: 'Plans', path: '/admin/plans' },
     { icon: <BarChart3 size={20} />, label: 'Analytics', path: '/admin/analytics' },
