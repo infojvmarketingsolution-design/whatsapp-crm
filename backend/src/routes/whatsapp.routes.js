@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { verifyWebhook, handleIncomingMessage, getApiConfig, saveApiConfig, testApiConnection, exchangeFacebookToken } = require('../controllers/whatsapp.controller');
+const { verifyWebhook, handleIncomingMessage, getApiConfig, saveApiConfig, testApiConnection, exchangeFacebookToken, getMetaStatus } = require('../controllers/whatsapp.controller');
 const { protect } = require('../middleware/auth');
 const tenantMiddleware = require('../middleware/tenant');
 const { processIncomingMessage } = require('../services/flowEngine.service');
@@ -18,6 +18,7 @@ router.get('/config', protect, tenantMiddleware, getApiConfig);
 router.post('/config', protect, tenantMiddleware, saveApiConfig);
 router.get('/test-connection', protect, tenantMiddleware, testApiConnection);
 router.post('/oauth', protect, tenantMiddleware, exchangeFacebookToken);
+router.get('/meta-status', protect, tenantMiddleware, getMetaStatus);
 
 
 module.exports = router;

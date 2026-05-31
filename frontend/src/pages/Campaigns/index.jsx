@@ -1,19 +1,45 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle, Trash2, Megaphone, Users, Send, AlertCircle, FileText } from 'lucide-react';
+import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle, Trash2, Megaphone, Users, Send, AlertCircle, FileText, Activity, ShieldAlert, IndianRupee } from 'lucide-react';
 import CampaignReportModal from './CampaignReportModal';
+
+const META_PRICING = {
+  MARKETING: 0.88,
+  UTILITY: 0.11,
+  AUTHENTICATION: 0.11,
+  SERVICE: 0.29
+};
 
 function Campaigns() {
   const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reportData, setReportData] = useState({ isOpen: false, campaign: null, logs: [] });
+  const [metaStatus, setMetaStatus] = useState({ limitTier: 'Loading...', qualityRating: 'Loading...' });
 
   useEffect(() => {
     fetchCampaigns();
+    fetchMetaStatus();
     const interval = setInterval(() => fetchCampaigns(true), 10000);
     return () => clearInterval(interval);
   }, []);
+
+  const fetchMetaStatus = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const tenantId = localStorage.getItem('tenantId');
+      const res = await fetch('/api/whatsapp/meta-status', {
+        headers: { 'Authorization': `Bearer ${token}`, 'x-tenant-id': tenantId }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setMetaStatus(data);
+      }
+    } catch (err) {
+      console.error(err);
+      setMetaStatus({ limitTier: 'Unknown', qualityRating: 'UNKNOWN' });
+    }
+  };
 
   const fetchCampaigns = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -112,15 +138,15 @@ function Campaigns() {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-10">
-        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 group hover:border-blue-200 transition-all">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 sm:gap-6 mb-10">
+        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 group hover:border-blue-200 transition-all col-span-2 lg:col-span-1">
           <p className="text-slate-400 text-[9px] font-bold capitalize">Total Campaigns</p>
           <div className="flex items-center justify-between mt-3">
             <p className="text-2xl font-bold text-slate-800 tracking-tighter">{campaigns.length}</p>
             <div className="p-2.5 bg-blue-50 text-blue-600 rounded-2xl group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm"><Megaphone size={16} /></div>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 group hover:border-emerald-200 transition-all">
+        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 group hover:border-emerald-200 transition-all col-span-2 lg:col-span-1">
           <p className="text-slate-400 text-[9px] font-bold capitalize">Messages Sent</p>
           <div className="flex items-center justify-between mt-3">
             <p className="text-2xl font-bold text-slate-800 tracking-tighter">
@@ -129,7 +155,7 @@ function Campaigns() {
             <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-2xl group-hover:bg-emerald-600 group-hover:text-white transition-all shadow-sm"><Send size={16} /></div>
           </div>
         </div>
-        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100">
+        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 col-span-2 lg:col-span-1">
           <p className="text-slate-400 text-[9px] font-bold capitalize">Avg Delivery</p>
           <p className="text-2xl font-bold text-emerald-600 mt-3 tracking-tighter">
             {(() => {
@@ -139,15 +165,30 @@ function Campaigns() {
             })()}%
           </p>
         </div>
-        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100">
-          <p className="text-slate-400 text-[9px] font-bold capitalize">Read Rate</p>
-          <p className="text-2xl font-bold text-blue-500 mt-3 tracking-tighter">
-            {(() => {
-              const totalDelivered = campaigns.reduce((acc, c) => acc + (c.metrics?.delivered || 0), 0);
-              const totalRead = campaigns.reduce((acc, c) => acc + (c.metrics?.read || 0), 0);
-              return totalDelivered > 0 ? ((totalRead / totalDelivered) * 100).toFixed(1) : '0';
-            })()}%
-          </p>
+        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 col-span-2 lg:col-span-1">
+          <p className="text-slate-400 text-[9px] font-bold capitalize">Meta Limit & Quality</p>
+          <div className="flex flex-col mt-2">
+            <span className="text-xs font-bold text-slate-800 tracking-tight flex items-center gap-1">
+               <Activity size={12} className="text-blue-500" /> {metaStatus.limitTier?.replace('TIER_', '') || 'Unknown'} Limit
+            </span>
+            <span className={`text-xs font-bold tracking-tight flex items-center gap-1 mt-1 ${metaStatus.qualityRating === 'GREEN' ? 'text-green-600' : metaStatus.qualityRating === 'YELLOW' ? 'text-amber-500' : 'text-red-600'}`}>
+               <ShieldAlert size={12} /> {metaStatus.qualityRating || 'UNKNOWN'} Quality
+            </span>
+          </div>
+        </div>
+        <div className="bg-white p-5 rounded-[2rem] shadow-premium border border-slate-100 col-span-2 lg:col-span-2 bg-gradient-to-br from-green-50 to-emerald-100/50">
+          <p className="text-emerald-700 text-[9px] font-bold capitalize">Total Campaigns Cost (Est.)</p>
+          <div className="flex items-center justify-between mt-3">
+            <p className="text-2xl font-bold text-emerald-800 tracking-tighter flex items-center">
+              <IndianRupee size={20} className="mr-1" />
+              {campaigns.reduce((acc, c) => {
+                 const cat = c.templateId?.category || 'MARKETING';
+                 const rate = META_PRICING[cat] || 0.88;
+                 return acc + ((c.metrics?.sent || 0) * rate);
+              }, 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </p>
+            <div className="p-2.5 bg-white text-emerald-600 rounded-2xl shadow-sm"><IndianRupee size={16} /></div>
+          </div>
         </div>
       </div>
 
@@ -226,29 +267,31 @@ function Campaigns() {
                 <th className="p-5">Campaign Name</th>
                 <th className="p-5">Status</th>
                 <th className="p-5 whitespace-nowrap">Schedule Date</th>
-                <th className="p-5 text-center whitespace-nowrap" title="Total Contacts">Total</th>
+                <th className="p-5 text-center whitespace-nowrap" title="Template Category">Category</th>
+                <th className="p-5 text-center whitespace-nowrap text-emerald-600" title="Cost per message">Msg Cost</th>
                 <th className="p-5 text-center whitespace-nowrap text-blue-500" title="Successfully sent to API">Sent</th>
-                <th className="p-5 text-center whitespace-nowrap text-amber-500" title="Failed to send or Unsent">Unsent</th>
-                <th className="p-5 text-center whitespace-nowrap text-emerald-600">Delivered</th>
-                <th className="p-5 text-center whitespace-nowrap text-blue-600">Read</th>
-                <th className="p-5 text-center whitespace-nowrap text-red-500" title="Meta Delivery Failures">Failed</th>
+                <th className="p-5 text-center whitespace-nowrap text-emerald-700" title="Total Campaign Cost">Total Cost</th>
                 <th className="p-5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="text-sm">
-              {campaigns.map(c => (
+              {campaigns.map(c => {
+                const category = c.templateId?.category || 'MARKETING';
+                const rate = META_PRICING[category] || 0.88;
+                const cost = ((c.metrics?.sent || 0) * rate).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                return (
                 <tr key={c._id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors group">
                   <td className="p-5 font-bold text-gray-800 tracking-tight">{c.name}</td>
                   <td className="p-5">{getStatusBadge(c.status)}</td>
                   <td className="p-5 text-[11px] font-bold text-slate-500 whitespace-nowrap">
                     {new Date(c.scheduledAt || c.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                   </td>
-                  <td className="p-5 text-center font-bold text-gray-600">{c.metrics?.totalContacts || 0}</td>
+                  <td className="p-5 text-center font-bold text-gray-600">
+                     <span className={`px-2 py-1 rounded-md text-[9px] ${category === 'MARKETING' ? 'bg-blue-50 text-blue-600' : category === 'UTILITY' ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>{category}</span>
+                  </td>
+                  <td className="p-5 text-center font-bold text-emerald-600">₹{rate}</td>
                   <td className="p-5 text-center font-bold text-blue-500">{c.metrics?.sent || 0}</td>
-                  <td className="p-5 text-center font-bold text-amber-500">{Math.max(0, (c.metrics?.totalContacts || 0) - (c.metrics?.sent || 0))}</td>
-                  <td className="p-5 text-center text-emerald-600 font-bold">{c.metrics?.delivered || 0}</td>
-                  <td className="p-5 text-center text-blue-600 font-bold">{c.metrics?.read || 0}</td>
-                  <td className="p-5 text-center text-red-500 font-bold">{c.metrics?.failed || 0}</td>
+                  <td className="p-5 text-center font-bold text-emerald-700 bg-emerald-50/30">₹{cost}</td>
                   <td className="p-5 text-right">
                     <div className="flex items-center justify-end space-x-3">
                       <button 
@@ -268,7 +311,7 @@ function Campaigns() {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )})}
             </tbody>
           </table>
         </div>

@@ -628,11 +628,69 @@ const exchangeFacebookToken = async (req, res) => {
   }
 };
 
+const getMetaStatus = async (req, res) => {
+  try {
+    const client = await Client.findOne({ tenantId: req.tenantId });
+    if (!client || !client.whatsappConfig || !client.whatsappConfig.accessToken) {
+      return res.json({ limitTier: 'Unknown', qualityRating: 'UNKNOWN' });
+    }
+    
+    let configData = client.whatsappConfig;
+    const isShreyarth = client.tenantId?.toLowerCase().includes('shreyarth') || client.companyName?.toLowerCase().includes('shreyarth') || client.name?.toLowerCase().includes('shreyarth');
+    if (isShreyarth) {
+       configData = {
+          phoneNumberId: '1074613152404424',
+          wabaId: '1433761851305451',
+          accessToken: 'EAAUZAwz8PZCJABRfcA4XgJmp8UzJ4ixXbpVA7CvnldS3pkDXdUkbtE2hyfYFHYsZAcZBgKaDwGpHCLf5N0iQfCTfJZAu0iwLmhrbcy2TON4DBvkEeZBZCKhLsSnZCF0ZBASOjWQwtv8ZA2mSZC2ZB0UtQiWcvuPwukLlzAJbLqdkkkW7QPNzJZAWVUKZAQEnPYo2wxzQZDZD',
+       };
+    }
+
+    let limitTier = 'Unknown';
+    let qualityRating = 'UNKNOWN';
+
+    // Fetch Quality Rating from Phone Number ID
+    if (configData.phoneNumberId) {
+      try {
+        const phoneRes = await fetch(`https://graph.facebook.com/v22.0/${configData.phoneNumberId}?fields=quality_rating`, {
+          method: 'GET',
+          headers: { 'Authorization': `Bearer ${configData.accessToken}` }
+        });
+        if (phoneRes.ok) {
+          const phoneData = await phoneRes.json();
+          qualityRating = phoneData.quality_rating || 'UNKNOWN';
+        }
+      } catch (err) {
+        console.error('Failed to fetch meta quality rating:', err.message);
+      }
+    }
+
+    // Fetch Messaging Limit Tier from WABA ID
+    if (configData.wabaId) {
+      try {
+        const wabaRes = await fetch(`https://graph.facebook.com/v22.0/${configData.wabaId}?fields=messaging_limit_tier`, {
+          headers: { 'Authorization': `Bearer ${configData.accessToken}` }
+        });
+        if (wabaRes.ok) {
+          const wabaData = await wabaRes.json();
+          limitTier = wabaData.messaging_limit_tier || 'Unknown';
+        }
+      } catch (err) {
+        console.error('Failed to fetch meta limit tier:', err.message);
+      }
+    }
+
+    res.json({ limitTier, qualityRating });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   verifyWebhook,
   handleIncomingMessage,
   getApiConfig,
   saveApiConfig,
   testApiConnection,
-  exchangeFacebookToken
+  exchangeFacebookToken,
+  getMetaStatus
 };
