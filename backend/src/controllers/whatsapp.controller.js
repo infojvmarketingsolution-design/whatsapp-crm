@@ -270,7 +270,17 @@ const handleIncomingMessage = async (req, res) => {
         }
 
         try { require('fs').appendFileSync(require('path').join(__dirname, '../../webhook_debug.log'), `[${new Date().toISOString()}] TRACE: About to find contact for ${from} in tenantDb\n`); } catch(e) {}
-        let contact = await Contact.findOne({ phone: from });
+        // Normalize phone number to catch variations like 91 vs without 91
+        const tenDigit = from.length >= 10 ? from.slice(-10) : from;
+        const phoneQuery = { 
+            $or: [
+                { phone: from }, 
+                { phone: tenDigit }, 
+                { phone: `91${tenDigit}` },
+                { phone: `+91${tenDigit}` }
+            ] 
+        };
+        let contact = await Contact.findOne(phoneQuery);
 
         
         // 🔒 2. Deduplication (Rule 2)
