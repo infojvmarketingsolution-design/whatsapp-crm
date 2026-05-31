@@ -18,8 +18,8 @@ function RefillBudgetModal({ isOpen, onClose }) {
   const totalAmount = subTotal + gstAmount;
 
   // Static UPI details
-  const upiId = 'jvmarketingsolution@sbi';
-  const payeeName = 'J. V MARKETING SOLUTION P';
+  const upiId = '6354070709-3@ybl';
+  const payeeName = 'J V MARKETING SOLUTION';
   
   // Dynamic UPI URL
   // Format: upi://pay?pa=UPI_ID&pn=PAYEE_NAME&am=AMOUNT&cu=INR
@@ -103,7 +103,7 @@ function RefillBudgetModal({ isOpen, onClose }) {
           <div className="border-2 border-dashed border-slate-200 rounded-[2rem] p-8 text-center bg-white relative">
             <h3 className="text-sm font-black text-slate-800 uppercase tracking-widest">Scan to Pay</h3>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1 mb-6 flex items-center justify-center gap-1">
-              📱 UPI Transaction
+              📱 PhonePe / UPI Transaction
             </p>
 
             <div className="inline-block p-4 bg-white rounded-3xl shadow-premium border border-slate-100 mb-6 relative">
@@ -112,6 +112,14 @@ function RefillBudgetModal({ isOpen, onClose }) {
                 size={180}
                 level="H"
                 includeMargin={false}
+                imageSettings={{
+                   src: "https://download.logo.wine/logo/PhonePe/PhonePe-Logo.wine.png",
+                   x: undefined,
+                   y: undefined,
+                   height: 40,
+                   width: 60,
+                   excavate: true,
+                }}
               />
             </div>
 
