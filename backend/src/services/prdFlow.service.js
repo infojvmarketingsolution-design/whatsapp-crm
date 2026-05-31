@@ -439,10 +439,7 @@ class PRDFlowService {
                 mediaLink = null;
               }
             } else {
-              console.warn(`[PRD] Local media file not found at ${localPath}. Clearing media to prevent Meta delivery failure.`);
-              media = '';
-              mediaLink = null;
-              mediaId = null;
+              console.warn(`[PRD] Local media file not found at ${localPath}. Falling back to URL delivery.`);
             }
           } catch (pathErr) {
             console.warn('[PRD] Could not parse media URL for direct upload:', pathErr.message);
@@ -598,9 +595,7 @@ class PRDFlowService {
                   nameMediaLink = null;
                 }
               } else {
-                nameMedia = '';
-                nameMediaLink = null;
-                nameMediaId = null;
+                console.warn(`[PRD] Local media file not found at ${localPath}. Falling back to URL delivery.`);
               }
             } catch (pathErr) {
               console.warn('[PRD] Could not parse nameMedia URL for direct upload:', pathErr.message);
