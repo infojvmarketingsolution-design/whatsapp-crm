@@ -240,16 +240,17 @@ const processCampaignSync = async (tenantId, campaignId) => {
                         }
                     }
 
-                    let messageContent = `[Template: ${template.name}]`;
+                    let messageContent = `[Campaign: ${campaign.name}] [Template: ${template.name}]\n`;
                     const bodyComp = template.components?.find(c => c.type === 'BODY' || c.type === 'body');
                     if (bodyComp && bodyComp.text) {
-                        messageContent = bodyComp.text;
+                        let bodyText = bodyComp.text;
                         // Inject variables
                         if (campaign.templateComponents?.body?.variables) {
                             campaign.templateComponents.body.variables.forEach((val, idx) => {
-                                messageContent = messageContent.replace(`{{${idx + 1}}}`, val);
+                                bodyText = bodyText.replace(`{{${idx + 1}}}`, val);
                             });
                         }
+                        messageContent += bodyText;
                     }
 
                     messageContent = mediaPrefix + messageContent;
