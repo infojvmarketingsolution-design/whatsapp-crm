@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Filter, Search, ArrowLeft, FileText, FileSpreadsheet } from 'lucide-react';
+import { Download, Filter, Search, ArrowLeft, FileText, FileSpreadsheet, Send, CheckCircle2, XCircle, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -114,6 +114,23 @@ export default function OverallMessageReport() {
     doc.save("Overall_Campaign_Report.pdf");
   };
 
+  const clearFilters = () => {
+    setFilters({
+      startDate: '',
+      endDate: '',
+      status: '',
+      phone: '',
+      campaignId: ''
+    });
+  };
+
+  const stats = {
+    totalSent: logs.filter(l => ['SENT', 'DELIVERED', 'READ'].includes(l.status)).length,
+    delivered: logs.filter(l => ['DELIVERED', 'READ'].includes(l.status)).length,
+    read: logs.filter(l => l.status === 'READ').length,
+    failed: logs.filter(l => l.status === 'FAILED').length,
+  };
+
   return (
     <div className="p-4 sm:p-8 bg-crm-bg min-h-full">
       <div className="max-w-7xl mx-auto">
@@ -134,8 +151,75 @@ export default function OverallMessageReport() {
           </div>
         </div>
 
+        {/* Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6">
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Total Sent</p>
+              <p className="text-2xl font-black text-gray-800">{stats.totalSent}</p>
+            </div>
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+              <Send size={20} />
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Delivered</p>
+              <p className="text-2xl font-black text-emerald-600">{stats.delivered}</p>
+            </div>
+            <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
+              <CheckCircle2 size={20} />
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Read</p>
+              <p className="text-2xl font-black text-blue-600">{stats.read}</p>
+            </div>
+            <div className="p-3 bg-blue-50 text-blue-600 rounded-xl">
+              <Eye size={20} />
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Failed</p>
+              <p className="text-2xl font-black text-red-600">{stats.failed}</p>
+            </div>
+            <div className="p-3 bg-red-50 text-red-600 rounded-xl">
+              <XCircle size={20} />
+            </div>
+          </div>
+        </div>
+
         {/* Filters */}
         <div className="bg-white p-4 rounded-xl border border-gray-100 shadow-sm mb-6 flex flex-wrap gap-4 items-end">
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Campaign</label>
+            <select
+              className="px-3 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+              value={filters.campaignId}
+              onChange={e => setFilters({...filters, campaignId: e.target.value})}
+            >
+              <option value="">All Campaigns</option>
+              {campaigns.map(camp => (
+                <option key={camp._id} value={camp._id}>{camp.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Status</label>
+            <select
+              className="px-3 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white min-w-[120px]"
+              value={filters.status}
+              onChange={e => setFilters({...filters, status: e.target.value})}
+            >
+              <option value="">All</option>
+              <option value="SENT">Sent</option>
+              <option value="DELIVERED">Delivered</option>
+              <option value="READ">Read</option>
+              <option value="FAILED">Failed</option>
+            </select>
+          </div>
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Start Date</label>
             <input 
@@ -154,33 +238,6 @@ export default function OverallMessageReport() {
               onChange={e => setFilters({...filters, endDate: e.target.value})}
             />
           </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Status</label>
-            <select
-              className="px-3 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white min-w-[120px]"
-              value={filters.status}
-              onChange={e => setFilters({...filters, status: e.target.value})}
-            >
-              <option value="">All</option>
-              <option value="SENT">Sent</option>
-              <option value="DELIVERED">Delivered</option>
-              <option value="READ">Read</option>
-              <option value="FAILED">Failed</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Campaign</label>
-            <select
-              className="px-3 py-2 border border-gray-200 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white"
-              value={filters.campaignId}
-              onChange={e => setFilters({...filters, campaignId: e.target.value})}
-            >
-              <option value="">All Campaigns</option>
-              {campaigns.map(camp => (
-                <option key={camp._id} value={camp._id}>{camp.name}</option>
-              ))}
-            </select>
-          </div>
           <div className="flex-1 min-w-[200px]">
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1">Phone Number</label>
             <div className="relative">
@@ -195,9 +252,14 @@ export default function OverallMessageReport() {
                />
             </div>
           </div>
-          <button onClick={fetchReports} className="bg-gray-800 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-gray-700 transition-colors h-[38px]">
-            Apply Filters
-          </button>
+          <div className="flex gap-2">
+            <button onClick={fetchReports} className="bg-gray-800 text-white px-6 py-2 rounded-lg font-bold text-sm shadow-md hover:bg-gray-700 transition-colors h-[38px]">
+              Apply Filters
+            </button>
+            <button onClick={clearFilters} className="bg-white text-gray-600 border border-gray-200 px-4 py-2 rounded-lg font-bold text-sm shadow-sm hover:bg-gray-50 transition-colors h-[38px]">
+              Clear
+            </button>
+          </div>
         </div>
 
         {/* Data Table */}
