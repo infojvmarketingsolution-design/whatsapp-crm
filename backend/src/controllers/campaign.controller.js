@@ -394,6 +394,42 @@ const getErrorReports = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+const getAllMessageReports = async (req, res) => {
+  try {
+    const tenantDb = getTenantConnection(req.tenantId);
+    const CampaignLog = tenantDb.model('CampaignLog', CampaignLogSchema);
+
+    const { startDate, endDate, campaignId, status, phone } = req.query;
+    
+    let query = {};
+    
+    // Don't filter by FAILED by default. But allow filtering by status.
+    if (status) query.status = status;
+    
+    if (startDate && endDate) {
+      query.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+    if (campaignId) query.campaignId = campaignId;
+    if (phone) query.phone = new RegExp(phone, 'i');
+
+    const logs = await CampaignLog.find(query).populate('campaignId', 'name').sort({ createdAt: -1 });
+
+    const formattedLogs = logs.map(log => ({
+      _id: log._id,
+      phone: log.phone,
+      campaignName: log.campaignId?.name || 'Unknown Campaign',
+      status: log.status,
+      sentAt: log.sentAt,
+      deliveredAt: log.deliveredAt,
+      readAt: log.readAt,
+      errorReason: log.errorReason
+    }));
+
+    res.json(formattedLogs);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
 
 module.exports = {
   createCampaign,
@@ -402,5 +438,6 @@ module.exports = {
   deleteCampaign,
   processCampaignSync,
   getErrorDashboard,
-  getErrorReports
+  getErrorReports,
+  getAllMessageReports
 };

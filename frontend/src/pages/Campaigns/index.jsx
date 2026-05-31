@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle, Trash2, Megaphone, Users, Send, AlertCircle } from 'lucide-react';
+import { Play, Pause, Plus, BarChart2, CheckCircle2, XCircle, Trash2, Megaphone, Users, Send, AlertCircle, FileText } from 'lucide-react';
 import CampaignReportModal from './CampaignReportModal';
 
 function Campaigns() {
@@ -101,6 +101,10 @@ function Campaigns() {
           <p className="text-xs sm:text-sm font-bold text-gray-400 mt-1 capitalize">Manage and track bulk broadcasts.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+          <button onClick={() => navigate('/campaigns/reports/all')} className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-white text-gray-700 border border-gray-200 rounded-2xl text-xs font-bold shadow-sm hover:bg-gray-50 transition-all active:scale-95 capitalize">
+            <FileText size={18} />
+            <span>Overall Report</span>
+          </button>
           <button onClick={() => navigate('/campaigns/errors/dashboard')} className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 bg-white text-red-600 border border-red-200 rounded-2xl text-xs font-bold shadow-sm hover:bg-red-50 transition-all active:scale-95 capitalize">
             <AlertCircle size={18} />
             <span>Error Dashboard</span>

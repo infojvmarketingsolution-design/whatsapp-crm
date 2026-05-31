@@ -14,6 +14,7 @@ import Campaigns from './pages/Campaigns';
 import CreateCampaign from './pages/Campaigns/CreateCampaign';
 import ErrorDashboard from './pages/Campaigns/ErrorDashboard';
 import FailedMessageReport from './pages/Campaigns/FailedMessageReport';
+import OverallMessageReport from './pages/Campaigns/OverallMessageReport';
 import Templates from './pages/Templates';
 import Flows from './pages/Flows';
 import FlowBuilder from './pages/Flows/Builder';
@@ -2334,6 +2335,7 @@ function AppLayout() {
             <Route path="/campaigns/create" element={<CreateCampaign />} />
             <Route path="/campaigns/errors/dashboard" element={<ErrorDashboard />} />
             <Route path="/campaigns/errors/report" element={<FailedMessageReport />} />
+            <Route path="/campaigns/reports/all" element={<OverallMessageReport />} />
             <Route path="/flows" element={<Flows />} />
             <Route path="/flows/:id" element={<FlowBuilder />} />
             <Route path="/agents" element={<AgentsDashboard />} />
